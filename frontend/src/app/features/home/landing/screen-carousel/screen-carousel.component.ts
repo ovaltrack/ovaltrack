@@ -3,7 +3,6 @@ import {
   Component,
   DestroyRef,
   ElementRef,
-  afterNextRender,
   computed,
   inject,
   input,
@@ -12,9 +11,40 @@ import {
 } from '@angular/core';
 import { LandingScreen } from '../landing-content';
 
+/** Grados que gira el cubo para pasar de una cara a la contigua. */
+const TURN = 90;
+/** Lo que dura el giro (igual que la transición del CSS). */
+const SETTLE_MS = 750;
+/** Fracción del giro a partir de la cual soltar el arrastre completa el paso a la cara siguiente. */
+const COMMIT_RATIO = 0.15;
+/** Píxeles de movimiento antes de decidir si el gesto es un arrastre horizontal o un scroll vertical. */
+const DRAG_THRESHOLD = 8;
+
+type Direction = 1 | -1;
+
+interface DragState {
+  pointerId: number;
+  startX: number;
+  startY: number;
+  /** Ángulo de la cara activa al empezar: el giro se mide desde ahí. */
+  base: number;
+  width: number;
+  direction: Direction | 0;
+  moving: boolean;
+}
+
+export interface CubeFace {
+  visible: boolean;
+  transform: string;
+  /** Oscurecimiento de la cara según cuánto se aleja del frente (0 de frente, más al girar). */
+  shade: number;
+}
+
 /**
- * Carrusel de capturas de la app: una pantalla por vista, con pestañas (patrón "tabbed carousel" de WAI-ARIA),
- * flechas, deslizamiento nativo con scroll-snap y flechas del teclado. Sin autoplay: avanza cuando el usuario quiere.
+ * Carrusel con forma de cubo: cada pantalla es una cara y pasar a la siguiente gira el cubo 90°.
+ * Se gira arrastrando (dedo o mouse), con las flechas (solo escritorio), los puntos o el teclado.
+ * Las caras se ubican a demanda junto a la activa, así el cubo admite cualquier cantidad de pantallas
+ * y da la vuelta completa. Sin autoplay.
  */
 @Component({
   selector: 'app-screen-carousel',
@@ -26,119 +56,185 @@ import { LandingScreen } from '../landing-content';
 export class ScreenCarouselComponent {
   readonly screens = input.required<readonly LandingScreen[]>();
 
-  private readonly track = viewChild.required<ElementRef<HTMLElement>>('track');
-  private readonly tabList = viewChild.required<ElementRef<HTMLElement>>('tabList');
+  private readonly scene = viewChild.required<ElementRef<HTMLElement>>('scene');
 
   readonly activeIndex = signal(0);
-  readonly isFirst = computed(() => this.activeIndex() === 0);
-  readonly isLast = computed(() => this.activeIndex() === this.screens().length - 1);
-  readonly counter = computed(() => `${this.activeIndex() + 1} / ${this.screens().length}`);
+  /** Giro acumulado del cubo en grados: queda de frente la cara cuyo ángulo coincide. */
+  readonly rotation = signal(0);
+  readonly dragging = signal(false);
+  /** Ángulo de cada cara alrededor del eje vertical; se asigna al traerla junto a la activa. */
+  private readonly faceAngles = signal<Readonly<Record<number, number>>>({ 0: 0 });
+  /** Cara que sigue visible mientras termina el giro: la que se va o la que se asomó al arrastrar. */
+  private readonly lingering = signal<number | null>(null);
 
-  private readonly destroyRef = inject(DestroyRef);
-  private frame = 0;
-  /** Mientras dura un desplazamiento pedido por código, el scroll no cambia la pantalla activa. */
-  private programmaticScroll: ReturnType<typeof setTimeout> | null = null;
+  readonly cubeTransform = computed(() => `translateZ(calc(var(--half) * -1)) rotateY(${-this.rotation()}deg)`);
+
+  readonly faces = computed<CubeFace[]>(() => {
+    const angles = this.faceAngles();
+    const rotation = this.rotation();
+    const active = this.activeIndex();
+    const lingering = this.lingering();
+    return this.screens().map((_, index) => {
+      const angle = angles[index] ?? 0;
+      const visible = index === active || index === lingering;
+      const offset = Math.min(Math.abs(angle - rotation) / TURN, 1);
+      return {
+        visible,
+        transform: `rotateY(${angle}deg) translateZ(var(--half))`,
+        shade: visible ? offset * 0.45 : 0
+      };
+    });
+  });
+
+  /** Lo que anuncia el lector de pantalla al cambiar de cara. */
+  readonly status = computed(() => {
+    const screen = this.screens()[this.activeIndex()];
+    return screen ? `Pantalla ${this.activeIndex() + 1} de ${this.screens().length}: ${screen.tab}` : '';
+  });
+
+  private drag: DragState | null = null;
+  private settleTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
-    afterNextRender(() => {
-      // Al cambiar el ancho, la pista se re-encastra en la pantalla activa
-      const observer = new ResizeObserver(() => this.goTo(this.activeIndex(), 'auto'));
-      observer.observe(this.track().nativeElement);
-      this.destroyRef.onDestroy(() => observer.disconnect());
-    });
-    this.destroyRef.onDestroy(() => {
-      cancelAnimationFrame(this.frame);
-      this.clearProgrammaticScroll();
-    });
-  }
-
-  previous(): void {
-    this.goTo(this.activeIndex() - 1);
+    inject(DestroyRef).onDestroy(() => this.clearSettle());
   }
 
   next(): void {
-    this.goTo(this.activeIndex() + 1);
+    this.turnTo(this.wrap(this.activeIndex() + 1), 1);
   }
 
-  goTo(index: number, behavior: ScrollBehavior = this.scrollBehavior()): void {
+  previous(): void {
+    this.turnTo(this.wrap(this.activeIndex() - 1), -1);
+  }
+
+  /** Puntos, Inicio y Fin: gira hacia el lado en que está la pantalla pedida. */
+  goTo(index: number): void {
     const target = Math.min(Math.max(index, 0), this.screens().length - 1);
-    this.clearProgrammaticScroll();
-    this.programmaticScroll = setTimeout(() => (this.programmaticScroll = null), 700);
-    this.track().nativeElement.scrollTo({ left: target * this.step(), behavior });
-    this.setActive(target);
+    this.turnTo(target, target > this.activeIndex() ? 1 : -1);
   }
 
-  /** Agrupa los eventos de scroll (deslizar con el dedo o el trackpad) en un cálculo por cuadro. */
-  onScroll(): void {
-    if (this.programmaticScroll !== null) {
-      return;
-    }
-    cancelAnimationFrame(this.frame);
-    this.frame = requestAnimationFrame(() => {
-      const step = this.step();
-      if (step > 0) {
-        this.setActive(Math.round(this.track().nativeElement.scrollLeft / step));
-      }
-    });
-  }
-
-  /** Flechas, Inicio y Fin recorren las pantallas, tanto desde la pista como desde las pestañas. */
   onKeydown(event: KeyboardEvent): void {
-    const moves: Record<string, () => number> = {
-      ArrowRight: () => this.activeIndex() + 1,
-      ArrowLeft: () => this.activeIndex() - 1,
-      Home: () => 0,
-      End: () => this.screens().length - 1
+    const actions: Record<string, () => void> = {
+      ArrowRight: () => this.next(),
+      ArrowLeft: () => this.previous(),
+      Home: () => this.goTo(0),
+      End: () => this.goTo(this.screens().length - 1)
     };
-    const move = moves[event.key];
-    if (!move) {
+    const action = actions[event.key];
+    if (action) {
+      event.preventDefault();
+      action();
+    }
+  }
+
+  onPointerDown(event: PointerEvent): void {
+    if (event.pointerType === 'mouse' && event.button !== 0) {
       return;
     }
-    event.preventDefault();
-    this.goTo(move());
-    if ((event.target as HTMLElement).getAttribute('role') === 'tab') {
-      this.focusActiveTab();
-    }
+    this.drag = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      base: this.angleOf(this.activeIndex()),
+      width: this.scene().nativeElement.clientWidth || 1,
+      direction: 0,
+      moving: false
+    };
   }
 
-  private clearProgrammaticScroll(): void {
-    if (this.programmaticScroll !== null) {
-      clearTimeout(this.programmaticScroll);
-      this.programmaticScroll = null;
-    }
-  }
-
-  private setActive(index: number): void {
-    const clamped = Math.min(Math.max(index, 0), this.screens().length - 1);
-    if (clamped === this.activeIndex()) {
+  /** El cubo sigue al dedo: arrastrar a la izquierda asoma la cara siguiente por la derecha. */
+  onPointerMove(event: PointerEvent): void {
+    const drag = this.drag;
+    if (!drag || event.pointerId !== drag.pointerId) {
       return;
     }
-    this.activeIndex.set(clamped);
-    this.revealActiveTab();
+    const dx = event.clientX - drag.startX;
+    if (!drag.moving) {
+      if (Math.abs(dx) < DRAG_THRESHOLD || Math.abs(dx) < Math.abs(event.clientY - drag.startY)) {
+        return;
+      }
+      drag.moving = true;
+      this.dragging.set(true);
+      this.clearSettle();
+      this.scene().nativeElement.setPointerCapture?.(event.pointerId);
+    }
+    const direction: Direction = dx < 0 ? 1 : -1;
+    if (direction !== drag.direction) {
+      drag.direction = direction;
+      const neighbour = this.wrap(this.activeIndex() + direction);
+      this.placeFace(neighbour, drag.base + direction * TURN);
+      this.lingering.set(neighbour);
+    }
+    const delta = Math.max(-TURN, Math.min(TURN, (-dx / drag.width) * TURN * 1.1));
+    this.rotation.set(drag.base + delta);
   }
 
-  /** En celular las pestañas desbordan: se desplaza la fila para que la activa quede a la vista. */
-  private revealActiveTab(): void {
-    const tab = this.tabList().nativeElement.children.item(this.activeIndex()) as HTMLElement | null;
-    tab?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: this.scrollBehavior() });
+  /** Al soltar, completa el giro si pasó el umbral; si no, el cubo vuelve a su cara. */
+  onPointerUp(event: PointerEvent): void {
+    const drag = this.drag;
+    if (!drag || event.pointerId !== drag.pointerId) {
+      return;
+    }
+    this.drag = null;
+    if (!drag.moving || drag.direction === 0) {
+      return;
+    }
+    this.dragging.set(false);
+    const from = this.activeIndex();
+    const neighbour = this.wrap(from + drag.direction);
+    if (Math.abs(this.rotation() - drag.base) / TURN > COMMIT_RATIO) {
+      this.activeIndex.set(neighbour);
+      this.rotation.set(drag.base + drag.direction * TURN);
+      this.settle(from);
+    } else {
+      this.rotation.set(drag.base);
+      this.settle(neighbour);
+    }
   }
 
-  private focusActiveTab(): void {
-    queueMicrotask(() => {
-      const tab = this.tabList().nativeElement.children.item(this.activeIndex()) as HTMLElement | null;
-      tab?.focus({ preventScroll: true });
-    });
+  /** Ubica la cara destino al costado de la activa y gira el cubo hacia ella. */
+  private turnTo(target: number, direction: Direction): void {
+    const from = this.activeIndex();
+    if (target === from) {
+      return;
+    }
+    const base = this.angleOf(from);
+    this.placeFace(target, base + direction * TURN);
+    this.activeIndex.set(target);
+    this.rotation.set(base + direction * TURN);
+    this.settle(from);
   }
 
-  /** Ancho de una pantalla más el espacio entre pantallas. */
-  private step(): number {
-    const element = this.track().nativeElement;
-    const first = element.firstElementChild as HTMLElement | null;
-    const gap = parseFloat(getComputedStyle(element).columnGap) || 0;
-    return first ? first.getBoundingClientRect().width + gap : 0;
+  private settle(lingering: number): void {
+    this.clearSettle();
+    this.lingering.set(lingering);
+    this.settleTimer = setTimeout(() => {
+      this.settleTimer = null;
+      this.lingering.set(null);
+    }, this.reducedMotion() ? 0 : SETTLE_MS);
   }
 
-  private scrollBehavior(): ScrollBehavior {
-    return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+  private clearSettle(): void {
+    if (this.settleTimer !== null) {
+      clearTimeout(this.settleTimer);
+      this.settleTimer = null;
+    }
+  }
+
+  private placeFace(index: number, angle: number): void {
+    this.faceAngles.update(angles => ({ ...angles, [index]: angle }));
+  }
+
+  private angleOf(index: number): number {
+    return this.faceAngles()[index] ?? 0;
+  }
+
+  private wrap(index: number): number {
+    const total = this.screens().length;
+    return ((index % total) + total) % total;
+  }
+
+  private reducedMotion(): boolean {
+    return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
   }
 }
