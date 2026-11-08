@@ -22,9 +22,9 @@
           <div role="cell" class="adm-field">
             <label class="adm-sr-only" [attr.for]="'admin-' + c.id">Administrador para {{ c.name }}</label>
             <select class="form-control adm-select" [id]="'admin-' + c.id" (change)="onAdminChange(c.id, $event)">
-              <option value="" [selected]="!store.selectedAdmin()[c.id]">Elegí un administrador</option>
+              <option value="" [selected]="!store.pendingAdminId(c.id)">Elegí un administrador</option>
               @for (a of store.admins(); track a.user.id) {
-                <option [value]="a.user.id" [selected]="store.selectedAdmin()[c.id] === a.user.id">
+                <option [value]="a.user.id" [selected]="store.pendingAdminId(c.id) === a.user.id">
                   {{ userName(a.user) }} · {{ a.user.email }}
                 </option>
               }

@@ -74,11 +74,20 @@ export class AdminPanelStore {
   readonly newAdminId = signal<string | null>(null);
 
   /* ---------- Derivados ---------- */
-  /** Administradores disponibles para asociar a un club. */
-  readonly admins = computed<UserClubRegistration[]>(() => [
-    ...this.allAccounts().filter((a) => a.user.role === 'ADMIN_CLUB'),
-    ...this.requests().filter((r) => r.user.role === 'ADMIN_CLUB'),
-  ]);
+  /**
+   * Administradores disponibles para asociar a un club, sin repetidos y en orden fijo (nombre, id).
+   * El orden no depende de si la cuenta está pendiente o aprobada: si una opción cambiara de lugar al
+   * aprobarla, algunos navegadores vuelven el <select> a "Elegí un administrador".
+   */
+  readonly admins = computed<UserClubRegistration[]>(() => {
+    const byId = new Map<string, UserClubRegistration>();
+    for (const a of [...this.allAccounts(), ...this.requests()]) {
+      if (a.user.role === 'ADMIN_CLUB' && !byId.has(a.user.id)) byId.set(a.user.id, a);
+    }
+    return [...byId.values()].sort(
+      (x, y) => userName(x.user).localeCompare(userName(y.user), 'es') || x.user.id.localeCompare(y.user.id),
+    );
+  });
 
   readonly stats = computed<AdminStats>(() => ({
     pendingRequests: this.requests().length,
@@ -219,8 +228,14 @@ export class AdminPanelStore {
     this.selectedAdmin.update((map) => ({ ...map, [clubId]: adminUserId }));
   }
 
+  /** Admin elegido para un club pendiente, solo si sigue entre las opciones (lo mismo que muestra el select). */
+  pendingAdminId(clubId: string): string | null {
+    const id = this.selectedAdmin()[clubId];
+    return id && this.admins().some((a) => a.user.id === id) ? id : null;
+  }
+
   approveClub(club: Club): void {
-    const adminUserId = this.selectedAdmin()[club.id];
+    const adminUserId = this.pendingAdminId(club.id);
     if (!adminUserId) {
       this.toast.warning(`Elegí el administrador que quedará a cargo de ${club.name} antes de aprobarlo.`, 'Falta el administrador');
       return;
