@@ -8,6 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,6 +22,7 @@ import com.ovaltrack.backend.club.domain.dto.ClubResponseDTO;
 import com.ovaltrack.backend.common.dto.response.MessageResponse;
 import com.ovaltrack.backend.user.business.UserService;
 import com.ovaltrack.backend.user.domain.UserStatus;
+import com.ovaltrack.backend.user.domain.dto.UserResponseDTO;
 import com.ovaltrack.backend.user.domain.dto.UserClubRegistration;
 
 import lombok.RequiredArgsConstructor;
@@ -91,6 +93,20 @@ public class OvalTrackAdminController {
             Authentication authentication) {
         adminService.rejectClub(clubId);
         return ResponseEntity.ok(new MessageResponse("El club fue rechazado."));
+    }
+
+    /** Entrenadores/analistas activos del club, candidatos a administrarlo. */
+    @GetMapping("/clubs/{clubId}/admin-candidates")
+    public ResponseEntity<Collection<UserResponseDTO>> getClubAdminCandidates(@PathVariable UUID clubId) {
+        return ResponseEntity.ok(adminService.findClubAdminCandidates(clubId));
+    }
+
+    @PutMapping("/clubs/{clubId}/admin")
+    public ResponseEntity<MessageResponse> changeClubAdmin(
+            @PathVariable UUID clubId,
+            @RequestParam UUID adminUserId) {
+        adminService.changeClubAdmin(clubId, adminUserId);
+        return ResponseEntity.ok(new MessageResponse("El administrador del club fue actualizado."));
     }
 
     @PostMapping("/clubs/{clubId}/reactivate")

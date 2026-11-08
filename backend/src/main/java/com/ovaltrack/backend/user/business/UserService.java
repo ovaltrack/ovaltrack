@@ -180,12 +180,15 @@ public class UserService {
 				? passwordEncoder.encode(request.password())
 				: passwordEncoder.encode("Default123!");
 
+		boolean active = request.active() == null || request.active();
 		return User.builder()
 				.person(person)
 				.loginEmail(email)
 				.passwordHash(encodedPassword)
 				.role(request.role() != null ? request.role() : UserRole.NO_ROLE)
-				.active(request.active() != null ? request.active() : true)
+				.active(active)
+				// Alta directa: si nace activa ya está aprobada (antes quedaba PENDING_APPROVAL por defecto)
+				.accountStatus(active ? UserStatus.ACTIVE : UserStatus.PENDING_APPROVAL)
 				.build();
 	}
 

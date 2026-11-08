@@ -2,7 +2,7 @@
   <div class="adm-card-header">
     <div>
       <h2 id="adm-clubs-title">Clubes</h2>
-      <p>Clubes activos e inactivos. Al desactivar un club, sus miembros pierden el acceso hasta que lo reactives.</p>
+      <p>Clubes activos e inactivos. Al desactivar un club, sus miembros pierden el acceso hasta que lo reactives. El administrador se elige entre los entrenadores del club.</p>
     </div>
   </div>
   <app-admin-table-toolbar
@@ -28,16 +28,19 @@
         <div class="adm-row" role="row">
           <div role="cell" appAdminPerson [kind]="'logo'" [name]="c.name" [detail]="c.city"></div>
           @if (store.adminById(c.adminUserId); as admin) {
-            <div
-              role="cell"
-              data-label="Administrador"
-              appAdminPerson
-              [userRole]="'ADMIN_CLUB'"
-              [name]="userName(admin.user)"
-              [detail]="admin.user.email"
-              [small]="true"
-              [monoDetail]="true"
-            ></div>
+            <div role="cell" data-label="Administrador" class="adm-admin-cell">
+              <span
+                appAdminPerson
+                [userRole]="'ADMIN_CLUB'"
+                [name]="userName(admin.user)"
+                [detail]="admin.user.email"
+                [small]="true"
+                [monoDetail]="true"
+              ></span>
+              @if (!admin.user.active) {
+                <i class="adm-badge adm-badge-warn">Sin acceso: cuenta inactiva</i>
+              }
+            </div>
           } @else {
             <div role="cell" data-label="Administrador" class="adm-person">
               <span class="adm-muted">Sin administrador</span>
@@ -51,6 +54,9 @@
             }
           </span>
           <span role="cell" class="adm-actions">
+            <button type="button" class="btn btn-outline" [disabled]="store.busy()" (click)="store.openChangeAdmin(c)">
+              <i class="bi bi-person-gear" aria-hidden="true"></i> Cambiar admin
+            </button>
             @if (c.status === 'ACTIVE') {
               <button type="button" class="btn adm-btn-danger" [disabled]="store.busy()" (click)="store.deactivateClub(c)">
                 <i class="bi bi-slash-circle" aria-hidden="true"></i> Desactivar

@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '@environments/environment';
 import { MessageResponse } from 'src/app/shared/types/shared-types';
 import { Club, ClubStatus } from '../../club/types/club.types';
+import { UserResponseDTO } from 'src/app/features/user/types/user.types';
 import { UserClubRegistration } from '../types/ovaltrack-admin.types';
 
 @Injectable({ providedIn: 'root' })
@@ -58,6 +59,17 @@ export class OvalTrackAdminService {
     /** POST /clubs/{clubId}/reactivate: vuelve a ACTIVE un club REJECTED (su administrador debe estar activo). */
     reactivateClub(clubId: string): Observable<MessageResponse> {
         return this.http.post<MessageResponse>(`${this.apiUrl}/clubs/${clubId}/reactivate`, null);
+    }
+
+    /** GET /clubs/{clubId}/admin-candidates: entrenadores/analistas activos del club. */
+    getClubAdminCandidates(clubId: string): Observable<UserResponseDTO[]> {
+        return this.http.get<UserResponseDTO[]>(`${this.apiUrl}/clubs/${clubId}/admin-candidates`);
+    }
+
+    /** PUT /clubs/{clubId}/admin: el elegido pasa a ADMIN_CLUB y el anterior a COACH_ANALYST. */
+    changeClubAdmin(clubId: string, adminUserId: string): Observable<MessageResponse> {
+        const params = new HttpParams().set('adminUserId', adminUserId);
+        return this.http.put<MessageResponse>(`${this.apiUrl}/clubs/${clubId}/admin`, null, { params });
     }
 
     /* ---------- Cuentas ---------- */
