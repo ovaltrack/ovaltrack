@@ -1,544 +1,369 @@
-<main class="layout-container page admin-wrap">
-  <header class="hud">
-    <span class="badge-tech">Panel de plataforma</span>
-    <h1 class="title">Administración de cuentas y clubes</h1>
-    <p class="club">
-      Revisa solicitudes de registro, activa cuentas y aprueba clubes con su
-      administrador.
-    </p>
-  </header>
-
-  @if (error()) {
-    <div class="alert" role="alert">
-      <span>{{ error() }}</span>
-      <button type="button" class="btn btn-outline" (click)="loadAll()">
-        Reintentar
+<main class="layout-container page adm">
+  <header class="hud adm-hud">
+    <div class="hud-brand">
+      <span class="badge-tech"><i class="bi bi-shield-lock" aria-hidden="true"></i> Panel de plataforma</span>
+      <div class="brand-text">
+        <h1 class="title">Administración de cuentas y clubes</h1>
+        <p class="club">Revisá solicitudes de registro, activá cuentas y aprobá clubes con su administrador.</p>
+      </div>
+    </div>
+    <div class="hud-actions">
+      <button type="button" class="btn btn-outline adm-refresh" [disabled]="loading()" (click)="loadAll()">
+        <i class="bi bi-arrow-clockwise" [class.adm-spin]="loading()" aria-hidden="true"></i>
+        Actualizar
       </button>
     </div>
-  }
+  </header>
 
   <!-- Resumen -->
-  <section class="grid-4" aria-label="Resumen">
-    <article class="card stat">
-      <span>Solicitudes de cuenta</span>
+  <section class="adm-kpis" aria-label="Resumen">
+    <article class="tile adm-kpi" [class.adm-kpi-alert]="stats().pendingRequests > 0">
+      <span class="label-mono">Solicitudes</span>
       <strong>{{ stats().pendingRequests }}</strong>
-      <span>Pendientes de revisión</span>
+      <span class="adm-kpi-hint">Cuentas por revisar</span>
     </article>
-    <article class="card stat">
-      <span>Clubes por aprobar</span>
+    <article class="tile adm-kpi" [class.adm-kpi-alert]="stats().pendingClubs > 0">
+      <span class="label-mono">Clubes pendientes</span>
       <strong>{{ stats().pendingClubs }}</strong>
-      <span>Sin administrador asociado</span>
+      <span class="adm-kpi-hint">Esperan administrador</span>
     </article>
-    <article class="card stat">
-      <span>Cuentas activas</span>
+    <article class="tile adm-kpi">
+      <span class="label-mono">Cuentas activas</span>
       <strong>{{ stats().activeAccounts }}</strong>
-      <span>Con cuenta aprobada</span>
+      <span class="adm-kpi-hint">Con acceso aprobado</span>
     </article>
-    <article class="card stat">
-      <span>Clubes activos</span>
+    <article class="tile adm-kpi">
+      <span class="label-mono">Clubes activos</span>
       <strong>{{ stats().activeClubs }}</strong>
-      <span>Operando en la plataforma</span>
+      <span class="adm-kpi-hint">Operando en la plataforma</span>
     </article>
   </section>
 
-  <!-- Solicitudes de registro de administradores -->
-  <section class="card">
-    <div class="card-header">
+  <!-- Solicitudes de registro -->
+  <section class="adm-card" aria-labelledby="adm-requests-title">
+    <div class="adm-card-header">
       <div>
-        <h2>Solicitudes de registro</h2>
-        <p>Cuentas a la espera de activación</p>
+        <h2 id="adm-requests-title">Solicitudes de registro</h2>
+        <p>Cuentas a la espera de activación.</p>
       </div>
-      <span class="badge badge-warn">{{ requests().length }} pendientes</span>
+      <span class="adm-badge" [class.adm-badge-warn]="requests().length > 0">
+        {{ requests().length }} {{ requests().length === 1 ? 'pendiente' : 'pendientes' }}
+      </span>
     </div>
-    <div class="scroll">
-      <div class="table">
-        <div class="row row-head cols-requests">
-          <span>Solicitante</span><span>Club solicitado</span><span>Fecha</span
-          ><span>Rol</span><span>Acciones</span>
-        </div>
+
+    <div class="adm-table" role="table" aria-label="Solicitudes de registro">
+      <div class="adm-row adm-row-head cols-requests" role="row">
+        <span role="columnheader">Solicitante</span>
+        <span role="columnheader">Club solicitado</span>
+        <span role="columnheader">Fecha</span>
+        <span role="columnheader">Rol</span>
+        <span role="columnheader" class="adm-col-actions">Acciones</span>
+      </div>
+      @if (!loaded()) {
+        <ng-container *ngTemplateOutlet="skeleton" />
+      } @else {
         @for (r of requests(); track r.user.id) {
-          <div class="row cols-requests">
-            <div class="person">
-              <span class="avatar role-admin">{{
-                initials(r.user.firstName!)
-              }}</span>
-              <div>
-                <b>{{ r.user.firstName }}</b
-                ><span class="mono">{{ r.user.email }}</span>
+          <div class="adm-row cols-requests" role="row">
+            <div class="adm-person" role="cell">
+              <span class="adm-avatar" [class]="'adm-avatar ' + roleClass(r.user.role)" aria-hidden="true">{{ initials(userName(r.user)) }}</span>
+              <div class="adm-person-text">
+                <b>{{ userName(r.user) }}</b>
+                <span class="adm-mono">{{ r.user.email }}</span>
               </div>
             </div>
-            <span>{{ r.club.name }}</span>
-            <span class="mono">{{ r.user.createdAt | date }}</span>
-            <span
-              ><i class="badge" [class]="'badge ' + roleClass(r.user.role)">{{
-                r.user.role
-              }}</i></span
-            >
-            <span class="actions">
-              <button
-                type="button"
-                class="btn btn-outline btn-danger"
-                (click)="rejectRequest(r.user)"
-              >
-                Rechazar
+            <span role="cell" data-label="Club">{{ r.club.name }}</span>
+            <span role="cell" data-label="Fecha" class="adm-mono">{{ formatDate(r.user.createdAt) }}</span>
+            <span role="cell" data-label="Rol"><i class="adm-badge" [class]="'adm-badge ' + roleClass(r.user.role)">{{ roleLabel(r.user.role) }}</i></span>
+            <span role="cell" class="adm-actions">
+              <button type="button" class="btn adm-btn-danger" [disabled]="busyId() !== null" (click)="rejectRequest(r.user)">
+                <i class="bi bi-x-lg" aria-hidden="true"></i> Rechazar
               </button>
-              <button
-                type="button"
-                class="btn btn-primary"
-                (click)="approveRequest(r)"
-              >
-                Aprobar cuenta
+              <button type="button" class="btn adm-btn-approve" [disabled]="busyId() !== null" (click)="approveRequest(r)">
+                <i class="bi bi-check-lg" aria-hidden="true"></i> Aprobar
               </button>
             </span>
           </div>
         } @empty {
-          <p class="empty">
-            {{ loading() ? "Cargando…" : "No hay solicitudes pendientes." }}
-          </p>
+          <div class="adm-empty">
+            <i class="bi bi-inbox" aria-hidden="true"></i>
+            <p>No hay solicitudes pendientes.</p>
+          </div>
         }
-      </div>
+      }
     </div>
   </section>
 
   <!-- Clubes pendientes de aprobación -->
-  <section class="card">
-    <div class="card-header">
+  <section class="adm-card" aria-labelledby="adm-pending-title">
+    <div class="adm-card-header">
       <div>
-        <h2>Clubes pendientes de aprobación</h2>
-        <p>
-          Al aprobar, el club queda activo y el administrador seleccionado queda
-          asociado
-        </p>
+        <h2 id="adm-pending-title">Clubes pendientes de aprobación</h2>
+        <p>Al aprobar, el club queda activo con el administrador elegido.</p>
       </div>
-      <span class="badge badge-warn"
-        >{{ pendingClubs().length }} pendientes</span
-      >
+      <span class="adm-badge" [class.adm-badge-warn]="pendingClubs().length > 0">
+        {{ pendingClubs().length }} {{ pendingClubs().length === 1 ? 'pendiente' : 'pendientes' }}
+      </span>
     </div>
-    <div class="scroll">
-      <div class="table">
-        <div class="row row-head cols-pending">
-          <span>Club</span>
-          <span>Administrador a asociar</span>
-          <span>Acciones</span>
-        </div>
+
+    <div class="adm-table" role="table" aria-label="Clubes pendientes">
+      <div class="adm-row adm-row-head cols-pending" role="row">
+        <span role="columnheader">Club</span>
+        <span role="columnheader">Administrador a asociar</span>
+        <span role="columnheader" class="adm-col-actions">Acciones</span>
+      </div>
+      @if (!loaded()) {
+        <ng-container *ngTemplateOutlet="skeleton" />
+      } @else {
         @for (c of pendingClubs(); track c.id) {
-          <div class="row cols-pending">
-            <div class="person">
-              <span class="logo">{{ c.name[0] }}</span>
-              <div>
-                <b>{{ c.name }}</b
-                ><span
-                  >{{ c.city }}
-                  <!-- @if (c.) {
-                    · Fundado {{ c. }}
-                  } -->
-                </span>
+          <div class="adm-row cols-pending" role="row">
+            <div class="adm-person" role="cell">
+              <span class="adm-logo" aria-hidden="true">{{ c.name[0] }}</span>
+              <div class="adm-person-text">
+                <b>{{ c.name }}</b>
+                <span>{{ c.city }}</span>
               </div>
             </div>
-
-            <div class="dropdown">
-              <button
-                type="button"
-                class="select"
-                aria-haspopup="listbox"
-                [attr.aria-expanded]="openDropdown() === 'pending-' + c.id"
-                (click)="toggleDropdown('pending-' + c.id)"
-              >
-                <span>
-                  @if (adminById(selectedAdmin()[c.id]); as a) {
-                    {{ a.user.firstName }} ({{ a.user.email }})
-                  } @else {
-                    Selecciona un administrador
-                  }
-                </span>
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                  aria-hidden="true"
-                >
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
-              </button>
-              @if (openDropdown() === "pending-" + c.id) {
-                <ul class="menu" role="listbox">
-                  @for (a of admins(); track a.user.id) {
-                    <li>
-                      <button
-                        type="button"
-                        role="option"
-                        class="menu-item"
-                        [class.is-selected]="
-                          selectedAdmin()[c.id] === a.user.id
-                        "
-                        [attr.aria-selected]="
-                          selectedAdmin()[c.id] === a.user.id
-                        "
-                        (click)="chooseAdminForPending(c.id, a.user.id)"
-                      >
-                        <b>{{ a.user.firstName }}</b
-                        ><span class="mono">{{ a.user.email }}</span>
-                      </button>
-                    </li>
-                  }
-                </ul>
-              }
+            <div role="cell" class="adm-field">
+              <label class="adm-sr-only" [attr.for]="'admin-' + c.id">Administrador para {{ c.name }}</label>
+              <select class="form-control adm-select" [id]="'admin-' + c.id" (change)="chooseAdminForPending(c.id, $event)">
+                <option value="" [selected]="!selectedAdmin()[c.id]">Elegí un administrador</option>
+                @for (a of admins(); track a.user.id) {
+                  <option [value]="a.user.id" [selected]="selectedAdmin()[c.id] === a.user.id">
+                    {{ userName(a.user) }} · {{ a.user.email }}
+                  </option>
+                }
+              </select>
             </div>
-
-            <span class="actions">
-              <button
-                type="button"
-                class="btn btn-outline btn-danger"
-                (click)="rejectClub(c)"
-              >
-                Rechazar
+            <span role="cell" class="adm-actions">
+              <button type="button" class="btn adm-btn-danger" [disabled]="busyId() !== null" (click)="rejectClub(c)">
+                <i class="bi bi-x-lg" aria-hidden="true"></i> Rechazar
               </button>
-              <button
-                type="button"
-                class="btn btn-primary"
-                [disabled]="selectedAdmin()[c.id] == null"
-                (click)="approveClub(c, selectedAdmin()[c.id]!)"
-              >
-                Aprobar club
+              <button type="button" class="btn adm-btn-approve" [disabled]="busyId() !== null" (click)="approveClub(c)">
+                <i class="bi bi-check-lg" aria-hidden="true"></i> Aprobar club
               </button>
             </span>
           </div>
         } @empty {
-          <p class="empty">
-            {{
-              loading()
-                ? "Cargando…"
-                : "No hay clubes pendientes de aprobación."
-            }}
-          </p>
+          <div class="adm-empty">
+            <i class="bi bi-buildings" aria-hidden="true"></i>
+            <p>No hay clubes pendientes de aprobación.</p>
+          </div>
         }
-      </div>
+      }
     </div>
   </section>
 
   <!-- Cuentas -->
-  <section class="card">
-    <div class="card-header">
+  <section class="adm-card" aria-labelledby="adm-accounts-title">
+    <div class="adm-card-header">
       <div>
-        <h2>Cuentas</h2>
-        <p>
-          Todas las cuentas de la plataforma. Rechaza las activas o acepta las
-          inactivas
-        </p>
+        <h2 id="adm-accounts-title">Cuentas</h2>
+        <p>Todas las cuentas de la plataforma. Desactivá las activas o aceptá las inactivas.</p>
       </div>
     </div>
-    <div class="toolbar">
-      <div class="segmented" role="tablist" aria-label="Filtrar cuentas">
-        <button
-          type="button"
-          role="tab"
-          [class.on]="accountFilter() === 'all'"
-          [attr.aria-selected]="accountFilter() === 'all'"
-          (click)="setAccountFilter('all')"
-        >
-          Todas · {{ accountCounts().all }}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          [class.on]="accountFilter() === 'active'"
-          [attr.aria-selected]="accountFilter() === 'active'"
-          (click)="setAccountFilter('active')"
-        >
-          Activas · {{ accountCounts().active }}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          [class.on]="accountFilter() === 'inactive'"
-          [attr.aria-selected]="accountFilter() === 'inactive'"
-          (click)="setAccountFilter('inactive')"
-        >
-          Inactivas · {{ accountCounts().inactive }}
-        </button>
+    <div class="adm-toolbar">
+      <div class="status-segment adm-segment" role="group" aria-label="Filtrar cuentas">
+        @for (opt of accountFilterOptions; track opt.value) {
+          <button
+            type="button"
+            class="status-tab"
+            [class.active]="accountFilter() === opt.value"
+            [attr.aria-pressed]="accountFilter() === opt.value"
+            (click)="setAccountFilter(opt.value)"
+          >
+            {{ opt.label }} <span class="status-badge-count">{{ accountCounts()[opt.value] }}</span>
+          </button>
+        }
       </div>
-      <label class="search">
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2.2"
-          aria-hidden="true"
-        >
-          <circle cx="11" cy="11" r="7" />
-          <path d="m20 20-3.5-3.5" />
-        </svg>
-        <input
-          type="search"
-          placeholder="Buscar por nombre o email"
-          aria-label="Buscar cuentas"
-          (input)="onSearch('account', $event)"
-        />
+      <label class="adm-search">
+        <i class="bi bi-search" aria-hidden="true"></i>
+        <input type="search" placeholder="Buscar por nombre o email" aria-label="Buscar cuentas" (input)="onSearch('account', $event)" />
       </label>
     </div>
-    <div class="scroll">
-      <div class="table">
-        <div class="row row-head cols-accounts">
-          <span>Usuario</span><span>Rol</span><span>Club</span
-          ><span>Estado</span><span>Acción</span>
-        </div>
+
+    <div class="adm-table" role="table" aria-label="Cuentas">
+      <div class="adm-row adm-row-head cols-accounts" role="row">
+        <span role="columnheader">Usuario</span>
+        <span role="columnheader">Rol</span>
+        <span role="columnheader">Club</span>
+        <span role="columnheader">Estado</span>
+        <span role="columnheader" class="adm-col-actions">Acción</span>
+      </div>
+      @if (!loaded()) {
+        <ng-container *ngTemplateOutlet="skeleton" />
+      } @else {
         @for (a of filteredAccounts(); track a.user.id) {
-          <div class="row cols-accounts">
-            <div class="person">
-              <span
-                class="avatar"
-                [class]="'avatar ' + roleClass(a.user.role)"
-                >{{ initials(a.user.firstName!) }}</span
-              >
-              <div>
-                <b>{{ a.user.firstName }}</b
-                ><span class="mono">{{ a.user.email }}</span>
+          <div class="adm-row cols-accounts" role="row">
+            <div class="adm-person" role="cell">
+              <span class="adm-avatar" [class]="'adm-avatar ' + roleClass(a.user.role)" aria-hidden="true">{{ initials(userName(a.user)) }}</span>
+              <div class="adm-person-text">
+                <b>{{ userName(a.user) }}</b>
+                <span class="adm-mono">{{ a.user.email }}</span>
               </div>
             </div>
-            <span
-              ><i class="badge" [class]="'badge ' + roleClass(a.user.role)">{{
-                a.user.role
-              }}</i></span
-            >
-            <span>{{ a.club.name }}</span>
-            <span>
-              <i
-                class="badge"
-                [class.badge-ok]="a.user.active"
-                [class.badge-off]="!a.user.active"
-                >{{ a.user.active ? "Activa" : "Inactiva" }}</i
-              >
+            <span role="cell" data-label="Rol"><i class="adm-badge" [class]="'adm-badge ' + roleClass(a.user.role)">{{ roleLabel(a.user.role) }}</i></span>
+            <span role="cell" data-label="Club">{{ a.club.name }}</span>
+            <span role="cell" data-label="Estado">
+              <i class="status-badge" [class.status-active]="a.user.active" [class.status-inactive]="!a.user.active">
+                <span class="dot"></span>{{ a.user.active ? 'Activa' : 'Inactiva' }}
+              </i>
             </span>
-            <span class="actions">
+            <span role="cell" class="adm-actions">
               @if (a.user.active) {
-                <button
-                  type="button"
-                  class="btn btn-outline btn-danger"
-                  (click)="setAccountActive(a, false)"
-                >
-                  Desactivar
+                <button type="button" class="btn adm-btn-danger" [disabled]="busyId() !== null" (click)="setAccountActive(a, false)">
+                  <i class="bi bi-slash-circle" aria-hidden="true"></i> Desactivar
                 </button>
               } @else {
-                <button
-                  type="button"
-                  class="btn btn-primary"
-                  (click)="setAccountActive(a, true)"
-                >
-                  Aceptar
+                <button type="button" class="btn adm-btn-approve" [disabled]="busyId() !== null" (click)="setAccountActive(a, true)">
+                  <i class="bi bi-check-lg" aria-hidden="true"></i> Aceptar
                 </button>
               }
             </span>
           </div>
         } @empty {
-          <p class="empty">
-            {{
-              loading()
-                ? "Cargando…"
-                : "No hay cuentas que coincidan con el filtro."
-            }}
-          </p>
+          <div class="adm-empty">
+            <i class="bi bi-person-x" aria-hidden="true"></i>
+            <p>No hay cuentas que coincidan con el filtro.</p>
+          </div>
         }
-      </div>
+      }
     </div>
   </section>
 
   <!-- Clubes -->
-  <section class="card">
-    <div class="card-header">
+  <section class="adm-card" aria-labelledby="adm-clubs-title">
+    <div class="adm-card-header">
       <div>
-        <h2>Clubes</h2>
-        <p>Clubes activos y rechazados. Cambia su administrador o su estado</p>
+        <h2 id="adm-clubs-title">Clubes</h2>
+        <p>Clubes activos y rechazados, con su administrador.</p>
       </div>
     </div>
-    <div class="toolbar">
-      <div class="segmented" role="tablist" aria-label="Filtrar clubes">
-        <button
-          type="button"
-          role="tab"
-          [class.on]="clubFilter() === 'all'"
-          [attr.aria-selected]="clubFilter() === 'all'"
-          (click)="setClubFilter('all')"
-        >
-          Todos · {{ clubCounts().all }}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          [class.on]="clubFilter() === 'active'"
-          [attr.aria-selected]="clubFilter() === 'active'"
-          (click)="setClubFilter('active')"
-        >
-          Activos · {{ clubCounts().active }}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          [class.on]="clubFilter() === 'rejected'"
-          [attr.aria-selected]="clubFilter() === 'rejected'"
-          (click)="setClubFilter('rejected')"
-        >
-          Rechazados · {{ clubCounts().rejected }}
-        </button>
+    <div class="adm-toolbar">
+      <div class="status-segment adm-segment" role="group" aria-label="Filtrar clubes">
+        @for (opt of clubFilterOptions; track opt.value) {
+          <button
+            type="button"
+            class="status-tab"
+            [class.active]="clubFilter() === opt.value"
+            [attr.aria-pressed]="clubFilter() === opt.value"
+            (click)="setClubFilter(opt.value)"
+          >
+            {{ opt.label }} <span class="status-badge-count">{{ clubCounts()[opt.value] }}</span>
+          </button>
+        }
       </div>
-      <label class="search">
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2.2"
-          aria-hidden="true"
-        >
-          <circle cx="11" cy="11" r="7" />
-          <path d="m20 20-3.5-3.5" />
-        </svg>
-        <input
-          type="search"
-          placeholder="Buscar club o ciudad"
-          aria-label="Buscar clubes"
-          (input)="onSearch('club', $event)"
-        />
+      <label class="adm-search">
+        <i class="bi bi-search" aria-hidden="true"></i>
+        <input type="search" placeholder="Buscar club o ciudad" aria-label="Buscar clubes" (input)="onSearch('club', $event)" />
       </label>
     </div>
-    <div class="scroll">
-      <div class="table">
-        <div class="row row-head cols-clubs">
-          <span>Club</span><span>Administrador</span><span>Estado</span
-          ><span>Acciones</span>
-        </div>
+
+    <div class="adm-table" role="table" aria-label="Clubes">
+      <div class="adm-row adm-row-head cols-clubs" role="row">
+        <span role="columnheader">Club</span>
+        <span role="columnheader">Administrador</span>
+        <span role="columnheader">Estado</span>
+        <span role="columnheader" class="adm-col-actions">Acción</span>
+      </div>
+      @if (!loaded()) {
+        <ng-container *ngTemplateOutlet="skeleton" />
+      } @else {
         @for (c of filteredClubs(); track c.id) {
-          <div class="row cols-clubs">
-            <div class="person">
-              <span class="logo">{{ c.name[0] }}</span>
-              <div>
-                <b>{{ c.name }}</b
-                ><span>{{ c.city }}</span>
+          <div class="adm-row cols-clubs" role="row">
+            <div class="adm-person" role="cell">
+              <span class="adm-logo" aria-hidden="true">{{ c.name[0] }}</span>
+              <div class="adm-person-text">
+                <b>{{ c.name }}</b>
+                <span>{{ c.city }}</span>
               </div>
             </div>
-            <div class="person">
+            <div role="cell" data-label="Administrador" class="adm-person">
               @if (adminById(c.adminUserId); as admin) {
-                <span class="avatar role-admin">{{
-                  initials(admin.user.firstName!)
-                }}</span>
-                <div>
-                  <b>{{ admin.user.firstName }}</b
-                  ><span class="mono">{{ admin.user.email }}</span>
+                <span class="adm-avatar role-admin adm-avatar-sm" aria-hidden="true">{{ initials(userName(admin.user)) }}</span>
+                <div class="adm-person-text">
+                  <b>{{ userName(admin.user) }}</b>
+                  <span class="adm-mono">{{ admin.user.email }}</span>
                 </div>
               } @else {
-                <span>Sin administrador</span>
+                <span class="adm-muted">Sin administrador</span>
               }
             </div>
-            <span>
-              <i
-                class="badge"
-                [class.badge-ok]="c.status === 'ACTIVE'"
-                [class.badge-off]="c.status !== 'ACTIVE'"
-                >{{ c.status === "ACTIVE" ? "Activo" : "Rechazado" }}</i
-              >
+            <span role="cell" data-label="Estado">
+              <i class="status-badge" [class.status-active]="c.status === 'ACTIVE'" [class.adm-status-rejected]="c.status !== 'ACTIVE'">
+                <span class="dot"></span>{{ c.status === 'ACTIVE' ? 'Activo' : 'Rechazado' }}
+              </i>
             </span>
-            <span class="actions">
-              <!-- <button
-                type="button"
-                class="btn btn-outline"
-                (click)="openChangeAdmin(c)"
-              >
-                Cambiar administrador
-              </button> -->
-              @if (c.status === "ACTIVE") {
-                <button
-                  type="button"
-                  class="btn btn-outline btn-danger"
-                  (click)="setClubStatus(c, 'REJECTED')"
-                >
-                  Desactivar
+            <span role="cell" class="adm-actions">
+              @if (c.status === 'ACTIVE') {
+                <button type="button" class="btn adm-btn-danger" (click)="setClubStatus(c, 'REJECTED')">
+                  <i class="bi bi-slash-circle" aria-hidden="true"></i> Desactivar
                 </button>
               } @else {
-                <button
-                  type="button"
-                  class="btn btn-primary"
-                  (click)="setClubStatus(c, 'ACTIVE')"
-                >
-                  Aceptar
+                <button type="button" class="btn adm-btn-approve" (click)="setClubStatus(c, 'ACTIVE')">
+                  <i class="bi bi-check-lg" aria-hidden="true"></i> Aceptar
                 </button>
               }
             </span>
           </div>
         } @empty {
-          <p class="empty">
-            {{
-              loading()
-                ? "Cargando…"
-                : "No hay clubes que coincidan con el filtro."
-            }}
-          </p>
+          <div class="adm-empty">
+            <i class="bi bi-buildings" aria-hidden="true"></i>
+            <p>No hay clubes que coincidan con el filtro.</p>
+          </div>
         }
-      </div>
+      }
     </div>
   </section>
 </main>
 
-<!-- Modal: cambiar administrador -->
+<ng-template #skeleton>
+  <div class="adm-skeleton" aria-busy="true" aria-label="Cargando">
+    @for (i of skeletonRows; track i) {
+      <div class="adm-skeleton-row">
+        <span class="sk sk-avatar"></span>
+        <div class="adm-skeleton-text">
+          <span class="sk sk-line"></span>
+          <span class="sk sk-line s"></span>
+        </div>
+        <span class="sk sk-pill"></span>
+      </div>
+    }
+  </div>
+</ng-template>
+
+<!-- Modal: cambiar administrador (sin disparador por ahora: el botón "Cambiar administrador" sigue comentado) -->
 @if (changingClub(); as club) {
-  <div class="ot-backdrop" (click)="closeChangeAdmin()">
-    <div
-      class="ot-dialog card"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="change-admin-title"
-      (click)="$event.stopPropagation()"
-    >
-      <div class="card-header">
+  <div class="adm-backdrop" (click)="closeChangeAdmin()">
+    <div class="adm-card adm-dialog" role="dialog" aria-modal="true" aria-labelledby="change-admin-title" (click)="$event.stopPropagation()">
+      <div class="adm-card-header">
         <div>
           <h2 id="change-admin-title">Cambiar administrador</h2>
           <p>{{ club.name }} · {{ club.city }}</p>
         </div>
       </div>
-      <ul
-        class="admin-list"
-        role="listbox"
-        aria-label="Administradores disponibles"
-      >
+      <ul class="adm-admin-list" role="listbox" aria-label="Administradores disponibles">
         @for (a of admins(); track a.user.id) {
           <li>
             <button
               type="button"
               role="option"
-              class="menu-item"
+              class="adm-option"
               [class.is-selected]="newAdminId() === a.user.id"
               [attr.aria-selected]="newAdminId() === a.user.id"
               (click)="newAdminId.set(a.user.id)"
             >
-              <span class="avatar role-admin">{{
-                initials(a.user.firstName!)
-              }}</span>
-              <span class="menu-text"
-                ><b>{{ a.user.firstName }}</b
-                ><span class="mono">{{ a.user.email }}</span></span
-              >
+              <span class="adm-avatar role-admin" aria-hidden="true">{{ initials(userName(a.user)) }}</span>
+              <span class="adm-person-text">
+                <b>{{ userName(a.user) }}</b>
+                <span class="adm-mono">{{ a.user.email }}</span>
+              </span>
             </button>
           </li>
         }
       </ul>
-      <div class="ot-dialog-footer">
-        <button
-          type="button"
-          class="btn btn-outline"
-          (click)="closeChangeAdmin()"
-        >
-          Cancelar
-        </button>
-        <button
-          type="button"
-          class="btn btn-primary"
-          [disabled]="newAdminId() === club.adminUserId"
-          (click)="confirmChangeAdmin()"
-        >
+      <div class="adm-dialog-footer">
+        <button type="button" class="btn btn-outline" (click)="closeChangeAdmin()">Cancelar</button>
+        <button type="button" class="btn btn-primary-rugby" [disabled]="newAdminId() === club.adminUserId" (click)="confirmChangeAdmin()">
           Guardar cambios
         </button>
       </div>

@@ -1,30 +1,45 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { forkJoin } from 'rxjs';
+import { Observable, finalize, forkJoin } from 'rxjs';
 import { OvalTrackAdminService } from '../../services/ovaltrack-admin.service';
 import { UserRole } from 'src/app/features/auth/types/auth.types';
-import { ClubStatus } from 'src/app/features/club/types/club.types';
-import { Club } from 'src/app/features/club/types/club.types'; // Ajusta la ruta real de tus interfaces
-import { User, UserResponseDTO } from 'src/app/features/user/types/user.types';
+import { Club, ClubStatus } from 'src/app/features/club/types/club.types';
+import { UserResponseDTO } from 'src/app/features/user/types/user.types';
 import { UserClubRegistration } from '../../types/ovaltrack-admin.types';
-import { DatePipe } from '@angular/common';
+import { ToastService } from 'src/app/core/services/toast.service';
+import { MessageResponse } from 'src/app/shared/types/shared-types';
+import { NgTemplateOutlet } from '@angular/common';
 
 export type AccountFilter = 'all' | 'active' | 'inactive';
 export type ClubFilter = 'all' | 'active' | 'rejected';
 
+interface FilterOption<T extends string> {
+  value: T;
+  label: string;
+}
+
+const ROLE_LABELS: Record<UserRole, string> = {
+  ADMIN_OVALTRACK: 'Admin. OvalTrack',
+  ADMIN_CLUB: 'Admin. de club',
+  COACH_ANALYST: 'Entrenador/analista',
+  PLAYER: 'Jugador',
+  NO_ROLE: 'Sin rol',
+};
+
 @Component({
   selector: 'app-ovaltrack-admin',
   standalone: true,
-  imports: [DatePipe],
+  imports: [NgTemplateOutlet],
   templateUrl: './ovaltrack-admin.component.html',
   styleUrl: './ovaltrack-admin.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OvaltrackAdminComponent implements OnInit {
   private readonly adminService = inject(OvalTrackAdminService);
+  private readonly toast = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
 
-  /* ---------- Datos reales (User[] y Club[]) ---------- */
+  /* ---------- Datos ---------- */
   readonly requests = signal<UserClubRegistration[]>([]);
   readonly pendingClubs = signal<Club[]>([]);
   readonly allAccounts = signal<UserClubRegistration[]>([]);
@@ -43,17 +58,34 @@ export class OvaltrackAdminComponent implements OnInit {
   readonly clubFilter = signal<ClubFilter>('all');
   readonly accountSearch = signal('');
   readonly clubSearch = signal('');
-  readonly error = signal('');
 
   private readonly pendingCalls = signal(0);
   readonly loading = computed(() => this.pendingCalls() > 0);
+  /** Hasta la primera respuesta se muestran skeletons en lugar de los estados vacíos. */
+  readonly loaded = signal(false);
+
+  /** Fila con una acción en curso (evita doble clic). */
+  readonly busyId = signal<string | null>(null);
 
   /** Admin elegido para cada club pendiente (clubId -> adminUserId). */
   readonly selectedAdmin = signal<Record<string, string | null>>({});
-  readonly openDropdown = signal<string | null>(null);
 
   readonly changingClubId = signal<string | null>(null);
   readonly newAdminId = signal<string | null>(null);
+
+  readonly skeletonRows = [0, 1, 2];
+
+  readonly accountFilterOptions: FilterOption<AccountFilter>[] = [
+    { value: 'all', label: 'Todas' },
+    { value: 'active', label: 'Activas' },
+    { value: 'inactive', label: 'Inactivas' },
+  ];
+
+  readonly clubFilterOptions: FilterOption<ClubFilter>[] = [
+    { value: 'all', label: 'Todos' },
+    { value: 'active', label: 'Activos' },
+    { value: 'rejected', label: 'Rechazados' },
+  ];
 
   /* ---------- Derivados ---------- */
   readonly stats = computed(() => ({
@@ -63,13 +95,13 @@ export class OvaltrackAdminComponent implements OnInit {
     activeClubs: this.allClubs().filter((c) => c.status === 'ACTIVE').length,
   }));
 
-  readonly accountCounts = computed(() => {
+  readonly accountCounts = computed<Record<AccountFilter, number>>(() => {
     const all = this.allAccounts();
     const active = all.filter((a) => a.user.active).length;
     return { all: all.length, active, inactive: all.length - active };
   });
 
-  readonly clubCounts = computed(() => {
+  readonly clubCounts = computed<Record<ClubFilter, number>>(() => {
     const all = this.allClubs();
     const active = all.filter((c) => c.status === 'ACTIVE').length;
     return { all: all.length, active, rejected: all.length - active };
@@ -95,18 +127,8 @@ export class OvaltrackAdminComponent implements OnInit {
     this.loadAll();
   }
 
-  /* ---------- Helpers visuales para User ---------- */
-  userName(u: UserResponseDTO): string {
-    return [u.firstName, u.lastName].filter(Boolean).join(' ') || u.email;
-  }
-
-  formatDate(iso?: string | null): string {
-    return iso ? new Date(iso).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
-  }
-
   /* ---------- Carga de datos (GET) ---------- */
   loadAll(): void {
-    this.error.set('');
     this.accountFilter.set('all');
     this.clubFilter.set('all');
     this.begin();
@@ -117,112 +139,109 @@ export class OvaltrackAdminComponent implements OnInit {
       users: this.adminService.getUsers(),
       clubs: this.adminService.getClubs(),
     })
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        finalize(() => this.end()),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe({
         next: ({ pendingUsers, pendingClubs, users, clubs }) => {
-          const pClubs = pendingClubs;
-          const uList = users;
-          const cList = clubs;
-
           this.requests.set(pendingUsers);
-          this.pendingClubs.set(pClubs);
-          this.selectedAdmin.set(Object.fromEntries(pClubs.map((c) => [c.id, c.adminUserId ?? null])));
-          this.allAccounts.set(uList);
-          this.visibleAccounts.set(uList);
-          this.allClubs.set(cList);
-          this.visibleClubs.set(cList);
-          this.end();
+          this.pendingClubs.set(pendingClubs);
+          this.selectedAdmin.set(Object.fromEntries(pendingClubs.map((c) => [c.id, c.adminUserId ?? null])));
+          this.allAccounts.set(users);
+          this.visibleAccounts.set(users);
+          this.allClubs.set(clubs);
+          this.visibleClubs.set(clubs);
+          this.loaded.set(true);
         },
-        error: (err) => this.fail(err, 'No se pudieron cargar los datos del panel.'),
+        error: (err: HttpErrorLike) =>
+          this.toast.error(this.errorMessage(err, 'No se pudieron cargar los datos del panel.'), 'Error de carga', 0, {
+            label: 'Reintentar',
+            handler: () => this.loadAll(),
+          }),
       });
   }
 
   setAccountFilter(filter: AccountFilter): void {
+    if (this.accountFilter() === filter) return;
     this.accountFilter.set(filter);
-    this.error.set('');
     this.begin();
 
     const active = filter === 'all' ? undefined : filter === 'active';
     this.adminService
       .getUsers(active)
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        finalize(() => this.end()),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe({
         next: (list) => {
-          if (this.accountFilter() !== filter) return this.end();
+          if (this.accountFilter() !== filter) return;
           this.visibleAccounts.set(list);
           if (filter === 'all') this.allAccounts.set(list);
-          this.end();
         },
-        error: (err) => this.fail(err, 'No se pudieron cargar las cuentas.'),
+        error: (err: HttpErrorLike) => this.toast.error(this.errorMessage(err, 'No se pudieron cargar las cuentas.')),
       });
   }
 
   setClubFilter(filter: ClubFilter): void {
+    if (this.clubFilter() === filter) return;
     this.clubFilter.set(filter);
-    this.error.set('');
     this.begin();
 
     const status = filter === 'all' ? undefined : filter === 'active' ? 'ACTIVE' : 'REJECTED';
     this.adminService
       .getClubs(status)
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        finalize(() => this.end()),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe({
         next: (list) => {
-          if (this.clubFilter() !== filter) return this.end();
+          if (this.clubFilter() !== filter) return;
           this.visibleClubs.set(list);
           if (filter === 'all') this.allClubs.set(list);
-          this.end();
         },
-        error: (err) => this.fail(err, 'No se pudieron cargar los clubes.'),
+        error: (err: HttpErrorLike) => this.toast.error(this.errorMessage(err, 'No se pudieron cargar los clubes.')),
       });
   }
 
   /* ---------- Acciones ---------- */
-  approveRequest(user: UserClubRegistration): void {
-    this.adminService.approveAccount(user.user.id)
-      .subscribe({
-        next: () => this.loadAll(),
-        error: (error) => {
-          this.fail(error, 'No se puedo aprobar la cuenta.');
-        }
-      })
-    // this.requests.update((list) => list.filter((r) => r.user.id !== user.user.id));
-    // this.updateAccounts((list) => [...list, { ...user, active: true }]);
+  approveRequest(registration: UserClubRegistration): void {
+    this.runAction(
+      registration.user.id,
+      this.adminService.approveAccount(registration.user.id),
+      `Cuenta de ${this.userName(registration.user)} aprobada.`,
+      'No se pudo aprobar la cuenta.',
+    );
   }
 
   rejectRequest(user: UserResponseDTO): void {
-    this.adminService.rejectAccount(user.id)
-      .subscribe({
-        next: () => this.loadAll(),
-        error: (error) => {
-          this.fail(error, 'No se pudo rechazar la cuenta')
-        }
-      })
-    // this.requests.update((list) => list.filter((r) => r.user.id !== user.id));
+    this.runAction(
+      user.id,
+      this.adminService.rejectAccount(user.id),
+      `Solicitud de ${this.userName(user)} rechazada.`,
+      'No se pudo rechazar la cuenta.',
+    );
   }
 
-  toggleDropdown(key: string): void {
-    this.openDropdown.update((current) => (current === key ? null : key));
+  chooseAdminForPending(clubId: string, event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.selectedAdmin.update((map) => ({ ...map, [clubId]: value || null }));
   }
 
-  chooseAdminForPending(clubId: string, adminUserId: string): void {
-    this.selectedAdmin.update((map) => ({ ...map, [clubId]: adminUserId }));
-    this.openDropdown.set(null);
-  }
-
-  approveClub(club: Club, adminUserId: string): void {
-    if (adminUserId === null) return;
-    this.adminService.approveClub(club.id, adminUserId)
-      .subscribe({
-        next: () => this.loadAll(),
-        error: (error) => {
-          this.fail(error, 'No se puedo aprobar el club')
-        }
-      })
-    // const adminUserId = this.selectedAdmin()[club.id];
-    // if (adminUserId == null) return;
-    // this.pendingClubs.update((list) => list.filter((c) => c.id !== club.id));
-    // this.updateClubs((list) => [...list, { ...club, adminUserId, status: 'ACTIVE' }]);
+  approveClub(club: Club): void {
+    const adminUserId = this.selectedAdmin()[club.id];
+    if (!adminUserId) {
+      this.toast.warning(`Elegí el administrador que quedará a cargo de ${club.name} antes de aprobarlo.`, 'Falta el administrador');
+      return;
+    }
+    this.runAction(
+      club.id,
+      this.adminService.approveClub(club.id, adminUserId),
+      `${club.name} quedó activo con su administrador.`,
+      'No se pudo aprobar el club.',
+    );
   }
 
   rejectClub(club: Club): void {
@@ -230,19 +249,13 @@ export class OvaltrackAdminComponent implements OnInit {
   }
 
   setAccountActive(account: UserClubRegistration, active: boolean): void {
-    if (active) {
-      this.adminService.activateAccount(account.user.id)
-        .subscribe({
-          next: () => this.loadAll(),
-          error: (err) => this.fail(err,'No se puedo activar la cuenta')
-        })
-    } else {
-      this.adminService.deactivateAccount(account.user.id)
-        .subscribe({
-          next: () => this.loadAll(), error: (err) => this.fail(err,'No se puedo desactivar la cuenta')
-        })
-    }
-    // this.updateAccounts((list) => list.map((a) => (a.user.id === account.user.id ? { ...a, active } : a)));
+    const name = this.userName(account.user);
+    this.runAction(
+      account.user.id,
+      active ? this.adminService.activateAccount(account.user.id) : this.adminService.deactivateAccount(account.user.id),
+      active ? `Cuenta de ${name} activada.` : `Cuenta de ${name} desactivada.`,
+      active ? 'No se pudo activar la cuenta.' : 'No se pudo desactivar la cuenta.',
+    );
   }
 
   setClubStatus(club: Club, status: ClubStatus): void {
@@ -268,14 +281,17 @@ export class OvaltrackAdminComponent implements OnInit {
   }
 
   /* ---------- Helpers de plantilla ---------- */
+  userName(u: UserResponseDTO): string {
+    return [u.firstName, u.lastName].filter(Boolean).join(' ') || u.email;
+  }
+
   adminById(id: string | null | undefined): UserClubRegistration | undefined {
     return this.admins().find((a) => a.user.id === id);
   }
 
   initials(name: string): string {
-
     return name
-      .split(' ')
+      .split(/[\s@.]+/)
       .filter(Boolean)
       .slice(0, 2)
       .map((p) => p[0].toUpperCase())
@@ -286,18 +302,36 @@ export class OvaltrackAdminComponent implements OnInit {
     return role === 'ADMIN_CLUB' ? 'role-admin' : role === 'COACH_ANALYST' ? 'role-coach' : 'role-player';
   }
 
+  roleLabel(role: UserRole): string {
+    return ROLE_LABELS[role] ?? role;
+  }
+
+  formatDate(iso?: string | null): string {
+    return iso ? new Date(iso).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
+  }
+
   onSearch(target: 'account' | 'club', event: Event): void {
     const value = (event.target as HTMLInputElement).value;
     (target === 'account' ? this.accountSearch : this.clubSearch).set(value);
   }
 
   /* ---------- Internos ---------- */
-  private updateAccounts(fn: (list: UserClubRegistration[]) => UserClubRegistration[]): void {
-    const filter = this.accountFilter();
-    this.allAccounts.update(fn);
-    this.visibleAccounts.update((list) =>
-      fn(list).filter((a) => filter === 'all' || (filter === 'active' ? a.user.active : !a.user.active)),
-    );
+  /** Ejecuta una acción de una fila, avisa el resultado con un toast y recarga el panel. */
+  private runAction(rowId: string, request$: Observable<MessageResponse>, success: string, fallbackError: string): void {
+    if (this.busyId()) return;
+    this.busyId.set(rowId);
+    request$
+      .pipe(
+        finalize(() => this.busyId.set(null)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: () => {
+          this.toast.success(success);
+          this.loadAll();
+        },
+        error: (err: HttpErrorLike) => this.toast.error(this.errorMessage(err, fallbackError)),
+      });
   }
 
   private updateClubs(fn: (list: Club[]) => Club[]): void {
@@ -316,8 +350,11 @@ export class OvaltrackAdminComponent implements OnInit {
     this.pendingCalls.update((n) => Math.max(0, n - 1));
   }
 
-  private fail(err: { error?: { message?: string } }, fallback: string): void {
-    this.error.set(err?.error?.message ?? fallback);
-    this.end();
+  private errorMessage(err: HttpErrorLike, fallback: string): string {
+    return err?.error?.message ?? fallback;
   }
+}
+
+interface HttpErrorLike {
+  error?: { message?: string } | null;
 }

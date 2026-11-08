@@ -205,6 +205,18 @@
 
   --player: #94a3b8;
   --player-tint: rgba(148, 163, 184, 0.1);
+  --blue-mid: #60a5fa;
+  --blue-mid-tint: rgba(96, 165, 250, 0.15);
+
+  /* Feedback: mismos tonos que ya usaban en oscuro post-partido (#f87171, #fbbf24); el éxito es el verde de acento */
+  --error: #f87171;
+  --error-tint: rgba(248, 113, 113, 0.15);
+  --error-border: rgba(248, 113, 113, 0.4);
+  --warning: #fbbf24;
+  --warning-tint: rgba(251, 191, 36, 0.15);
+  --warning-border: rgba(251, 191, 36, 0.4);
+  --success: #a3e635;
+  --success-tint: rgba(163, 230, 53, 0.15);
 
   --btn-primary-bg: #a3e635;
   --btn-primary-fg: #0b111e;
