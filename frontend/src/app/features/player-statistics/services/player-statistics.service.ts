@@ -1,16 +1,14 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { Observable, catchError, filter, forkJoin, from, map, of, shareReplay, switchMap, take, timeout } from 'rxjs';
+import { Observable, filter, forkJoin, map, of, shareReplay, switchMap, take, timeout } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { PlayerMatchDTO, PlayerMatchSource, PlayerMatchStatistic } from '../types/player-statistics.types';
 import { UserContextService } from 'src/app/core/services/user-context.service';
-import { LocalDatabaseService } from '../../local-database/services/local-database.service';
 import { EventTypeService } from '../../match/services/event-type.service';
-import { LiveCaptureService } from '../../match/services/live-capture.service';
+import { EventService } from '../../match/services/event.service';
 import { StatisticCalculationService } from '../../match/statistics/services/statistic-calculation.service';
 import { RosterPlayerInfo } from '../../match/statistics/calculators';
-import { LocalMatchEvent } from '../../match/types/event.types';
 
 /** Si el contexto no llega en este tiempo, la carga termina con error en lugar de quedar colgada. */
 const USER_CONTEXT_TIMEOUT_MS = 10000;
@@ -19,9 +17,8 @@ const USER_CONTEXT_TIMEOUT_MS = 10000;
 export class PlayerStatisticsService {
   private readonly http = inject(HttpClient);
   private readonly userContext = inject(UserContextService);
-  private readonly cache = inject(LocalDatabaseService);
   private readonly eventTypeService = inject(EventTypeService);
-  private readonly liveCaptureService = inject(LiveCaptureService);
+  private readonly eventService = inject(EventService);
   private readonly statisticService = inject(StatisticCalculationService);
   private readonly apiUrl = `${environment.apiUrl}/matches`;
 
@@ -60,7 +57,8 @@ export class PlayerStatisticsService {
   loadMatchSource(matchId: string): Observable<PlayerMatchSource> {
     return this.personId$.pipe(
       switchMap(() => forkJoin({
-        events: this.loadEvents(matchId),
+        // Solo backend: las estadísticas del jugador no funcionan sin conexión ni se guardan en IndexedDB.
+        events: this.eventService.getByMatch(matchId),
         eventTypes: this.eventTypes$,
       }))
     );
@@ -94,7 +92,6 @@ export class PlayerStatisticsService {
 
     const me: RosterPlayerInfo = {
       playerId: personId,
-      // Slot 0 no existe en la planilla: sin slot solo se atribuyen los eventos por playerId.
       jerseyNumber: match.slotNumber ?? 0,
       playerName: this.userContext.fullName(),
       isStarter: match.role === 'TITULAR',
@@ -104,13 +101,5 @@ export class PlayerStatisticsService {
       source.events, [me], source.eventTypes, 'full', period
     );
     return { match, columns, stat: players[0] };
-  }
-
-  /** Trae los eventos del backend a la caché local; si falla, usa lo que ya haya en IndexedDB. */
-  private loadEvents(matchId: string): Observable<LocalMatchEvent[]> {
-    return this.liveCaptureService.hydrateMatchEvents(matchId).pipe(
-      catchError(() => of(null)),
-      switchMap(() => from(this.cache.getEventsByMatch(matchId)))
-    );
   }
 }

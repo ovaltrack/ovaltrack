@@ -19,7 +19,6 @@ import { PostMatchTimelineComponent } from './components/post-match-timeline/pos
 import { PostMatchTableComponent } from './components/post-match-table/post-match-table.component';
 import { PostMatchPanelComponent } from './components/post-match-panel/post-match-panel.component';
 import { PostMatchCreateModalComponent } from './components/post-match-create-modal/post-match-create-modal.component';
-import { LocalDatabaseService } from '../../local-database/services/local-database.service';
 
 /** Desde esta cantidad de eventos, dibujar la vista traba el hilo un rato: la pelota se muestra antes de empezar. */
 const HEAVY_RENDER_EVENTS = 200;
@@ -53,7 +52,6 @@ export class PostMatchComponent implements OnInit, OnDestroy {
   private readonly eventService = inject(EventService);
   private readonly eventTypeService = inject(EventTypeService);
   private readonly rosterService = inject(RosterService);
-  private readonly cacheService = inject(LocalDatabaseService);
   private readonly liveCaptureService = inject(LiveCaptureService);
   private readonly toastService = inject(ToastService);
   private readonly layoutService = inject(LayoutService);
@@ -66,7 +64,6 @@ export class PostMatchComponent implements OnInit, OnDestroy {
   matchId = '';
   private eventToRestore: string | null = null;
 
-  // Estado del contenedor
   readonly errorMessage = signal<string>('');
   /** La pelota aparece solo si la carga tarda (ver LoadingGate). */
   readonly loading = new LoadingGate();
@@ -172,11 +169,9 @@ export class PostMatchComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.layoutService.setWide(true);
     this.shell.bindLiveScore(this.store.scoreboard, this.store.scoreDelta);
-    // El servidor recalcula el marcador con cada cambio de eventos: el shell lo vuelve a pedir para Zonas y Estadísticas
     this.store.confirmedChange$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.shell.refresh());
     this.matchId = this.shell.matchId();
     if (this.matchId) {
-      // El evento que estaba seleccionado al irse a otra vista (resetSession lo borra: se restaura al terminar la carga)
       this.eventToRestore = this.shell.lastSelectedEventId();
       this.store.resetSession();
       this.store.setMatchId(this.matchId);
@@ -231,7 +226,6 @@ export class PostMatchComponent implements OnInit, OnDestroy {
         })));
       },
       error: () => {
-        // Fallback no bloqueante si la división no tiene jugadores cargados
       }
     });
   }
@@ -257,15 +251,9 @@ export class PostMatchComponent implements OnInit, OnDestroy {
         this.loadEvents();
       },
       error: () => {
-        this.cacheService.getActiveEventTypes().then(types => {
-          const dict: { [id: string]: string } = {};
-          types.forEach(type => {
-            dict[type.id] = type.name;
-          });
-          this.eventTypesDiccionario.set(dict);
-          this.store.setEventTypesList(types);
-          this.loadEvents();
-        });
+        const msg = 'No se pudieron cargar los tipos de evento.';
+        this.errorMessage.set(msg);
+        this.toastService.error(msg);
       }
     });
   }
@@ -277,13 +265,6 @@ export class PostMatchComponent implements OnInit, OnDestroy {
     try {
       await firstValueFrom(this.liveCaptureService.syncPendingEvents(this.matchId));
     } catch {
-      // Sync local previo no bloqueante
-    }
-
-    try {
-      await firstValueFrom(this.liveCaptureService.hydrateMatchEvents(this.matchId));
-    } catch {
-      // El contenido local sigue disponible si el backend no responde.
     }
 
     try {
@@ -299,27 +280,9 @@ export class PostMatchComponent implements OnInit, OnDestroy {
         return;
       }
 
-      try {
-        const localEvents = await this.cacheService.getEventsByMatch(this.matchId);
-        const dict = this.eventTypesDiccionario();
-        const mapped = localEvents.map(e => ({
-          id: e.id,
-          eventTypeId: e.eventTypeId,
-          eventTypeName: dict[e.eventTypeId] || 'Evento',
-          playerId: e.playerId,
-          playerName: e.playerId ? 'Jugador' : null,
-          playerJerseyNumber: null,
-          matchTime: e.matchTime ?? 0,
-          absoluteMatchTime: e.absoluteMatchTime ?? null,
-          period: e.period ?? 1,
-          teamPossession: e.teamPossession
-        }));
-        this.store.setEvents(mapped);
-      } catch {
-        const msg = 'No se pudieron cargar los eventos del partido.';
-        this.errorMessage.set(msg);
-        this.toastService.error(msg);
-      }
+      const msg = 'No se pudieron cargar los eventos del partido.';
+      this.errorMessage.set(msg);
+      this.toastService.error(msg);
     } finally {
       if (this.errorMessage()) {
         await this.loading.finish();
