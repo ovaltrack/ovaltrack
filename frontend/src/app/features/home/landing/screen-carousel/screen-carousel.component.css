@@ -1,205 +1,136 @@
+/*
+ * Al girar, las aristas del cubo se acercan y pueden pasar el ancho de la pantalla: el host recorta en
+ * horizontal hasta el borde de la página (margen negativo) y deja pasar las sombras en vertical.
+ */
 :host {
   display: block;
-  --carousel-gap: 32px;
+  overflow-x: clip;
+  margin-inline: calc(-1 * var(--layout-pad));
+  padding-inline: var(--layout-pad);
 }
 
-/* ---------- Cabecera: pestañas + flechas ---------- */
-.carousel-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-.tabs {
-  display: flex;
-  gap: 6px;
-  padding: 5px;
-  border-radius: var(--radius-pill);
-  background: var(--surface-toolbar);
-  border: 1px solid var(--border-sport-subtle);
-  overflow-x: auto;
-  scrollbar-width: none;
-  min-width: 0;
-}
-
-.tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.tab {
-  flex: 0 0 auto;
-  height: 40px;
-  padding: 0 16px;
-  border: 1px solid transparent;
-  border-radius: var(--radius-pill);
-  background: transparent;
-  color: var(--text-secondary);
-  font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
-}
-
-.tab:hover {
-  color: var(--text-primary);
-  background: var(--surface-hover);
-}
-
-.tab[aria-selected='true'] {
-  background: var(--grass-tint-strong);
-  border-color: var(--grass-border);
-  color: var(--text-primary);
-}
-
-.tab:focus-visible,
-.arrow:focus-visible {
-  outline: 2px solid var(--grass-deep);
-  outline-offset: 2px;
-}
-
-.arrows {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-}
-
-.counter {
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: 13px;
-  color: var(--text-muted);
-  min-width: 44px;
-  text-align: right;
-}
-
-.arrow {
-  width: var(--hit);
-  height: var(--hit);
-  padding: 0;
-  border-radius: var(--radius-pill);
-  font-size: 18px;
-}
-
-.arrow:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* ---------- Pista ---------- */
-/*
- * Una pantalla por vista con encastre. El overflow recorta lo que sale de la caja: el padding (compensado
- * con margen negativo) deja lugar a la sombra, y la máscara desvanece los costados.
- */
-.track {
-  display: flex;
-  gap: var(--carousel-gap);
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  overscroll-behavior-x: contain;
-  scrollbar-width: none;
-  padding: 24px var(--layout-pad) 56px;
-  margin: -24px calc(-1 * var(--layout-pad)) -32px;
-  scroll-padding-inline: var(--layout-pad);
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--layout-pad), #000 calc(100% - var(--layout-pad)), transparent);
-  mask-image: linear-gradient(to right, transparent, #000 var(--layout-pad), #000 calc(100% - var(--layout-pad)), transparent);
-}
-
-.track::-webkit-scrollbar {
-  display: none;
-}
-
-/* ---------- Escenario: imágenes a la izquierda, texto a la derecha ---------- */
+/* Contenedor de referencia de las unidades cqw: el ancho de cara se define respecto de él */
 .stage {
+  position: relative;
+  container-type: inline-size;
+  --face-w: min(720px, 100cqw);
+  /* Mitad del ancho: la distancia de cada cara al eje del cubo */
+  --half: calc(var(--face-w) / 2);
+  --turn-duration: 0.75s;
+  --turn-easing: cubic-bezier(0.45, 0.05, 0.25, 1);
+}
+
+/* ---------- Escena y cubo ---------- */
+.scene {
+  perspective: 2400px;
+  perspective-origin: 50% 45%;
+  padding-block: 24px 32px;
+  /* El scroll vertical sigue siendo del navegador; el arrastre horizontal gira el cubo */
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+  outline: none;
+}
+
+.scene--dragging {
+  cursor: grabbing;
+}
+
+.scene:focus-visible .face--active {
+  outline: 2px solid var(--grass-deep);
+  outline-offset: 4px;
+}
+
+.cube {
+  position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
-  align-items: center;
-  gap: 40px;
+  width: var(--face-w);
+  margin-inline: auto;
+  transform-style: preserve-3d;
+  transition: transform var(--turn-duration) var(--turn-easing);
 }
 
-.stage-media {
-  min-width: 0;
+/* ---------- Caras ---------- */
+/* Todas en la misma celda: el cubo toma la altura de la cara más alta y todas miden lo mismo */
+.face {
+  grid-area: 1 / 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  background: var(--surface);
+  border: 2px solid var(--border-sport);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-elevation);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  visibility: hidden;
 }
 
-.slide {
-  flex: 0 0 100%;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
-  min-width: 0;
-  margin: 0;
+.face--visible {
+  visibility: visible;
 }
 
-.slide-image {
+.face-media {
+  position: relative;
+}
+
+.face-image {
   display: block;
   width: 100%;
   height: auto;
   border-radius: var(--radius-lg);
-  border: 2px solid var(--border-sport);
-  box-shadow: var(--shadow-elevation);
+  border: 1px solid var(--border-sport-subtle);
+  background: var(--surface-alt);
+  pointer-events: none;
+}
+
+/* Etiqueta sólida: sobre capturas oscuras una translúcida no se lee */
+.face-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
   background: var(--surface);
+  border: 1px solid var(--grass-border);
+  color: var(--grass-deep);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: var(--shadow-button);
 }
 
-/*
- * Textos apilados en una sola celda: la celda toma el alto del más largo, así el contenido de abajo
- * no salta al cambiar de pantalla. El recorte horizontal evita que el texto que sale ensanche la página.
- */
-.copies {
-  display: grid;
-  overflow-x: clip;
-}
-
-.copy {
-  grid-area: 1 / 1;
+.face-body {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateX(40px);
-  transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 0.4s;
+  gap: 8px;
+  padding: 16px 8px 6px;
 }
 
-/* Las pantallas anteriores esperan a la izquierda: al avanzar el texto sale hacia ese lado */
-.copy--before {
-  transform: translateX(-40px);
-}
-
-.copy--active {
-  opacity: 1;
-  visibility: visible;
-  transform: none;
-  /* El que entra arranca un poco después de que empieza a irse el anterior */
-  transition: opacity 0.35s ease 0.1s, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.1s, visibility 0s;
-}
-
-.slide-title {
+.face-title {
   font-family: var(--font-head);
   font-weight: 800;
-  font-size: clamp(1.35rem, 2.4vw, 1.75rem);
+  font-size: clamp(1.15rem, 2vw, 1.4rem);
   line-height: 1.2;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.01em;
   margin: 0;
   color: var(--text-primary);
 }
 
-.slide-desc {
-  font-size: 1rem;
-  line-height: 1.6;
+.face-desc {
+  font-size: 14.5px;
+  line-height: 1.55;
   color: var(--text-secondary);
   margin: 0;
 }
 
-.slide-points {
+.face-points {
   list-style: none;
-  align-self: stretch;
-  padding: 12px 0 0;
   margin: 4px 0 0;
+  padding: 12px 0 0;
   border-top: 1px solid var(--border-sport-subtle);
   display: flex;
   flex-direction: column;
@@ -208,92 +139,134 @@
   color: var(--text-primary);
 }
 
-.slide-points li {
+.face-points li {
   display: flex;
   align-items: flex-start;
   gap: 8px;
 }
 
-.slide-points i {
+.face-points i {
   color: var(--grass-deep);
   font-size: 16px;
   line-height: 1.3;
 }
 
-/* ---------- Progreso (no se llama .progress: choca con Bootstrap) ---------- */
-.steps-bar {
-  display: flex;
-  gap: 6px;
-  margin-top: 4px;
+/* Oscurece la cara al girar hacia el costado: da volumen al cubo */
+.face-shade {
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: var(--board-bg-end);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--turn-duration) var(--turn-easing);
 }
 
-.steps-bar-item {
-  flex: 1;
-  height: 4px;
+/* Mientras se arrastra, el cubo sigue al dedo sin demora */
+.scene--dragging .cube,
+.scene--dragging .face-shade {
+  transition: none;
+}
+
+/* ---------- Flechas (solo escritorio) ---------- */
+.arrow {
+  position: absolute;
+  /* A media altura de la captura (16:10) de la cara de frente */
+  top: calc(24px + 14px + var(--face-w) * 0.3125);
+  transform: translateY(-50%);
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--hit);
+  height: var(--hit);
+  padding: 0;
   border-radius: var(--radius-pill);
-  background: var(--border-strong);
-  transition: background-color 0.25s ease;
+  border: 1px solid var(--btn-outline-border);
+  background: var(--btn-outline-bg);
+  color: var(--btn-outline-fg);
+  box-shadow: var(--shadow-button);
+  font-size: 18px;
+  cursor: pointer;
+  transition: transform 0.15s ease;
 }
 
-.steps-bar-item--done {
+/* Junto al cubo, sin salirse del escenario */
+.arrow--prev {
+  left: max(0px, calc(50% - var(--half) - var(--hit) - 32px));
+}
+
+.arrow--next {
+  right: max(0px, calc(50% - var(--half) - var(--hit) - 32px));
+}
+
+.arrow:hover {
+  transform: translateY(-50%) scale(1.06);
+}
+
+.arrow:focus-visible,
+.dot:focus-visible {
+  outline: 2px solid var(--grass-deep);
+  outline-offset: 2px;
+}
+
+/* ---------- Puntos ---------- */
+.dots {
+  display: flex;
+  justify-content: center;
+}
+
+/* El botón mide 44px de alto para el toque; la marca visible es más chica */
+.dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: var(--hit);
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.dot-mark {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.dot:hover .dot-mark {
+  border-color: var(--grass-deep);
+}
+
+.dot--active .dot-mark {
   background: var(--grass-deep);
+  border-color: var(--grass-deep);
 }
 
+/* Con movimiento reducido el cambio de cara es inmediato */
 @media (prefers-reduced-motion: reduce) {
-  .tab,
-  .steps-bar-item {
+  .cube,
+  .face-shade,
+  .arrow,
+  .dot-mark {
     transition: none;
   }
-
-  /* Sin desplazamiento: el texto solo cambia con un fundido corto */
-  .copy,
-  .copy--before {
-    transform: none;
-    transition: opacity 0.15s linear, visibility 0s linear 0.15s;
-  }
-
-  .copy--active {
-    transition: opacity 0.15s linear, visibility 0s;
-  }
 }
 
-/* ---------- Responsive ---------- */
-@media (max-width: 991px) {
+/* ---------- Celular y tablet vertical: sin flechas, se gira arrastrando ---------- */
+@media (max-width: 768px) {
   .stage {
-    grid-template-columns: 1fr;
-    gap: 24px;
-    align-items: start;
-  }
-}
-
-/* En pantallas angostas el texto viaja menos */
-@media (max-width: 991px) and (prefers-reduced-motion: no-preference) {
-  .copy {
-    transform: translateX(24px);
+    --face-w: 100cqw;
   }
 
-  .copy--before {
-    transform: translateX(-24px);
+  .scene {
+    perspective: 1400px;
   }
 
-  .copy--active {
-    transform: none;
-  }
-}
-
-/* Celular: pestañas a todo el ancho arriba y flechas abajo a la derecha del contador */
-@media (max-width: 576px) {
-  :host {
-    --carousel-gap: 16px;
-  }
-
-  .carousel-head {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-  }
-
-  .arrows {
-    justify-content: flex-end;
+  .arrow {
+    display: none;
   }
 }
