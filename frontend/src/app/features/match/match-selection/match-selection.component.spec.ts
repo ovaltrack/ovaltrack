@@ -7,7 +7,11 @@ import { of } from 'rxjs';
 import { MatchSelectComponent } from './match-selection.component';
 import { MatchService } from '../services/match.service';
 import { RosterService } from '../services/roster.service';
+import { LiveCaptureService } from '../services/live-capture.service';
+import { Match, MatchStatus } from '../types/match.types';
 import { buildMatch } from '../../../testing/offline-test-helpers';
+
+const divisionMatch = (id: string, status: MatchStatus): Match => buildMatch({ id, divisionId: 'division-1', status });
 
 describe('MatchSelectionComponent', () => {
   let component: MatchSelectComponent;
@@ -15,11 +19,15 @@ describe('MatchSelectionComponent', () => {
   let divisionPlayersRequests: string[];
   let availablePlayersRequests: string[];
   let savedRosterRequests: string[];
+  let matchEventsRequests: string[];
+  let divisionMatches: Match[];
 
   beforeEach(async () => {
     divisionPlayersRequests = [];
     availablePlayersRequests = [];
     savedRosterRequests = [];
+    matchEventsRequests = [];
+    divisionMatches = [];
     await TestBed.configureTestingModule({
       imports: [MatchSelectComponent],
       providers: [
@@ -30,8 +38,7 @@ describe('MatchSelectionComponent', () => {
           provide: MatchService,
           useValue: {
             getMatches: () => of([]),
-            getAllMatchesByDivisionId: () => of(['match-1', 'match-2', 'match-3']
-              .map(id => buildMatch({ id, divisionId: 'division-1', status: 'finished' }))),
+            getAllMatchesByDivisionId: () => of(divisionMatches),
             createMatch: () => of({}),
             deleteMatch: () => of(undefined),
           },
@@ -53,6 +60,15 @@ describe('MatchSelectionComponent', () => {
             },
           },
         },
+        {
+          provide: LiveCaptureService,
+          useValue: {
+            hydrateMatchEvents: (matchId: string) => {
+              matchEventsRequests.push(matchId);
+              return of([]);
+            },
+          },
+        },
       ],
     })
       .compileComponents();
@@ -67,11 +83,39 @@ describe('MatchSelectionComponent', () => {
   });
 
   it('should request the division players once, not once per match, when loading the division matches', () => {
+    divisionMatches = [divisionMatch('ready-1', 'not_started'), divisionMatch('ready-2', 'not_started')];
+
     component.loadMatchesForDivision('division-1');
 
     expect(divisionPlayersRequests).toEqual(['division-1']);
     expect(availablePlayersRequests).toEqual([]);
-    expect(savedRosterRequests).toEqual(['match-1', 'match-2', 'match-3']);
+  });
+
+  it('should only cache roster and events of the matches that can be captured offline', () => {
+    divisionMatches = [
+      divisionMatch('new', 'empty_roster'),
+      divisionMatch('ready', 'not_started'),
+      divisionMatch('live', 'in_progress'),
+      divisionMatch('break', 'halftime'),
+      divisionMatch('played', 'finished'),
+      divisionMatch('cancelled', 'cancelled'),
+    ];
+
+    component.loadMatchesForDivision('division-1');
+
+    expect(savedRosterRequests).toEqual(['ready', 'live', 'break']);
+    // Un partido sin iniciar todavía no tiene eventos.
+    expect(matchEventsRequests).toEqual(['live', 'break']);
+  });
+
+  it('should not request anything to cache when the division has no match to capture', () => {
+    divisionMatches = [divisionMatch('new', 'empty_roster'), divisionMatch('played', 'finished')];
+
+    component.loadMatchesForDivision('division-1');
+
+    expect(divisionPlayersRequests).toEqual([]);
+    expect(savedRosterRequests).toEqual([]);
+    expect(matchEventsRequests).toEqual([]);
   });
 
   describe('match without roster (empty_roster)', () => {
