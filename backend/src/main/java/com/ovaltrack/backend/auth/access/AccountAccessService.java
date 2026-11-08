@@ -25,12 +25,20 @@ public class AccountAccessService {
     private final UserRepository userRepository;
 
     public AccessStatus check(UUID userId) {
+        return decide(userId).status();
+    }
+
+    /**
+     * Estado de acceso y rol actual de la cuenta. El filtro JWT usa este rol en vez del
+     * del token, así un cambio de rol (p. ej. cambio de administrador) rige en el próximo request.
+     */
+    public AccessDecision decide(UUID userId) {
         if (userId == null) {
-            return AccessStatus.ACCOUNT_INACTIVE;
+            return new AccessDecision(AccessStatus.ACCOUNT_INACTIVE, null);
         }
         return userRepository.findAccessById(userId)
-                .map(AccountAccessService::evaluate)
-                .orElse(AccessStatus.ACCOUNT_INACTIVE);
+                .map(view -> new AccessDecision(evaluate(view), view.getRole()))
+                .orElse(new AccessDecision(AccessStatus.ACCOUNT_INACTIVE, null));
     }
 
     private static AccessStatus evaluate(UserAccessView view) {

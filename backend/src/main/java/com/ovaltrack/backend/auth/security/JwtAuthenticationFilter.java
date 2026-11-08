@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
+import com.ovaltrack.backend.auth.access.AccessDecision;
 import com.ovaltrack.backend.auth.access.AccessStatus;
 import com.ovaltrack.backend.auth.access.AccountAccessService;
 
@@ -52,15 +53,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             var claims = jwtService.extractClaims(token);
             String email = claims.getSubject();
-            String rol = claims.get("role", String.class);
 
             // Token válido pero cuenta o club desactivados después de emitirlo: se corta acá
-            access = accountAccessService.check(parseUserId(claims.get("userId", String.class)));
+            AccessDecision decision = accountAccessService.decide(parseUserId(claims.get("userId", String.class)));
+            access = decision.status();
 
-            if (access == AccessStatus.ALLOWED && email != null
+            if (decision.allowed() && email != null
                     && SecurityContextHolder.getContext().getAuthentication() == null) {
-                // Se registra la autoridad con prefijo ROLE_ (convención de Spring Security)
-                var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + rol));
+                // Rol vigente en la BD (no el del token), con prefijo ROLE_ (convención de Spring Security)
+                var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + decision.role().name()));
 
                 var authToken = new UsernamePasswordAuthenticationToken(email, null, authorities);
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
