@@ -1,0 +1,57 @@
+<section class="adm-card" aria-labelledby="adm-accounts-title">
+  <div class="adm-card-header">
+    <div>
+      <h2 id="adm-accounts-title">Cuentas</h2>
+      <p>Todas las cuentas de la plataforma. Desactivá las activas o aceptá las inactivas.</p>
+    </div>
+  </div>
+  <app-admin-table-toolbar
+    filterLabel="Filtrar cuentas"
+    searchPlaceholder="Buscar por nombre o email"
+    searchLabel="Buscar cuentas"
+    [options]="filterOptions"
+    [active]="store.accountFilter()"
+    [counts]="store.accountCounts()"
+    (filterChange)="store.setAccountFilter($event)"
+    (searchChange)="store.accountSearch.set($event)"
+  />
+
+  <div class="adm-table" role="table" aria-label="Cuentas">
+    <div class="adm-row adm-row-head" role="row">
+      <span role="columnheader">Usuario</span>
+      <span role="columnheader">Rol</span>
+      <span role="columnheader">Club</span>
+      <span role="columnheader">Estado</span>
+      <span role="columnheader" class="adm-col-actions">Acción</span>
+    </div>
+    @if (store.loaded()) {
+      @for (a of store.filteredAccounts(); track a.user.id) {
+        <div class="adm-row" role="row">
+          <div role="cell" appAdminPerson [name]="userName(a.user)" [detail]="a.user.email" [userRole]="a.user.role" [monoDetail]="true"></div>
+          <span role="cell" data-label="Rol"><i class="adm-badge" [class]="'adm-badge ' + roleClass(a.user.role)">{{ roleLabel(a.user.role) }}</i></span>
+          <span role="cell" data-label="Club">{{ a.club.name }}</span>
+          <span role="cell" data-label="Estado">
+            <i class="status-badge" [class.status-active]="a.user.active" [class.status-inactive]="!a.user.active">
+              <span class="dot"></span>{{ a.user.active ? 'Activa' : 'Inactiva' }}
+            </i>
+          </span>
+          <span role="cell" class="adm-actions">
+            @if (a.user.active) {
+              <button type="button" class="btn adm-btn-danger" [disabled]="store.busy()" (click)="store.setAccountActive(a, false)">
+                <i class="bi bi-slash-circle" aria-hidden="true"></i> Desactivar
+              </button>
+            } @else {
+              <button type="button" class="btn adm-btn-approve" [disabled]="store.busy()" (click)="store.setAccountActive(a, true)">
+                <i class="bi bi-check-lg" aria-hidden="true"></i> Aceptar
+              </button>
+            }
+          </span>
+        </div>
+      } @empty {
+        <app-admin-table-placeholder icon="bi-person-x" message="No hay cuentas que coincidan con el filtro." />
+      }
+    } @else {
+      <app-admin-table-placeholder [loading]="true" />
+    }
+  </div>
+</section>

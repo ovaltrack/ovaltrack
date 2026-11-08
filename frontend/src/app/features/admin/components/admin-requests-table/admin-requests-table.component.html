@@ -1,0 +1,43 @@
+<section class="adm-card" aria-labelledby="adm-requests-title">
+  <div class="adm-card-header">
+    <div>
+      <h2 id="adm-requests-title">Solicitudes de registro</h2>
+      <p>Cuentas a la espera de activación.</p>
+    </div>
+    <span class="adm-badge" [class.adm-badge-warn]="store.requests().length > 0">
+      {{ store.requests().length }} {{ store.requests().length === 1 ? 'pendiente' : 'pendientes' }}
+    </span>
+  </div>
+
+  <div class="adm-table" role="table" aria-label="Solicitudes de registro">
+    <div class="adm-row adm-row-head" role="row">
+      <span role="columnheader">Solicitante</span>
+      <span role="columnheader">Club solicitado</span>
+      <span role="columnheader">Fecha</span>
+      <span role="columnheader">Rol</span>
+      <span role="columnheader" class="adm-col-actions">Acciones</span>
+    </div>
+    @if (store.loaded()) {
+      @for (r of store.requests(); track r.user.id) {
+        <div class="adm-row" role="row">
+          <div role="cell" appAdminPerson [name]="userName(r.user)" [detail]="r.user.email" [userRole]="r.user.role" [monoDetail]="true"></div>
+          <span role="cell" data-label="Club">{{ r.club.name }}</span>
+          <span role="cell" data-label="Fecha" class="adm-mono">{{ formatDate(r.user.createdAt) }}</span>
+          <span role="cell" data-label="Rol"><i class="adm-badge" [class]="'adm-badge ' + roleClass(r.user.role)">{{ roleLabel(r.user.role) }}</i></span>
+          <span role="cell" class="adm-actions">
+            <button type="button" class="btn adm-btn-danger" [disabled]="store.busy()" (click)="store.rejectRequest(r.user)">
+              <i class="bi bi-x-lg" aria-hidden="true"></i> Rechazar
+            </button>
+            <button type="button" class="btn adm-btn-approve" [disabled]="store.busy()" (click)="store.approveRequest(r)">
+              <i class="bi bi-check-lg" aria-hidden="true"></i> Aprobar
+            </button>
+          </span>
+        </div>
+      } @empty {
+        <app-admin-table-placeholder icon="bi-inbox" message="No hay solicitudes pendientes." />
+      }
+    } @else {
+      <app-admin-table-placeholder [loading]="true" />
+    }
+  </div>
+</section>

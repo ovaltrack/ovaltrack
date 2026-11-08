@@ -1,0 +1,58 @@
+<section class="adm-card" aria-labelledby="adm-clubs-title">
+  <div class="adm-card-header">
+    <div>
+      <h2 id="adm-clubs-title">Clubes</h2>
+      <p>Clubes activos y rechazados, con su administrador. Suspender o reactivar un club llega en la próxima etapa.</p>
+    </div>
+  </div>
+  <app-admin-table-toolbar
+    filterLabel="Filtrar clubes"
+    searchPlaceholder="Buscar club o ciudad"
+    searchLabel="Buscar clubes"
+    [options]="filterOptions"
+    [active]="store.clubFilter()"
+    [counts]="store.clubCounts()"
+    (filterChange)="store.setClubFilter($event)"
+    (searchChange)="store.clubSearch.set($event)"
+  />
+
+  <div class="adm-table" role="table" aria-label="Clubes">
+    <div class="adm-row adm-row-head" role="row">
+      <span role="columnheader">Club</span>
+      <span role="columnheader">Administrador</span>
+      <span role="columnheader">Estado</span>
+    </div>
+    @if (store.loaded()) {
+      @for (c of store.filteredClubs(); track c.id) {
+        <div class="adm-row" role="row">
+          <div role="cell" appAdminPerson [kind]="'logo'" [name]="c.name" [detail]="c.city"></div>
+          @if (store.adminById(c.adminUserId); as admin) {
+            <div
+              role="cell"
+              data-label="Administrador"
+              appAdminPerson
+              [userRole]="'ADMIN_CLUB'"
+              [name]="userName(admin.user)"
+              [detail]="admin.user.email"
+              [small]="true"
+              [monoDetail]="true"
+            ></div>
+          } @else {
+            <div role="cell" data-label="Administrador" class="adm-person">
+              <span class="adm-muted">Sin administrador</span>
+            </div>
+          }
+          <span role="cell" data-label="Estado">
+            <i class="status-badge" [class.status-active]="c.status === 'ACTIVE'" [class.adm-status-rejected]="c.status !== 'ACTIVE'">
+              <span class="dot"></span>{{ c.status === 'ACTIVE' ? 'Activo' : 'Rechazado' }}
+            </i>
+          </span>
+        </div>
+      } @empty {
+        <app-admin-table-placeholder icon="bi-buildings" message="No hay clubes que coincidan con el filtro." />
+      }
+    } @else {
+      <app-admin-table-placeholder [loading]="true" />
+    }
+  </div>
+</section>
