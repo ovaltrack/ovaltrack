@@ -1,4 +1,14 @@
 :host {
   display: block;
-  --adm-cols: minmax(0, 2fr) minmax(0, 2.4fr) minmax(0, 1fr);
+  --adm-cols: minmax(0, 2fr) minmax(0, 2.4fr) minmax(0, 1fr) 156px;
+}
+
+/* Inactivo (REJECTED): estado reversible con «Reactivar», en ámbar */
+.adm-status-off {
+  background: var(--warning-tint);
+  color: var(--warning);
+}
+
+.adm-status-off .dot {
+  background: var(--warning);
 }

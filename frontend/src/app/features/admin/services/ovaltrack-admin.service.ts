@@ -50,9 +50,14 @@ export class OvalTrackAdminService {
         return this.http.post<MessageResponse>(`${this.apiUrl}/clubs/${clubId}/approve`, null, { params });
     }
 
-    /** POST /clubs/{clubId}/reject (comentario opcional) */
+    /** POST /clubs/{clubId}/reject: rechaza una solicitud o desactiva un club activo (queda REJECTED). */
     rejectClub(clubId: string): Observable<MessageResponse> {
         return this.http.post<MessageResponse>(`${this.apiUrl}/clubs/${clubId}/reject`, null);
+    }
+
+    /** POST /clubs/{clubId}/reactivate: vuelve a ACTIVE un club REJECTED (su administrador debe estar activo). */
+    reactivateClub(clubId: string): Observable<MessageResponse> {
+        return this.http.post<MessageResponse>(`${this.apiUrl}/clubs/${clubId}/reactivate`, null);
     }
 
     /* ---------- Cuentas ---------- */

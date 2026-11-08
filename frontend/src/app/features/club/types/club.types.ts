@@ -1,4 +1,5 @@
-export type ClubStatus = 'ACTIVE' | 'INACTIVE' | 'PENDING' | string;
+/** `REJECTED` cubre la solicitud rechazada y el club desactivado; ambos se pueden reactivar. */
+export type ClubStatus = 'ACTIVE' | 'PENDING' | 'REJECTED';
 
 export interface Club {
   id: string;
