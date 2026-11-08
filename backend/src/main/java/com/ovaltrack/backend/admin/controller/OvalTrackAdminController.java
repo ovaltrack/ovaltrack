@@ -93,6 +93,12 @@ public class OvalTrackAdminController {
         return ResponseEntity.ok(new MessageResponse("El club fue rechazado."));
     }
 
+    @PostMapping("/clubs/{clubId}/reactivate")
+    public ResponseEntity<MessageResponse> reactivateClub(@PathVariable UUID clubId) {
+        adminService.reactivateClub(clubId);
+        return ResponseEntity.ok(new MessageResponse("El club fue reactivado."));
+    }
+
     /* ---------- Cuentas ---------- */
 
     @PostMapping("/users/{userId}/approve")

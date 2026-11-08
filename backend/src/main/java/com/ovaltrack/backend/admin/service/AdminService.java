@@ -57,6 +57,24 @@ public class AdminService {
         clubService.save(club);
     }
 
+    /**
+     * Vuelve a ACTIVE un club REJECTED (solicitud rechazada o club desactivado).
+     * Su administrador tiene que estar activo, igual que al aprobarlo.
+     */
+    @Transactional
+    public void reactivateClub(UUID clubId) {
+        Club club = clubService.findClubEntityById(clubId);
+        if (club == null)
+            throw new BusinessException("El club no existe");
+        if (club.getStatus() != ClubStatus.REJECTED)
+            throw new BusinessException("Solo se puede reactivar un club inactivo");
+        User admin = club.getAdminUser();
+        if (admin == null || admin.isDeactivated())
+            throw new BusinessException("El administrador del club debe estar activo para reactivarlo");
+        club.setStatus(ClubStatus.ACTIVE);
+        clubService.save(club);
+    }
+
     /* ---------- Users ---------- */
     @Transactional
     public void approveAccount(UUID userId) {
