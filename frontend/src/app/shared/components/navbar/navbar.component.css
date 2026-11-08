@@ -1,10 +1,17 @@
+/*
+ * El sticky va en el host: un elemento sticky solo se pega dentro de su contenedor, y el host mide lo mismo
+ * que la barra, así que en el wrapper se iba con el scroll. El contenedor del host es toda la página.
+ */
 :host {
   display: block;
-}
-
-.navbar-wrapper {
   position: sticky;
   top: 0;
+  z-index: 1030;
+}
+
+/* El z-index interno mantiene el menú de usuario por encima de la barra inferior del celular (1029) */
+.navbar-wrapper {
+  position: relative;
   z-index: 1030;
   width: 100%;
 }
