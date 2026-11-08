@@ -1,9 +1,9 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, HostListener, OnInit, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Observable, finalize, forkJoin } from 'rxjs';
 import { OvalTrackAdminService } from '../../services/ovaltrack-admin.service';
 import { UserRole } from 'src/app/features/auth/types/auth.types';
-import { Club, ClubStatus } from 'src/app/features/club/types/club.types';
+import { Club } from 'src/app/features/club/types/club.types';
 import { UserResponseDTO } from 'src/app/features/user/types/user.types';
 import { UserClubRegistration } from '../../types/ovaltrack-admin.types';
 import { ToastService } from 'src/app/core/services/toast.service';
@@ -12,6 +12,15 @@ import { NgTemplateOutlet } from '@angular/common';
 
 export type AccountFilter = 'all' | 'active' | 'inactive';
 export type ClubFilter = 'all' | 'active' | 'rejected';
+
+/** Confirmación pendiente de una acción destructiva (rechazar, desactivar). */
+interface ConfirmRequest {
+  title: string;
+  message: string;
+  detail?: string;
+  confirmLabel: string;
+  run: () => void;
+}
 
 interface FilterOption<T extends string> {
   value: T;
@@ -70,6 +79,9 @@ export class OvaltrackAdminComponent implements OnInit {
   /** Admin elegido para cada club pendiente (clubId -> adminUserId). */
   readonly selectedAdmin = signal<Record<string, string | null>>({});
 
+  readonly confirmRequest = signal<ConfirmRequest | null>(null);
+  private readonly confirmCancelBtn = viewChild<ElementRef<HTMLButtonElement>>('confirmCancel');
+
   readonly changingClubId = signal<string | null>(null);
   readonly newAdminId = signal<string | null>(null);
 
@@ -122,6 +134,11 @@ export class OvaltrackAdminComponent implements OnInit {
   });
 
   readonly changingClub = computed(() => this.visibleClubs().find((c) => c.id === this.changingClubId()) ?? null);
+
+  constructor() {
+    // Al abrir la confirmación el foco va a "Cancelar": Enter por error no ejecuta la acción.
+    effect(() => this.confirmCancelBtn()?.nativeElement.focus());
+  }
 
   ngOnInit(): void {
     this.loadAll();
@@ -217,12 +234,15 @@ export class OvaltrackAdminComponent implements OnInit {
   }
 
   rejectRequest(user: UserResponseDTO): void {
-    this.runAction(
-      user.id,
-      this.adminService.rejectAccount(user.id),
-      `Solicitud de ${this.userName(user)} rechazada.`,
-      'No se pudo rechazar la cuenta.',
-    );
+    const name = this.userName(user);
+    this.askConfirm({
+      title: 'Rechazar solicitud',
+      message: `¿Rechazar la solicitud de ${name}?`,
+      detail: 'La cuenta queda rechazada y sin rol; no podrá iniciar sesión.',
+      confirmLabel: 'Rechazar',
+      run: () =>
+        this.runAction(user.id, this.adminService.rejectAccount(user.id), `Solicitud de ${name} rechazada.`, 'No se pudo rechazar la cuenta.'),
+    });
   }
 
   chooseAdminForPending(clubId: string, event: Event): void {
@@ -245,21 +265,51 @@ export class OvaltrackAdminComponent implements OnInit {
   }
 
   rejectClub(club: Club): void {
-    this.runAction(club.id, this.adminService.rejectClub(club.id), `${club.name} fue rechazado.`, 'No se pudo rechazar el club.');
+    this.askConfirm({
+      title: 'Rechazar club',
+      message: `¿Rechazar ${club.name}?`,
+      detail: 'El club pasa a la lista de rechazados y no admite registros nuevos.',
+      confirmLabel: 'Rechazar club',
+      run: () =>
+        this.runAction(club.id, this.adminService.rejectClub(club.id), `${club.name} fue rechazado.`, 'No se pudo rechazar el club.'),
+    });
   }
 
   setAccountActive(account: UserClubRegistration, active: boolean): void {
-    const name = this.userName(account.user);
-    this.runAction(
-      account.user.id,
-      active ? this.adminService.activateAccount(account.user.id) : this.adminService.deactivateAccount(account.user.id),
-      active ? `Cuenta de ${name} activada.` : `Cuenta de ${name} desactivada.`,
-      active ? 'No se pudo activar la cuenta.' : 'No se pudo desactivar la cuenta.',
-    );
+    const { user } = account;
+    const name = this.userName(user);
+    if (active) {
+      this.runAction(user.id, this.adminService.activateAccount(user.id), `Cuenta de ${name} activada.`, 'No se pudo activar la cuenta.');
+      return;
+    }
+    const managedClub = this.allClubs().find((c) => c.adminUserId === user.id);
+    this.askConfirm({
+      title: 'Desactivar cuenta',
+      message: `¿Desactivar la cuenta de ${name}?`,
+      detail: managedClub
+        ? `Es el administrador de ${managedClub.name}: el club sigue activo, pero queda sin un administrador que pueda entrar.`
+        : 'No podrá iniciar sesión hasta que la vuelvas a aceptar.',
+      confirmLabel: 'Desactivar',
+      run: () =>
+        this.runAction(user.id, this.adminService.deactivateAccount(user.id), `Cuenta de ${name} desactivada.`, 'No se pudo desactivar la cuenta.'),
+    });
   }
 
-  setClubStatus(club: Club, status: ClubStatus): void {
-    this.updateClubs((list) => list.map((c) => (c.id === club.id ? { ...c, status } : c)));
+  /* ---------- Confirmación ---------- */
+  acceptConfirm(): void {
+    const request = this.confirmRequest();
+    this.confirmRequest.set(null);
+    request?.run();
+  }
+
+  cancelConfirm(): void {
+    this.confirmRequest.set(null);
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.confirmRequest()) this.cancelConfirm();
+    else if (this.changingClubId()) this.closeChangeAdmin();
   }
 
   openChangeAdmin(club: Club): void {
@@ -316,6 +366,11 @@ export class OvaltrackAdminComponent implements OnInit {
   }
 
   /* ---------- Internos ---------- */
+  private askConfirm(request: ConfirmRequest): void {
+    if (this.busyId()) return;
+    this.confirmRequest.set(request);
+  }
+
   /** Ejecuta una acción de una fila, avisa el resultado con un toast y recarga el panel. */
   private runAction(rowId: string, request$: Observable<MessageResponse>, success: string, fallbackError: string): void {
     if (this.busyId()) return;

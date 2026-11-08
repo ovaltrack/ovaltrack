@@ -220,7 +220,7 @@ p {
 }
 
 .cols-clubs {
-  grid-template-columns: minmax(0, 2fr) minmax(0, 2.4fr) minmax(0, 1fr) 156px;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 2.4fr) minmax(0, 1fr);
 }
 
 .adm-person {
@@ -519,6 +519,41 @@ p {
   padding: 16px 28px;
   background: var(--surface-toolbar);
   border-top: 2px solid var(--border-sport-subtle);
+}
+
+/* ---------- Confirmación ---------- */
+.adm-confirm {
+  max-width: 460px;
+}
+
+.adm-confirm-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px 28px;
+}
+
+.adm-confirm-message {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.adm-confirm-detail {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 640px) {
+  .adm-confirm-body,
+  .adm-dialog-footer {
+    padding-inline: 16px;
+  }
+
+  .adm-dialog-footer .btn {
+    flex: 1;
+    height: 48px;
+  }
 }
 
 /* ---------- Responsive ---------- */
