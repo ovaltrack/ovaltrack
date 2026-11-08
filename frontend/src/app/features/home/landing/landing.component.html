@@ -1,116 +1,198 @@
-<header class="layout-container py-5 text-center mb-md-4">
-  <div
-    class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill badge-tech mb-4"
+<main class="landing">
+  <!-- Hero -->
+  <section class="hero layout-container" aria-labelledby="landing-title">
+    <div class="hero-copy">
+      <span class="badge-tech">
+        <span class="status-dot" aria-hidden="true"></span>
+        Gestión y análisis de rugby
+      </span>
+
+      <h1 id="landing-title" class="hero-title">
+        Del vestuario a las estadísticas,
+        <span class="hero-accent">todo tu club en un solo lugar</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        OvalTrack acompaña a clubes, entrenadores y analistas en todo el ciclo del partido:
+        organizar el plantel, convocar, registrar cada jugada en vivo y convertirla en datos para decidir mejor.
+      </p>
+
+      <div class="hero-actions">
+        <a routerLink="/auth/register" class="btn btn-invite btn-lg-hit">
+          Crear cuenta
+          <i class="bi bi-arrow-right" aria-hidden="true"></i>
+        </a>
+        <button type="button" class="btn btn-outline btn-lg-hit" (click)="showFeatures()" aria-controls="features">
+          Ver funcionalidades
+          <i class="bi bi-chevron-down" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <ul class="hero-highlights" aria-label="Destacados">
+        @for (highlight of highlights; track highlight) {
+          <li><i class="bi bi-check-circle-fill" aria-hidden="true"></i>{{ highlight }}</li>
+        }
+      </ul>
+    </div>
+
+    <!-- Capturas reales: estadísticas detrás y carga en vivo adelante -->
+    <div class="hero-shots" aria-hidden="true">
+      <img
+        class="shot shot-back"
+        src="assets/landing/statistics-800.webp"
+        srcset="assets/landing/statistics-800.webp 800w, assets/landing/statistics-1600.webp 1600w"
+        sizes="(max-width: 991px) 80vw, 560px"
+        width="1600"
+        height="1000"
+        alt=""
+        decoding="async"
+      />
+      <img
+        class="shot shot-front"
+        src="assets/landing/live-capture-800.webp"
+        srcset="assets/landing/live-capture-800.webp 800w, assets/landing/live-capture-1600.webp 1600w"
+        sizes="(max-width: 991px) 80vw, 560px"
+        width="1600"
+        height="1000"
+        alt=""
+        fetchpriority="high"
+        decoding="async"
+      />
+    </div>
+  </section>
+
+  <!-- Cómo funciona -->
+  <section class="steps-section layout-container" aria-labelledby="steps-title">
+    <header class="section-head">
+      <span class="label-mono">Cómo funciona</span>
+      <h2 id="steps-title" class="section-title">Un flujo de trabajo para todo el partido</h2>
+    </header>
+
+    <ol class="steps">
+      @for (step of steps; track step.title; let i = $index) {
+        <li class="step">
+          <span class="step-number">{{ i + 1 }}</span>
+          <h3 class="step-title">{{ step.title }}</h3>
+          <p class="step-desc">{{ step.description }}</p>
+        </li>
+      }
+    </ol>
+  </section>
+
+  <!-- Funcionalidades -->
+  <section
+    id="features"
+    #featuresSection
+    class="features-section layout-container"
+    tabindex="-1"
+    aria-labelledby="features-title"
   >
-    <span class="status-dot"></span>
-    <span>Plataforma de gestión deportiva & analítica</span>
-  </div>
+    <header class="section-head">
+      <span class="label-mono">Funcionalidades</span>
+      <h2 id="features-title" class="section-title">Todo lo que tu staff necesita, sin planillas sueltas</h2>
+      <p class="section-subtitle">
+        Cada módulo cubre una etapa del ciclo y comparte los mismos datos, así nada se carga dos veces.
+      </p>
+    </header>
 
-  <h1 class="landing-title display-4 fw-bold mb-3">
-    El control total de tu club <br />
-    <span class="text-accent-highlight">en un solo lugar</span>
-  </h1>
-
-  <p class="landing-subtitle lead mx-auto mb-4" style="max-width: 680px">
-    Administra divisiones, centraliza rosters de jugadores y registra eventos
-    en vivo minuto a minuto con métricas de alto rendimiento.
-  </p>
-
-  <div class="landing-actions">
-    <a routerLink="/auth/register" class="btn btn-invite px-4">
-      Crear cuenta
-    </a>
-    <a href="#features" class="btn btn-outline px-4">
-      Ver funcionalidades
-    </a>
-  </div>
-</header>
-
-<section id="features" class="layout-container pb-5">
-  <div class="row g-4">
-    <div class="col-md-4">
-      <div class="card-dark card-feature p-4 h-100 d-flex flex-column">
-        <div
-          class="card-icon-wrapper d-flex align-items-center justify-content-center mb-3"
-        >
-          <svg
-            width="20"
-            height="20"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-          >
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-            <circle cx="9" cy="7" r="4"></circle>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-          </svg>
-        </div>
-        <h5 class="feature-title fw-bold mb-2">Gestión de Planteles</h5>
-        <p class="feature-desc small mb-0">
-          Control de roles (staff, entrenadores, analistas y jugadores),
-          estados de ficha médica y asignación dinámica por divisiones.
-        </p>
-      </div>
+    <div class="showcase">
+      @for (item of showcase; track item.id; let odd = $odd) {
+        <article class="showcase-row" [class.showcase-row--reverse]="odd">
+          <figure class="showcase-media">
+            <img
+              class="shot"
+              [src]="item.image + '-800.webp'"
+              [attr.srcset]="item.image + '-800.webp 800w, ' + item.image + '-1600.webp 1600w'"
+              sizes="(max-width: 991px) 92vw, 680px"
+              width="1600"
+              height="1000"
+              [alt]="item.alt"
+              loading="lazy"
+              decoding="async"
+            />
+          </figure>
+          <div class="showcase-copy">
+            <span class="label-mono">{{ item.kicker }}</span>
+            <h3 class="showcase-title">{{ item.title }}</h3>
+            <p class="showcase-desc">{{ item.description }}</p>
+            <ul class="feature-points showcase-points">
+              @for (point of item.points; track point) {
+                <li><i class="bi bi-check2" aria-hidden="true"></i>{{ point }}</li>
+              }
+            </ul>
+          </div>
+        </article>
+      }
     </div>
 
-    <div class="col-md-4">
-      <div class="card-dark card-feature p-4 h-100 d-flex flex-column">
-        <div
-          class="card-icon-wrapper d-flex align-items-center justify-content-center mb-3"
-        >
-          <svg
-            width="20"
-            height="20"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-          >
-            <polygon
-              points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"
-            ></polygon>
-          </svg>
-        </div>
-        <h5 class="feature-title fw-bold mb-2">Carga en Vivo</h5>
-        <p class="feature-desc small mb-0">
-          Tagging en tiempo real durante los partidos: puntos, infracciones,
-          scrums, tackles y lineouts al alcance de un tap.
+    <div class="features-grid">
+      @for (feature of features; track feature.title) {
+        <article class="feature-card">
+          <span class="feature-icon"><i class="bi" [class]="feature.icon" aria-hidden="true"></i></span>
+          <h3 class="feature-title">{{ feature.title }}</h3>
+          <p class="feature-desc">{{ feature.description }}</p>
+          <ul class="feature-points">
+            @for (point of feature.points; track point) {
+              <li><i class="bi bi-check2" aria-hidden="true"></i>{{ point }}</li>
+            }
+          </ul>
+        </article>
+      }
+    </div>
+  </section>
+
+  <!-- Offline-first -->
+  <section class="offline layout-container" aria-labelledby="offline-title">
+    <div class="offline-board">
+      <div class="offline-copy">
+        <span class="offline-kicker"><i class="bi bi-wifi-off" aria-hidden="true"></i> Offline-first</span>
+        <h2 id="offline-title" class="offline-title">Sin señal en la cancha, sin datos perdidos</h2>
+        <p class="offline-text">
+          Cada evento se guarda primero en el dispositivo y se sincroniza solo cuando vuelve la conexión.
+          Se puede instalar como app en el celular o la tablet.
         </p>
       </div>
+      <ul class="offline-facts">
+        <li><span class="fact-value">0</span><span class="fact-label">eventos perdidos como objetivo de diseño</span></li>
+        <li><span class="fact-value">PWA</span><span class="fact-label">instalable en celular y tablet</span></li>
+      </ul>
     </div>
+  </section>
 
-    <div class="col-md-4">
-      <div class="card-dark card-feature p-4 h-100 d-flex flex-column">
-        <div
-          class="card-icon-wrapper d-flex align-items-center justify-content-center mb-3"
-        >
-          <svg
-            width="20"
-            height="20"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-          >
-            <path d="M18 20V10"></path>
-            <path d="M12 20V4"></path>
-            <path d="M6 20v-6"></path>
-          </svg>
-        </div>
-        <h5 class="feature-title fw-bold mb-2">Estadísticas Claras</h5>
-        <p class="feature-desc small mb-0">
-          Métricas consolidadas post-partido para toma de decisiones tácticas
-          del cuerpo técnico y seguimiento individual de rendimiento.
-        </p>
-      </div>
+  <!-- Para quién -->
+  <section class="audience-section layout-container" aria-labelledby="audience-title">
+    <header class="section-head">
+      <span class="label-mono">Para quién</span>
+      <h2 id="audience-title" class="section-title">Cada rol ve lo que necesita</h2>
+    </header>
+
+    <div class="audience-grid">
+      @for (audience of audiences; track audience.role) {
+        <article class="audience-card">
+          <i class="bi audience-icon" [class]="audience.icon" aria-hidden="true"></i>
+          <div>
+            <h3 class="audience-role">{{ audience.role }}</h3>
+            <p class="audience-desc">{{ audience.description }}</p>
+          </div>
+        </article>
+      }
     </div>
-  </div>
-</section>
+  </section>
 
-<footer class="landing-footer py-4 mt-5 text-center">
-  <div class="container">
-    <p class="mb-0">OvalTrack &copy; Todos los derechos reservados.</p>
+  <!-- Cierre -->
+  <section class="closing layout-container" aria-labelledby="closing-title">
+    <h2 id="closing-title" class="closing-title">¿Listo para llevar tu club al siguiente nivel?</h2>
+    <p class="closing-text">Registrá tu club y empezá a organizar tu primera división.</p>
+    <div class="closing-actions">
+      <a routerLink="/auth/register" class="btn btn-outline btn-lg-hit">Registrar mi club</a>
+      <a routerLink="/auth/login" class="btn btn-link-plain btn-lg-hit">Ya tengo cuenta</a>
+    </div>
+  </section>
+</main>
+
+<footer class="landing-footer">
+  <div class="layout-container footer-inner">
+    <span class="footer-brand">OvalTrack</span>
+    <span>&copy; {{ year }} OvalTrack. Todos los derechos reservados.</span>
   </div>
 </footer>
