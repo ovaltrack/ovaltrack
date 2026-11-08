@@ -1,0 +1,299 @@
+:host {
+  display: block;
+  --carousel-gap: 32px;
+}
+
+/* ---------- Cabecera: pestañas + flechas ---------- */
+.carousel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.tabs {
+  display: flex;
+  gap: 6px;
+  padding: 5px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-toolbar);
+  border: 1px solid var(--border-sport-subtle);
+  overflow-x: auto;
+  scrollbar-width: none;
+  min-width: 0;
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  flex: 0 0 auto;
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.tab:hover {
+  color: var(--text-primary);
+  background: var(--surface-hover);
+}
+
+.tab[aria-selected='true'] {
+  background: var(--grass-tint-strong);
+  border-color: var(--grass-border);
+  color: var(--text-primary);
+}
+
+.tab:focus-visible,
+.arrow:focus-visible {
+  outline: 2px solid var(--grass-deep);
+  outline-offset: 2px;
+}
+
+.arrows {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.counter {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text-muted);
+  min-width: 44px;
+  text-align: right;
+}
+
+.arrow {
+  width: var(--hit);
+  height: var(--hit);
+  padding: 0;
+  border-radius: var(--radius-pill);
+  font-size: 18px;
+}
+
+.arrow:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ---------- Pista ---------- */
+/*
+ * Una pantalla por vista con encastre. El overflow recorta lo que sale de la caja: el padding (compensado
+ * con margen negativo) deja lugar a la sombra, y la máscara desvanece los costados.
+ */
+.track {
+  display: flex;
+  gap: var(--carousel-gap);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  padding: 24px var(--layout-pad) 56px;
+  margin: -24px calc(-1 * var(--layout-pad)) -32px;
+  scroll-padding-inline: var(--layout-pad);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--layout-pad), #000 calc(100% - var(--layout-pad)), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 var(--layout-pad), #000 calc(100% - var(--layout-pad)), transparent);
+}
+
+.track::-webkit-scrollbar {
+  display: none;
+}
+
+/* ---------- Escenario: imágenes a la izquierda, texto a la derecha ---------- */
+.stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 40px;
+}
+
+.stage-media {
+  min-width: 0;
+}
+
+.slide {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  min-width: 0;
+  margin: 0;
+}
+
+.slide-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--border-sport);
+  box-shadow: var(--shadow-elevation);
+  background: var(--surface);
+}
+
+/*
+ * Textos apilados en una sola celda: la celda toma el alto del más largo, así el contenido de abajo
+ * no salta al cambiar de pantalla. El recorte horizontal evita que el texto que sale ensanche la página.
+ */
+.copies {
+  display: grid;
+  overflow-x: clip;
+}
+
+.copy {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(40px);
+  transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 0.4s;
+}
+
+/* Las pantallas anteriores esperan a la izquierda: al avanzar el texto sale hacia ese lado */
+.copy--before {
+  transform: translateX(-40px);
+}
+
+.copy--active {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  /* El que entra arranca un poco después de que empieza a irse el anterior */
+  transition: opacity 0.35s ease 0.1s, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.1s, visibility 0s;
+}
+
+.slide-title {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: clamp(1.35rem, 2.4vw, 1.75rem);
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.slide-desc {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.slide-points {
+  list-style: none;
+  align-self: stretch;
+  padding: 12px 0 0;
+  margin: 4px 0 0;
+  border-top: 1px solid var(--border-sport-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.slide-points li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.slide-points i {
+  color: var(--grass-deep);
+  font-size: 16px;
+  line-height: 1.3;
+}
+
+/* ---------- Progreso (no se llama .progress: choca con Bootstrap) ---------- */
+.steps-bar {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.steps-bar-item {
+  flex: 1;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--border-strong);
+  transition: background-color 0.25s ease;
+}
+
+.steps-bar-item--done {
+  background: var(--grass-deep);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab,
+  .steps-bar-item {
+    transition: none;
+  }
+
+  /* Sin desplazamiento: el texto solo cambia con un fundido corto */
+  .copy,
+  .copy--before {
+    transform: none;
+    transition: opacity 0.15s linear, visibility 0s linear 0.15s;
+  }
+
+  .copy--active {
+    transition: opacity 0.15s linear, visibility 0s;
+  }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 991px) {
+  .stage {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+}
+
+/* En pantallas angostas el texto viaja menos */
+@media (max-width: 991px) and (prefers-reduced-motion: no-preference) {
+  .copy {
+    transform: translateX(24px);
+  }
+
+  .copy--before {
+    transform: translateX(-24px);
+  }
+
+  .copy--active {
+    transform: none;
+  }
+}
+
+/* Celular: pestañas a todo el ancho arriba y flechas abajo a la derecha del contador */
+@media (max-width: 576px) {
+  :host {
+    --carousel-gap: 16px;
+  }
+
+  .carousel-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .arrows {
+    justify-content: flex-end;
+  }
+}

@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { LandingComponent } from './landing.component';
-import { LANDING_FEATURES, LANDING_SHOWCASE } from './landing-content';
+import { LANDING_FEATURES, LANDING_SCREENS } from './landing-content';
 
 describe('LandingComponent', () => {
   let fixture: ComponentFixture<LandingComponent>;
@@ -36,8 +36,8 @@ describe('LandingComponent', () => {
   });
 
   it('muestra las capturas reales con texto alternativo', () => {
-    const shots = Array.from(host.querySelectorAll<HTMLImageElement>('#features .showcase img'));
-    expect(shots.length).toBe(LANDING_SHOWCASE.length);
+    const shots = Array.from(host.querySelectorAll<HTMLImageElement>('#features app-screen-carousel img'));
+    expect(shots.length).toBe(LANDING_SCREENS.length);
     shots.forEach(shot => expect(shot.alt.length).toBeGreaterThan(0));
   });
 

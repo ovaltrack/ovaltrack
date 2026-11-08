@@ -95,35 +95,7 @@
       </p>
     </header>
 
-    <div class="showcase">
-      @for (item of showcase; track item.id; let odd = $odd) {
-        <article class="showcase-row" [class.showcase-row--reverse]="odd">
-          <figure class="showcase-media">
-            <img
-              class="shot"
-              [src]="item.image + '-800.webp'"
-              [attr.srcset]="item.image + '-800.webp 800w, ' + item.image + '-1600.webp 1600w'"
-              sizes="(max-width: 991px) 92vw, 680px"
-              width="1600"
-              height="1000"
-              [alt]="item.alt"
-              loading="lazy"
-              decoding="async"
-            />
-          </figure>
-          <div class="showcase-copy">
-            <span class="label-mono">{{ item.kicker }}</span>
-            <h3 class="showcase-title">{{ item.title }}</h3>
-            <p class="showcase-desc">{{ item.description }}</p>
-            <ul class="feature-points showcase-points">
-              @for (point of item.points; track point) {
-                <li><i class="bi bi-check2" aria-hidden="true"></i>{{ point }}</li>
-              }
-            </ul>
-          </div>
-        </article>
-      }
-    </div>
+    <app-screen-carousel [screens]="screens" />
 
     <div class="features-grid">
       @for (feature of features; track feature.title) {
