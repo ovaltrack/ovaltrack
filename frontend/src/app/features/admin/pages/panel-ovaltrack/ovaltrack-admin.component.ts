@@ -245,7 +245,7 @@ export class OvaltrackAdminComponent implements OnInit {
   }
 
   rejectClub(club: Club): void {
-    this.pendingClubs.update((list) => list.filter((c) => c.id !== club.id));
+    this.runAction(club.id, this.adminService.rejectClub(club.id), `${club.name} fue rechazado.`, 'No se pudo rechazar el club.');
   }
 
   setAccountActive(account: UserClubRegistration, active: boolean): void {
