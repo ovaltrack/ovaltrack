@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { liveCaptureDatabase, matchDatabase } from '../local-databases';
 import { LiveCaptureEventType, LiveCapturePersistedState } from '../../match/types/live-capture.types';
 import { BackendEventResponse, LocalMatchEvent } from '../../match/types/event.types';
-import { Match, MatchStatus, PendingMatchMutation } from '../../match/types/match.types';
+import { Match, MatchStatus, PendingMatchMutation, isOfflineMatch } from '../../match/types/match.types';
 import { Division } from '../../division/types/division.types';
 import { AvailablePlayer, SavedRoster } from '../../match/types/roster.types';
 import { UserContext } from '../../auth/types/auth.types';
@@ -37,6 +37,31 @@ export class LocalDatabaseService {
 
   saveMatches(matches: Match[]): Promise<void> {
     return matchDatabase.matches.bulkPut(matches).then(() => undefined);
+  }
+
+  /**
+   * Alinea IndexedDB con los partidos que devolvió el backend: guarda los que se usan sin conexión
+   * (`isOfflineMatch`) y borra los demás junto con su plantel. Un partido con una transición pendiente
+   * no se modifica
+   */
+  syncOfflineMatches(matches: Match[]): Promise<void> {
+    return matchDatabase.transaction(
+      'rw',
+      matchDatabase.matches,
+      matchDatabase.rosters,
+      matchDatabase.pendingMatchMutations,
+      async () => {
+        const pendingMatchIds = new Set(
+          (await this.getPendingMatchMutations()).map(mutation => mutation.matchId),
+        );
+        const syncable = matches.filter(match => !pendingMatchIds.has(match.id));
+        const staleMatchIds = syncable.filter(match => !isOfflineMatch(match)).map(match => match.id);
+
+        await matchDatabase.matches.bulkDelete(staleMatchIds);
+        await matchDatabase.rosters.bulkDelete(staleMatchIds);
+        await this.saveMatches(syncable.filter(isOfflineMatch));
+      },
+    );
   }
 
   getMatchesByStatus(statuses: readonly MatchStatus[]): Promise<Match[]> {

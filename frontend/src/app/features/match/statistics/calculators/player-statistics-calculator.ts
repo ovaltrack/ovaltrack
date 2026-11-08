@@ -1,5 +1,5 @@
 import { LiveCaptureEventType } from '../../types/event-type.types';
-import { LocalMatchEvent } from '../../types/event.types';
+import { BackendEventResponse } from '../../types/event.types';
 import { PlayerStatColumn, PlayerStatistic, PlayerStatistics, StatView } from '../types/statistic.types';
 import { countsAsScoring } from './event-rules';
 import { creditedTeam, readNumber } from './match-statistics-calculator';
@@ -36,7 +36,7 @@ export function playerStatColumns(eventTypes: LiveCaptureEventType[], view: Stat
  * Recibe eventos activos ya filtrados por período.
  */
 export function computePlayerStatistics(
-  events: LocalMatchEvent[],
+  events: BackendEventResponse[],
   roster: RosterPlayerInfo[],
   eventTypes: LiveCaptureEventType[],
   view: StatView,
@@ -44,9 +44,9 @@ export function computePlayerStatistics(
   const typeById = new Map(eventTypes.map(type => [type.id, type]));
   const columns = playerStatColumns(eventTypes, view);
 
-  const eventsByPlayerId = new Map<string, LocalMatchEvent[]>();
-  const eventsBySlot = new Map<number, LocalMatchEvent[]>();
-  const push = <K>(map: Map<K, LocalMatchEvent[]>, key: K, event: LocalMatchEvent) =>
+  const eventsByPlayerId = new Map<string, BackendEventResponse[]>();
+  const eventsBySlot = new Map<number, BackendEventResponse[]>();
+  const push = <K>(map: Map<K, BackendEventResponse[]>, key: K, event: BackendEventResponse) =>
     map.set(key, [...(map.get(key) ?? []), event]);
 
   for (const event of events) {
@@ -61,7 +61,7 @@ export function computePlayerStatistics(
   }
 
   const players: PlayerStatistic[] = roster.map(player => {
-    const playerEvents = new Map<string, LocalMatchEvent>();
+    const playerEvents = new Map<string, BackendEventResponse>();
     for (const event of eventsByPlayerId.get(player.playerId) ?? []) playerEvents.set(event.id, event);
     for (const event of eventsBySlot.get(player.jerseyNumber) ?? []) playerEvents.set(event.id, event);
 

@@ -22,7 +22,7 @@ export class MatchService {
   getAllMatchesByDivisionId(divisionId: string): Observable<Match[]> {
     return this.http.get<BackendMatchResponse[]>(`${this.apiUrl}/division?divisionId=${divisionId}`).pipe(
       map(matches => matches.map(match => this.normalizeMatch(match))),
-      switchMap(matches => from(this.cache.saveMatches(matches)).pipe(map(() => matches))),
+      switchMap(matches => from(this.cache.syncOfflineMatches(matches)).pipe(map(() => matches))),
       catchError(() => from(this.cache.getMatchesByDivision(divisionId)).pipe(
         switchMap(matches => matches.length > 0
           ? from([matches])
@@ -35,7 +35,7 @@ export class MatchService {
   getMatchesByClub(clubId: string): Observable<Match[]> {
     return this.http.get<BackendMatchResponse[]>(`${this.apiUrl}/club?clubId=${clubId}`).pipe(
       map(matches => matches.map(match => this.normalizeMatch(match))),
-      switchMap(matches => from(this.cache.saveMatches(matches)).pipe(map(() => matches))),
+      switchMap(matches => from(this.cache.syncOfflineMatches(matches)).pipe(map(() => matches))),
       catchError(() => from(this.readCachedClubMatches(clubId)).pipe(
         switchMap(matches => matches.length > 0
           ? of(matches)
@@ -63,7 +63,8 @@ export class MatchService {
 
     return this.http.post<BackendMatchResponse>(this.apiUrl, payload).pipe(
       map(match => this.normalizeMatch(match)),
-      switchMap(match => from(this.cache.saveMatches([match])).pipe(
+      // Un partido nuevo nace sin plantel (empty_roster): no queda en IndexedDB (ver syncOfflineMatches).
+      switchMap(match => from(this.cache.syncOfflineMatches([match])).pipe(
         map(() => match)
       ))
     );
@@ -203,7 +204,8 @@ export class MatchService {
 
   deleteMatch(matchId: string): Observable<BackendMatchResponse> {
     return this.http.delete<BackendMatchResponse>(`${this.apiUrl}/${matchId}/cancel`).pipe(
-      switchMap(response => from(this.cache.saveMatches([this.normalizeMatch(response)])).pipe(
+      // Un partido cancelado deja de capturarse: se quita de IndexedDB junto con su nómina (ver syncOfflineMatches).
+      switchMap(response => from(this.cache.syncOfflineMatches([this.normalizeMatch(response)])).pipe(
         map(() => response)
       )),
     );
@@ -212,7 +214,8 @@ export class MatchService {
   getMatchById(matchId: string): Observable<Match> {
     return this.http.get<BackendMatchResponse>(`${this.apiUrl}/${matchId}`).pipe(
       map(match => this.normalizeMatch(match)),
-      switchMap(match => from(this.cache.saveMatches([match])).pipe(
+      // Misma regla que los listados: solo queda en IndexedDB si se captura sin conexión (ver syncOfflineMatches).
+      switchMap(match => from(this.cache.syncOfflineMatches([match])).pipe(
         map(() => match)
       )),
       catchError(error => from(this.cache.getMatch(matchId)).pipe(

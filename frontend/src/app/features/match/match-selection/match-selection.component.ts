@@ -11,6 +11,7 @@ import {
   MatchFilter,
   MatchStatus,
   NewMatchDraft,
+  isOfflineMatch,
 } from '../types/match.types';
 import { MatchService } from '../services/match.service';
 import { DivisionService } from 'src/app/services/division.service';
@@ -81,7 +82,6 @@ export class MatchSelectComponent implements OnInit {
   selectedMatchForModal: Match | null = null;
   isMatchModalOpen = false;
 
-  // 1. Agregá esta variable en tu clase:
   isPickerOpen = false;
   isDayModalOpen = false;
   isYearView = false;
@@ -96,14 +96,14 @@ export class MatchSelectComponent implements OnInit {
 
   calendarOptions: CalendarOptions = {
     initialView: 'dayGridMonth',
-    plugins: [dayGridPlugin, interactionPlugin, multiMonthPlugin], // Agregado multiMonthPlugin
+    plugins: [dayGridPlugin, interactionPlugin, multiMonthPlugin],
     locale: 'es',
     height: 'auto',
     buttonText: { today: 'Hoy', month: 'Mes', year: 'Año' },
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
-      right: 'dayGridMonth,multiMonthYear', // Botón anual
+      right: 'dayGridMonth,multiMonthYear',
     },
     views: {
       dayGridMonth: {
@@ -130,7 +130,6 @@ export class MatchSelectComponent implements OnInit {
     },
     events: [],
     
-    // Conectores de clics y estilos
     eventClick: this.handleEventClick.bind(this),
     dateClick: this.handleDateClick.bind(this),
     dayCellClassNames: this.getDayClassNames.bind(this),
@@ -141,7 +140,7 @@ export class MatchSelectComponent implements OnInit {
     eventDisplay: 'block',
     eventContent: function (arg) {
       if (arg.view.type === 'multiMonthYear') {
-        return { html: '<span></span>' }; // Oculta info en vista anual (solo usa el fondo verde)
+        return { html: '<span></span>' };
       }
       
       const date = arg.event.start;
@@ -186,12 +185,10 @@ export class MatchSelectComponent implements OnInit {
   @Output() selectMatch = new EventEmitter<Match>();
 
   ngOnInit(): void {
-    // Solo cargamos las divisiones al iniciar. Los partidos se cargan después.
     this.loadUserDivisions();
   }
   
   get visibleMatches(): Match[] {
-    // Ahora usamos el array completo, sin excluir los finalizados
     let activeMatches = this.matches;
 
     if (this.activeFilter === 'all') {
@@ -214,7 +211,6 @@ export class MatchSelectComponent implements OnInit {
   setFilter(filter: MatchFilter): void {
     this.activeFilter = filter;
     
-    // Si cambia de filtro a uno distinto de finalizados, ocultamos las tarjetas
     if (filter !== 'finished') {
       this.isCalendarView = false;
     }
@@ -384,7 +380,7 @@ export class MatchSelectComponent implements OnInit {
   }
 
   loadUserDivisions() {
-    const token = localStorage.getItem('auth_token'); // Usamos el nombre exacto de tu imagen
+    const token = localStorage.getItem('auth_token');
 
     if (!token) {
       console.error("No se encontró el token de sesión");
@@ -392,13 +388,10 @@ export class MatchSelectComponent implements OnInit {
     }
 
     try {
-      // Un JWT tiene 3 partes separadas por puntos. La del medio [1] es el Payload (los datos).
       const payloadBase64 = token.split('.')[1];
       
-      // Decodificamos el Base64 a texto y lo convertimos en un objeto JSON
       const decodedPayload = JSON.parse(atob(payloadBase64));
       
-      // Intentamos obtener el clubId (revisa la consola si el nombre de la propiedad es distinto)
       const currentClubId = decodedPayload.clubId || decodedPayload.club_id;
 
       if (!currentClubId) {
@@ -410,7 +403,6 @@ export class MatchSelectComponent implements OnInit {
         this.userDivisions = divisions;
 
         if (this.userDivisions.length > 0) {
-          // Autoseleccionar la primera división
           this.selectedDivisionId = this.userDivisions[0].id;
           this.loadMatchesForDivision(this.selectedDivisionId);
           
@@ -461,31 +453,24 @@ export class MatchSelectComponent implements OnInit {
     return role === 'ADMIN_CLUB' || role === 'ADMIN_OVALTRACK';
   }
 
-  //ta raro esto, no me gusta del todo usar el mismo filtro de partidos tanto en LiveCaptureCacheService como aca
+  /**
+   * Deja en IndexedDB lo necesario para capturar sin conexión, solo para los partidos que se pueden capturar
+   * (`isOfflineMatch`): plantel de cada uno, jugadores de la división y eventos de los ya iniciados.
+   * Los demás partidos se leen del backend.
+   */
   private cacheMatchData(divisionId: string, matches: Match[]): void {
-    if (matches.length === 0) {
+    const offlineMatches = matches.filter(isOfflineMatch);
+    if (offlineMatches.length === 0) {
       return;
     }
 
-    const offlineMatches = matches.filter(
-      m => m.status === 'not_started' || m.status === 'in_progress' || m.status === 'halftime'
-    );
+    const startedMatches = offlineMatches.filter(match => match.status !== 'not_started');
 
-    // Los jugadores son de la división, no de cada partido: se piden (y guardan en Dexie) una sola vez.
     forkJoin([
       this.rosterService.getDivisionPlayers(divisionId).pipe(catchError(() => of([]))),
-      ...matches.map(match => this.rosterService.getSavedRoster(match.id).pipe(catchError(() => of(null)))),
+      ...offlineMatches.map(match => this.rosterService.getSavedRoster(match.id).pipe(catchError(() => of(null)))),
+      ...startedMatches.map(match => this.liveCaptureService.hydrateMatchEvents(match.id).pipe(catchError(() => of([])))),
     ]).subscribe();
-
-    if (offlineMatches.length > 0) {
-      forkJoin(
-        offlineMatches.map(match =>
-          this.liveCaptureService.hydrateMatchEvents(match.id).pipe(
-            catchError(() => of([]))
-          )
-        )
-      ).subscribe();
-    }
   }
 
   actualizarEventosCalendario(partidosFiltrados: Match[]) {
@@ -502,7 +487,7 @@ export class MatchSelectComponent implements OnInit {
         id: partido.id,
         title: `${partido.opponent.name || 'Rival'}`,
         start: isoDate,
-        backgroundColor: bgColor, // <--- Aplica el color dinámico
+        backgroundColor: bgColor,
         borderColor: bgColor,
         extendedProps: { match: partido }
       };
@@ -527,7 +512,6 @@ export class MatchSelectComponent implements OnInit {
   }
 
   get pickerYears(): number[] {
-    // 12 años alrededor del año actual del picker
     const start = this.pickerYear - 5;
     return Array.from({ length: 12 }, (_, i) => start + i);
   }
@@ -583,7 +567,6 @@ export class MatchSelectComponent implements OnInit {
       
       if (matchesOnDay.length > 0) {
         let category = 'WON'; 
-        // Prioridad de visualización si hay varios partidos el mismo día
         if (matchesOnDay.some(m => this.getMatchCategory(m) === 'LIVE')) category = 'LIVE';
         else if (matchesOnDay.some(m => this.getMatchCategory(m) === 'READY')) category = 'READY';
         else if (matchesOnDay.some(m => this.getMatchCategory(m) === 'NEW_GAME')) category = 'NEW_GAME';
@@ -597,7 +580,6 @@ export class MatchSelectComponent implements OnInit {
 
   handleDateClick(arg: any) {
     if (arg.view.type === 'multiMonthYear') {
-      // Lógica existente para la vista anual...
       const clickedDate = arg.date;
       const matchesOnDay = this.visibleMatches.filter(m => {
         const md = this.parseDateForSort(m.date);
@@ -611,17 +593,14 @@ export class MatchSelectComponent implements OnInit {
         this.isDayModalOpen = true;
       }
     } else if (arg.view.type === 'dayGridMonth') {
-      // NUEVO: Lógica para la vista mensual (Crear partido directo)
       
-      this.openCreateModal(); // Abrimos el modal
+      this.openCreateModal();
       
-      // Extraemos el año, mes y día del clic
       const clickedDate = arg.date;
       const year = clickedDate.getFullYear();
       const month = String(clickedDate.getMonth() + 1).padStart(2, '0');
       const day = String(clickedDate.getDate()).padStart(2, '0');
       
-      // Autocompletamos la fecha y le damos un horario por defecto (ej. 15:30 hs)
       this.draft.date = `${year}-${month}-${day}T16:00`;
     }
   }
@@ -652,7 +631,6 @@ export class MatchSelectComponent implements OnInit {
     this.isMatchModalOpen = true;
   }
 
-  // Determina la categoría del partido
   getMatchCategory(match: Match): 'LIVE' | 'READY' | 'NEW_GAME' | 'WON' | 'LOST' | 'TIED' | 'CANCELLED' {
     if (match.status === 'cancelled') return 'CANCELLED';
     if (match.status === 'in_progress' || match.status === 'halftime') return 'LIVE';
@@ -666,7 +644,6 @@ export class MatchSelectComponent implements OnInit {
     return 'TIED';
   }
 
-  // Devuelve el color oscuro para las tarjetas (Vista mensual y modal)
   getMatchColor(match: Match): string {
     switch (this.getMatchCategory(match)) {
       case 'LIVE': return '#ca8a04';     // Ámbar
@@ -690,12 +667,10 @@ export class MatchSelectComponent implements OnInit {
   }
 
   getDetailedStatusLabel(match: Match): string {
-    // Los estados sin resultado usan las mismas etiquetas que el filtro y el modal.
     if (match.status !== 'finished') {
       return this.statusLabel(match.status);
     }
 
-    // Finalizado: se muestra el resultado
     const home = match.homeScore || 0;
     const away = match.awayScore || 0;
     if (home > away) return 'Ganado';

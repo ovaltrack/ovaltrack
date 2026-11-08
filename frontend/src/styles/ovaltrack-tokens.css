@@ -1,5 +1,12 @@
 /* Import Design Guide v1 Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+/* Empaquetadas con la app (no CDN) para que la captura en vivo se vea igual sin conexión. */
+@import "@fontsource/manrope/latin-400.css";
+@import "@fontsource/manrope/latin-600.css";
+@import "@fontsource/manrope/latin-700.css";
+@import "@fontsource/manrope/latin-800.css";
+@import "@fontsource/space-grotesk/latin-500.css";
+@import "@fontsource/space-grotesk/latin-600.css";
+@import "@fontsource/space-grotesk/latin-700.css";
 
 :root {
   /* Design Guide v1 — Marca Colors */

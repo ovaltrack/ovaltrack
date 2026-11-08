@@ -1,5 +1,5 @@
 import { PlayerStatColumn, PlayerStatistic } from '../../match/statistics/types/statistic.types';
-import { LocalMatchEvent } from '../../match/types/event.types';
+import { BackendEventResponse } from '../../match/types/event.types';
 import { LiveCaptureEventType } from '../../match/types/event-type.types';
 
 /** Resultado de un partido desde la perspectiva del club del jugador. */
@@ -24,7 +24,7 @@ export interface PlayerMatchDTO {
 
 /** Datos base de un partido para calcular estadísticas: se cargan una vez por partido. */
 export interface PlayerMatchSource {
-  events: LocalMatchEvent[];
+  events: BackendEventResponse[];
   eventTypes: LiveCaptureEventType[];
 }
 

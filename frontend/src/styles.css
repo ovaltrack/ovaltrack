@@ -1,4 +1,16 @@
-@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
+/* Tipografías e íconos empaquetados con la app (no CDN): el service worker los guarda para usarse sin conexión.
+   Solo el subconjunto latin (incluye tildes y ñ) y los pesos que usa el design system. */
+@import "@fontsource/hanken-grotesk/latin-600.css";
+@import "@fontsource/hanken-grotesk/latin-700.css";
+@import "@fontsource/hanken-grotesk/latin-800.css";
+@import "@fontsource/inter/latin-400.css";
+@import "@fontsource/inter/latin-500.css";
+@import "@fontsource/inter/latin-600.css";
+@import "@fontsource/inter/latin-700.css";
+@import "@fontsource/jetbrains-mono/latin-500.css";
+@import "@fontsource/jetbrains-mono/latin-600.css";
+@import "@fontsource/jetbrains-mono/latin-700.css";
+@import "@tabler/icons-webfont/dist/tabler-icons.min.css";
 @import './styles/ovaltrack-tokens.css';
 @import "bootstrap-icons/font/bootstrap-icons.css";
 

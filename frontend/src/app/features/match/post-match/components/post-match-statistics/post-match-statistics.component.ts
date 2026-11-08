@@ -5,10 +5,11 @@ import { firstValueFrom } from 'rxjs';
 import { LayoutService } from 'src/app/core/services/layout.service';
 import { UserContextService } from 'src/app/core/services/user-context.service';
 import { EventTypeService } from '../../../services/event-type.service';
+import { EventService } from '../../../services/event.service';
 import { RosterService } from '../../../services/roster.service';
 import { LiveCaptureService } from '../../../services/live-capture.service';
 import { StatisticCalculationService } from '../../../statistics/services/statistic-calculation.service';
-import { LocalMatchEvent } from '../../../types/event.types';
+import { BackendEventResponse } from '../../../types/event.types';
 import { LiveCaptureEventType } from '../../../types/event-type.types';
 import { MatchStatistics, PlayerStatistic, PlayerStatistics } from '../../../statistics/types/statistic.types';
 import { RosterPlayerInfo } from '../../../statistics/calculators';
@@ -23,7 +24,6 @@ import {
 import { PostMatchShellStore } from '../../store/post-match-shell.store';
 import { LoadingGate } from '../../utils/loading-gate';
 import { RugbyBallLoaderComponent } from '../../../../../shared/components/rugby-ball-loader/rugby-ball-loader.component';
-import { LocalDatabaseService } from 'src/app/features/local-database/services/local-database.service';
 
 export type StatsPeriodFilter = 'ALL' | 1 | 2;
 export type StatsTab = 'team' | 'players';
@@ -45,7 +45,7 @@ export class PostMatchStatisticsComponent implements OnInit, OnDestroy {
   private readonly shell = inject(PostMatchShellStore);
   private readonly eventTypeService = inject(EventTypeService);
   private readonly rosterService = inject(RosterService);
-  private readonly cacheService = inject(LocalDatabaseService);
+  private readonly eventService = inject(EventService);
   private readonly liveCaptureService = inject(LiveCaptureService);
   private readonly statisticService = inject(StatisticCalculationService);
   private readonly userContext = inject(UserContextService);
@@ -61,8 +61,7 @@ export class PostMatchStatisticsComponent implements OnInit, OnDestroy {
   readonly period = signal<StatsPeriodFilter>('ALL');
   readonly selectedPlayerId = signal<string | null>(null);
 
-  // Datos base: se cargan una sola vez y todo lo demás se recalcula en memoria.
-  private readonly events = signal<LocalMatchEvent[]>([]);
+  private readonly events = signal<BackendEventResponse[]>([]);
   private readonly eventTypes = signal<LiveCaptureEventType[]>([]);
   private readonly roster = signal<RosterPlayerInfo[]>([]);
 
@@ -193,12 +192,12 @@ export class PostMatchStatisticsComponent implements OnInit, OnDestroy {
     this.errorMessage.set('');
 
     try {
-      await Promise.all([
-        this.hydrateEvents(matchId),
+      const [events] = await Promise.all([
+        this.loadEvents(matchId),
         this.loadEventTypes(),
       ]);
 
-      this.events.set(await this.cacheService.getEventsByMatch(matchId));
+      this.events.set(events);
       this.roster.set(await this.loadRoster(matchId));
     } catch (err) {
       console.error('Error al cargar las estadísticas del partido:', err);
@@ -208,24 +207,24 @@ export class PostMatchStatisticsComponent implements OnInit, OnDestroy {
     }
   }
 
-  private async hydrateEvents(matchId: string): Promise<void> {
+  /**
+   * Eventos del backend, sin pasar por IndexedDB: las estadísticas del post-partido no funcionan sin conexión.
+   * Antes envía lo capturado en este dispositivo, para que el backend tenga el partido completo.
+   */
+  private async loadEvents(matchId: string): Promise<BackendEventResponse[]> {
     try {
       await firstValueFrom(this.liveCaptureService.syncPendingEvents(matchId));
-    } catch { /* no bloqueante */ }
-    try {
-      await firstValueFrom(this.liveCaptureService.hydrateMatchEvents(matchId));
-    } catch { /* se usa lo que haya en IndexedDB */ }
+    } catch { /* no bloqueante: se envían en la próxima sincronización */ }
+    return firstValueFrom(this.eventService.getByMatch(matchId));
   }
 
   /**
-   * Sincroniza el catálogo y usa solo los tipos activos: los eventos de tipos dados de baja no se
-   * muestran ni cuentan en las estadísticas del post-partido.
+   * Usa solo los tipos activos del catálogo: los eventos de tipos dados de baja no se muestran ni
+   * cuentan en las estadísticas del post-partido.
    */
   private async loadEventTypes(): Promise<void> {
-    try {
-      await firstValueFrom(this.eventTypeService.getAll());
-    } catch { /* se usa lo que haya en caché */ }
-    this.eventTypes.set(await this.cacheService.getActiveEventTypes());
+    const eventTypes = await firstValueFrom(this.eventTypeService.getAll());
+    this.eventTypes.set(eventTypes.filter(eventType => eventType.isActive !== false));
   }
 
   /**

@@ -58,6 +58,17 @@ export interface NewMatchDraft {
 /** Estados posibles de un partido en el listado. */
 export type MatchStatus = 'empty_roster' | 'not_started' | 'in_progress' | 'halftime' | 'finished' | 'cancelled';
 
+/**
+ * Estados de los partidos que se guardan en IndexedDB para usarse sin conexión: los que todavía se
+ * pueden capturar (carga en vivo, entretiempo). Los demás se leen siempre del backend.
+ */
+const OFFLINE_MATCH_STATUSES: readonly MatchStatus[] = ['not_started', 'in_progress', 'halftime'];
+
+/** Si el partido se guarda en IndexedDB para usarse sin conexión (ver `OFFLINE_MATCH_STATUSES`). */
+export function isOfflineMatch(match: Pick<Match, 'status'>): boolean {
+  return OFFLINE_MATCH_STATUSES.includes(match.status);
+}
+
 /** Duración reglamentaria de un tiempo: el 2° tiempo arranca en este segundo del reloj de juego. */
 export const HALF_DURATION_SECONDS = 40 * 60;
 

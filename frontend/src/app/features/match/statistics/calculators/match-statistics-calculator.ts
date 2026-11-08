@@ -1,5 +1,5 @@
 import { LiveCaptureEventType, TemplateField } from '../../types/event-type.types';
-import { LocalMatchEvent } from '../../types/event.types';
+import { BackendEventResponse } from '../../types/event.types';
 import {
   BooleanFieldStat,
   EventTypeStat,
@@ -38,14 +38,14 @@ export const readNumber = (value: unknown): number | null => {
  * Equipo al que se le acredita un evento. Los tipos que suman usan la misma regla que el marcador
  * persistido por el backend; el resto, el equipo que ejecuta la acción según el `actor` del tipo.
  */
-export function creditedTeam(type: LiveCaptureEventType, event: LocalMatchEvent): Team | null {
+export function creditedTeam(type: LiveCaptureEventType, event: BackendEventResponse): Team | null {
   return type.isScoring ? scoringTeam(event) : eventTeam(type, event);
 }
 
 /** Acumulador de un campo, armado a partir de su definición en el catálogo. */
 interface FieldAccumulator {
   stat: FieldStat;
-  add(event: LocalMatchEvent, team: Team): void;
+  add(event: BackendEventResponse, team: Team): void;
   finish(): void;
 }
 
@@ -153,7 +153,7 @@ function typeAccumulator(type: LiveCaptureEventType, view: StatView): TypeAccumu
  * un tipo en el catálogo no requiere tocar este cálculo. Recibe eventos activos ya filtrados por período.
  */
 export function computeMatchStatistics(
-  events: LocalMatchEvent[],
+  events: BackendEventResponse[],
   eventTypes: LiveCaptureEventType[],
   view: StatView,
 ): MatchStatistics {
@@ -194,7 +194,6 @@ export function computeMatchStatistics(
     if (!accumulator) continue;
     accumulator.fields.forEach(field => field.finish());
 
-    // Un tipo dado de baja solo aparece si tiene eventos en este partido.
     const { stat } = accumulator;
     if (type.isActive === false && stat.count.own + stat.count.opponent === 0) continue;
 
