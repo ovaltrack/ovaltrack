@@ -18,11 +18,13 @@ export interface LandingAudience {
   readonly description: string;
 }
 
-export interface LandingShowcase {
+export interface LandingScreen {
   readonly id: string;
+  /** Etiqueta corta de la pestaña del carrusel. */
+  readonly tab: string;
+  /** Ruta base de la captura: existe en `-800.webp` y `-1600.webp`. */
   readonly image: string;
   readonly alt: string;
-  readonly kicker: string;
   readonly title: string;
   readonly description: string;
   readonly points: readonly string[];
@@ -110,24 +112,60 @@ export const LANDING_AUDIENCES: readonly LandingAudience[] = [
   }
 ];
 
-/** Capturas reales de la app (generadas con los datos de staging). Cada imagen existe en 800 y 1600 px de ancho. */
-export const LANDING_SHOWCASE: readonly LandingShowcase[] = [
+/** Capturas reales de la app (datos de staging), en el orden del ciclo del partido. */
+export const LANDING_SCREENS: readonly LandingScreen[] = [
+  {
+    id: 'coach-home',
+    tab: 'Inicio',
+    image: 'assets/landing/coach-home',
+    alt: 'Inicio del entrenador en OvalTrack: partido en curso, deuda de análisis, pendientes antes del próximo partido y forma de los últimos partidos',
+    title: 'Todo lo urgente apenas entrás',
+    description: 'El inicio de cada rol muestra lo que hay que hacer hoy: el partido en curso, lo que falta analizar y lo que falta para el próximo.',
+    points: ['Partido en vivo a la vista, desde cualquier dispositivo', 'Avance del análisis del último partido', 'Racha y diferencia de puntos de la temporada']
+  },
   {
     id: 'live-capture',
+    tab: 'Carga en vivo',
     image: 'assets/landing/live-capture',
     alt: 'Pantalla de carga en vivo de OvalTrack: marcador, reloj del partido y botonera de eventos agrupados por puntuación, juego fijo, cambio de posesión y ataque',
-    kicker: 'En la cancha',
     title: 'Carga en vivo pensada para el borde de la cancha',
     description: 'Botones grandes agrupados por tipo de jugada, el reloj y el marcador siempre a la vista, y la posesión marcada con color de un vistazo.',
     points: ['Hasta dos toques por jugada: tipo y jugador', 'Deshacer al instante si te equivocaste', 'Guarda en el dispositivo aunque no haya señal']
   },
   {
+    id: 'post-match-events',
+    tab: 'Eventos',
+    image: 'assets/landing/post-match-events',
+    alt: 'Revisión post-partido de OvalTrack: línea de tiempo de jugadas por tipo, tabla de eventos con jugador y zona, y cola de revisión de pendientes',
+    title: 'Revisión del partido jugada por jugada',
+    description: 'Línea de tiempo y tabla sincronizadas para auditar el partido con el video: completá jugadores, corregí eventos y sumá lo que faltó.',
+    points: ['Cola de eventos pendientes de completar', 'Tiempo de juego y tiempo de video por evento', 'Filtros por tiempo y por equipo']
+  },
+  {
+    id: 'post-match-zones',
+    tab: 'Zonas de cancha',
+    image: 'assets/landing/post-match-zones',
+    alt: 'Zonas de cancha en OvalTrack: tramos de tiempo por zona a lo largo del partido y mapa de calor de eventos sobre una grilla de 18 zonas',
+    title: 'Dónde se jugó el partido',
+    description: 'Asigná tramos de tiempo a zonas de la cancha y OvalTrack ubica cada evento en el mapa de calor.',
+    points: ['Grilla de 18 zonas alineada a las líneas de la cancha', 'Mapa de calor por cantidad de eventos', 'Huecos sin zona señalados para completarlos']
+  },
+  {
     id: 'statistics',
+    tab: 'Estadísticas',
     image: 'assets/landing/statistics',
     alt: 'Pantalla de estadísticas post-partido de OvalTrack: marcador, porcentaje de posesión y comparación de tries, conversiones y penales entre ambos equipos',
-    kicker: 'Después del partido',
     title: 'Estadísticas listas cuando termina el partido',
     description: 'Los eventos capturados se convierten en métricas comparadas entre tu equipo y el rival, por tiempo y por jugador.',
     points: ['Posesión, puntuación, ataque y defensa', 'Filtro por primer y segundo tiempo', 'Vista por equipo o por jugador']
+  },
+  {
+    id: 'division-dashboard',
+    tab: 'Evolución',
+    image: 'assets/landing/division-dashboard',
+    alt: 'Dashboard de partidos de una división en OvalTrack: resumen de resultados, promedios y gráficos de puntos y tries partido a partido',
+    title: 'La evolución de la división, partido a partido',
+    description: 'Elegí un rango de fechas y las métricas que te importan para ver cómo viene el equipo a lo largo de la temporada.',
+    points: ['Ganados, empatados y perdidos con promedios', 'Gráficos de puntos, tries, penales y obtención', 'Rangos rápidos: últimos 3 o 6 meses y el año']
   }
 ];

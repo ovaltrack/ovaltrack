@@ -1,0 +1,88 @@
+<div class="carousel" aria-roledescription="carrusel" aria-label="Pantallas de OvalTrack">
+  <div class="carousel-head">
+    <div #tabList class="tabs" role="tablist" aria-label="Elegí una pantalla">
+      @for (screen of screens(); track screen.id; let i = $index) {
+        <button
+          type="button"
+          class="tab"
+          role="tab"
+          [id]="'screen-tab-' + screen.id"
+          [attr.aria-selected]="i === activeIndex()"
+          [attr.aria-controls]="'screen-' + screen.id"
+          [attr.tabindex]="i === activeIndex() ? 0 : -1"
+          (click)="goTo(i)"
+          (keydown)="onKeydown($event)"
+        >
+          {{ screen.tab }}
+        </button>
+      }
+    </div>
+
+    <div class="arrows">
+      <span class="counter" aria-hidden="true">{{ counter() }}</span>
+      <button type="button" class="btn btn-outline arrow" aria-label="Pantalla anterior" [disabled]="isFirst()" (click)="previous()">
+        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+      </button>
+      <button type="button" class="btn btn-outline arrow" aria-label="Pantalla siguiente" [disabled]="isLast()" (click)="next()">
+        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="stage-media">
+      <!-- Solo las imágenes deslizan; el texto vive aparte para no asomar a medias por los bordes -->
+      <div #track class="track" (scroll)="onScroll()" (keydown)="onKeydown($event)">
+        @for (screen of screens(); track screen.id; let i = $index) {
+          <figure class="slide" [attr.aria-hidden]="i !== activeIndex()">
+            <img
+              class="slide-image"
+              [src]="screen.image + '-800.webp'"
+              [attr.srcset]="screen.image + '-800.webp 800w, ' + screen.image + '-1600.webp 1600w'"
+              sizes="(max-width: 991px) 92vw, 720px"
+              width="1600"
+              height="1000"
+              [alt]="screen.alt"
+              [attr.loading]="i === 0 ? null : 'lazy'"
+              decoding="async"
+            />
+          </figure>
+        }
+      </div>
+
+      <div class="steps-bar" aria-hidden="true">
+        @for (screen of screens(); track screen.id; let i = $index) {
+          <span class="steps-bar-item" [class.steps-bar-item--done]="i <= activeIndex()"></span>
+        }
+      </div>
+    </div>
+
+    <!--
+      Todos los textos ocupan la misma celda: el activo se ve y los demás quedan desplazados hacia el lado
+      en el que están (antes a la izquierda, después a la derecha), así al avanzar uno sale y el otro entra.
+    -->
+    <div class="copies">
+      @for (screen of screens(); track screen.id; let i = $index) {
+        <article
+          class="copy"
+          role="tabpanel"
+          aria-roledescription="diapositiva"
+          [id]="'screen-' + screen.id"
+          [attr.aria-labelledby]="'screen-tab-' + screen.id"
+          [class.copy--active]="i === activeIndex()"
+          [class.copy--before]="i < activeIndex()"
+          [attr.inert]="i !== activeIndex() ? '' : null"
+        >
+          <span class="label-mono">{{ i + 1 }} · {{ screen.tab }}</span>
+          <h3 class="slide-title">{{ screen.title }}</h3>
+          <p class="slide-desc">{{ screen.description }}</p>
+          <ul class="slide-points">
+            @for (point of screen.points; track point) {
+              <li><i class="bi bi-check2" aria-hidden="true"></i>{{ point }}</li>
+            }
+          </ul>
+        </article>
+      }
+    </div>
+  </div>
+</div>
