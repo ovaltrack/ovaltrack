@@ -1,6 +1,47 @@
 import { TestBed } from '@angular/core/testing';
 import { LocalDatabaseService } from './local-database.service';
 import { buildBackendEventResponse, buildEventType, buildLocalEvent, buildMatch, clearLocalDatabases } from '../../../testing/offline-test-helpers';
+import { matchDatabase } from '../local-databases';
+
+describe('LocalDatabaseService (partidos offline)', () => {
+  let cache: LocalDatabaseService;
+  const roster = { startingPlayers: [], substitutePlayers: [] };
+
+  beforeEach(async () => {
+    cache = TestBed.inject(LocalDatabaseService);
+    await clearLocalDatabases();
+  });
+
+  it('borra la nómina de un partido que dejó de capturarse sin conexión', async () => {
+    await cache.saveMatches([buildMatch({ id: 'match-1', status: 'in_progress' })]);
+    await cache.saveRoster('match-1', roster);
+
+    await cache.syncOfflineMatches([buildMatch({ id: 'match-1', status: 'finished' })]);
+
+    expect(await cache.getMatch('match-1')).toBeUndefined();
+    expect(await matchDatabase.rosters.get('match-1')).toBeUndefined();
+  });
+
+  it('conserva partido y nómina si tiene una transición pendiente', async () => {
+    await cache.saveMatches([buildMatch({ id: 'match-1', status: 'finished' })]);
+    await cache.saveRoster('match-1', roster);
+    await cache.savePendingMatchMutation({ id: 'match-1-latest', matchId: 'match-1', action: 'finish', createdAt: 1 });
+
+    await cache.syncOfflineMatches([buildMatch({ id: 'match-1', status: 'in_progress' })]);
+
+    expect((await cache.getMatch('match-1'))?.status).toBe('finished');
+    expect(await matchDatabase.rosters.get('match-1')).toBeDefined();
+  });
+
+  it('no toca los eventos de un partido que deja de guardarse', async () => {
+    await cache.saveMatches([buildMatch({ id: 'match-1', status: 'in_progress' })]);
+    await cache.saveEvent(buildLocalEvent());
+
+    await cache.syncOfflineMatches([buildMatch({ id: 'match-1', status: 'finished' })]);
+
+    expect((await cache.getPendingEvents('match-1')).length).toBe(1);
+  });
+});
 
 describe('LocalDatabaseService (eventos)', () => {
   let cache: LocalDatabaseService;
