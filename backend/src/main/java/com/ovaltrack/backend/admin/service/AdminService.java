@@ -1,5 +1,6 @@
 package com.ovaltrack.backend.admin.service;
 
+import java.util.Collection;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import com.ovaltrack.backend.user.business.UserService;
 import com.ovaltrack.backend.user.domain.User;
 import com.ovaltrack.backend.user.domain.UserRole;
 import com.ovaltrack.backend.user.domain.UserStatus;
+import com.ovaltrack.backend.user.domain.dto.UserResponseDTO;
 
 import jakarta.transaction.Transactional;
 
@@ -73,6 +75,56 @@ public class AdminService {
             throw new BusinessException("El administrador del club debe estar activo para reactivarlo");
         club.setStatus(ClubStatus.ACTIVE);
         clubService.save(club);
+    }
+
+    /**
+     * Cambia el administrador de un club (activo o inactivo, no pendiente).
+     * El nuevo tiene que ser un entrenador/analista activo del mismo club y pasa a ADMIN_CLUB;
+     * el anterior pasa a COACH_ANALYST (solo puede haber un ADMIN_CLUB por club).
+     */
+    @Transactional
+    public void changeClubAdmin(UUID clubId, UUID adminUserId) {
+        Club club = clubService.findClubEntityById(clubId);
+        if (club == null)
+            throw new BusinessException("El club no existe");
+        if (club.getStatus() == ClubStatus.PENDING)
+            throw new BusinessException("El club todavía está pendiente de aprobación");
+
+        User newAdmin = userService.findUserById(adminUserId);
+        if (newAdmin == null)
+            throw new BusinessException("El usuario no existe");
+        User current = club.getAdminUser();
+        if (current != null && current.getId().equals(newAdmin.getId()))
+            throw new BusinessException("El usuario ya es el administrador del club");
+        boolean sameClub = newAdmin.getPerson() != null && newAdmin.getPerson().getClub() != null
+                && newAdmin.getPerson().getClub().getId().equals(clubId);
+        if (!sameClub)
+            throw new BusinessException("El nuevo administrador tiene que pertenecer al club");
+        if (newAdmin.getRole() != UserRole.COACH_ANALYST)
+            throw new BusinessException("Solo un entrenador/analista del club puede ser su administrador");
+        if (!newAdmin.isActivated())
+            throw new BusinessException("El nuevo administrador tiene que tener la cuenta activa");
+
+        if (current != null && current.getRole() == UserRole.ADMIN_CLUB) {
+            current.setRole(UserRole.COACH_ANALYST);
+            userService.saveUser(current);
+        }
+        newAdmin.setRole(UserRole.ADMIN_CLUB);
+        // Las cuentas creadas por POST /user quedan activas pero con PENDING_APPROVAL:
+        // como ADMIN_CLUB aparecerían entre las solicitudes de registro
+        newAdmin.setAccountStatus(UserStatus.ACTIVE);
+        userService.saveUser(newAdmin);
+        club.setAdminUser(newAdmin);
+        clubService.save(club);
+    }
+
+    /** Entrenadores/analistas activos del club: candidatos a administrarlo. */
+    public Collection<UserResponseDTO> findClubAdminCandidates(UUID clubId) {
+        if (clubService.findClubEntityById(clubId) == null)
+            throw new BusinessException("El club no existe");
+        return userService.findUsersByClubId(clubId).stream()
+                .filter(u -> u.role() == UserRole.COACH_ANALYST && Boolean.TRUE.equals(u.active()))
+                .toList();
     }
 
     /* ---------- Users ---------- */
