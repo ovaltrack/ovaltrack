@@ -1,0 +1,27 @@
+.adm-confirm {
+  max-width: 460px;
+}
+
+.adm-confirm-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px 28px;
+}
+
+.adm-confirm-message {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.adm-confirm-detail {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 640px) {
+  .adm-confirm-body {
+    padding-inline: 16px;
+  }
+}

@@ -1,0 +1,49 @@
+<section class="adm-card" aria-labelledby="adm-pending-title">
+  <div class="adm-card-header">
+    <div>
+      <h2 id="adm-pending-title">Clubes pendientes de aprobación</h2>
+      <p>Al aprobar, el club queda activo con el administrador elegido.</p>
+    </div>
+    <span class="adm-badge" [class.adm-badge-warn]="store.pendingClubs().length > 0">
+      {{ store.pendingClubs().length }} {{ store.pendingClubs().length === 1 ? 'pendiente' : 'pendientes' }}
+    </span>
+  </div>
+
+  <div class="adm-table" role="table" aria-label="Clubes pendientes">
+    <div class="adm-row adm-row-head" role="row">
+      <span role="columnheader">Club</span>
+      <span role="columnheader">Administrador a asociar</span>
+      <span role="columnheader" class="adm-col-actions">Acciones</span>
+    </div>
+    @if (store.loaded()) {
+      @for (c of store.pendingClubs(); track c.id) {
+        <div class="adm-row" role="row">
+          <div role="cell" appAdminPerson [kind]="'logo'" [name]="c.name" [detail]="c.city"></div>
+          <div role="cell" class="adm-field">
+            <label class="adm-sr-only" [attr.for]="'admin-' + c.id">Administrador para {{ c.name }}</label>
+            <select class="form-control adm-select" [id]="'admin-' + c.id" (change)="onAdminChange(c.id, $event)">
+              <option value="" [selected]="!store.selectedAdmin()[c.id]">Elegí un administrador</option>
+              @for (a of store.admins(); track a.user.id) {
+                <option [value]="a.user.id" [selected]="store.selectedAdmin()[c.id] === a.user.id">
+                  {{ userName(a.user) }} · {{ a.user.email }}
+                </option>
+              }
+            </select>
+          </div>
+          <span role="cell" class="adm-actions">
+            <button type="button" class="btn adm-btn-danger" [disabled]="store.busy()" (click)="store.rejectClub(c)">
+              <i class="bi bi-x-lg" aria-hidden="true"></i> Rechazar
+            </button>
+            <button type="button" class="btn adm-btn-approve" [disabled]="store.busy()" (click)="store.approveClub(c)">
+              <i class="bi bi-check-lg" aria-hidden="true"></i> Aprobar club
+            </button>
+          </span>
+        </div>
+      } @empty {
+        <app-admin-table-placeholder icon="bi-buildings" message="No hay clubes pendientes de aprobación." />
+      }
+    } @else {
+      <app-admin-table-placeholder [loading]="true" />
+    }
+  </div>
+</section>

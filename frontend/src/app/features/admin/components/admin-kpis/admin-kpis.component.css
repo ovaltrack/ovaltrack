@@ -1,0 +1,50 @@
+:host {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.adm-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.adm-kpi strong {
+  font: 700 36px/1.1 var(--font-mono);
+  color: var(--text-primary);
+}
+
+.adm-kpi-hint {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.adm-kpi-alert {
+  border-color: var(--warning-border);
+}
+
+.adm-kpi-alert strong {
+  color: var(--warning);
+}
+
+@media (max-width: 1100px) {
+  :host {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  :host {
+    gap: 12px;
+  }
+
+  .adm-kpi {
+    padding: 16px;
+  }
+
+  .adm-kpi strong {
+    font-size: 28px;
+  }
+}

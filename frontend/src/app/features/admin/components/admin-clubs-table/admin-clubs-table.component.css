@@ -1,0 +1,4 @@
+:host {
+  display: block;
+  --adm-cols: minmax(0, 2fr) minmax(0, 2.4fr) minmax(0, 1fr);
+}

@@ -1,0 +1,355 @@
+/* OvalTrack — Panel de administración · piezas compartidas (Sport Pro Salvia)
+   La incluyen las tablas, la celda de persona y los diálogos (styleUrls).
+   Solo tokens de styles.css: claro y oscuro salen de [data-theme="dark"].
+   Prefijo adm- para no chocar con Bootstrap (.card, .table, .badge).
+   Cada tabla define sus columnas en :host con --adm-cols. */
+
+h2,
+p {
+  margin: 0;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ---------- Tarjetas ---------- */
+.adm-card {
+  background: var(--surface);
+  border: 2px solid var(--border-sport);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-elevation);
+  overflow: hidden;
+}
+
+.adm-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  padding: 20px 28px;
+  background: linear-gradient(180deg, var(--surface-header-start), var(--surface-header-end));
+  border-bottom: 2px solid var(--border-sport-subtle);
+}
+
+.adm-card-header h2 {
+  font: 800 20px/1.2 var(--font-head);
+  color: var(--text-primary);
+}
+
+.adm-card-header p {
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* ---------- Tablas (grilla; en celular cada fila es una tarjeta) ---------- */
+.adm-row {
+  display: grid;
+  grid-template-columns: var(--adm-cols);
+  align-items: center;
+  gap: 16px;
+  padding: 14px 28px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  min-width: 0;
+}
+
+.adm-row:last-child {
+  border-bottom: 0;
+}
+
+.adm-row:not(.adm-row-head):hover {
+  background: var(--surface-hover);
+}
+
+.adm-row > * {
+  min-width: 0;
+}
+
+.adm-row-head {
+  padding-block: 12px;
+  background: var(--surface-header-start);
+  border-bottom: 2px solid var(--border-sport-subtle);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.adm-col-actions {
+  text-align: right;
+}
+
+.adm-mono {
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.adm-muted {
+  color: var(--text-muted);
+}
+
+/* ---------- Badges ---------- */
+.adm-badge {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 5px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-alt);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.adm-badge-warn {
+  background: var(--warning-tint);
+  color: var(--warning);
+}
+
+.adm-badge.role-admin {
+  background: var(--navy-tint);
+  color: var(--navy);
+}
+
+.adm-badge.role-coach {
+  background: var(--blue-mid-tint);
+  color: var(--blue-mid);
+}
+
+.adm-badge.role-player {
+  background: var(--player-tint);
+  color: var(--player);
+}
+
+.status-badge {
+  font-style: normal;
+}
+
+.adm-status-rejected {
+  background: var(--error-tint);
+  color: var(--error);
+}
+
+.adm-status-rejected .dot {
+  background: var(--error);
+}
+
+/* ---------- Acciones (todas outline: no hay un único primario por fila) ---------- */
+.adm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.adm-btn-approve,
+.adm-btn-danger {
+  background: var(--btn-outline-bg);
+  font-weight: 600;
+}
+
+.adm-btn-approve {
+  border-color: var(--grass-border);
+  color: var(--grass-deep);
+}
+
+.adm-btn-approve:hover:not(:disabled) {
+  background: var(--grass-tint);
+  border-color: var(--grass-deep);
+  color: var(--grass-deep);
+}
+
+.adm-btn-danger {
+  border-color: var(--error-border);
+  color: var(--error);
+}
+
+.adm-btn-danger:hover:not(:disabled) {
+  background: var(--error-tint);
+  border-color: var(--error);
+  color: var(--error);
+}
+
+.adm-btn-approve:focus-visible,
+.adm-btn-danger:focus-visible {
+  outline: 2px solid var(--navy);
+  outline-offset: 2px;
+}
+
+.adm-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- Vacío y carga ---------- */
+.adm-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 24px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.adm-empty .bi {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--surface-alt);
+  color: var(--text-secondary);
+  font-size: 20px;
+}
+
+.adm-skeleton {
+  padding: 8px 28px;
+}
+
+.adm-skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+}
+
+.adm-skeleton-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.adm-skeleton-text .sk-line {
+  display: block;
+}
+
+/* ---------- Diálogos ---------- */
+.adm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: color-mix(in srgb, var(--bg) 60%, transparent);
+}
+
+.adm-dialog {
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.adm-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px 28px;
+  background: var(--surface-toolbar);
+  border-top: 2px solid var(--border-sport-subtle);
+}
+
+/* ---------- Responsive ---------- */
+/* Tablet y celular: cada fila pasa a tarjeta con rótulos (data-label) y acciones a lo ancho */
+@media (max-width: 960px) {
+  .adm-row-head {
+    display: none;
+  }
+
+  .adm-row {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px 16px;
+    align-items: start;
+    padding: 16px 20px;
+  }
+
+  .adm-row > .adm-person:first-child,
+  .adm-row > .adm-field,
+  .adm-row > .adm-actions {
+    grid-column: 1 / -1;
+  }
+
+  .adm-row > [data-label] {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .adm-row > [data-label]::before {
+    content: attr(data-label);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .adm-row > .adm-person[data-label] {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .adm-row > .adm-person[data-label]::before {
+    flex-basis: 100%;
+  }
+
+  .adm-actions {
+    justify-content: stretch;
+  }
+
+  .adm-actions .btn {
+    flex: 1;
+    height: 48px;
+  }
+
+  .adm-skeleton {
+    padding-inline: 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  .adm-card-header {
+    padding-inline: 16px;
+  }
+
+  .adm-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding-inline: 16px;
+  }
+
+  .adm-skeleton {
+    padding-inline: 16px;
+  }
+
+  .adm-dialog-footer {
+    padding-inline: 16px;
+  }
+
+  .adm-dialog-footer .btn {
+    flex: 1;
+    height: 48px;
+  }
+}

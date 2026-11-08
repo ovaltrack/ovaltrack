@@ -1,0 +1,82 @@
+:host {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.adm-person-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.adm-person-text b {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.adm-person-text b,
+.adm-person-text span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.adm-person-text span {
+  font-size: 12.5px;
+}
+
+.adm-mono {
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.adm-avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--player);
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.adm-avatar-sm {
+  width: 34px;
+  height: 34px;
+  font-size: 12px;
+}
+
+.adm-avatar.role-admin {
+  border-color: var(--navy);
+}
+
+.adm-avatar.role-coach {
+  border-color: var(--blue-mid);
+}
+
+.adm-logo {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--surface-alt);
+  border: 2px solid var(--border-sport);
+  color: var(--text-primary);
+  font: 800 16px var(--font-head);
+  text-transform: uppercase;
+}
+
+/* En tarjeta (celular/tablet) con rótulo arriba, el texto ocupa el resto de la línea junto al avatar */
+@media (max-width: 960px) {
+  :host([data-label]) .adm-person-text {
+    flex: 1 1 0;
+  }
+}
