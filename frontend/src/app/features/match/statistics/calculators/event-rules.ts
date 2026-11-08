@@ -1,5 +1,5 @@
 import { FollowUpChoice, LiveCaptureEventType, PossessionAfter, TemplateField } from '../../types/event-type.types';
-import { LocalMatchEvent, Possession } from '../../types/live-capture.types';
+import { BackendEventResponse, Possession } from '../../types/live-capture.types';
 
 export type Team = 'OWN' | 'OPPONENT';
 
@@ -21,7 +21,7 @@ export function countsAsScoring(type: LiveCaptureEventType, attrs?: Record<strin
   return !field || attrs?.[field.key] !== false;
 }
 
-export function eventTeam(type: LiveCaptureEventType | undefined, event: LocalMatchEvent): Team | null {
+export function eventTeam(type: LiveCaptureEventType | undefined, event: BackendEventResponse): Team | null {
   if (!type) return null;
   return event.teamPossession === 'NEUTRAL' ? null : event.teamPossession;
 }

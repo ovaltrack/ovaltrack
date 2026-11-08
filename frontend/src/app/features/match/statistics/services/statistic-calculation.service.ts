@@ -1,18 +1,18 @@
 import { Injectable, inject } from '@angular/core';
 import { LiveCaptureEventType } from '../../types/event-type.types';
-import { LocalMatchEvent } from '../../types/event.types';
+import { BackendEventResponse } from '../../types/event.types';
 import { MatchStatistics, PlayerStatistics, StatView } from '../types/statistic.types';
 import { computeMatchStatistics, computePlayerStatistics, RosterPlayerInfo } from '../calculators';
 import { LocalDatabaseService } from '../../../local-database/services/local-database.service';
 
 /** Datos ya cargados en memoria; lo que falte se lee de la caché local. */
 export interface StatisticSource {
-  events?: LocalMatchEvent[];
+  events?: BackendEventResponse[];
   eventTypes?: LiveCaptureEventType[];
 }
 
 /** Eventos activos del período (los de período null cuentan en ambos). Sin período: partido completo. */
-function eventsOfPeriod(events: LocalMatchEvent[], period?: number): LocalMatchEvent[] {
+function eventsOfPeriod(events: BackendEventResponse[], period?: number): BackendEventResponse[] {
   return events.filter(event => event.active && (period === undefined || event.period === null || event.period === period));
 }
 
@@ -42,7 +42,7 @@ export class StatisticCalculationService {
   }
 
   computeMatchStatistics(
-    events: LocalMatchEvent[],
+    events: BackendEventResponse[],
     eventTypes: LiveCaptureEventType[],
     view: StatView,
     period?: number,
@@ -51,7 +51,7 @@ export class StatisticCalculationService {
   }
 
   computePlayerStatistics(
-    events: LocalMatchEvent[],
+    events: BackendEventResponse[],
     roster: RosterPlayerInfo[],
     eventTypes: LiveCaptureEventType[],
     view: StatView,
@@ -66,7 +66,6 @@ export class StatisticCalculationService {
   ): Promise<Required<StatisticSource>> {
     const [events, eventTypes] = await Promise.all([
       source.events ?? this.cache.getEventsByMatch(matchId),
-      // Incluye los tipos dados de baja: sus eventos ya cargados siguen contando.
       source.eventTypes && source.eventTypes.length > 0 ? source.eventTypes : this.cache.getEventTypes(),
     ]);
     return { events, eventTypes };
