@@ -1,6 +1,6 @@
 import { DestroyRef, Injectable, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Observable, finalize, forkJoin } from 'rxjs';
+import { Observable, finalize, forkJoin, switchMap } from 'rxjs';
 import { ToastService } from 'src/app/core/services/toast.service';
 import { Club } from 'src/app/features/club/types/club.types';
 import { UserResponseDTO } from 'src/app/features/user/types/user.types';
@@ -10,6 +10,7 @@ import {
   AccountFilter,
   AdminStats,
   ClubFilter,
+  ConfirmChoice,
   ConfirmRequest,
   FilterOption,
   UserClubRegistration,
@@ -72,6 +73,11 @@ export class AdminPanelStore {
 
   readonly changingClubId = signal<string | null>(null);
   readonly newAdminId = signal<string | null>(null);
+  /** Entrenadores/analistas activos del club que se está editando. */
+  readonly adminCandidates = signal<UserResponseDTO[]>([]);
+  readonly candidatesLoading = signal(false);
+  /** Admin que se desactiva al guardar (flujo "Reasignar" desde la baja de un admin de club). */
+  readonly deactivateAfterChange = signal<UserClubRegistration | null>(null);
 
   /* ---------- Derivados ---------- */
   /**
@@ -123,7 +129,7 @@ export class AdminPanelStore {
     return this.visibleClubs().filter((c) => !q || c.name.toLowerCase().includes(q) || c.city.toLowerCase().includes(q));
   });
 
-  readonly changingClub = computed(() => this.visibleClubs().find((c) => c.id === this.changingClubId()) ?? null);
+  readonly changingClub = computed(() => this.allClubs().find((c) => c.id === this.changingClubId()) ?? null);
 
   /* ---------- Carga de datos (GET) ---------- */
   loadAll(): void {
@@ -277,15 +283,50 @@ export class AdminPanelStore {
       return;
     }
     const managedClub = this.allClubs().find((c) => c.adminUserId === user.id);
+    const deactivate$ = this.adminService.deactivateAccount(user.id);
+    const deactivateOnly = () =>
+      this.runAction(user.id, deactivate$, `Cuenta de ${name} desactivada.`, 'No se pudo desactivar la cuenta.');
+
+    if (managedClub?.status === 'ACTIVE') {
+      this.askConfirm({
+        kind: 'choices',
+        title: 'Desactivar administrador de club',
+        message: `${name} administra ${managedClub.name}. ¿Qué pasa con el club?`,
+        detail: 'Si solo desactivás la cuenta, el club sigue activo pero sin un administrador que pueda entrar.',
+        choices: [
+          { label: 'Reasignar administrador', icon: 'bi-person-gear', tone: 'primary', run: () => this.openChangeAdmin(managedClub, account) },
+          { label: 'Desactivar también el club', icon: 'bi-slash-circle', tone: 'danger', run: () => this.deactivateAdminAndClub(account, managedClub) },
+          { label: 'Solo desactivar la cuenta', icon: 'bi-person-dash', tone: 'outline', run: deactivateOnly },
+        ],
+      });
+      return;
+    }
+
     this.askConfirm({
       title: 'Desactivar cuenta',
       message: `¿Desactivar la cuenta de ${name}?`,
       detail: managedClub
-        ? `Es el administrador de ${managedClub.name}: el club sigue activo, pero queda sin un administrador que pueda entrar.`
+        ? `Es el administrador de ${managedClub.name}, que está inactivo: para reactivarlo vas a necesitar un administrador activo.`
         : 'No podrá iniciar sesión hasta que la vuelvas a aceptar.',
       confirmLabel: 'Desactivar',
+      run: deactivateOnly,
+    });
+  }
+
+  private deactivateAdminAndClub(account: UserClubRegistration, club: Club): void {
+    const name = userName(account.user);
+    this.askConfirm({
+      title: 'Desactivar cuenta y club',
+      message: `¿Desactivar a ${name} y a ${club.name}?`,
+      detail: 'Todos los miembros del club pierden el acceso, también los que tienen la sesión abierta, hasta que reactives el club.',
+      confirmLabel: 'Desactivar ambos',
       run: () =>
-        this.runAction(user.id, this.adminService.deactivateAccount(user.id), `Cuenta de ${name} desactivada.`, 'No se pudo desactivar la cuenta.'),
+        this.runAction(
+          account.user.id,
+          this.adminService.deactivateAccount(account.user.id).pipe(switchMap(() => this.adminService.rejectClub(club.id))),
+          `${name} y ${club.name} fueron desactivados.`,
+          'No se pudo desactivar la cuenta y el club.',
+        ),
     });
   }
 
@@ -293,30 +334,66 @@ export class AdminPanelStore {
   acceptConfirm(): void {
     const request = this.confirmRequest();
     this.confirmRequest.set(null);
-    request?.run();
+    if (request && request.kind !== 'choices') request.run();
+  }
+
+  choose(choice: ConfirmChoice): void {
+    this.confirmRequest.set(null);
+    choice.run();
   }
 
   cancelConfirm(): void {
     this.confirmRequest.set(null);
   }
 
-  /* ---------- Cambiar administrador (sin disparador en la UI todavía) ---------- */
-  openChangeAdmin(club: Club): void {
+  /* ---------- Cambiar administrador ---------- */
+  /** Abre el diálogo; con `deactivating`, al guardar también se desactiva esa cuenta (la del admin actual). */
+  openChangeAdmin(club: Club, deactivating: UserClubRegistration | null = null): void {
+    if (this.busyId()) return;
     this.changingClubId.set(club.id);
-    this.newAdminId.set(club.adminUserId ?? null);
+    this.newAdminId.set(null);
+    this.deactivateAfterChange.set(deactivating);
+    this.adminCandidates.set([]);
+    this.candidatesLoading.set(true);
+    this.adminService
+      .getClubAdminCandidates(club.id)
+      .pipe(
+        finalize(() => this.candidatesLoading.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (list) => {
+          if (this.changingClubId() === club.id) this.adminCandidates.set(list);
+        },
+        error: (err: HttpErrorLike) => this.toast.error(errorMessage(err, 'No se pudieron cargar los entrenadores del club.')),
+      });
   }
 
   closeChangeAdmin(): void {
     this.changingClubId.set(null);
     this.newAdminId.set(null);
+    this.deactivateAfterChange.set(null);
+    this.adminCandidates.set([]);
   }
 
   confirmChangeAdmin(): void {
-    const clubId = this.changingClubId();
-    const adminUserId = this.newAdminId();
-    if (clubId == null || adminUserId == null) return;
-    this.updateClubs((list) => list.map((c) => (c.id === clubId ? { ...c, adminUserId } : c)));
+    const club = this.changingClub();
+    const candidate = this.adminCandidates().find((u) => u.id === this.newAdminId());
+    if (!club || !candidate) return;
+    const previous = this.deactivateAfterChange();
+    const change$ = this.adminService.changeClubAdmin(club.id, candidate.id);
     this.closeChangeAdmin();
+
+    if (previous) {
+      this.runAction(
+        club.id,
+        change$.pipe(switchMap(() => this.adminService.deactivateAccount(previous.user.id))),
+        `${userName(candidate)} administra ${club.name} y la cuenta de ${userName(previous.user)} fue desactivada.`,
+        'No se pudo completar la reasignación.',
+      );
+      return;
+    }
+    this.runAction(club.id, change$, `${userName(candidate)} es el nuevo administrador de ${club.name}.`, 'No se pudo cambiar el administrador.');
   }
 
   /* ---------- Consultas ---------- */

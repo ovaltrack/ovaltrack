@@ -26,3 +26,19 @@
 .adm-option.is-selected {
   background: var(--grass-tint);
 }
+
+.adm-change-note {
+  padding: 16px 28px 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.adm-change-note b {
+  color: var(--text-primary);
+}
+
+@media (max-width: 640px) {
+  .adm-change-note {
+    padding-inline: 16px;
+  }
+}

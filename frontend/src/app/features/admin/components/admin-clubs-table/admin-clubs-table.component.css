@@ -1,6 +1,6 @@
 :host {
   display: block;
-  --adm-cols: minmax(0, 2fr) minmax(0, 2.4fr) minmax(0, 1fr) 156px;
+  --adm-cols: minmax(0, 1.8fr) minmax(0, 2.2fr) minmax(0, 0.9fr) 312px;
 }
 
 /* Inactivo (REJECTED): estado reversible con «Reactivar», en ámbar */
@@ -11,4 +11,20 @@
 
 .adm-status-off .dot {
   background: var(--warning);
+}
+
+/* Administrador con la cuenta inactiva: el club sigue, pero nadie puede administrarlo */
+.adm-admin-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+/* Desactivar y Reactivar con el mismo ancho: "Cambiar admin" queda alineado entre filas */
+@media (min-width: 961px) {
+  .adm-actions .btn:last-child {
+    min-width: 140px;
+    justify-content: center;
+  }
 }

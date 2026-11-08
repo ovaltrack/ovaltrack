@@ -23,7 +23,12 @@
 </main>
 
 @if (store.confirmRequest(); as request) {
-  <app-admin-confirm-dialog [request]="request" (confirmed)="store.acceptConfirm()" (cancelled)="store.cancelConfirm()" />
+  <app-admin-confirm-dialog
+    [request]="request"
+    (confirmed)="store.acceptConfirm()"
+    (chosen)="store.choose($event)"
+    (cancelled)="store.cancelConfirm()"
+  />
 }
 
 @if (store.changingClub(); as club) {
