@@ -25,8 +25,11 @@ export const ACCOUNT_FILTER_OPTIONS: FilterOption<AccountFilter>[] = [
 export const CLUB_FILTER_OPTIONS: FilterOption<ClubFilter>[] = [
   { value: 'all', label: 'Todos' },
   { value: 'active', label: 'Activos' },
-  { value: 'rejected', label: 'Rechazados' },
+  { value: 'rejected', label: 'Inactivos' },
 ];
+
+/** Los pendientes tienen su propia sección; `GET /clubs` sin filtro también los trae. */
+const isReviewed = (club: Club): boolean => club.status !== 'PENDING';
 
 /**
  * Estado del panel de administración de la plataforma.
@@ -92,8 +95,11 @@ export class AdminPanelStore {
 
   readonly clubCounts = computed<Record<ClubFilter, number>>(() => {
     const all = this.allClubs();
-    const active = all.filter((c) => c.status === 'ACTIVE').length;
-    return { all: all.length, active, rejected: all.length - active };
+    return {
+      all: all.length,
+      active: all.filter((c) => c.status === 'ACTIVE').length,
+      rejected: all.filter((c) => c.status === 'REJECTED').length,
+    };
   });
 
   readonly filteredAccounts = computed(() => {
@@ -133,8 +139,9 @@ export class AdminPanelStore {
           this.selectedAdmin.set(Object.fromEntries(pendingClubs.map((c) => [c.id, c.adminUserId ?? null])));
           this.allAccounts.set(users);
           this.visibleAccounts.set(users);
-          this.allClubs.set(clubs);
-          this.visibleClubs.set(clubs);
+          const reviewed = clubs.filter(isReviewed);
+          this.allClubs.set(reviewed);
+          this.visibleClubs.set(reviewed);
           this.loaded.set(true);
         },
         error: (err: HttpErrorLike) =>
@@ -180,8 +187,9 @@ export class AdminPanelStore {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
-        next: (list) => {
+        next: (clubs) => {
           if (this.clubFilter() !== filter) return;
+          const list = clubs.filter(isReviewed);
           this.visibleClubs.set(list);
           if (filter === 'all') this.allClubs.set(list);
         },
@@ -228,6 +236,22 @@ export class AdminPanelStore {
       confirmLabel: 'Rechazar club',
       run: () => this.runAction(club.id, this.adminService.rejectClub(club.id), `${club.name} fue rechazado.`, 'No se pudo rechazar el club.'),
     });
+  }
+
+  /** Desactivar: el club queda REJECTED y sus miembros pierden el acceso (login y sesiones abiertas). */
+  deactivateClub(club: Club): void {
+    this.askConfirm({
+      title: 'Desactivar club',
+      message: `¿Desactivar ${club.name}?`,
+      detail: 'Todos sus miembros pierden el acceso, también los que tienen la sesión abierta, hasta que lo reactives. Los datos del club se conservan.',
+      confirmLabel: 'Desactivar club',
+      run: () =>
+        this.runAction(club.id, this.adminService.rejectClub(club.id), `${club.name} fue desactivado.`, 'No se pudo desactivar el club.'),
+    });
+  }
+
+  reactivateClub(club: Club): void {
+    this.runAction(club.id, this.adminService.reactivateClub(club.id), `${club.name} fue reactivado.`, 'No se pudo reactivar el club.');
   }
 
   setAccountActive(account: UserClubRegistration, active: boolean): void {

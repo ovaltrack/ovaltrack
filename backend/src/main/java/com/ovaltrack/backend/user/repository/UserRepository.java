@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.ovaltrack.backend.auth.access.UserAccessView;
 import com.ovaltrack.backend.user.domain.User;
 import com.ovaltrack.backend.user.domain.UserRole;
 import com.ovaltrack.backend.user.domain.UserStatus;
@@ -23,6 +24,10 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     List<User> findAllByActiveTrueOrderByCreatedAtDesc();
 
     Optional<User> findByPersonId(UUID personId);
+
+    /** Datos mínimos para revisar el acceso (cuenta activa y estado del club). */
+    @Query("SELECT u.active AS active, u.role AS role, c.status AS clubStatus FROM User u LEFT JOIN u.person p LEFT JOIN p.club c WHERE u.id = :userId")
+    Optional<UserAccessView> findAccessById(@Param("userId") UUID userId);
 
     @Query("SELECT u FROM User u WHERE u.person.club.id = :clubId")
     List<User> findAllByClubId(@Param("clubId") UUID clubId);

@@ -5,7 +5,7 @@ import { AdminPersonComponent } from '../admin-person/admin-person.component';
 import { AdminTablePlaceholderComponent } from '../admin-table-placeholder/admin-table-placeholder.component';
 import { AdminTableToolbarComponent } from '../admin-table-toolbar/admin-table-toolbar.component';
 
-/** Clubes ya revisados (activos y rechazados) con su administrador. Solo lectura hasta la Fase 3. */
+/** Clubes ya revisados con su administrador: desactivar (con confirmación) o reactivar. */
 @Component({
   selector: 'app-admin-clubs-table',
   standalone: true,

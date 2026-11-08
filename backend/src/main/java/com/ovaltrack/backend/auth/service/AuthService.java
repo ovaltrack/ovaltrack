@@ -5,6 +5,8 @@ import java.util.UUID;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.ovaltrack.backend.auth.access.AccessStatus;
+import com.ovaltrack.backend.auth.access.AccountAccessService;
 import com.ovaltrack.backend.auth.dto.AuthResponse;
 import com.ovaltrack.backend.auth.dto.LoginRequest;
 import com.ovaltrack.backend.auth.dto.RegisterFromInvitationRequest;
@@ -17,6 +19,7 @@ import com.ovaltrack.backend.club.business.ClubService;
 import com.ovaltrack.backend.club.domain.Club;
 import com.ovaltrack.backend.club.domain.ClubStatus;
 import com.ovaltrack.backend.common.config.exceptions.BusinessException;
+import com.ovaltrack.backend.common.config.exceptions.ClubInactiveException;
 import com.ovaltrack.backend.user.business.UserService;
 import com.ovaltrack.backend.user.domain.User;
 import com.ovaltrack.backend.user.domain.UserRole;
@@ -40,6 +43,7 @@ public class AuthService {
     private PersonService personService;
     private InvitationService invitationService;
     private TokenService tokenService;
+    private final AccountAccessService accountAccessService;
 
     public AuthService(UserService userService,
             PasswordEncoder passwordEncoder,
@@ -47,8 +51,10 @@ public class AuthService {
             ClubService clubService,
             PersonService personService,
             InvitationService invitationService,
-            TokenService tokenService) {
+            TokenService tokenService,
+            AccountAccessService accountAccessService) {
         this.userService = userService;
+        this.accountAccessService = accountAccessService;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.clubService = clubService;
@@ -169,6 +175,9 @@ public class AuthService {
         }
         if (Boolean.FALSE.equals(user.getActive())) {
             throw new UserDeactivatedException("La cuenta todavia se encuentra inactiva.");
+        }
+        if (accountAccessService.check(user.getId()) == AccessStatus.CLUB_INACTIVE) {
+            throw new ClubInactiveException(AccountAccessService.CLUB_INACTIVE_MESSAGE);
         }
         String token = jwtService.generateToken(user);
         return new AuthResponse(token);

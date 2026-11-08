@@ -137,15 +137,6 @@ p {
   font-style: normal;
 }
 
-.adm-status-rejected {
-  background: var(--error-tint);
-  color: var(--error);
-}
-
-.adm-status-rejected .dot {
-  background: var(--error);
-}
-
 /* ---------- Acciones (todas outline: no hay un único primario por fila) ---------- */
 .adm-actions {
   display: flex;

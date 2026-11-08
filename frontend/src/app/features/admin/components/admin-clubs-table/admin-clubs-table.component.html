@@ -2,7 +2,7 @@
   <div class="adm-card-header">
     <div>
       <h2 id="adm-clubs-title">Clubes</h2>
-      <p>Clubes activos y rechazados, con su administrador. Suspender o reactivar un club llega en la próxima etapa.</p>
+      <p>Clubes activos e inactivos. Al desactivar un club, sus miembros pierden el acceso hasta que lo reactives.</p>
     </div>
   </div>
   <app-admin-table-toolbar
@@ -21,6 +21,7 @@
       <span role="columnheader">Club</span>
       <span role="columnheader">Administrador</span>
       <span role="columnheader">Estado</span>
+      <span role="columnheader" class="adm-col-actions">Acción</span>
     </div>
     @if (store.loaded()) {
       @for (c of store.filteredClubs(); track c.id) {
@@ -43,9 +44,22 @@
             </div>
           }
           <span role="cell" data-label="Estado">
-            <i class="status-badge" [class.status-active]="c.status === 'ACTIVE'" [class.adm-status-rejected]="c.status !== 'ACTIVE'">
-              <span class="dot"></span>{{ c.status === 'ACTIVE' ? 'Activo' : 'Rechazado' }}
-            </i>
+            @if (c.status === 'ACTIVE') {
+              <i class="status-badge status-active"><span class="dot"></span>Activo</i>
+            } @else {
+              <i class="status-badge adm-status-off"><span class="dot"></span>Inactivo</i>
+            }
+          </span>
+          <span role="cell" class="adm-actions">
+            @if (c.status === 'ACTIVE') {
+              <button type="button" class="btn adm-btn-danger" [disabled]="store.busy()" (click)="store.deactivateClub(c)">
+                <i class="bi bi-slash-circle" aria-hidden="true"></i> Desactivar
+              </button>
+            } @else {
+              <button type="button" class="btn adm-btn-approve" [disabled]="store.busy()" (click)="store.reactivateClub(c)">
+                <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Reactivar
+              </button>
+            }
           </span>
         </div>
       } @empty {

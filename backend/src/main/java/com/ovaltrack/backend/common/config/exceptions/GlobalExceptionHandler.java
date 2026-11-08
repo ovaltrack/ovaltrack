@@ -71,6 +71,12 @@ public class GlobalExceptionHandler {
                                 .body(new MessageResponse(ex.getMessage()));
         }
 
+        @ExceptionHandler(ClubInactiveException.class)
+        public ResponseEntity<MessageResponse> handleClubInactiveException(ClubInactiveException ex) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                                .body(new MessageResponse(ex.getMessage()));
+        }
+
         /** Falla de @Valid: se informa el mensaje del primer campo inválido. */
         @ExceptionHandler(MethodArgumentNotValidException.class)
         public ResponseEntity<MessageResponse> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
