@@ -71,18 +71,31 @@ describe('MatchService (transiciones offline)', () => {
     expect((await cache.getMatch('match-1'))?.status).toBe('finished');
   });
 
-  it('cachea los partidos finalizados y cancelados que devuelve el servidor', async () => {
+  it('cachea solo los partidos que se capturan sin conexión y quita los que dejaron de serlo', async () => {
     const loading = firstValueFrom(service.getAllMatchesByDivisionId('division-1'));
     (await nextRequest(httpMock, req => req.url.includes('/matches/division')))
       .flush([
         buildBackendMatch({ id: 'match-1', status: 'FINISHED' }),
         buildBackendMatch({ id: 'match-2', status: 'CANCELLED' }),
+        buildBackendMatch({ id: 'match-3', status: 'EMPTY_ROSTER' }),
+        buildBackendMatch({ id: 'match-4', status: 'HALFTIME' }),
       ]);
+
+    expect((await loading).length).withContext('la pantalla recibe todos los partidos').toBe(4);
+    const cached = await cache.getMatchesByDivision('division-1');
+    expect(cached.map(match => [match.id, match.status])).toEqual([['match-4', 'halftime']]);
+  });
+
+  it('no pisa ni borra un partido con una transición pendiente', async () => {
+    await cache.saveMatches([buildMatch({ id: 'match-1', status: 'finished' })]);
+    await cache.savePendingMatchMutation({ id: 'match-1-latest', matchId: 'match-1', action: 'finish', createdAt: 1 });
+
+    const loading = firstValueFrom(service.getAllMatchesByDivisionId('division-1'));
+    (await nextRequest(httpMock, req => req.url.includes('/matches/division')))
+      .flush([buildBackendMatch({ id: 'match-1', status: 'IN_PROGRESS' })]);
     await loading;
 
-    const cached = await cache.getMatchesByDivision('division-1');
-    expect(cached.map(match => [match.id, match.status]))
-      .toEqual([['match-1', 'finished'], ['match-2', 'cancelled']]);
+    expect((await cache.getMatch('match-1'))?.status).toBe('finished');
   });
 
   it('lista los partidos del club y los cachea', async () => {
