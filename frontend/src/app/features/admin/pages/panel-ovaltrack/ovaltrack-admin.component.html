@@ -235,7 +235,7 @@
     <div class="adm-card-header">
       <div>
         <h2 id="adm-clubs-title">Clubes</h2>
-        <p>Clubes activos y rechazados, con su administrador.</p>
+        <p>Clubes activos y rechazados, con su administrador. Suspender o reactivar un club llega en la próxima etapa.</p>
       </div>
     </div>
     <div class="adm-toolbar">
@@ -263,7 +263,6 @@
         <span role="columnheader">Club</span>
         <span role="columnheader">Administrador</span>
         <span role="columnheader">Estado</span>
-        <span role="columnheader" class="adm-col-actions">Acción</span>
       </div>
       @if (!loaded()) {
         <ng-container *ngTemplateOutlet="skeleton" />
@@ -292,17 +291,6 @@
               <i class="status-badge" [class.status-active]="c.status === 'ACTIVE'" [class.adm-status-rejected]="c.status !== 'ACTIVE'">
                 <span class="dot"></span>{{ c.status === 'ACTIVE' ? 'Activo' : 'Rechazado' }}
               </i>
-            </span>
-            <span role="cell" class="adm-actions">
-              @if (c.status === 'ACTIVE') {
-                <button type="button" class="btn adm-btn-danger" (click)="setClubStatus(c, 'REJECTED')">
-                  <i class="bi bi-slash-circle" aria-hidden="true"></i> Desactivar
-                </button>
-              } @else {
-                <button type="button" class="btn adm-btn-approve" (click)="setClubStatus(c, 'ACTIVE')">
-                  <i class="bi bi-check-lg" aria-hidden="true"></i> Aceptar
-                </button>
-              }
             </span>
           </div>
         } @empty {
@@ -366,6 +354,34 @@
         <button type="button" class="btn btn-primary-rugby" [disabled]="newAdminId() === club.adminUserId" (click)="confirmChangeAdmin()">
           Guardar cambios
         </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Confirmación de acciones destructivas -->
+@if (confirmRequest(); as req) {
+  <div class="adm-backdrop" (click)="cancelConfirm()">
+    <div
+      class="adm-card adm-dialog adm-confirm"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="adm-confirm-title"
+      aria-describedby="adm-confirm-message"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="adm-card-header">
+        <h2 id="adm-confirm-title">{{ req.title }}</h2>
+      </div>
+      <div class="adm-confirm-body" id="adm-confirm-message">
+        <p class="adm-confirm-message">{{ req.message }}</p>
+        @if (req.detail) {
+          <p class="adm-confirm-detail">{{ req.detail }}</p>
+        }
+      </div>
+      <div class="adm-dialog-footer">
+        <button #confirmCancel type="button" class="btn btn-outline" (click)="cancelConfirm()">Cancelar</button>
+        <button type="button" class="btn adm-btn-danger" (click)="acceptConfirm()">{{ req.confirmLabel }}</button>
       </div>
     </div>
   </div>
