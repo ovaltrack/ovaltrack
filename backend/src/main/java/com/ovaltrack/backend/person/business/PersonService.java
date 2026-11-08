@@ -7,6 +7,7 @@ import com.ovaltrack.backend.person.domain.dto.PersonDTOMapper;
 import com.ovaltrack.backend.person.domain.dto.PersonResponseDTO;
 import com.ovaltrack.backend.person.domain.dto.PersonUpdateDTO;
 import com.ovaltrack.backend.person.repository.PersonRepository;
+import com.ovaltrack.backend.user.repository.UserRepository;
 import com.ovaltrack.backend.club.domain.Club;
 import com.ovaltrack.backend.club.business.ClubService;
 import jakarta.transaction.Transactional;
@@ -22,11 +23,13 @@ import java.util.UUID;
 public class PersonService {
 
     private final PersonRepository personRepository;
+    private final UserRepository userRepository;
     private final ClubService clubService;
 
-    public PersonService(PersonRepository personRepository, ClubService clubService) {
+    public PersonService(PersonRepository personRepository, ClubService clubService, UserRepository userRepository) {
         this.personRepository = personRepository;
         this.clubService = clubService;
+        this.userRepository = userRepository;
     }
 
     public Collection<PersonResponseDTO> findAllPersons() {
@@ -156,6 +159,17 @@ public class PersonService {
         person.setContactPhone(request.contactPhone());
 
         person = personRepository.save(person);
+
+        person = personRepository.save(person);
+
+        // Si la persona tiene cuenta de usuario vinculada, sincronizamos su email de login
+        if (request.contactEmail() != null && !request.contactEmail().isBlank()) {
+            userRepository.findByPersonId(person.getId()).ifPresent(user -> {
+                user.setLoginEmail(request.contactEmail());
+                userRepository.save(user);
+            });
+        }
+
         return PersonDTOMapper.toResponseDTO(person);
     }
 

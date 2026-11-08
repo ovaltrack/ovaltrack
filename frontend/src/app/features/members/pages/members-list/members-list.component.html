@@ -32,9 +32,6 @@
         aria-label="Buscar miembro"
       />
     </div>
-    <button class="btn btn-invite" id="inviteBtn" (click)="onInviteClick()">
-      + Invitar miembro
-    </button>
   </header>
 
   <!-- Filtros unificados con tabs de estado y categorías -->
@@ -120,9 +117,6 @@
       <p class="empty-copy">
         Invitá al primer integrante del club para empezar a asignar roles.
       </p>
-      <button class="btn btn-invite" (click)="onInviteClick()">
-        + Invitar miembro
-      </button>
     </div>
   } @else if (filteredMembers().length === 0) {
     <div class="empty-state">
@@ -176,6 +170,15 @@
                 }
               </div>
             </div>
+          </div>
+
+          <!-- 2. NUEVA UBICACIÓN: Estado de Cuenta e Invitación -->
+          <div style="display: flex; align-items: center; gap: 12px;">
+            @if (member.userId) {
+              <span style="font-size: 13px; font-weight: 600; color: #4a6042;">Cuenta asociada</span>
+            } @else {
+              <span style="font-size: 13px; font-weight: 600; color: #4a6042;">Sin cuenta</span>
+            }
           </div>
 
           <!-- Selector de Rol y Permiso -->
@@ -310,8 +313,8 @@
             }
           </div>
 
-          <!-- Estado -->
-          <div>
+        <!-- 3. Columna: Estado -->
+          <div style="display: flex; align-items: center;">
             <span
               class="status-badge"
               [ngClass]="member.active ? 'status-active' : 'status-inactive'"
@@ -321,46 +324,44 @@
             </span>
           </div>
 
-          <!-- Menú de Acciones -->
-          <div class="row-actions">
-            <!-- @if (member.active) { -->
-            <button
-              class="menu-btn"
-              type="button"
-              (click)="toggleActionsMenu(member.id, $event)"
-              aria-haspopup="menu"
-              aria-label="Más acciones"
-            >
-              ⋯
+          <!-- Reemplaza el botón simple de los tres puntos por este bloque -->
+          <div class="menu-container">
+            <button 
+              type="button" 
+              class="btn-more" 
+              (click)="toggleMenu(member, $event)"
+              title="Opciones">
+              ...
             </button>
 
-            @if (
-              openMenu()?.type === "actions" &&
-              openMenu()?.memberId === member.id
-            ) {
-              <div class="actions-menu">
-                @if (member.active) {
-                  <button
-                    class="action-opt danger"
-                    type="button"
-                    (click)="handleAction(member, 'revoke', $event)"
-                  >
-                    Revocar acceso
-                  </button>
-                } @else {
-                  <button
-                    class="action-opt"
-                    type="button"
-                    (click)="handleAction(member, 'activate', $event)"
-                  >
-                    Dar de alta
-                  </button>
-                }
-              </div>
-            }
-            <!-- } -->
+            <!-- Menú desplegable -->
+            <div 
+              class="dropdown-menu" 
+              *ngIf="activeMenuMember === member"
+              (click)="$event.stopPropagation()">
+              
+              <button type="button" class="dropdown-item" (click)="openEditModal(member)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                Editar información
+              </button>
+            </div>
           </div>
-        </div>
+
+          <div style="display: flex; align-items: center; gap: 12px;">
+            @if (member.userId) {
+            } @else {
+              <button 
+                class="btn btn-invite" 
+                style="padding: 6px 16px; font-size: 13px; white-space: nowrap;" 
+                (click)="onInviteClick(member)">
+                + Invitar miembro
+              </button>
+            }
+          </div>
+        </div> <!-- Cierre del div .member-row -->
       }
     </div>
   }
@@ -385,3 +386,101 @@
     (save)="saveAllChanges()"
   ></app-batch-action-bar>
 }
+
+<!-- Modal de Confirmación de Invitación -->
+@if (memberToInvite(); as target) {
+  <app-modal
+    title="Invitar a la plataforma"
+    [message]="'¿Enviar invitación a ' + target.firstName + ' ' + target.lastName + '?'"
+    [description]="'Se enviará un correo electrónico a ' + target.email + ' con un enlace para que pueda crear su cuenta de OvalTrack y unirse al club.'"
+    [isProcessing]="isInviting()"
+    (confirm)="confirmarInvitacion()"
+    (cancel)="cancelarInvitacion()">
+  </app-modal>
+}
+
+<!-- Modal de Edición de Miembro -->
+<div class="modal-overlay" *ngIf="isEditModalOpen" (click)="closeEditModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    
+    <div class="modal-top">
+      <div class="modal-title-wrap">
+        <span class="badge-tag">JUGADOR / MIEMBRO</span>
+        <h2>Editar Información</h2>
+      </div>
+      <button type="button" class="close-x" (click)="closeEditModal()">&times;</button>
+    </div>
+
+    <form (ngSubmit)="saveMemberChanges()">
+      <div class="modal-content">
+        
+        <!-- Fila: Nombre y Apellido -->
+        <div class="modal-row">
+          <div class="input-field col-half">
+            <label>Nombre *</label>
+            <input 
+              type="text" 
+              [(ngModel)]="editFormData.firstName" 
+              name="firstName" 
+              required 
+              placeholder="Ej: Mateo" />
+          </div>
+
+          <div class="input-field col-half">
+            <label>Apellido *</label>
+            <input 
+              type="text" 
+              [(ngModel)]="editFormData.lastName" 
+              name="lastName" 
+              required 
+              placeholder="Ej: González" />
+          </div>
+        </div>
+
+        <!-- Fila: Fecha de Nacimiento y Teléfono -->
+        <div class="modal-row">
+          <div class="input-field col-half">
+            <label>Fecha de Nacimiento</label>
+            <input 
+              type="date" 
+              [(ngModel)]="editFormData.birthDate" 
+              name="birthDate" />
+          </div>
+
+          <div class="input-field col-half">
+            <label>Teléfono de Contacto</label>
+            <input 
+              type="tel" 
+              [(ngModel)]="editFormData.contactPhone" 
+              name="contactPhone" 
+              placeholder="Ej: +54 9 280 4123456" />
+          </div>
+        </div>
+
+        <!-- Campo: Email de Contacto -->
+        <div class="input-field">
+          <label>Email de Contacto</label>
+          <input 
+            type="email" 
+            [(ngModel)]="editFormData.contactEmail" 
+            name="contactEmail" 
+            placeholder="Ej: jugador@ejemplo.com" />
+          <span class="hint" *ngIf="selectedMemberToEdit?.id">
+            * Al modificar este correo se actualizará también el acceso de su cuenta vinculada.
+          </span>
+        </div>
+
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" (click)="closeEditModal()" [disabled]="isSavingMember">
+          Cancelar
+        </button>
+        <button type="submit" class="btn-primary" [disabled]="isSavingMember || !editFormData.firstName || !editFormData.lastName">
+          {{ isSavingMember ? 'Guardando...' : 'Guardar cambios' }}
+        </button>
+      </div>
+    </form>
+
+  </div>
+</div>

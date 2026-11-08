@@ -19,6 +19,7 @@ import com.ovaltrack.backend.club.domain.dto.ClubCreationDTO;
 import com.ovaltrack.backend.club.domain.dto.ClubResponseDTO;
 import com.ovaltrack.backend.club.domain.dto.ClubUpdateDTO;
 import com.ovaltrack.backend.common.dto.response.MessageResponse;
+import com.ovaltrack.backend.member.dto.bussines.MemberService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -35,6 +36,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class ClubController {
 
     private final ClubService clubService;
+    private final MemberService memberService; // <- Inyectar el MemberService
 
     @Operation(summary = "Get current authenticated user's club", description = "Returns the club managed by the authenticated club admin.")
     @ApiResponses({
@@ -42,6 +44,7 @@ public class ClubController {
             @ApiResponse(responseCode = "404", description = "No club is associated with the authenticated user."),
             @ApiResponse(responseCode = "409", description = "Business conflict or unauthenticated access.")
     })
+    
     @GetMapping("/my-club")
     public ResponseEntity<Object> getMyClub(org.springframework.security.core.Authentication authentication) {
         ClubResponseDTO result = clubService.findClubForAuthenticatedUser(authentication);
@@ -49,14 +52,22 @@ public class ClubController {
                 : ResponseEntity.status(HttpStatus.NOT_FOUND).body(new MessageResponse("Club no encontrado"));
     }
 
-    @Operation(summary = "Get current authenticated club's members", description = "Returns the users associated with the authenticated user's club.")
+    // Reemplaza el método getMyClubMembers por este:
+    @Operation(summary = "Get current authenticated club's members", description = "Returns the members/persons associated with the authenticated user's club.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Members returned successfully."),
             @ApiResponse(responseCode = "404", description = "No club is associated with the authenticated user.")
     })
     @GetMapping("/my-club/members")
     public ResponseEntity<Object> getMyClubMembers(org.springframework.security.core.Authentication authentication) {
-        return ResponseEntity.ok(clubService.findMembersForAuthenticatedClub(authentication));
+        // Obtenemos primero el club del usuario autenticado a través del servicio que ya funciona
+        ClubResponseDTO club = clubService.findClubForAuthenticatedUser(authentication);
+        if (club == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new MessageResponse("Club no encontrado"));
+        }
+        
+        // Retornamos la lista combinada (Personas + Usuarios) usando el club.id()
+        return ResponseEntity.ok(memberService.getClubMembers(club.id()));
     }
 
     @Operation(summary = "List all clubs in the system", description = "Returns every club registered in the system.")

@@ -11,9 +11,15 @@
       </div>
     </div>
 
-    <div class="hud-actions" *ngIf="!esCoach">
-      <a routerLink="/divisions/new" class="btn btn-invite" id="newDivisionBtn">
+    <div class="hud-actions">
+      <!-- Solo Administrador del Club -->
+      <a *ngIf="!esCoach" routerLink="/divisions/new" class="btn btn-invite" id="newDivisionBtn">
         + Nueva División
+      </a>
+
+      <!-- Administrador del Club Y Entrenadores -->
+      <a routerLink="/players/new" class="btn btn-invite" id="newPlayerBtn">
+        + Nuevo jugador
       </a>
     </div>
   </header>

@@ -18,6 +18,7 @@ export interface Member {
   active: boolean;
   jersey?: number;
   isProtected: boolean;
+  userId?: string;
 }
 
 export interface RolePermissionMeta {

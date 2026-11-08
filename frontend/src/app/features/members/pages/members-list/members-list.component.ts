@@ -27,6 +27,7 @@ import {
 } from '../../types/members.types';
 import { BatchActionBarComponent } from '../../components/batch-action-bar/batch-action-bar.component';
 import { DeactivateModalComponent } from '../../components/deactivate-modal/deactivate-modal.component';
+import { ModalComponent } from 'src/app/features/modal/modal.component';
 
 @Component({
   selector: 'app-members-list',
@@ -35,7 +36,8 @@ import { DeactivateModalComponent } from '../../components/deactivate-modal/deac
     CommonModule,
     FormsModule,
     BatchActionBarComponent,
-    DeactivateModalComponent
+    DeactivateModalComponent,
+    ModalComponent
   ],
   templateUrl: './members-list.component.html',
   styleUrl: './members-list.component.css',
@@ -82,6 +84,8 @@ export class MembersListComponent implements OnInit {
   readonly isSaving = signal<boolean>(false);
   readonly openMenu = signal<{ type: 'role' | 'actions'; memberId: string } | null>(null);
   readonly club = signal<ClubInfo | null>(null);
+
+  
 
   // Computed Signals
   readonly clubName = computed(() => this.club()?.name || 'Orcas RC');
@@ -276,6 +280,56 @@ export class MembersListComponent implements OnInit {
   readonly memberToDeactivate = signal<Member | null>(null);
   readonly isDeactivating = signal<boolean>(false);
 
+  // SEÑALES PARA LA INVITACIÓN
+  readonly memberToInvite = signal<Member | null>(null);
+  readonly isInviting = signal<boolean>(false);
+
+  // 1. Abre el modal
+  onInviteClick(member: Member): void {
+    if (!member.email) {
+      this.showBanner(
+        'warning', 
+        'Falta correo electrónico', 
+        `Debes editar el perfil de ${member.firstName} y agregarle un email antes de poder invitarlo.`
+      );
+      return;
+    }
+    this.memberToInvite.set(member);
+  }
+
+  // 2. Cierra el modal
+  cancelarInvitacion(): void {
+    this.memberToInvite.set(null);
+  }
+
+  // 3. Ejecuta la llamada al backend
+  confirmarInvitacion(): void {
+    const target = this.memberToInvite();
+    if (!target || this.isInviting()) return;
+
+    this.isInviting.set(true);
+
+    // Aquí llamas a tu servicio (Asegúrate de tener este método en MembersService)
+    this.membersService.inviteMember(target.id, target.email).subscribe({
+      next: () => {
+        this.isInviting.set(false);
+        this.memberToInvite.set(null);
+        this.showBanner(
+          'success', 
+          'Invitación enviada', 
+          `Se envió un correo a ${target.email} con las instrucciones para unirse.`
+        );
+        // Opcional: Podrías marcar localmente que ya fue invitado para cambiar el texto del botón
+      },
+      error: (err) => {
+        console.error('Error al invitar:', err);
+        this.isInviting.set(false);
+        const msg = err?.error?.message || 'Hubo un problema al enviar la invitación.';
+        this.showBanner('error', 'Error al enviar', msg);
+      }
+    });
+  }
+
   handleAction(member: Member, action: 'revoke' | 'activate', event: Event): void {
     event.stopPropagation();
     this.closeMenus();
@@ -325,14 +379,6 @@ export class MembersListComponent implements OnInit {
         this.showBanner('error', 'No se pudo dar de baja', msg);
       }
     });
-  }
-
-  onInviteClick(): void {
-    this.showBanner(
-      'info',
-      'Invitar miembro',
-      'Esta acción abriría el flujo de invitación por email (fuera del alcance de esta maqueta).'
-    );
   }
 
   discardChanges(): void {
@@ -391,7 +437,7 @@ export class MembersListComponent implements OnInit {
 
   @HostListener('document:click')
   onDocumentClick(): void {
-    this.closeMenus();
+    this.closeMenu();
   }
 
   activateUser(member: Member): void {
@@ -416,4 +462,121 @@ export class MembersListComponent implements OnInit {
       }
     });
   }
+
+  editarJugador(member: Member): void {
+    // Cerramos el menú de los 3 puntitos
+    this.closeMenus();
+    
+    // Aquí irá la lógica real (abrir un modal o navegar a la pantalla de edición)
+    this.showBanner(
+      'info', 
+      'Editar Jugador', 
+      `Editando información de ${member.firstName} ${member.lastName}`
+    );
+  }
+
+  // Variables para controlar el dropdown y el modal
+  activeMenuMemberId: string | null = null;
+  isEditModalOpen: boolean = false;
+  selectedMemberToEdit: any = null;
+  isSavingMember = false;
+  todayDate = new Date().toISOString().split('T')[0];
+
+  // Formulario o modelo temporal de edición
+  editFormData = {
+    firstName: '',
+    lastName: '',
+    birthDate: '',
+    contactPhone: '',
+    contactEmail: ''
+  };
+
+  activeMenuMember: any = null; // Guardamos el miembro seleccionado
+
+  toggleMenu(member: any, event: MouseEvent): void {
+    event.stopPropagation(); // Evita que el evento suba al document
+    if (this.activeMenuMember === member) {
+      this.activeMenuMember = null;
+    } else {
+      this.activeMenuMember = member;
+    }
+  }
+
+  closeMenu(): void {
+    this.activeMenuMember = null;
+  }
+  // Abrir modal de edición
+  openEditModal(member: any): void {
+
+    console.log('Datos del miembro recibidos desde el backend:', member);
+
+    this.closeMenu();
+    this.selectedMemberToEdit = member;
+
+    let formattedDate = '';
+    if (member.birthDate) {
+      formattedDate = member.birthDate.toString().split('T')[0];
+    }
+
+    this.editFormData = {
+      firstName: member.firstName || '',
+      lastName: member.lastName || '',
+      birthDate: formattedDate,
+      contactPhone: member.contactPhone || member.phone || '',
+      contactEmail: member.contactEmail || member.email || ''
+    };
+
+    this.isEditModalOpen = true;
+  }
+
+  saveMemberChanges(): void {
+    if (!this.selectedMemberToEdit) return;
+
+    const personId = this.selectedMemberToEdit.personId || this.selectedMemberToEdit.id;
+    if (!personId) return;
+
+    this.isSavingMember = true;
+
+    try {
+      // Armado de payload a prueba de errores (forzamos String para evitar el crasheo del trim)
+      const payload = {
+        firstName: this.editFormData.firstName,
+        lastName: this.editFormData.lastName,
+        birthDate: this.editFormData.birthDate ? this.editFormData.birthDate : null,
+        contactEmail: this.editFormData.contactEmail ? String(this.editFormData.contactEmail).trim() : null,
+        contactPhone: this.editFormData.contactPhone ? String(this.editFormData.contactPhone).trim() : null
+      };
+
+      console.log('Enviando PUT con payload:', payload);
+
+      this.membersService.updatePerson(personId, payload).subscribe({
+        next: () => {
+          // Actualizar tabla local
+          this.selectedMemberToEdit.firstName = payload.firstName;
+          this.selectedMemberToEdit.lastName = payload.lastName;
+          this.selectedMemberToEdit.email = payload.contactEmail;
+          this.selectedMemberToEdit.contactEmail = payload.contactEmail;
+          this.selectedMemberToEdit.birthDate = payload.birthDate;
+          this.selectedMemberToEdit.contactPhone = payload.contactPhone;
+
+          this.isSavingMember = false;
+          this.closeEditModal();
+        },
+        error: (err) => {
+          console.error('Error al actualizar datos:', err);
+          this.isSavingMember = false;
+          alert(err.error?.message || 'Error al guardar los cambios');
+        }
+      });
+    } catch (error) {
+      console.error('Error armando los datos antes de enviar:', error);
+      this.isSavingMember = false;
+    }
+  }
+
+  closeEditModal(): void {
+    this.isEditModalOpen = false;
+    this.selectedMemberToEdit = null;
+  }
+
 }
