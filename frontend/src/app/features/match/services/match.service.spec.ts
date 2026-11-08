@@ -86,6 +86,24 @@ describe('MatchService (transiciones offline)', () => {
     expect(cached.map(match => [match.id, match.status])).toEqual([['match-4', 'halftime']]);
   });
 
+  it('al consultar un partido finalizado no lo deja en IndexedDB', async () => {
+    const loading = firstValueFrom(service.getMatchById('match-1'));
+    (await nextRequest(httpMock, req => req.url.endsWith('/matches/match-1')))
+      .flush(buildBackendMatch({ id: 'match-1', status: 'FINISHED' }));
+
+    expect((await loading).status).toBe('finished');
+    expect(await cache.getMatch('match-1')).toBeUndefined();
+  });
+
+  it('al consultar un partido en entretiempo lo guarda para usarlo sin conexión', async () => {
+    const loading = firstValueFrom(service.getMatchById('match-1'));
+    (await nextRequest(httpMock, req => req.url.endsWith('/matches/match-1')))
+      .flush(buildBackendMatch({ id: 'match-1', status: 'HALFTIME' }));
+    await loading;
+
+    expect((await cache.getMatch('match-1'))?.status).toBe('halftime');
+  });
+
   it('no pisa ni borra un partido con una transición pendiente', async () => {
     await cache.saveMatches([buildMatch({ id: 'match-1', status: 'finished' })]);
     await cache.savePendingMatchMutation({ id: 'match-1-latest', matchId: 'match-1', action: 'finish', createdAt: 1 });
@@ -116,13 +134,25 @@ describe('MatchService (transiciones offline)', () => {
     expect((await loading).map(match => match.id)).toEqual(['match-1']);
   });
 
-  it('cachea el partido cancelado tras cancelarlo', async () => {
+  it('quita de IndexedDB el partido cancelado y su nómina', async () => {
+    await cache.saveRoster('match-1', { startingPlayers: [], substitutePlayers: [] });
+
     const cancelling = firstValueFrom(service.deleteMatch('match-1'));
     (await nextRequest(httpMock, req => req.url.endsWith('/matches/match-1/cancel')))
       .flush(buildBackendMatch({ status: 'CANCELLED' }));
     await cancelling;
 
-    expect((await cache.getMatch('match-1'))?.status).toBe('cancelled');
+    expect(await cache.getMatch('match-1')).toBeUndefined();
+    expect(await cache.getRoster('match-1')).toBeUndefined();
+  });
+
+  it('no deja en IndexedDB un partido recién creado (sin plantel)', async () => {
+    const creating = firstValueFrom(service.createMatch({ date: '2026-10-30T16:00', opponentId: 'opponent-1' }, 'division-1'));
+    (await nextRequest(httpMock, req => req.method === 'POST' && req.url.endsWith('/matches')))
+      .flush(buildBackendMatch({ id: 'match-2', status: 'EMPTY_ROSTER' }));
+
+    expect((await creating).status).toBe('empty_roster');
+    expect(await cache.getMatch('match-2')).toBeUndefined();
   });
 
   it('una transición encolada completa startedAt/finishedAt y clockUpdatedAt en la caché', async () => {
