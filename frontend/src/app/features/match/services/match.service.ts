@@ -22,7 +22,7 @@ export class MatchService {
   getAllMatchesByDivisionId(divisionId: string): Observable<Match[]> {
     return this.http.get<BackendMatchResponse[]>(`${this.apiUrl}/division?divisionId=${divisionId}`).pipe(
       map(matches => matches.map(match => this.normalizeMatch(match))),
-      switchMap(matches => from(this.cache.saveMatches(matches)).pipe(map(() => matches))),
+      switchMap(matches => from(this.cache.syncOfflineMatches(matches)).pipe(map(() => matches))),
       catchError(() => from(this.cache.getMatchesByDivision(divisionId)).pipe(
         switchMap(matches => matches.length > 0
           ? from([matches])
@@ -35,7 +35,7 @@ export class MatchService {
   getMatchesByClub(clubId: string): Observable<Match[]> {
     return this.http.get<BackendMatchResponse[]>(`${this.apiUrl}/club?clubId=${clubId}`).pipe(
       map(matches => matches.map(match => this.normalizeMatch(match))),
-      switchMap(matches => from(this.cache.saveMatches(matches)).pipe(map(() => matches))),
+      switchMap(matches => from(this.cache.syncOfflineMatches(matches)).pipe(map(() => matches))),
       catchError(() => from(this.readCachedClubMatches(clubId)).pipe(
         switchMap(matches => matches.length > 0
           ? of(matches)
