@@ -8,7 +8,7 @@ export const LEGAL_UPDATED_AT = '8 de noviembre de 2026';
 export const LEGAL_PROVIDER = 'Equipo OvalTrack';
 export const LEGAL_JURISDICTION = 'Puerto Madryn, Provincia del Chubut';
 /** Correo para consultas y para ejercer los derechos sobre los datos personales. */
-export const LEGAL_CONTACT_EMAIL = 'ovaltrack.noreply@gmail.com';
+export const LEGAL_CONTACT_EMAIL = 'ovaltrack.contact@gmail.com';
 
 export interface LegalSection {
   id: string;
