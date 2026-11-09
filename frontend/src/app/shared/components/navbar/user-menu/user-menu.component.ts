@@ -11,8 +11,8 @@ import { ToastService } from '../../../../core/services/toast.service';
 import { UserContextService } from '../../../../core/services/user-context.service';
 import { LogoutConfirmDialogComponent } from './logout-confirm-dialog/logout-confirm-dialog.component';
 
-/** Ruta de "Mi perfil". Mientras sea `null` la opción no se muestra. */
-const PROFILE_ROUTE: string | null = null;
+/** Ruta de "Mi perfil": la abren la tarjeta de identidad y la opción del menú. */
+const PROFILE_ROUTE = '/profile';
 
 /** Avatar con iniciales y menú de usuario: identidad, sincronización, apariencia y cierre de sesión. */
 @Component({
