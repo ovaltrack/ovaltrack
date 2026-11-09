@@ -17,7 +17,8 @@
       "features/estadisticas/**/*.feature",
       "features/user/**/*.feature",
       "features/club/**/*.feature",
-      "features/auth/**/*.feature"
+      "features/auth/**/*.feature",
+      "features/perfil/**/*.feature"
     ],
     "require": [
       "features/**/*.js"

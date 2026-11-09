@@ -26,6 +26,7 @@ public class AccountAccessService {
      */
     public static final String DENIED_MESSAGE_ATTRIBUTE = "ovaltrack.accessDeniedMessage";
     public static final String CLUB_INACTIVE_MESSAGE = "Tu club no está activo. Contactá al administrador de la plataforma.";
+    public static final String SESSION_EXPIRED_MESSAGE = "Tu sesión ya no es válida. Iniciá sesión de nuevo.";
 
     private final UserRepository userRepository;
 
@@ -38,17 +39,28 @@ public class AccountAccessService {
      * del token, así un cambio de rol (p. ej. cambio de administrador) rige en el próximo request.
      */
     public AccessDecision decide(UUID userId) {
+        return decide(userId, null);
+    }
+
+    /**
+     * Igual que {@link #decide(UUID)}, y además exige que el token se haya emitido para el correo
+     * de acceso actual: si la cuenta cambió su correo, los tokens anteriores dejan de servir.
+     */
+    public AccessDecision decide(UUID userId, String tokenEmail) {
         if (userId == null) {
             return new AccessDecision(AccessStatus.ACCOUNT_INACTIVE, null);
         }
         return userRepository.findAccessById(userId)
-                .map(view -> new AccessDecision(evaluate(view), view.getRole()))
+                .map(view -> new AccessDecision(evaluate(view, tokenEmail), view.getRole()))
                 .orElse(new AccessDecision(AccessStatus.ACCOUNT_INACTIVE, null));
     }
 
-    private static AccessStatus evaluate(UserAccessView view) {
+    private static AccessStatus evaluate(UserAccessView view, String tokenEmail) {
         if (Boolean.FALSE.equals(view.getActive())) {
             return AccessStatus.ACCOUNT_INACTIVE;
+        }
+        if (tokenEmail != null && !tokenEmail.equalsIgnoreCase(view.getLoginEmail())) {
+            return AccessStatus.SESSION_EXPIRED;
         }
         if (view.getRole() == UserRole.ADMIN_OVALTRACK) {
             return AccessStatus.ALLOWED;
@@ -57,6 +69,10 @@ public class AccountAccessService {
     }
 
     public static String messageFor(AccessStatus status) {
-        return status == AccessStatus.CLUB_INACTIVE ? CLUB_INACTIVE_MESSAGE : ACCOUNT_INACTIVE_MESSAGE;
+        return switch (status) {
+            case CLUB_INACTIVE -> CLUB_INACTIVE_MESSAGE;
+            case SESSION_EXPIRED -> SESSION_EXPIRED_MESSAGE;
+            default -> ACCOUNT_INACTIVE_MESSAGE;
+        };
     }
 }

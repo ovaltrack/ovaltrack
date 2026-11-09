@@ -172,6 +172,13 @@ export const routes: Routes = [
                 .then(m => m.DivisionPlayerUserQueryComponent)
     },
     {
+        path: 'profile',
+        canMatch: [authGuard],
+        title: 'Mi perfil · OvalTrack',
+        loadComponent: () =>
+            import('./features/profile/pages/profile/profile.component').then(m => m.ProfileComponent)
+    },
+    {
         path: 'members',
         canMatch: [authGuard],
         canActivate: [hasRoleGuard, hasClubGuard],

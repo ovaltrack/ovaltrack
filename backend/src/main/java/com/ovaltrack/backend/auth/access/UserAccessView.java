@@ -7,6 +7,9 @@ import com.ovaltrack.backend.user.domain.UserRole;
 public interface UserAccessView {
     Boolean getActive();
 
+    /** Correo de acceso actual: el token debe haberse emitido para este correo. */
+    String getLoginEmail();
+
     UserRole getRole();
 
     /** Estado del club de la persona; null si no tiene club. */

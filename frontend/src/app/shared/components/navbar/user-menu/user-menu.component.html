@@ -26,7 +26,7 @@
   >
     <span class="sheet-handle" aria-hidden="true"></span>
 
-    <section class="identity">
+    <a class="identity identity--link" [routerLink]="profileRoute" (click)="close(false)" title="Ver mi perfil">
       <span class="avatar avatar--static" [style.--role-color]="roleMeta()?.color" [style.--role-tint]="roleMeta()?.tint" aria-hidden="true">
         <span class="avatar-initials">{{ initials() }}</span>
       </span>
@@ -37,7 +37,8 @@
           <span class="role-chip" [style.--role-color]="meta.color" [style.--role-tint]="meta.tint">{{ meta.label }}</span>
         }
       </div>
-    </section>
+      <i class="bi bi-chevron-right identity-go" aria-hidden="true"></i>
+    </a>
     @if (clubName()) {
       <p class="club-name">{{ clubName() }}</p>
     }
@@ -66,14 +67,12 @@
     </section>
 
     <ul class="options">
-      @if (profileRoute) {
-        <li>
-          <a class="option" [routerLink]="profileRoute" (click)="close(false)">
-            <i class="bi bi-person" aria-hidden="true"></i>
-            <span>Mi perfil</span>
-          </a>
-        </li>
-      }
+      <li>
+        <a class="option" [routerLink]="profileRoute" (click)="close(false)">
+          <i class="bi bi-person" aria-hidden="true"></i>
+          <span>Mi perfil</span>
+        </a>
+      </li>
       <li class="option option--theme">
         <i class="bi bi-moon" aria-hidden="true"></i>
         <span id="theme-label">Apariencia</span>

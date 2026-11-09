@@ -3,10 +3,18 @@ package com.ovaltrack.backend.user.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ovaltrack.backend.user.business.UserContextService;
+import com.ovaltrack.backend.user.business.UserProfileService;
+import com.ovaltrack.backend.common.dto.response.MessageResponse;
+import com.ovaltrack.backend.user.domain.dto.ChangeLoginEmailRequest;
+import com.ovaltrack.backend.user.domain.dto.UpdateContactRequest;
+import com.ovaltrack.backend.user.domain.dto.UserProfileDTO;
 import com.ovaltrack.backend.user.domain.dto.UserContextDTO;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 public class UserContextController {
 
     private final UserContextService userContextService;
+    private final UserProfileService userProfileService;
 
     @Operation(summary = "Get current authenticated user context", description = "Returns identity, person details, assigned club, and active divisions for the authenticated user.")
     @ApiResponses({
@@ -32,5 +41,40 @@ public class UserContextController {
     @GetMapping
     public ResponseEntity<UserContextDTO> getMe(Authentication authentication) {
         return ResponseEntity.ok(userContextService.getUserContext(authentication));
+    }
+
+    @Operation(summary = "Get the authenticated user's profile", description = "Account, personal data, club and divisions of the authenticated user.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Profile returned successfully."),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - Missing or invalid token.")
+    })
+    @GetMapping("/profile")
+    public ResponseEntity<UserProfileDTO> getProfile(Authentication authentication) {
+        return ResponseEntity.ok(userProfileService.getProfile(authentication.getName()));
+    }
+
+    @Operation(summary = "Update the authenticated user's contact data", description = "Updates contact email and phone. The login email does not change.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Contact updated; returns the updated profile."),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - Missing or invalid token."),
+            @ApiResponse(responseCode = "409", description = "Invalid data or contact email already in use.")
+    })
+    @PatchMapping("/profile/contact")
+    public ResponseEntity<UserProfileDTO> updateContact(Authentication authentication,
+            @Valid @RequestBody UpdateContactRequest request) {
+        return ResponseEntity.ok(userProfileService.updateContact(authentication.getName(), request));
+    }
+
+    @Operation(summary = "Change the authenticated user's login email", description = "Requires the current password and applies immediately. Tokens issued for the previous email stop working, so the user must sign in again.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Login email changed; the client must sign in again."),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - Missing or invalid token."),
+            @ApiResponse(responseCode = "409", description = "Wrong password, invalid email, same email or email already in use.")
+    })
+    @PatchMapping("/profile/login-email")
+    public ResponseEntity<MessageResponse> changeLoginEmail(Authentication authentication,
+            @Valid @RequestBody ChangeLoginEmailRequest request) {
+        userProfileService.changeLoginEmail(authentication.getName(), request);
+        return ResponseEntity.ok(new MessageResponse("Tu correo de acceso cambió. Iniciá sesión con el correo nuevo."));
     }
 }

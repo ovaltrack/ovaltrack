@@ -54,8 +54,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             var claims = jwtService.extractClaims(token);
             String email = claims.getSubject();
 
-            // Token válido pero cuenta o club desactivados después de emitirlo: se corta acá
-            AccessDecision decision = accountAccessService.decide(parseUserId(claims.get("userId", String.class)));
+            // Token válido pero cuenta o club desactivados, o correo de acceso cambiado, después de emitirlo
+            AccessDecision decision = accountAccessService.decide(parseUserId(claims.get("userId", String.class)), email);
             access = decision.status();
 
             if (decision.allowed() && email != null

@@ -1,0 +1,240 @@
+<div class="layout-container page profile-page">
+  <header class="page-header">
+    <div>
+      <h1 class="pf-title">Mi perfil</h1>
+      <p class="pf-subtitle">Tu cuenta, tus datos y tu club.</p>
+    </div>
+  </header>
+
+  @switch (state()) {
+    @case ('loading') {
+      <div class="pf-grid" aria-busy="true" aria-label="Cargando tu perfil">
+        <div class="pf-card pf-skeleton pf-span-2"></div>
+        <div class="pf-card pf-skeleton"></div>
+        <div class="pf-card pf-skeleton"></div>
+      </div>
+    }
+
+    @case ('error') {
+      <div class="pf-card pf-state" role="alert">
+        <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+        <h2>No pudimos cargar tu perfil</h2>
+        <p>Revisá tu conexión e intentá de nuevo.</p>
+        <button type="button" class="btn btn-outline" (click)="load()">
+          <i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Reintentar
+        </button>
+      </div>
+    }
+
+    @default {
+      @if (profile(); as p) {
+        <div class="pf-grid">
+          <!-- Identidad -->
+          <section class="pf-card pf-hero pf-span-2" aria-labelledby="pf-name">
+            <span class="pf-avatar" [style.--role-color]="role()?.color" [style.--role-tint]="role()?.tint" aria-hidden="true">
+              {{ initials() }}
+            </span>
+            <div class="pf-hero-text">
+              <h2 id="pf-name">{{ fullName() }}</h2>
+              <p class="pf-hero-email">{{ p.account.loginEmail }}</p>
+              <div class="pf-chips">
+                @if (role(); as r) {
+                  <span class="pf-chip" [style.--role-color]="r.color" [style.--role-tint]="r.tint">{{ r.label }}</span>
+                }
+                @if (accountStatus(); as s) {
+                  <span class="pf-chip pf-tone" [attr.data-tone]="s.tone">Cuenta {{ s.label.toLowerCase() }}</span>
+                }
+              </div>
+            </div>
+          </section>
+
+          <!-- Mis datos -->
+          <section class="pf-card" aria-labelledby="pf-data-title">
+            <header class="pf-card-head">
+              <h2 id="pf-data-title"><i class="bi bi-person-vcard" aria-hidden="true"></i> Mis datos</h2>
+            </header>
+
+            <div class="pf-card-body">
+              @if (p.person; as person) {
+                <dl class="pf-list">
+                  <div><dt>Nombre</dt><dd>{{ person.firstName }} {{ person.lastName }}</dd></div>
+                  <div>
+                    <dt>Fecha de nacimiento</dt>
+                    <dd>
+                      {{ formatLongDate(person.birthDate) }}
+                      @if (age() !== null) { <span class="pf-muted">({{ age() }} años)</span> }
+                    </dd>
+                  </div>
+                  <div><dt>Miembro desde</dt><dd>{{ formatLongDate(p.account.memberSince) }}</dd></div>
+                </dl>
+
+                <div class="pf-subsection">
+                  <div class="pf-subsection-head">
+                    <h3>Correo de acceso</h3>
+                    @if (editing() !== 'login') {
+                      <button type="button" class="btn btn-outline btn-sm-hit" (click)="startLoginEdit()" [disabled]="editing() !== null">
+                        <i class="bi bi-envelope" aria-hidden="true"></i> Cambiar correo
+                      </button>
+                    }
+                  </div>
+                  @if (editing() === 'login') {
+                    <form class="pf-form" [formGroup]="loginForm" (ngSubmit)="saveLoginEmail()" novalidate>
+                      <p class="pf-note pf-note-warn">
+                        <i class="bi bi-info-circle" aria-hidden="true"></i>
+                        <span>El cambio se aplica al instante y vas a tener que iniciar sesión de nuevo con el correo nuevo. Revisá que esté bien escrito.</span>
+                      </p>
+                      <div class="pf-field">
+                        <label for="newEmail">Correo nuevo</label>
+                        <input #newEmailInput id="newEmail" type="email" class="pf-input" formControlName="newEmail"
+                          autocomplete="email" [class.is-invalid]="showLoginError('newEmail')" />
+                        @if (showLoginError('newEmail')) { <span class="pf-error">Ingresá un correo válido.</span> }
+                      </div>
+                      <div class="pf-field">
+                        <label for="currentPassword">Contraseña actual</label>
+                        <div class="pf-input-group">
+                          <input id="currentPassword" class="pf-input" formControlName="currentPassword" autocomplete="current-password"
+                            [type]="showPassword() ? 'text' : 'password'" [class.is-invalid]="showLoginError('currentPassword')" />
+                          <button type="button" class="pf-input-action" (click)="showPassword.set(!showPassword())"
+                            [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'" [attr.aria-pressed]="showPassword()">
+                            <i class="bi" [class.bi-eye]="!showPassword()" [class.bi-eye-slash]="showPassword()" aria-hidden="true"></i>
+                          </button>
+                        </div>
+                        @if (showLoginError('currentPassword')) { <span class="pf-error">Ingresá tu contraseña actual.</span> }
+                      </div>
+                      <div class="pf-form-actions">
+                        <button type="button" class="btn btn-outline" (click)="cancelEdit()" [disabled]="saving()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary-rugby" [disabled]="saving()">
+                          {{ saving() ? 'Cambiando…' : 'Cambiar y volver a entrar' }}
+                        </button>
+                      </div>
+                    </form>
+                  } @else {
+                    <dl class="pf-list">
+                      <div><dt>Correo</dt><dd class="pf-break">{{ p.account.loginEmail }}</dd></div>
+                    </dl>
+                  }
+                </div>
+
+                <div class="pf-subsection">
+                  <div class="pf-subsection-head">
+                    <h3>Contacto</h3>
+                    @if (editing() !== 'contact') {
+                      <button type="button" class="btn btn-outline btn-sm-hit" (click)="startEdit()" [disabled]="editing() !== null">
+                        <i class="bi bi-pencil" aria-hidden="true"></i> Editar contacto
+                      </button>
+                    }
+                  </div>
+
+                  @if (editing() === 'contact') {
+                    <form class="pf-form" [formGroup]="contactForm" (ngSubmit)="saveContact()" novalidate>
+                      <div class="pf-field">
+                        <label for="contactEmail">Correo de contacto</label>
+                        <input #emailInput id="contactEmail" type="email" class="pf-input" formControlName="contactEmail"
+                          autocomplete="email" [class.is-invalid]="showError('contactEmail')" aria-describedby="contactEmail-hint" />
+                        @if (showError('contactEmail')) {
+                          <span class="pf-error" id="contactEmail-hint">Ingresá un correo válido.</span>
+                        } @else {
+                          <span class="pf-hint" id="contactEmail-hint">Ahí te llegan invitaciones y avisos. No cambia el correo con el que iniciás sesión.</span>
+                        }
+                      </div>
+                      <div class="pf-field">
+                        <label for="contactPhone">Teléfono <span class="pf-muted">(opcional)</span></label>
+                        <input id="contactPhone" type="tel" inputmode="tel" class="pf-input" formControlName="contactPhone"
+                          autocomplete="tel" placeholder="Ej.: +54 280 400-0000" [class.is-invalid]="showError('contactPhone')" />
+                        @if (showError('contactPhone')) { <span class="pf-error">Usá hasta 40 caracteres.</span> }
+                      </div>
+                      <div class="pf-form-actions">
+                        <button type="button" class="btn btn-outline" (click)="cancelEdit()" [disabled]="saving()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary-rugby" [disabled]="saving()">
+                          {{ saving() ? 'Guardando…' : 'Guardar contacto' }}
+                        </button>
+                      </div>
+                    </form>
+                  } @else {
+                    <dl class="pf-list">
+                      <div><dt>Correo</dt><dd class="pf-break">{{ person.contactEmail || '—' }}</dd></div>
+                      <div><dt>Teléfono</dt><dd class="pf-mono">{{ person.contactPhone || '—' }}</dd></div>
+                    </dl>
+                  }
+                </div>
+              } @else {
+                <dl class="pf-list">
+                  <div><dt>Correo de acceso</dt><dd class="pf-break">{{ p.account.loginEmail }}</dd></div>
+                  <div><dt>Miembro desde</dt><dd>{{ formatLongDate(p.account.memberSince) }}</dd></div>
+                </dl>
+                <p class="pf-note">Tu cuenta no tiene datos personales cargados.</p>
+              }
+
+              @if (p.account.termsAcceptedAt) {
+                <p class="pf-terms">
+                  <i class="bi bi-file-earmark-check" aria-hidden="true"></i>
+                  <span>Aceptaste los términos el {{ formatLongDate(p.account.termsAcceptedAt) }} (versión {{ p.account.termsVersion }}).</span>
+                </p>
+              }
+            </div>
+          </section>
+
+          <!-- Mi club -->
+          <section class="pf-card" aria-labelledby="pf-club-title">
+            <header class="pf-card-head">
+              <h2 id="pf-club-title"><i class="bi bi-shield" aria-hidden="true"></i> Mi club</h2>
+            </header>
+
+            <div class="pf-card-body">
+              @if (p.club; as club) {
+                <div class="pf-club">
+                  @if (club.logoUrl) {
+                    <img class="pf-club-logo" [src]="club.logoUrl" [alt]="'Escudo de ' + club.name" />
+                  } @else {
+                    <span class="pf-club-logo pf-club-initial" aria-hidden="true">{{ clubInitial() }}</span>
+                  }
+                  <div>
+                    <h3 class="pf-club-name">{{ club.name }}</h3>
+                    <p class="pf-muted">{{ club.city || 'Ciudad sin cargar' }}</p>
+                    @if (clubStatus(); as s) {
+                      <span class="pf-chip pf-tone" [attr.data-tone]="s.tone">{{ s.label }}</span>
+                    }
+                  </div>
+                </div>
+
+                <dl class="pf-list">
+                  <div><dt>Administrador</dt><dd>{{ club.adminName || '—' }}</dd></div>
+                  <div><dt>Correo del club</dt><dd class="pf-break">{{ club.contactEmail || '—' }}</dd></div>
+                  <div><dt>Teléfono del club</dt><dd class="pf-mono">{{ club.contactPhone || '—' }}</dd></div>
+                </dl>
+
+                <div class="pf-subsection">
+                  <h3>{{ divisionsTitle() }}</h3>
+                  @if (p.divisions.length) {
+                    <ul class="pf-divisions">
+                      @for (d of p.divisions; track d.id) {
+                        <li>
+                          <strong>{{ d.name }}</strong>
+                          <span class="pf-muted">{{ categoryLabel(d.ageCategory) }} · {{ genderLabel(d.gender) }}</span>
+                        </li>
+                      }
+                    </ul>
+                  } @else {
+                    <p class="pf-note">Todavía no estás en ninguna división.</p>
+                  }
+                </div>
+              } @else {
+                <div class="pf-empty">
+                  <i class="bi bi-building" aria-hidden="true"></i>
+                  <p><strong>No pertenecés a ningún club</strong></p>
+                  <p class="pf-muted">
+                    @if (p.account.role === 'ADMIN_OVALTRACK') {
+                      Como administrador de OvalTrack gestionás la plataforma, sin un club propio.
+                    } @else {
+                      Cuando un club apruebe tu solicitud o te invite, lo vas a ver acá.
+                    }
+                  </p>
+                </div>
+              }
+            </div>
+          </section>
+        </div>
+      }
+    }
+  }
+</div>

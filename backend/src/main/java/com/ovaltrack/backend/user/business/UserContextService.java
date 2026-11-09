@@ -1,6 +1,5 @@
 package com.ovaltrack.backend.user.business;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.security.core.Authentication;
@@ -57,30 +56,8 @@ public class UserContextService {
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con email: " + email));
 
         Person person = user.getPerson();
-        Club club = null;
-
-        if (person != null && person.getClub() != null) {
-            club = person.getClub();
-        } else {
-            club = clubRepository.findByAdminUserId(user.getId()).orElse(null);
-        }
-
-        List<DivisionResponseDTO> activeDivisions = new ArrayList<>();
-        if (user.getRole() == UserRole.COACH_ANALYST && person != null) {
-            activeDivisions = divisionCoachRepository.findActiveByPersonId(person.getId()).stream()
-                    .map(DivisionCoach::getDivision)
-                    .map(DivisionDTOMapper::toResponseDTO)
-                    .toList();
-        } else if (user.getRole() == UserRole.PLAYER && person != null) {
-            activeDivisions = divisionPlayerRepository.findActiveByPersonId(person.getId()).stream()
-                    .map(DivisionPlayer::getDivision)
-                    .map(DivisionDTOMapper::toResponseDTO)
-                    .toList();
-        } else if (user.getRole() == UserRole.ADMIN_CLUB && club != null) {
-            activeDivisions = divisionRepository.findAllDivisionsByClubId(club.getId()).stream()
-                    .map(DivisionDTOMapper::toResponseDTO)
-                    .toList();
-        }
+        Club club = resolveClub(user);
+        List<DivisionResponseDTO> activeDivisions = resolveDivisions(user, club);
 
         return new UserContextDTO(
                 user.getId(),
@@ -92,5 +69,39 @@ public class UserContextService {
                 club != null ? ClubDTOMapper.toResponseDTO(club) : null,
                 activeDivisions
         );
+    }
+
+    /** Club del usuario: el de su persona o, si no tiene, el que administra. */
+    @Transactional(readOnly = true)
+    public Club resolveClub(User user) {
+        Person person = user.getPerson();
+        if (person != null && person.getClub() != null) {
+            return person.getClub();
+        }
+        return clubRepository.findByAdminUserId(user.getId()).orElse(null);
+    }
+
+    /** Divisiones activas del usuario según su rol (el admin de club ve todas las del club). */
+    @Transactional(readOnly = true)
+    public List<DivisionResponseDTO> resolveDivisions(User user, Club club) {
+        Person person = user.getPerson();
+        if (user.getRole() == UserRole.COACH_ANALYST && person != null) {
+            return divisionCoachRepository.findActiveByPersonId(person.getId()).stream()
+                    .map(DivisionCoach::getDivision)
+                    .map(DivisionDTOMapper::toResponseDTO)
+                    .toList();
+        }
+        if (user.getRole() == UserRole.PLAYER && person != null) {
+            return divisionPlayerRepository.findActiveByPersonId(person.getId()).stream()
+                    .map(DivisionPlayer::getDivision)
+                    .map(DivisionDTOMapper::toResponseDTO)
+                    .toList();
+        }
+        if (user.getRole() == UserRole.ADMIN_CLUB && club != null) {
+            return divisionRepository.findAllDivisionsByClubId(club.getId()).stream()
+                    .map(DivisionDTOMapper::toResponseDTO)
+                    .toList();
+        }
+        return List.of();
     }
 }
