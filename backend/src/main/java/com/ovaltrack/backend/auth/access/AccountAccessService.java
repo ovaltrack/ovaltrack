@@ -20,6 +20,11 @@ import lombok.RequiredArgsConstructor;
 public class AccountAccessService {
 
     public static final String ACCOUNT_INACTIVE_MESSAGE = "Tu cuenta no está activa.";
+    /**
+     * Atributo del request con el motivo del bloqueo. El filtro JWT lo deja y sigue como anónimo:
+     * las rutas públicas funcionan igual y el entry point lo usa como mensaje del 401 en las privadas.
+     */
+    public static final String DENIED_MESSAGE_ATTRIBUTE = "ovaltrack.accessDeniedMessage";
     public static final String CLUB_INACTIVE_MESSAGE = "Tu club no está activo. Contactá al administrador de la plataforma.";
 
     private final UserRepository userRepository;

@@ -75,11 +75,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         if (access != AccessStatus.ALLOWED) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
-            response.getWriter().write("{\"message\": \"" + AccountAccessService.messageFor(access) + "\"}");
-            return;
+            // Sin autenticar: una ruta pública (p. ej. registration-options) responde igual que sin token;
+            // una privada termina en el entry point, que responde 401 con este motivo.
+            request.setAttribute(AccountAccessService.DENIED_MESSAGE_ATTRIBUTE, AccountAccessService.messageFor(access));
         }
 
         filterChain.doFilter(request, response);
