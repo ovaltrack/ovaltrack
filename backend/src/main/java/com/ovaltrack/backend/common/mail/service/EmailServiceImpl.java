@@ -24,6 +24,8 @@ public class EmailServiceImpl implements EmailService {
     private final TemplateEngine templateEngine;
     @Value("${invitation.url}")
     private String url;
+    @Value("${password-reset.url}")
+    private String passwordResetUrl;
 
     public EmailServiceImpl(final JavaMailSender javaMailSender, final TemplateEngine templateEngine) {
         this.javaMailSender = javaMailSender;
@@ -85,6 +87,32 @@ public class EmailServiceImpl implements EmailService {
             throw new BusinessException("Error al enviar el correo: " + e.getMessage());
         } catch (Exception e) {
             throw new BusinessException("Error al enviar el correo" + e.getMessage());
+        }
+    }
+
+    @Override
+    public void sendPasswordReset(String to, String userName, String rawToken, String expiresIn)
+            throws MessagingException {
+        if (to == null || to.isBlank())
+            throw new BusinessException("El destinatario vino vacío");
+        if (rawToken == null || rawToken.isBlank())
+            throw new BusinessException("El token vino vacío");
+        try {
+            MimeMessage message = javaMailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF8");
+            helper.setTo(to);
+            helper.setSubject("Restablecé tu contraseña de OvalTrack");
+
+            Context context = new Context();
+            context.setVariable("userName", userName);
+            context.setVariable("userEmail", to);
+            context.setVariable("expiresIn", expiresIn);
+            context.setVariable("urlReset", String.format("%s?token=%s", this.passwordResetUrl, rawToken));
+
+            helper.setText(templateEngine.process("password-reset", context), true);
+            javaMailSender.send(message);
+        } catch (MailException e) {
+            throw new BusinessException("Error al enviar el correo: " + e.getMessage());
         }
     }
 

@@ -1,5 +1,7 @@
 package com.ovaltrack.backend.auth.access;
 
+import java.time.LocalDateTime;
+
 import com.ovaltrack.backend.club.domain.ClubStatus;
 import com.ovaltrack.backend.user.domain.UserRole;
 
@@ -11,6 +13,9 @@ public interface UserAccessView {
     String getLoginEmail();
 
     UserRole getRole();
+
+    /** Último cambio de contraseña; los tokens emitidos antes ya no sirven. */
+    LocalDateTime getPasswordChangedAt();
 
     /** Estado del club de la persona; null si no tiene club. */
     ClubStatus getClubStatus();
