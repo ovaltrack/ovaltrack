@@ -103,3 +103,76 @@ export async function countActivePasswordResetTokens(email) {
   );
   return result.rows[0].total;
 }
+
+/**
+ * Crea (o recrea) un jugador del club de `adminEmail` en la división indicada, opcionalmente con cuenta.
+ * Personas propias de los escenarios de invitaciones: no tocan los jugadores compartidos del resto de la suite.
+ * Devuelve el id de la persona.
+ */
+export async function seedClubPlayer({ adminEmail, firstName, lastName, contactEmail = null, divisionName, withAccount = false }) {
+  await query(
+    `WITH target AS (
+       SELECT p.id FROM persons p
+       JOIN persons admin ON admin.club_id = p.club_id
+       JOIN users u ON u.person_id = admin.id AND u.login_email = $1
+       WHERE p.first_name = $2 AND p.last_name = $3
+     ), drop_users AS (
+       DELETE FROM users WHERE person_id IN (SELECT id FROM target)
+     ), drop_invitations AS (
+       DELETE FROM invitations WHERE person_id IN (SELECT id FROM target)
+     ), drop_memberships AS (
+       DELETE FROM division_players WHERE person_id IN (SELECT id FROM target)
+     )
+     DELETE FROM persons WHERE id IN (SELECT id FROM target)`,
+    [adminEmail, firstName, lastName],
+  );
+  const inserted = await query(
+    `WITH division AS (
+       SELECT d.id, d.club_id FROM divisions d
+       JOIN persons admin ON admin.club_id = d.club_id
+       JOIN users u ON u.person_id = admin.id AND u.login_email = $1
+       WHERE d.name = $5
+       LIMIT 1
+     ), person AS (
+       INSERT INTO persons (id, club_id, first_name, last_name, birth_date, contact_email, created_at)
+       SELECT gen_random_uuid(), division.club_id, $2, $3, DATE '2000-01-01', $4, now() FROM division
+       RETURNING id
+     ), membership AS (
+       INSERT INTO division_players (id, person_id, division_id, start_date)
+       SELECT gen_random_uuid(), person.id, division.id, CURRENT_DATE FROM person, division
+     )
+     SELECT id FROM person`,
+    [adminEmail, firstName, lastName, contactEmail, divisionName],
+  );
+  const personId = inserted.rows[0]?.id;
+  if (!personId) throw new Error(`No se encontró la división ${divisionName} del club de ${adminEmail}`);
+  if (withAccount) {
+    const passwordHash = await bcrypt.hash('PassSegura123!', 10);
+    await query(
+      `INSERT INTO users (id, login_email, password_hash, role, account_status, active, created_at, person_id)
+       VALUES (gen_random_uuid(), $1, $2, 'PLAYER', 'ACTIVE', true, now(), $3)`,
+      [contactEmail, passwordHash, personId],
+    );
+  }
+  return personId;
+}
+
+/** Invitación ya enviada a una persona (por id), con su división activa. */
+export async function createSentInvitationForPerson(personId, { rawToken = randomBytes(32).toString('hex'), expiresInHours = 72 } = {}) {
+  await query(
+    `WITH person AS (
+       SELECT p.id, p.club_id, p.contact_email, dp.division_id
+       FROM persons p JOIN division_players dp ON dp.person_id = p.id AND dp.end_date IS NULL
+       WHERE p.id = $1 LIMIT 1
+     ), token AS (
+       INSERT INTO tokens (id, email, expires_at, hash, used, purpose)
+       SELECT gen_random_uuid(), person.contact_email, now() + make_interval(secs => $3::float * 3600), $2, false, 'INVITATION'
+       FROM person
+       RETURNING id
+     )
+     INSERT INTO invitations (id, sent_at, club_id, division_id, person_id, token_id)
+     SELECT gen_random_uuid(), now(), person.club_id, person.division_id, person.id, token.id
+     FROM person, token`,
+    [personId, sha256(rawToken), expiresInHours],
+  );
+}

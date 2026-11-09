@@ -183,11 +183,11 @@ export const routes: Routes = [
         canMatch: [authGuard],
         canActivate: [hasRoleGuard, hasClubGuard],
         data: {
-            roles: ["ADMIN_OVALTRACK", "ADMIN_CLUB"]
+            roles: ["ADMIN_OVALTRACK", "ADMIN_CLUB", "COACH_ANALYST"]
         },
         loadComponent: () =>
-            import('./features/members/pages/members-list/members-list.component').then(
-                m => m.MembersListComponent
+            import('./features/members/pages/members-page/members-page.component').then(
+                m => m.MembersPageComponent
             )
     },
     {

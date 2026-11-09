@@ -458,25 +458,6 @@
 :host-context([data-theme="dark"]) .empty-state p {
   color: #94a3b8;
 }
-/* ==========================================================================
-   Estilos específicos para el botón de invitación a la plataforma
-   ========================================================================== */
-.btn-invite-platform {
-  background-color: #4f46e5; /* Indigo moderno y llamativo para invitaciones digitales */
-  color: #ffffff;
-  border: 1px solid #4f46e5;
-  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
-  font-weight: 700;
-}
-
-.btn-invite-platform:hover {
-  background-color: #4338ca;
-  border-color: #4338ca;
-  color: #ffffff;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
-}
-
 /* Espaciado para iconos dentro de los botones */
 .btn i {
   font-size: 16px;
@@ -484,17 +465,3 @@
   line-height: 1;
 }
 
-/* Modo Oscuro para el botón de invitación */
-:host-context([data-theme="dark"]) .btn-invite-platform {
-  background-color: #6366f1;
-  color: #ffffff;
-  border-color: #6366f1;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
-}
-
-:host-context([data-theme="dark"]) .btn-invite-platform:hover {
-  background-color: #818cf8;
-  border-color: #818cf8;
-  color: #0b111e;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
-}

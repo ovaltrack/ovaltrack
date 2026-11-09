@@ -1,0 +1,277 @@
+/* Jugadores e invitaciones. Solo tokens de Sport Pro Salvia (claro y oscuro). */
+:host {
+  display: block;
+}
+
+.pi-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.pi-title {
+  margin: 0 0 4px;
+  font: 800 22px/1.2 var(--font-head);
+  color: var(--text-primary);
+}
+
+.pi-subtitle,
+.pi-muted {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.pi-search {
+  position: relative;
+  flex: 0 1 340px;
+  min-width: 220px;
+  margin: 0;
+}
+
+.pi-search i {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+}
+
+.pi-search input {
+  width: 100%;
+  min-height: var(--hit);
+  padding: 10px 14px 10px 40px;
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text-primary);
+  font: 400 14.5px/1.4 var(--font-body);
+}
+
+.pi-search input:focus {
+  outline: none;
+  border-color: var(--grass-deep);
+  box-shadow: 0 0 0 3px var(--grass-tint);
+}
+
+/* ---------- Filtros ---------- */
+.pi-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.pi-chip {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  min-height: var(--hit);
+  padding: 0 16px;
+  border: 2px solid var(--border-sport-subtle);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font: 600 14px/1 var(--font-body);
+  cursor: pointer;
+}
+
+.pi-chip:hover {
+  border-color: var(--grass-deep);
+}
+
+.pi-chip.is-active {
+  border-color: var(--grass-deep);
+  background: var(--grass-tint);
+  color: var(--text-primary);
+}
+
+.pi-chip:focus-visible,
+.pi-btn:focus-visible {
+  outline: 2px solid var(--grass-deep);
+  outline-offset: 2px;
+}
+
+.pi-count {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+/* ---------- Tabla ---------- */
+.pi-card {
+  overflow: hidden;
+  background: var(--surface);
+  border: 2px solid var(--border-sport-subtle);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-elevation);
+}
+
+.pi-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.pi-table th {
+  padding: 14px 20px;
+  background: linear-gradient(180deg, var(--surface-header-start), var(--surface-header-end));
+  border-bottom: 2px solid var(--border-sport-subtle);
+  color: var(--text-muted);
+  font: 700 12.5px/1.2 var(--font-body);
+  letter-spacing: 0.04em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.pi-table td {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.pi-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.pi-player strong,
+.pi-email,
+.pi-detail {
+  display: block;
+}
+
+.pi-email {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.pi-divisions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pi-division {
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-alt);
+  color: var(--text-secondary);
+  font: 600 12.5px/1.4 var(--font-body);
+}
+
+.pi-status {
+  display: inline-flex;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  font: 700 12.5px/1.4 var(--font-body);
+}
+
+.pi-status[data-tone='ok'] { background: var(--success-tint); color: var(--success); }
+.pi-status[data-tone='info'] { background: var(--grass-tint); color: var(--grass-deep); }
+.pi-status[data-tone='warn'] { background: var(--warning-tint); color: var(--warning); }
+.pi-status[data-tone='error'] { background: var(--error-tint); color: var(--error); }
+.pi-status[data-tone='muted'] { background: var(--surface-alt); color: var(--text-muted); }
+
+.pi-detail {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.pi-action {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.pi-btn {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  min-width: 128px;
+  min-height: var(--hit);
+}
+
+.pi-btn:disabled {
+  cursor: progress;
+}
+
+/* ---------- Estados ---------- */
+.pi-skeleton {
+  height: 64px;
+  margin: 12px 20px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(90deg, var(--surface) 0%, var(--surface-alt) 50%, var(--surface) 100%);
+  background-size: 200% 100%;
+  animation: pi-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes pi-shimmer {
+  to { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pi-skeleton { animation: none; }
+}
+
+.pi-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  padding: 36px 24px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.pi-empty i {
+  font-size: 30px;
+  color: var(--text-muted);
+}
+
+.pi-empty p {
+  margin: 0;
+}
+
+/* ---------- Móvil: cada jugador es una tarjeta ---------- */
+@media (max-width: 760px) {
+  .pi-search {
+    flex-basis: 100%;
+  }
+
+  .pi-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .pi-table tr {
+    display: grid;
+    gap: 10px;
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .pi-table tr:last-child {
+    border-bottom: 0;
+  }
+
+  .pi-table td {
+    padding: 0;
+    border: 0;
+  }
+
+  .pi-action {
+    text-align: left;
+  }
+
+  .pi-btn {
+    width: 100%;
+  }
+}

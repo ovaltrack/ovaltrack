@@ -1,41 +1,28 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { environment } from '@environments/environment';
 import { Observable } from 'rxjs';
-import { MessageResponse } from 'src/app/shared/types/shared-types';
-import {
-  AcceptInvitationRequest,
-  CreateInvitationRequest,
-  InvitationResponse,
-  InvitationValidationResponse,
-  RegisterFromInvitationRequest,
-} from '../types/invitation.types';
+import { ClubPlayer, InvitationSummary, InvitePlayerRequest } from '../types/invitation.types';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class InvitationService {
-
+  private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}/api/invitation`;
 
-  constructor(private http: HttpClient) { }
-
-  sendInvitation(data: CreateInvitationRequest): Observable<InvitationResponse> {
-    return this.http.post<InvitationResponse>(`${this.apiUrl}/invite`, data);
+  /** Jugadores que quien consulta puede invitar (admin: todo el club; entrenador: sus divisiones). */
+  getPlayers(): Observable<ClubPlayer[]> {
+    return this.http.get<ClubPlayer[]>(`${this.apiUrl}/players`);
   }
 
-  /** Valida el token y devuelve qué formulario corresponde mostrar. No lo consume. */
-  validate(token: string): Observable<InvitationValidationResponse> {
-    return this.http.post<InvitationValidationResponse>(`${this.apiUrl}/validate`, { token });
+  /** Envía la invitación o la reenvía (el enlace anterior deja de servir). Devuelve la fila actualizada. */
+  invite(request: InvitePlayerRequest): Observable<ClubPlayer> {
+    return this.http.post<ClubPlayer>(this.apiUrl, request);
   }
 
-  /** CREATE_ACCOUNT: crea el usuario, lo vincula a la persona y consume el token. */
-  register(request: RegisterFromInvitationRequest): Observable<MessageResponse> {
-    return this.http.post<MessageResponse>(`${this.apiUrl}/register`, request);
-  }
-
-  /** ACCEPT_LINK: vincula la cuenta existente a la persona y consume el token. */
-  accept(request: AcceptInvitationRequest): Observable<MessageResponse> {
-    return this.http.post<MessageResponse>(`${this.apiUrl}/accept`, request);
+  /** Valida el enlace y devuelve lo que muestra el formulario. No lo consume. */
+  validate(token: string): Observable<InvitationSummary> {
+    return this.http.post<InvitationSummary>(`${this.apiUrl}/validate`, { token });
   }
 }

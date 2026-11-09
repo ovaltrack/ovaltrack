@@ -11,14 +11,13 @@ import { DivisionPlayerResponse } from '../type/division-player.types';
 import { PersonResponse } from '../../person/types/person.types';
 import { PaginationComponent } from '../../pagination/pagination.component';
 import { ResultsPage } from '../../pagination/results-page';
-import { InvitePlayerModalComponent } from '../invite-player-modal/invite-player-modal.component';
 import { ModalComponent } from '../../modal/modal.component';
 import { ToastService } from 'src/app/core/services/toast.service';
 
 @Component({
   selector: 'app-division-player-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, PaginationComponent, InvitePlayerModalComponent, ModalComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, PaginationComponent, ModalComponent],
   templateUrl: './division-player-list.component.html',
   styleUrl: './division-player-list.component.css'
 })
@@ -47,9 +46,6 @@ export class DivisionPlayerListComponent implements OnInit {
   activePlayersCurrentPage: number = 1;
   mostrarFormularioAsociacion = false;
 
-  // variables para invitar jugador
-  showInvite: boolean = false;
-  sending: any
 
   ngOnInit(): void {
     this.cargarJugadoresActivos();
@@ -255,13 +251,5 @@ export class DivisionPlayerListComponent implements OnInit {
       }
     });
   }
-  // Logica para invitar a un jugador
-  sendInvitation(): void {
-    this.showModalInvitation();
-  }
-  showModalInvitation(): void {
-    this.showInvite = true;
-  }
-  onInvite($event: any): void { }
 }
 

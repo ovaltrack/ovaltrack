@@ -2,7 +2,9 @@ package com.ovaltrack.backend.division.business;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -58,6 +60,13 @@ public class DivisionCoachService {
             divisionSecurityValidator.validateCanAccessDivision(result.getDivision(), authentication);
         }
         return DivisionDTOMapper.toResponseDTO(result);
+    }
+
+    /** Divisiones que la persona entrena actualmente. */
+    public Set<UUID> findActiveDivisionIdsByCoach(UUID personId) {
+        return divisionCoachRepository.findActiveByPersonId(personId).stream()
+                .map(dc -> dc.getDivision().getId())
+                .collect(Collectors.toSet());
     }
 
     public DivisionCoach findDivisionCoachEntityById(UUID divisionCoachId) {

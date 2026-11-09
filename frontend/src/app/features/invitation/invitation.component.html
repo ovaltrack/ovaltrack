@@ -1,7 +1,7 @@
 <main class="layout-container page">
   <section class="form-card invitation-card" aria-labelledby="invitation-title">
 
-    @switch (view) {
+    @switch (view()) {
 
       @case ('loading') {
         <div class="state-box" role="status">
@@ -15,45 +15,44 @@
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
           </span>
-          <h1 id="invitation-title" class="state-title">Esta invitación no es válida</h1>
-          <p class="state-text">{{ errorMessage }}</p>
-          <p class="state-text">Pide a tu club que te envíe una nueva invitación.</p>
+          <h1 id="invitation-title" class="state-title">No podemos usar esta invitación</h1>
+          <p class="state-text">{{ errorMessage() }}</p>
           <a class="btn btn-outline" routerLink="/home">Ir al inicio</a>
         </div>
       }
 
       @case ('create') {
         <header class="form-card-header">
-          <h1 id="invitation-title" class="form-card-title">Crea tu cuenta</h1>
-          <p class="form-card-subtitle">Te invitaron a sumarte a {{ summary?.divisionName }}</p>
+          <h1 id="invitation-title" class="form-card-title">Creá tu cuenta</h1>
+          <p class="form-card-subtitle">{{ summary()?.clubName }} te invitó a sumarte a OvalTrack</p>
         </header>
 
         <form class="form-card-body" [formGroup]="form" (ngSubmit)="createAccount()" novalidate>
           <dl class="summary">
             <div class="summary-row">
               <dt>Jugador</dt>
-              <dd>{{ summary?.playerName }}</dd>
+              <dd>{{ playerName() }}</dd>
             </div>
             <div class="summary-row">
               <dt>Correo de acceso</dt>
-              <dd class="mono">{{ summary?.email }}</dd>
+              <dd class="mono">{{ summary()?.email }}</dd>
             </div>
             <div class="summary-row">
               <dt>División</dt>
-              <dd>{{ summary?.divisionName }}</dd>
+              <dd>{{ summary()?.divisionName }}</dd>
             </div>
           </dl>
 
           <div class="field">
             <label for="password" class="field-label">Contraseña</label>
             <input id="password" class="form-control" formControlName="password"
-                   [type]="showPasswords ? 'text' : 'password'"
+                   [type]="showPasswords() ? 'text' : 'password'"
                    autocomplete="new-password"
                    [class.is-invalid]="passwordInvalid"
                    [attr.aria-invalid]="passwordInvalid"
                    aria-describedby="password-rules" />
             <ul id="password-rules" class="rules">
-              @for (rule of rules; track rule.label) {
+              @for (rule of rules(); track rule.label) {
                 <li [class.is-ok]="rule.ok">
                   <span class="rule-mark" aria-hidden="true">
                     @if (rule.ok) {
@@ -69,9 +68,9 @@
           </div>
 
           <div class="field">
-            <label for="confirmPassword" class="field-label">Repite la contraseña</label>
+            <label for="confirmPassword" class="field-label">Repetí la contraseña</label>
             <input id="confirmPassword" class="form-control" formControlName="confirmPassword"
-                   [type]="showPasswords ? 'text' : 'password'"
+                   [type]="showPasswords() ? 'text' : 'password'"
                    autocomplete="new-password"
                    [class.is-invalid]="confirmInvalid"
                    [attr.aria-invalid]="confirmInvalid"
@@ -82,8 +81,8 @@
           </div>
 
           <label class="show-toggle">
-            <input type="checkbox" [checked]="showPasswords"
-                   (change)="showPasswords = !showPasswords" />
+            <input type="checkbox" [checked]="showPasswords()"
+                   (change)="toggleShowPasswords()" />
             Mostrar contraseñas
           </label>
 
@@ -103,46 +102,10 @@
             </p>
           </div>
 
-          <button type="submit" class="btn btn-invite btn-block" [disabled]="submitting">
-            {{ submitting ? 'Creando cuenta…' : 'Crear cuenta' }}
+          <button type="submit" class="btn btn-invite btn-block" [disabled]="submitting()" [attr.aria-busy]="submitting()">
+            {{ submitting() ? 'Creando cuenta…' : 'Crear cuenta' }}
           </button>
         </form>
-      }
-
-      @case ('link') {
-        <header class="form-card-header">
-          <h1 id="invitation-title" class="form-card-title">Acepta tu asociación</h1>
-          <p class="form-card-subtitle">Ya tienes una cuenta en OvalTrack</p>
-        </header>
-
-        <div class="form-card-body">
-          <dl class="summary">
-            <div class="summary-row">
-              <dt>Jugador</dt>
-              <dd>{{ summary?.playerName }}</dd>
-            </div>
-            <div class="summary-row">
-              <dt>Correo</dt>
-              <dd class="mono">{{ summary?.email }}</dd>
-            </div>
-            <div class="summary-row">
-              <dt>División</dt>
-              <dd>{{ summary?.divisionName }}</dd>
-            </div>
-          </dl>
-
-          <p class="lead">
-            Al aceptar, tu cuenta quedará asociada a <strong>{{ summary?.divisionName }}</strong>
-            como <strong>{{ summary?.playerName }}</strong>.
-          </p>
-
-          <div class="actions">
-            <a class="btn btn-outline" routerLink="/home">Cancelar</a>
-            <button type="button" class="btn btn-invite" [disabled]="submitting" (click)="acceptLink()">
-              {{ submitting ? 'Aceptando…' : 'Aceptar asociación' }}
-            </button>
-          </div>
-        </div>
       }
 
       @case ('done') {
@@ -152,20 +115,12 @@
                  stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
               <path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
           </span>
-          @if (action === 'CREATE_ACCOUNT') {
-            <h1 id="invitation-title" class="state-title">Cuenta creada</h1>
-            <p class="state-text">
-              Tu cuenta quedó asociada a <strong>{{ summary?.divisionName }}</strong>.
-              Ya puedes iniciar sesión.
-            </p>
-            <a class="btn btn-invite" routerLink="/auth/login">Iniciar sesión</a>
-          } @else {
-            <h1 id="invitation-title" class="state-title">Asociación aceptada</h1>
-            <p class="state-text">
-              Tu cuenta quedó asociada a <strong>{{ summary?.divisionName }}</strong>.
-            </p>
-            <a class="btn btn-invite" routerLink="/home">Ir al inicio</a>
-          }
+          <h1 id="invitation-title" class="state-title">Cuenta creada</h1>
+          <p class="state-text">
+            Ya sos parte de <strong>{{ summary()?.divisionName }}</strong> en {{ summary()?.clubName }}.
+            Iniciá sesión con <span class="mono">{{ summary()?.email }}</span>.
+          </p>
+          <a class="btn btn-invite" routerLink="/auth/login">Iniciar sesión</a>
         </div>
       }
     }

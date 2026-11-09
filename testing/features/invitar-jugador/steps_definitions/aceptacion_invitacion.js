@@ -2,7 +2,6 @@ import { Given, When, Then } from "@cucumber/cucumber";
 import assert from "node:assert/strict";
 import { createSentInvitation } from "../../support/db_helper.js";
 import { makeHttpRequest } from "../../support/httpRequest.js";
-import { MISSING_UUID } from "../../support/ids.js";
 import { findDivisionId } from "../../support/match_helper.js";
 
 // Pasos reutilizados:
@@ -34,23 +33,18 @@ When('se registra con el token {string} y la contraseña {string}', async functi
   this.response = await makeHttpRequest("POST", "api/auth/register/invitation", { token, password, termsAccepted: this.termsAccepted ?? true });
 });
 
-Then('la validación indica la acción {string} para la persona {string} en la division {string}', async function (accion, email, nombreDivision) {
-  const persons = await makeHttpRequest("GET", "person", null, this.token);
-  const person = persons.body.find((p) => p.contactEmail === email);
-  assert.ok(person, `No existe la persona ${email}`);
-  assert.equal(this.response.body.action, accion);
-  assert.equal(this.response.body.personId, person.id);
-  assert.equal(this.response.body.divisionId, await findDivisionId(nombreDivision, this.token));
+Then('la invitación muestra a {string} {string} con el correo {string} en la division {string}', function (firstName, lastName, email, nombreDivision) {
+  const summary = this.response.body;
+  assert.equal(summary.firstName, firstName);
+  assert.equal(summary.lastName, lastName);
+  assert.equal(summary.email, email);
+  assert.equal(summary.divisionName, nombreDivision);
+  assert.ok(summary.clubName, "Falta el nombre del club");
+  assert.equal(summary.personId, undefined, "El resumen no expone ids internos");
 });
 
 Then('el enlace {string} ya no es válido', async function (token) {
   const response = await validateToken(token);
   assert.equal(response.status, 409);
-  assert.equal(response.body?.message, "Este enlace ya fue utilizado.");
-});
-
-// <==================== Consulta de invitaciones ====================>
-
-When('consulta una invitación con un ID cualquiera', async function () {
-  this.response = await makeHttpRequest("GET", `api/invitation/id/${MISSING_UUID}`, null, this.token);
+  assert.equal(response.body?.message, "Esta invitación ya se usó. Si ya creaste tu cuenta, iniciá sesión.");
 });

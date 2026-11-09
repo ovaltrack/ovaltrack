@@ -1,4 +1,4 @@
-<div class="app">
+<div class="members-accounts">
   <!-- Page Header Integrado -->
   <header class="hud">
     <div class="hud-brand">
@@ -6,7 +6,7 @@
         <span>Comunidad & Staff</span>
       </div>
       <div class="brand-text">
-        <h1 class="title">Gestión de Miembros</h1>
+        <h2 class="title">Cuentas del club</h2>
         <p class="club">
           Directorio general de deportistas, entrenadores y administradores
         </p>
@@ -32,9 +32,6 @@
         aria-label="Buscar miembro"
       />
     </div>
-    <button class="btn btn-invite" id="inviteBtn" (click)="onInviteClick()">
-      + Invitar miembro
-    </button>
   </header>
 
   <!-- Filtros unificados con tabs de estado y categorías -->
@@ -118,11 +115,9 @@
       </div>
       <div class="empty-title">No hay miembros todavía</div>
       <p class="empty-copy">
-        Invitá al primer integrante del club para empezar a asignar roles.
+        Cuando los integrantes del club creen su cuenta, aparecen acá para asignarles roles.
+        A los jugadores los invitás desde la pestaña Jugadores.
       </p>
-      <button class="btn btn-invite" (click)="onInviteClick()">
-        + Invitar miembro
-      </button>
     </div>
   } @else if (filteredMembers().length === 0) {
     <div class="empty-state">

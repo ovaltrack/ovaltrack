@@ -2,7 +2,6 @@ import { Given, When, Then } from '@cucumber/cucumber';
 import assert from 'node:assert/strict';
 import { getOvalTrackAdminToken, getUserToken } from '../../support/auth_helper.js';
 import { makeHttpRequest } from '../../support/httpRequest.js';
-import { findDivisionId } from '../../support/match_helper.js';
 
 // Pasos reutilizados:
 //  - "Entonces el sistema responde con ..." (support/common_steps.js)
@@ -36,12 +35,11 @@ When('actualiza su contacto con el correo {string} y el teléfono {string}', asy
   this.response = await makeHttpRequest('PATCH', `${PROFILE}/contact`, { contactEmail, contactPhone }, this.token);
 });
 
-When('invita a la persona {string} a la division {string}', async function (email, nombreDivision) {
+When('invita a la persona {string} a crear su cuenta', async function (email) {
   const persons = await makeHttpRequest('GET', 'person', null, this.token);
   const person = persons.body.find((p) => p.contactEmail === email);
   assert.ok(person, `No existe la persona ${email}`);
-  const divisionId = await findDivisionId(nombreDivision, this.token);
-  this.response = await makeHttpRequest('POST', 'api/invitation/invite', { divisionId, personId: person.id }, this.token);
+  this.response = await makeHttpRequest('POST', 'api/invitation', { personId: person.id }, this.token);
 });
 
 // <==================== Verificaciones ====================>

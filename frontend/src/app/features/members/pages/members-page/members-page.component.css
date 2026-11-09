@@ -1,0 +1,70 @@
+/* Contenedor de Miembros con pestañas. Solo tokens de Sport Pro Salvia. */
+:host {
+  display: block;
+}
+
+.mp-header {
+  margin: 28px 0 16px;
+}
+
+.mp-title {
+  margin: 0 0 4px;
+  font: 800 clamp(26px, 4vw, 32px)/1.15 var(--font-head);
+  color: var(--text-primary);
+}
+
+.mp-subtitle {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.mp-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 24px;
+  border-bottom: 2px solid var(--border-sport-subtle);
+  overflow-x: auto;
+}
+
+.mp-tab {
+  display: inline-flex;
+  flex: none;
+  gap: 8px;
+  align-items: center;
+  min-height: var(--hit);
+  margin-bottom: -2px;
+  padding: 0 18px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  font: 700 15px/1 var(--font-body);
+  cursor: pointer;
+}
+
+.mp-tab:hover {
+  color: var(--text-primary);
+}
+
+.mp-tab.is-active {
+  border-bottom-color: var(--grass-deep);
+  color: var(--text-primary);
+}
+
+.mp-tab:focus-visible {
+  outline: 2px solid var(--grass-deep);
+  outline-offset: -2px;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+/* En móvil las dos pestañas se reparten el ancho y el texto puede ir en dos líneas. */
+@media (max-width: 600px) {
+  .mp-tab {
+    flex: 1 1 0;
+    justify-content: center;
+    padding: 6px 10px;
+    font-size: 14px;
+    line-height: 1.2;
+    text-align: center;
+  }
+}

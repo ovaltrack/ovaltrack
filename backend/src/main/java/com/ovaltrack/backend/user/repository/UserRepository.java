@@ -1,6 +1,7 @@
 package com.ovaltrack.backend.user.repository;
 
 import java.util.Collection;
+import java.util.Set;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -26,6 +27,14 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     List<User> findAllByActiveTrueOrderByCreatedAtDesc();
 
     Optional<User> findByPersonId(UUID personId);
+
+    /** De las personas dadas, las que ya tienen cuenta. */
+    @Query("SELECT u.person.id FROM User u WHERE u.person.id IN :personIds")
+    Set<UUID> findPersonIdsWithAccount(@Param("personIds") Collection<UUID> personIds);
+
+    /** De los correos dados (en minúsculas), los que ya son correo de acceso de alguna cuenta. */
+    @Query("SELECT LOWER(u.loginEmail) FROM User u WHERE LOWER(u.loginEmail) IN :emails")
+    Set<String> findUsedLoginEmails(@Param("emails") Collection<String> emails);
 
     /** Datos mínimos para revisar el acceso (cuenta activa y estado del club). */
     @Query("SELECT u.active AS active, u.loginEmail AS loginEmail, u.role AS role, u.passwordChangedAt AS passwordChangedAt, c.status AS clubStatus FROM User u LEFT JOIN u.person p LEFT JOIN p.club c WHERE u.id = :userId")

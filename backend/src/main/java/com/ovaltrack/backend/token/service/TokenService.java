@@ -150,7 +150,8 @@ public class TokenService {
         if (rawValue == null || rawValue.isBlank()) {
             return false;
         }
-        return repository.markAsUsed(hash(rawValue), purpose, LocalDateTime.now()) == 1;
+        // Los tokens previos a la columna (purpose null) cuentan como invitaciones, igual que en Token#isFor
+        return repository.markAsUsed(hash(rawValue), purpose, purpose == TokenPurpose.INVITATION, LocalDateTime.now()) == 1;
     }
 
     @Transactional
