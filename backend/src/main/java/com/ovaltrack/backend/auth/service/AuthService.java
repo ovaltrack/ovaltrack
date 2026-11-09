@@ -1,5 +1,6 @@
 package com.ovaltrack.backend.auth.service;
 
+import com.ovaltrack.backend.auth.registration.domain.LegalTerms;
 import java.util.UUID;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -103,6 +104,7 @@ public class AuthService {
         newUser.setActive(false);
         newUser.setAccountStatus(UserStatus.PENDING_APPROVAL);
         newUser.setRole(applicant.requestedRole());
+        newUser.acceptTerms(LegalTerms.CURRENT_VERSION);
         userService.saveUser(newUser);
     }
 
@@ -134,6 +136,7 @@ public class AuthService {
         newUser.setActive(false);
         newUser.setAccountStatus(UserStatus.PENDING_APPROVAL);
         newUser.setRole(UserRole.ADMIN_CLUB);
+        newUser.acceptTerms(LegalTerms.CURRENT_VERSION);
         User savedUser = userService.saveUser(newUser);
 
         // 3. Club (pendiente de aprobación)
@@ -228,6 +231,7 @@ public class AuthService {
         user.setAccountStatus(UserStatus.ACTIVE);
         user.setActive(true);
         user.setPerson(person);
+        user.acceptTerms(LegalTerms.CURRENT_VERSION);
         userService.saveUser(user);
     }
 }

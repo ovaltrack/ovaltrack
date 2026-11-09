@@ -53,6 +53,20 @@ public class User {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    /** Momento en que aceptó los Términos y la Política de Privacidad (null: cuenta creada por un administrador). */
+    @Column(name = "terms_accepted_at")
+    private LocalDateTime termsAcceptedAt;
+
+    /** Versión de los textos legales que aceptó. */
+    @Column(name = "terms_version", length = 20)
+    private String termsVersion;
+
+    /** Registra la aceptación de la versión indicada de los textos legales. */
+    public void acceptTerms(String version) {
+        this.termsAcceptedAt = LocalDateTime.now();
+        this.termsVersion = version;
+    }
+
     public boolean isDeactivated() {
         return Boolean.FALSE.equals(this.active);
     }

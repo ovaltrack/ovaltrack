@@ -30,6 +30,12 @@ Característica: Aceptación de invitaciones
     Cuando se registra con el token "token-contrasena" y la contraseña "SoloLetrasLargas"
     Entonces el sistema responde con 409 y "La contraseña debe incluir al menos una letra y un número"
 
+  Escenario: No se puede crear la cuenta sin aceptar los términos
+    Dado que el jugador con email "jugador.temporal@test.com" recibió una invitación a la division "M19" con el token "token-sin-terminos"
+    Y no acepta los términos y condiciones
+    Cuando se registra con el token "token-sin-terminos" y la contraseña "PassSegura123!"
+    Entonces el sistema responde con 409 y "Tenés que aceptar los Términos y Condiciones y la Política de Privacidad."
+
   Escenario: El jugador crea su cuenta desde la invitación y el enlace deja de ser válido
     Dado que el jugador con email "jugador.temporal@test.com" recibió una invitación a la division "M19" con el token "token-registro"
     Cuando se registra con el token "token-registro" y la contraseña "PassSegura123!"

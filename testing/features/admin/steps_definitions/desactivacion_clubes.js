@@ -43,6 +43,7 @@ Given('que el club {string} de la ciudad {string} está activo con el administra
   const registration = await makeHttpRequest('POST', 'api/auth/register-club', {
     admin: { email, password: PASSWORD, firstName: 'Admin', lastName: nombreClub, birthDate: '1985-01-01', role: 'ADMIN_CLUB' },
     club: { name: nombreClub, city: ciudad, contactEmail: email, contactPhone: '+542804000000' },
+    termsAccepted: true,
   });
   const alreadyRegistered = registration.status === 409 && registration.body?.message === 'El email ya fue registrado con una cuenta';
   assert.ok(registration.status === 201 || alreadyRegistered, `No se pudo registrar el club ${nombreClub}: ${registration.body?.message}`);

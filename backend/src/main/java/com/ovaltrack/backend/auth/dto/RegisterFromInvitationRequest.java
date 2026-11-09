@@ -1,6 +1,9 @@
 package com.ovaltrack.backend.auth.dto;
 
+import com.ovaltrack.backend.auth.registration.domain.LegalTerms;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
@@ -14,5 +17,9 @@ public record RegisterFromInvitationRequest(
         @Size(min = 8, max = 72, message = "La contraseña debe tener entre 8 y 72 caracteres")
         @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d).+$",
                  message = "La contraseña debe incluir al menos una letra y un número")
-        String password) {
+        String password,
+
+        @NotNull(message = LegalTerms.NOT_ACCEPTED_MESSAGE)
+        @AssertTrue(message = LegalTerms.NOT_ACCEPTED_MESSAGE)
+        Boolean termsAccepted) {
 }

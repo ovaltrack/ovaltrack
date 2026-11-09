@@ -22,3 +22,9 @@ Ejemplos:
 | Juan    | Imhoff    | juan.imhoff@test.com  | PassSegura123! |                 | COACH_ANALYST | TRC        | Trelew        | 409          | La fecha de nacimiento es obligatoria.                          |
 | Juan    | Imhoff    | juan.imhoff@test.com  | PassSegura123! | 1988-05-11      | COACH_ANALYST |            |               | 409          | El club es obligatorio                                          |
 | Felipe  | Contepomi | felipe.conte@test.com | PassSegura123! | 1977-10-20      | COACH_ANALYST | PMRC       | Puerto Madryn | 409          | El email ya fue registrado con una cuenta                       |
+
+Escenario: No se puede enviar la solicitud de coach sin aceptar los términos
+Dado que el coach "Juan" "Sin Terminos" "juan.sinterminos@test.com" "PassSegura123!" "1988-05-11" quiere registrarse en el "PMRC" "Puerto Madryn" como "COACH_ANALYST"
+Y no acepta los términos y condiciones
+Cuando el coach presiona el botón para enviar su solicitud
+Entonces el sistema responde con 409 y "Tenés que aceptar los Términos y Condiciones y la Política de Privacidad."
