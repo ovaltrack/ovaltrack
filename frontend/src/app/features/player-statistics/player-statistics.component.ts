@@ -1,205 +1,214 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { catchError, finalize, of, tap } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { Observable, catchError, distinctUntilChanged, filter, map, of, startWith, switchMap } from 'rxjs';
 import { ToastService } from 'src/app/core/services/toast.service';
-import { PlayerStatisticsService } from './services/player-statistics.service';
 import { UserContextService } from 'src/app/core/services/user-context.service';
-import { EVENT_CODES, otherStats, seasonsOf, sumPlayerStatistics, toHistoryRow, valueByCode } from './utils/player-statistics.utils';
-import { PlayerEventTypeValue, PlayerStatColumn, PlayerStatistic } from '../match/statistics/types/statistic.types';
+import { RugbyBallLoaderComponent } from 'src/app/shared/components/rugby-ball-loader/rugby-ball-loader.component';
+import { PlayerStatsApiService } from './services/player-stats-api.service';
+import { PlayerComparisonCardComponent } from './components/player-comparison-card/player-comparison-card.component';
+import { PlayerZonesCardComponent } from './components/player-zones-card/player-zones-card.component';
+import { PlayerActionsCardComponent } from './components/player-actions-card/player-actions-card.component';
 import {
-  KickingStat,
-  MatchResult,
-  PlayerCountStat,
-  PlayerKpi,
-  PlayerMatchHistory,
-  PlayerMatchStatistic,
-  PlayerProfile,
-  PlayerRoleFilter,
-} from './types/player-statistics.types';
+  PlayerMatchStatisticsResponse,
+  PlayerMatchSummary,
+  PlayerMetrics,
+  PlayerStatisticsQuery,
+  PlayerStatisticsResponse,
+} from './types/player-stats-api.types';
+import { MatchResult, PlayerKpi } from './types/player-statistics.types';
+import { formatDecimal, matchResult, toActionGroups, toComparisonRows } from './utils/player-comparison';
 
-/** Tipos que no van en "Juego con la pelota": ya se muestran en puntos, pateo o disciplina, o no son juego. */
-const OTHER_STATS_EXCLUDED_CODES: string[] = [
-  ...Object.values(EVENT_CODES),
-  'PENALTY_TRY',
-  'DROP_GOAL',
-  'SUBSTITUTION',
-  'INJURY',
-];
+/** Carga con estado explícito: la pantalla distingue cargando, listo y error sin banderas sueltas. */
+type Load<T> = { status: 'loading' } | { status: 'ready'; data: T } | { status: 'error'; message: string };
 
-/** Iniciales para el avatar: primera letra del nombre y del apellido. */
+const LOADING = { status: 'loading' } as const;
+
+const RESULT_LABELS: Record<MatchResult, string> = { win: 'G', loss: 'P', draw: 'E' };
+const RESULT_WORDS: Record<MatchResult, string> = { win: 'Ganado', loss: 'Perdido', draw: 'Empatado' };
+
 function initialsOf(fullName: string): string {
-  return fullName
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map(part => part[0].toUpperCase())
-    .join('');
+  return fullName.split(' ').filter(Boolean).slice(0, 2).map(part => part[0].toUpperCase()).join('');
 }
 
-const RESULT_LABELS: Record<MatchResult, string> = {
-  win: 'G',
-  loss: 'P',
-  draw: 'E',
-};
+function tackleDetail(metrics: PlayerMetrics): string {
+  const attempts = metrics.tacklesMade + metrics.tacklesMissed;
+  return attempts === 0 ? 'Sin tackles registrados' : `${Math.round((metrics.tacklesMade / attempts) * 100)} % de ${attempts} intentados`;
+}
 
-const ROLE_FILTER_LABELS: Record<PlayerRoleFilter, string> = {
-  all: 'Todos',
-  starter: 'Titular',
-  substitute: 'Suplente',
-};
-
+/**
+ * Estadísticas de un jugador: generales (división y temporada, comparadas con el promedio del plantel) o de un partido.
+ * El jugador entra a `/player-statistics`; el staff, a `/players/:personId/statistics`. Con `:matchId` muestra el partido.
+ */
 @Component({
   selector: 'app-player-statistics',
   standalone: true,
-  imports: [DatePipe, RouterLink],
+  imports: [
+    DatePipe,
+    RouterLink,
+    RugbyBallLoaderComponent,
+    PlayerComparisonCardComponent,
+    PlayerZonesCardComponent,
+    PlayerActionsCardComponent,
+  ],
   templateUrl: './player-statistics.component.html',
-  styleUrl: './player-statistics.component.css'
+  styleUrl: './player-statistics.component.css',
 })
 export class PlayerStatisticsComponent {
-  private readonly playerStatisticsService = inject(PlayerStatisticsService);
-  private readonly toastService = inject(ToastService);
+  private readonly api = inject(PlayerStatsApiService);
+  private readonly toast = inject(ToastService);
+  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly userContext = inject(UserContextService);
 
-  readonly isLoading = signal<boolean>(true);
+  private readonly params = toSignal(
+    this.route.paramMap.pipe(map(params => ({ personId: params.get('personId'), matchId: params.get('matchId') }))),
+    { initialValue: { personId: null, matchId: null } }
+  );
 
-  /** Estadísticas de todos los partidos jugados; ante un error queda vacío y se avisa con un toast. */
-  readonly matchStatistics = toSignal(
-    this.playerStatisticsService.loadAllMatchStatistics().pipe(
-      tap(statistics => {
-        if (statistics.length === 0) {
-          this.toastService.warning('Todavía no jugaste partidos finalizados.', 'Sin partidos');
-        }
-      }),
-      catchError(() => {
-        this.toastService.error('No se pudieron cargar tus estadísticas.');
-        return of([]);
-      }),
-      finalize(() => this.isLoading.set(false))
+  /** Sin `personId` en la ruta, el jugador ve sus propias estadísticas. */
+  readonly isOwnView = computed(() => this.params().personId === null);
+  readonly personId = computed(() => this.params().personId ?? this.userContext.personId());
+  readonly matchId = computed(() => this.params().matchId);
+  readonly view = computed<'general' | 'match'>(() => (this.matchId() ? 'match' : 'general'));
+
+  /** División y temporada elegidas; vacío = las más recientes que elija el backend. */
+  readonly query = signal<PlayerStatisticsQuery>({});
+
+  readonly general = toSignal(
+    toObservable(computed(() => ({ personId: this.personId(), query: this.query() }))).pipe(
+      filter((request): request is { personId: string; query: PlayerStatisticsQuery } => request.personId !== null),
+      switchMap(({ personId, query }) => this.load(this.api.getGeneral(personId, query), 'las estadísticas del jugador'))
     ),
-    { initialValue: [] as PlayerMatchStatistic[] }
+    { initialValue: LOADING as Load<PlayerStatisticsResponse> }
   );
 
+  readonly matchDetail = toSignal(
+    toObservable(computed(() => ({ personId: this.personId(), matchId: this.matchId() }))).pipe(
+      distinctUntilChanged((a, b) => a.personId === b.personId && a.matchId === b.matchId),
+      filter((request): request is { personId: string; matchId: string } => !!request.personId && !!request.matchId),
+      switchMap(({ personId, matchId }) => this.load(this.api.getMatch(personId, matchId), 'las estadísticas del partido'))
+    ),
+    { initialValue: LOADING as Load<PlayerMatchStatisticsResponse> }
+  );
+
+  readonly data = computed(() => {
+    const state = this.general();
+    return state.status === 'ready' ? state.data : null;
+  });
+
+  readonly detail = computed(() => {
+    const state = this.matchDetail();
+    return state.status === 'ready' && state.data.match.matchId === this.matchId() ? state.data : null;
+  });
+
+  readonly ownClubName = computed(() => this.userContext.currentClub()?.name ?? 'Mi club');
+  readonly fullName = computed(() => this.data()?.fullName ?? this.detail()?.fullName ?? '');
+  readonly initials = computed(() => initialsOf(this.fullName()));
   readonly resultLabels = RESULT_LABELS;
-  readonly roleFilterLabels = ROLE_FILTER_LABELS;
-  readonly roleFilters: readonly PlayerRoleFilter[] = ['all', 'starter', 'substitute'];
-  /** Temporadas con partidos jugados, de la más reciente a la más antigua. */
-  readonly seasons = computed<string[]>(() => seasonsOf(this.matchStatistics()));
+  readonly resultWords = RESULT_WORDS;
 
-  /** Temporada elegida por el usuario; hasta que elija, la más reciente. */
-  private readonly chosenSeason = signal<string | null>(null);
-  readonly selectedSeason = computed<string>(() => this.chosenSeason() ?? this.seasons()[0] ?? '');
+  readonly matches = computed<PlayerMatchSummary[]>(() => this.data()?.matches ?? []);
+  readonly hasMatches = computed(() => this.matches().length > 0);
 
-  readonly roleFilter = signal<PlayerRoleFilter>('all');
-
-  readonly profile = computed<PlayerProfile>(() => {
-    const fullName = this.userContext.fullName();
-    return {
-      fullName,
-      initials: initialsOf(fullName),
-      clubName: this.userContext.currentClub()?.name ?? '',
-      // La división del último partido jugado; sin partidos, la división activa.
-      divisionName: this.matchStatistics()[0]?.match.divisionName ?? this.userContext.activeDivisions()[0]?.name ?? '',
-    };
+  readonly subtitle = computed(() => {
+    const data = this.data();
+    if (!data?.divisionName) return 'Sin división asignada';
+    return data.season ? `${data.divisionName} · Temporada ${data.season}` : data.divisionName;
   });
 
-  /** Partidos de la temporada elegida (el año de la fecha del partido). */
-  readonly seasonStatistics = computed<PlayerMatchStatistic[]>(() =>
-    this.matchStatistics().filter(statistic => statistic.match.date.startsWith(this.selectedSeason()))
-  );
-
-  readonly history = computed<PlayerMatchHistory[]>(() => this.seasonStatistics().map(toHistoryRow));
-
-  /** Totales de la temporada: suma de las estadísticas de cada partido. */
-  readonly total = computed<PlayerStatistic>(() => sumPlayerStatistics(this.seasonStatistics()));
-
-  /** Tipos de evento del catálogo: son los mismos en todos los partidos. */
-  readonly columns = computed<PlayerStatColumn[]>(() => this.seasonStatistics()[0]?.columns ?? []);
-
-  readonly kicking = computed<KickingStat[]>(() => {
-    const conversions = this.valueOf(EVENT_CODES.CONVERSION);
-    const penaltyKicks = this.valueOf(EVENT_CODES.PENALTY_KICK);
+  // --- General ---
+  readonly generalKpis = computed<PlayerKpi[]>(() => {
+    const data = this.data();
+    if (!data) return [];
+    const played = data.matches.length;
+    const starts = data.matches.filter(m => m.role === 'TITULAR').length;
+    const results = data.matches.map(matchResult);
+    const count = (result: MatchResult) => results.filter(r => r === result).length;
+    const perMatch = (value: number) => (played === 0 ? '0' : formatDecimal(value / played));
     return [
-      { label: 'Conversiones', made: conversions.made ?? 0, attempts: conversions.count },
-      { label: 'Penales a palos', made: penaltyKicks.made ?? 0, attempts: penaltyKicks.count },
+      { label: 'Partidos', value: `${played}`, detail: `${starts} titular · ${played - starts} suplente` },
+      { label: 'Puntos', value: `${data.totals.points}`, detail: `${perMatch(data.totals.points)} por partido` },
+      { label: 'Tries', value: `${data.totals.tries}`, detail: `${perMatch(data.totals.tries)} por partido` },
+      { label: 'Tackles', value: `${data.totals.tacklesMade}`, detail: tackleDetail(data.totals) },
+      { label: 'Récord jugando', value: `${count('win')}-${count('loss')}-${count('draw')}`, detail: 'G · P · E' },
     ];
   });
 
-  readonly playStats = computed<PlayerCountStat[]>(() =>
-    otherStats(this.total(), this.columns(), OTHER_STATS_EXCLUDED_CODES)
-  );
+  readonly generalRows = computed(() => toComparisonRows(this.data()?.comparisons ?? []));
+  readonly generalActions = computed(() => toActionGroups(this.data()?.actions ?? []));
 
-  readonly disciplineStats = computed<PlayerCountStat[]>(() => [
-    { label: 'Penales cometidos', value: this.valueOf(EVENT_CODES.PENALTY_CONCEDED).count },
-    { label: 'Amarillas', value: this.valueOf(EVENT_CODES.YELLOW_CARD).count, tone: 'warning' },
-    { label: 'Rojas', value: this.valueOf(EVENT_CODES.RED_CARD).count, tone: 'error' },
-  ]);
-
-  readonly kpis = computed<PlayerKpi[]>(() => {
-    const matches = this.history();
-    const starters = matches.filter(m => m.isStarter).length;
-    const points = matches.reduce((sum, m) => sum + m.totalPoints, 0);
-    const tries = matches.reduce((sum, m) => sum + m.tries, 0);
-    const count = (result: MatchResult) => matches.filter(m => m.result === result).length;
-    const made = this.kicking().reduce((sum, k) => sum + k.made, 0);
-    const attempts = this.kicking().reduce((sum, k) => sum + k.attempts, 0);
-
+  // --- Partido ---
+  readonly matchKpis = computed<PlayerKpi[]>(() => {
+    const detail = this.detail();
+    if (!detail) return [];
+    const { match } = detail;
     return [
-      { label: 'Partidos', value: `${matches.length}`, detail: `${starters} titular · ${matches.length - starters} suplente` },
-      { label: 'Puntos', value: `${points}`, detail: `${this.average(points, matches.length)} por partido` },
-      { label: 'Tries', value: `${tries}`, detail: 'Apoyados en la temporada' },
-      { label: 'Récord con el club', value: `${count('win')}-${count('loss')}-${count('draw')}`, detail: 'G · P · E jugando vos' },
-      { label: 'Efectividad de pateo', value: `${this.percentage(made, attempts)}%`, detail: `${made} de ${attempts} a palos` },
+      { label: 'Puntos', value: `${match.metrics.points}`, detail: 'Conseguidos por el jugador' },
+      { label: 'Tries', value: `${match.metrics.tries}`, detail: 'Apoyados' },
+      { label: 'Tackles', value: `${match.metrics.tacklesMade}`, detail: tackleDetail(match.metrics) },
+      { label: 'Turnovers', value: `${match.metrics.turnoversWon}`, detail: 'Ganados' },
+      { label: 'Acciones', value: `${match.metrics.actions}`, detail: 'Eventos con el jugador' },
     ];
   });
 
-  readonly pointsChart = computed(() => {
-    const matches = this.history();
-    const max = Math.max(...matches.map(m => m.totalPoints), 1);
-    return matches.map(m => ({
-      matchId: m.matchId,
-      opponent: m.opponent,
-      points: m.totalPoints,
-      isWin: m.result === 'win',
-      heightPercent: Math.round((m.totalPoints / max) * 100),
-    }));
+  readonly matchRows = computed(() => toComparisonRows(this.detail()?.comparisons ?? []));
+  readonly matchActions = computed(() => toActionGroups(this.detail()?.actions ?? []));
+
+  readonly matchSquadLabel = computed(() => {
+    const detail = this.detail();
+    return detail ? `Promedio de los ${detail.squadSize} jugadores del plantel de este partido` : '';
   });
 
-  readonly averagePoints = computed(() => {
-    const matches = this.history();
-    return this.average(matches.reduce((sum, m) => sum + m.totalPoints, 0), matches.length);
+  readonly backLink = computed<string[] | null>(() => {
+    const divisionId = this.data()?.divisionId;
+    return this.isOwnView() || !divisionId ? null : ['/divisions', divisionId, 'players'];
   });
 
-  readonly filteredHistory = computed(() => {
-    const filter = this.roleFilter();
-    return this.history().filter(m =>
-      filter === 'all' || (filter === 'starter' ? m.isStarter : !m.isStarter)
-    );
-  });
-
-  openMatch(matchId: string): void {
-    this.router.navigate(['/player-statistics', matchId]);
-  }
-
-  setRoleFilter(filter: PlayerRoleFilter): void {
-    this.roleFilter.set(filter);
+  // --- Navegación ---
+  setDivision(divisionId: string): void {
+    this.query.set({ divisionId, season: null });
+    this.openGeneral();
   }
 
   setSeason(season: string): void {
-    this.chosenSeason.set(season);
+    this.query.update(query => ({ ...query, divisionId: query.divisionId ?? this.data()?.divisionId, season: Number(season) }));
   }
 
-  private valueOf(code: string): PlayerEventTypeValue {
-    return valueByCode(this.total(), this.columns(), code);
+  openGeneral(): void {
+    this.router.navigate(this.baseRoute());
   }
 
-  percentage(made: number, attempts: number): number {
-    return attempts === 0 ? 0 : Math.round((made / attempts) * 100);
+  openMatch(matchId: string): void {
+    this.router.navigate([...this.baseRoute(), matchId]);
   }
 
-  private average(total: number, count: number): string {
-    return count === 0 ? '0' : (total / count).toFixed(1).replace(/\.0$/, '');
+  /** "Por partido" sin partido elegido abre el más reciente. */
+  openMatchView(): void {
+    const latest = this.matches()[0];
+    if (latest) this.openMatch(latest.matchId);
+  }
+
+  resultOf(match: PlayerMatchSummary): MatchResult {
+    return matchResult(match);
+  }
+
+  private baseRoute(): string[] {
+    const personId = this.params().personId;
+    return personId ? ['/players', personId, 'statistics'] : ['/player-statistics'];
+  }
+
+  private load<T>(request: Observable<T>, what: string): Observable<Load<T>> {
+    return request.pipe(
+      map(data => ({ status: 'ready', data }) as Load<T>),
+      catchError((error: unknown) => {
+        const message = (error instanceof HttpErrorResponse && error.error?.message) || `No se pudieron cargar ${what}.`;
+        this.toast.error(message);
+        return of({ status: 'error', message } as Load<T>);
+      }),
+      startWith(LOADING as Load<T>)
+    );
   }
 }

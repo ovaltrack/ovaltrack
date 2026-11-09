@@ -1,0 +1,27 @@
+<section class="form-card">
+  <div class="form-card-header">
+    <h2 class="form-card-title"><i class="bi bi-list-check" aria-hidden="true"></i> Acciones registradas</h2>
+    <p class="form-card-subtitle">En las jugadas a palos se muestran los aciertos sobre los intentos.</p>
+  </div>
+  <div class="form-card-body">
+    @if (groups().length === 0) {
+      <p class="empty">No hay acciones registradas con este jugador.</p>
+    } @else {
+      <div class="groups">
+        @for (group of groups(); track group.title) {
+          <div class="group">
+            <h3 class="group-title">{{ group.title }}</h3>
+            <dl class="rows">
+              @for (row of group.rows; track row.name) {
+                <div class="row-item">
+                  <dt>{{ row.name }}</dt>
+                  <dd>{{ row.value }}</dd>
+                </div>
+              }
+            </dl>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</section>

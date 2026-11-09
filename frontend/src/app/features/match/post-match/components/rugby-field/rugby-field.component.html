@@ -24,7 +24,7 @@
         <span class="ingoal-label ingoal-label--rival" data-testid="ingoal-rival" aria-hidden="true">{{ rivalShortName() }}</span>
 
         <!-- Grilla 3x6 accesible (role=grid, flechas, una sola parada de Tab) -->
-        <div class="pitch-grid" role="grid" [attr.aria-label]="gridLabel" [attr.aria-readonly]="!selectable()">
+        <div class="pitch-grid" role="grid" [attr.aria-label]="gridLabel()" [attr.aria-readonly]="!selectable()">
           <div class="pitch-row" role="row" *ngFor="let line of fieldRows(); let r = index; trackBy: trackRow"
                [style.flex-grow]="rowMeters[r]" [style.grid-template-columns]="columnTemplate">
             <div *ngFor="let cell of line; trackBy: trackCell"

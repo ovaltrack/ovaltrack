@@ -1,0 +1,49 @@
+<section class="form-card">
+  <div class="form-card-header card-head">
+    <div>
+      <h2 class="form-card-title"><i class="bi bi-bar-chart-line" aria-hidden="true"></i> {{ title() }}</h2>
+      @if (subtitle()) {
+        <p class="form-card-subtitle">{{ subtitle() }}</p>
+      }
+    </div>
+    <div class="summary" aria-label="Resumen de la comparación">
+      <span class="summary-chip tone-good">{{ counts().good }} a favor</span>
+      <span class="summary-chip tone-bad">{{ counts().bad }} a mejorar</span>
+    </div>
+  </div>
+
+  <div class="form-card-body">
+    <div class="legend" aria-hidden="true">
+      <span><span class="dot dot--player"></span>Jugador</span>
+      <span><span class="dot dot--squad"></span>{{ squadLabel() }}</span>
+    </div>
+
+    <ul class="metric-list">
+      @for (row of rows(); track row.key) {
+        <li class="metric" [attr.data-tone]="row.tone">
+          <div class="metric-name">
+            <span class="metric-label">{{ row.label }}</span>
+            <span class="metric-hint">{{ row.hint }}</span>
+          </div>
+
+          <div class="bars" aria-hidden="true">
+            <div class="bar-line">
+              <span class="bar-value bar-value--player">{{ row.player }}</span>
+              <div class="track"><div class="fill fill--player" [style.width.%]="row.playerWidth"></div></div>
+            </div>
+            <div class="bar-line">
+              <span class="bar-value">{{ row.squad }}</span>
+              <div class="track"><div class="fill fill--squad" [style.width.%]="row.squadWidth"></div></div>
+            </div>
+          </div>
+
+          <span [class]="'verdict tone-' + row.tone">
+            <i class="bi {{ row.icon }}" aria-hidden="true"></i>
+            {{ row.verdictLabel }}
+          </span>
+          <span class="visually-hidden">Jugador {{ row.player }}, {{ squadLabel() }} {{ row.squad }}.</span>
+        </li>
+      }
+    </ul>
+  </div>
+</section>
