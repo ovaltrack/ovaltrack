@@ -20,6 +20,8 @@ public interface PersonRepository extends JpaRepository<Person, UUID> {
 
     boolean existsByContactEmailIgnoreCase(String contactEmail);
 
+    boolean existsByContactEmailIgnoreCaseAndIdNot(String contactEmail, UUID id);
+
     boolean existsByContactPhone(String contactPhone);
 
     List<Person> findAllByClubId(UUID clubId);

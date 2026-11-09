@@ -19,6 +19,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     boolean existsByLoginEmail(String loginEmail);
 
+    boolean existsByLoginEmailIgnoreCaseAndIdNot(String loginEmail, UUID id);
+
     boolean existsByRole(UserRole role);
 
     List<User> findAllByActiveTrueOrderByCreatedAtDesc();
