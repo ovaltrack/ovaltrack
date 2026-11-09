@@ -61,6 +61,22 @@ public class User {
     @Column(name = "terms_version", length = 20)
     private String termsVersion;
 
+    /**
+     * Último cambio de contraseña, redondeado hacia arriba al segundo: el {@code iat} del JWT
+     * tiene precisión de segundos y así un token emitido en ese mismo segundo también queda afuera.
+     * Los tokens emitidos antes dejan de servir. Null si nunca la cambió.
+     */
+    @Column(name = "password_changed_at")
+    private LocalDateTime passwordChangedAt;
+
+    /** Reemplaza la contraseña y marca el momento: cierra las sesiones abiertas. */
+    public void changePassword(String newPasswordHash) {
+        this.passwordHash = newPasswordHash;
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime seconds = now.truncatedTo(java.time.temporal.ChronoUnit.SECONDS);
+        this.passwordChangedAt = seconds.equals(now) ? seconds : seconds.plusSeconds(1);
+    }
+
     /** Registra la aceptación de la versión indicada de los textos legales. */
     public void acceptTerms(String version) {
         this.termsAcceptedAt = LocalDateTime.now();

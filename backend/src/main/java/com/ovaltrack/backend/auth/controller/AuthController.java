@@ -9,11 +9,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ovaltrack.backend.auth.dto.AuthResponse;
 import com.ovaltrack.backend.auth.dto.LoginRequest;
+import com.ovaltrack.backend.auth.dto.PasswordResetConfirmRequest;
+import com.ovaltrack.backend.auth.dto.PasswordResetLinkResponse;
 import com.ovaltrack.backend.auth.dto.PasswordResetRequest;
+import com.ovaltrack.backend.auth.dto.PasswordResetTokenRequest;
 import com.ovaltrack.backend.auth.dto.RegisterFromInvitationRequest;
 import com.ovaltrack.backend.auth.registration.domain.dto.ClubRegistrationDTO;
 import com.ovaltrack.backend.auth.registration.domain.dto.MemberRegistrationDTO;
 import com.ovaltrack.backend.auth.service.AuthService;
+import com.ovaltrack.backend.auth.service.PasswordResetService;
 import com.ovaltrack.backend.common.dto.response.MessageResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,9 +32,11 @@ import jakarta.validation.Valid;
 public class AuthController {
 
     private final AuthService authService;
+    private final PasswordResetService passwordResetService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, PasswordResetService passwordResetService) {
         this.authService = authService;
+        this.passwordResetService = passwordResetService;
     }
 
     @Operation(summary = "Register a new player or coach", description = "Creates a player or coach account and a registration request pending approval. "
@@ -80,9 +86,31 @@ public class AuthController {
             @ApiResponse(responseCode = "202", description = "Password reset request accepted.")
     })
     @PostMapping("/password-reset/request")
-    public ResponseEntity<MessageResponse> passwordReset(@RequestBody PasswordResetRequest request) {
+    public ResponseEntity<MessageResponse> passwordReset(@Valid @RequestBody PasswordResetRequest request) {
+        passwordResetService.request(request.email());
         return ResponseEntity.status(HttpStatus.ACCEPTED)
-                .body(new MessageResponse("Solicitud enviada correctamente"));
+                .body(new MessageResponse(PasswordResetService.REQUEST_ACCEPTED_MESSAGE));
+    }
+
+    @Operation(summary = "Validate a password reset link", description = "Checks that the link is unused, not expired and issued for password recovery.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "The link can be used; returns the account login email."),
+            @ApiResponse(responseCode = "409", description = "The link is invalid, used or expired.")
+    })
+    @PostMapping("/password-reset/validate")
+    public ResponseEntity<PasswordResetLinkResponse> validatePasswordReset(@Valid @RequestBody PasswordResetTokenRequest request) {
+        return ResponseEntity.ok(new PasswordResetLinkResponse(passwordResetService.validate(request.token())));
+    }
+
+    @Operation(summary = "Set a new password from a reset link", description = "Consumes the link, changes the password and closes every open session of the account.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Password changed."),
+            @ApiResponse(responseCode = "409", description = "The link is invalid, used or expired, or the password does not meet the policy.")
+    })
+    @PostMapping("/password-reset/confirm")
+    public ResponseEntity<MessageResponse> confirmPasswordReset(@Valid @RequestBody PasswordResetConfirmRequest request) {
+        passwordResetService.reset(request.token(), request.password());
+        return ResponseEntity.ok(new MessageResponse(PasswordResetService.PASSWORD_CHANGED_MESSAGE));
     }
 
     // ---- AuthController (agrega este método junto a los otros) ----

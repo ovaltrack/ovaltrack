@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import com.ovaltrack.backend.common.config.exceptions.BusinessException;
 import com.ovaltrack.backend.token.domain.Token;
+import com.ovaltrack.backend.token.domain.TokenPurpose;
 import com.ovaltrack.backend.token.repository.TokenRepository;
 
 import jakarta.transaction.Transactional;
@@ -32,6 +33,13 @@ public class TokenService {
     private TokenRepository repository;
 
     public IssuedToken create(String email, Duration timeToLive, String rawValue) {
+        return create(email, timeToLive, rawValue, TokenPurpose.INVITATION);
+    }
+
+    public IssuedToken create(String email, Duration timeToLive, String rawValue, TokenPurpose purpose) {
+        if (purpose == null) {
+            throw new BusinessException("El propósito del token no puede ser nulo");
+        }
         if (email == null || email.isBlank()) {
             throw new BusinessException("El email no puede ser nulo");
         }
@@ -47,6 +55,7 @@ public class TokenService {
         token.setEmail(email);
         token.setExpiresAt(LocalDateTime.now().plus(timeToLive));
         token.setUsed(false);
+        token.setPurpose(purpose);
 
         Token savedToken = this.save(token);
         logger.info("Token creado y guardado exitosamente para el email: {}", email);
@@ -117,5 +126,35 @@ public class TokenService {
         }
 
         logger.info("Token consumido exitosamente");
+    }
+
+    /**
+     * Token vigente (sin usar y sin vencer) emitido para ese propósito; null si no hay.
+     * No distingue "no existe", "vencido" o "de otro flujo": el llamador responde un único mensaje.
+     */
+    public Token findActive(String rawValue, TokenPurpose purpose) {
+        if (rawValue == null || rawValue.isBlank()) {
+            return null;
+        }
+        Token token = repository.findByHash(hash(rawValue));
+        if (token == null || !token.isFor(purpose) || token.isUsed()
+                || !token.getExpiresAt().isAfter(LocalDateTime.now())) {
+            return null;
+        }
+        return token;
+    }
+
+    /** Marca como usado un token vigente de ese propósito; false si ya se usó, venció o es de otro flujo. */
+    @Transactional
+    public boolean consume(String rawValue, TokenPurpose purpose) {
+        if (rawValue == null || rawValue.isBlank()) {
+            return false;
+        }
+        return repository.markAsUsed(hash(rawValue), purpose, LocalDateTime.now()) == 1;
+    }
+
+    @Transactional
+    public int revokeActive(String email, TokenPurpose purpose) {
+        return repository.revokeActive(email, purpose);
     }
 }

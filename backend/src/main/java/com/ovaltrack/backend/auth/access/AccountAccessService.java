@@ -1,5 +1,8 @@
 package com.ovaltrack.backend.auth.access;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -47,25 +50,44 @@ public class AccountAccessService {
      * de acceso actual: si la cuenta cambió su correo, los tokens anteriores dejan de servir.
      */
     public AccessDecision decide(UUID userId, String tokenEmail) {
+        return decide(userId, tokenEmail, null);
+    }
+
+    /**
+     * Igual que {@link #decide(UUID, String)}, y además rechaza los tokens emitidos antes del
+     * último cambio de contraseña: restablecerla cierra las sesiones abiertas.
+     */
+    public AccessDecision decide(UUID userId, String tokenEmail, Instant tokenIssuedAt) {
         if (userId == null) {
             return new AccessDecision(AccessStatus.ACCOUNT_INACTIVE, null);
         }
         return userRepository.findAccessById(userId)
-                .map(view -> new AccessDecision(evaluate(view, tokenEmail), view.getRole()))
+                .map(view -> new AccessDecision(evaluate(view, tokenEmail, tokenIssuedAt), view.getRole()))
                 .orElse(new AccessDecision(AccessStatus.ACCOUNT_INACTIVE, null));
     }
 
-    private static AccessStatus evaluate(UserAccessView view, String tokenEmail) {
+    private static AccessStatus evaluate(UserAccessView view, String tokenEmail, Instant tokenIssuedAt) {
         if (Boolean.FALSE.equals(view.getActive())) {
             return AccessStatus.ACCOUNT_INACTIVE;
         }
         if (tokenEmail != null && !tokenEmail.equalsIgnoreCase(view.getLoginEmail())) {
             return AccessStatus.SESSION_EXPIRED;
         }
+        if (issuedBeforePasswordChange(tokenIssuedAt, view.getPasswordChangedAt())) {
+            return AccessStatus.SESSION_EXPIRED;
+        }
         if (view.getRole() == UserRole.ADMIN_OVALTRACK) {
             return AccessStatus.ALLOWED;
         }
         return view.getClubStatus() == ClubStatus.REJECTED ? AccessStatus.CLUB_INACTIVE : AccessStatus.ALLOWED;
+    }
+
+    /** El {@code iat} del JWT tiene precisión de segundos; el cambio se guarda redondeado al segundo siguiente. */
+    private static boolean issuedBeforePasswordChange(Instant issuedAt, LocalDateTime changedAt) {
+        if (issuedAt == null || changedAt == null) {
+            return false;
+        }
+        return issuedAt.isBefore(changedAt.atZone(ZoneId.systemDefault()).toInstant());
     }
 
     public static String messageFor(AccessStatus status) {

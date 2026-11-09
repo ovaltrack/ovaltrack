@@ -26,6 +26,7 @@ import com.ovaltrack.backend.invitations.repository.InvitationRepository;
 import com.ovaltrack.backend.person.business.PersonService;
 import com.ovaltrack.backend.person.domain.Person;
 import com.ovaltrack.backend.token.domain.Token;
+import com.ovaltrack.backend.token.domain.TokenPurpose;
 import com.ovaltrack.backend.token.service.TokenService;
 import com.ovaltrack.backend.token.service.TokenService.IssuedToken;
 import com.ovaltrack.backend.user.business.UserService;
@@ -118,7 +119,7 @@ public class InvitationService {
         logger.info("Validando token de invitación");
         Token token = tokenService.findUsable(invitationToken.token());
 
-        if (token == null) {
+        if (token == null || !token.isFor(TokenPurpose.INVITATION)) {
             logger.warn("Token de invitación no encontrado");
             throw new BusinessException("Token no encontrado.");
         }

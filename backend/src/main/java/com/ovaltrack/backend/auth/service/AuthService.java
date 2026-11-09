@@ -37,6 +37,8 @@ import com.ovaltrack.backend.token.service.TokenService;
 
 @Service
 public class AuthService {
+
+    public static final String INVALID_CREDENTIALS_MESSAGE = "Correo o contraseña incorrectos.";
     private final UserService userService;
     private final ClubService clubService;
     private final PasswordEncoder passwordEncoder;
@@ -170,11 +172,9 @@ public class AuthService {
     @Transactional
     public AuthResponse login(LoginRequest request) {
         User user = userService.findUserByEmail(request.email());
-        if (user == null) {
-            throw new BusinessException("El usuario con el email " + request.email() + " no existe");
-        }
-        if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
-            throw new BusinessException("Contraseña incorrecta");
+        // Mismo mensaje en ambos casos: no revela qué correos tienen cuenta
+        if (user == null || !passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+            throw new BusinessException(INVALID_CREDENTIALS_MESSAGE);
         }
         if (Boolean.FALSE.equals(user.getActive())) {
             throw new UserDeactivatedException("La cuenta todavia se encuentra inactiva.");

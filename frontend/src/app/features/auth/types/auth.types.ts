@@ -95,3 +95,9 @@ export interface ClubRegistrationDTO {
   /** Aceptación de los Términos y la Política de Privacidad vigentes. */
   termsAccepted: boolean;
 }
+
+
+/** Respuesta de `POST /api/auth/password-reset/validate`. */
+export interface PasswordResetLink {
+  email: string;
+}

@@ -1,120 +1,75 @@
-<main class="login-wrapper">
-  <div class="auth-split-card">
-    <!-- Lateral Izquierdo: Identidad Deportiva de Rugby -->
-    <div class="auth-brand-side">
-      <div class="brand-top">
-        <a routerLink="/home" class="brand-glass-badge">
-          <div class="brand-icon-box">O</div>
-          <span class="brand-name">OvalTrack</span>
-        </a>
+<div class="rf-page">
+  <div class="rf-shell lg-shell">
+    <aside class="rf-aside" aria-label="Sobre OvalTrack">
+      <span class="rf-aside-pill">Rugby Club OS</span>
+      <h2>Todo el rugby de tu club en una sola cancha digital.</h2>
+      <p>Divisiones, planteles, captura de partidos minuto a minuto y estadísticas.</p>
+      <ul class="rf-aside-list">
+        <li><i class="bi bi-check2-circle" aria-hidden="true"></i><span>Convocatorias de hasta 23 jugadores.</span></li>
+        <li><i class="bi bi-check2-circle" aria-hidden="true"></i><span>Captura en vivo, aun sin conexión.</span></li>
+        <li><i class="bi bi-check2-circle" aria-hidden="true"></i><span>Revisión post-partido y métricas.</span></li>
+      </ul>
+    </aside>
 
-        <div class="brand-pill">
-          <span class="pill-dot"></span>
-          <span>Plataforma Rugby Club OS</span>
-        </div>
+    <section class="rf-main" aria-labelledby="lg-title">
+      <header class="rf-header">
+        <h1 id="lg-title">Iniciar sesión</h1>
+        <p>Ingresá con el correo y la contraseña de tu cuenta.</p>
+      </header>
 
-        <h2 class="brand-headline">
-          Todo el rugby de tu club en una sola cancha digital.
-        </h2>
-        <p class="brand-subtext">
-          Planificación de divisiones, seguimiento de jugadores, captura de partidos minuto a minuto y métricas de rendimiento.
-        </p>
-      </div>
-
-      <div class="brand-footer">
-        <div class="category-avatars">
-          <span class="cat-pill cat-m19">M19</span>
-          <span class="cat-pill cat-ps">PS</span>
-          <span class="cat-pill cat-m16">M16</span>
-        </div>
-        <div class="brand-footer-text">
-          <strong>Control integral</strong>
-          <span>Planteles, entrenadores y analistas</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Lateral Derecho: Formulario de Login -->
-    <div class="auth-form-side">
-      <div class="form-header">
-        <h1 class="auth-title">Bienvenido de nuevo</h1>
-        <p class="auth-subtitle">Ingresa tus credenciales para acceder a la gestión del club</p>
-      </div>
-
-      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
-        <!-- Email -->
-        <div class="form-field mb-3">
-          <label for="email" class="custom-label">CORREO ELECTRÓNICO</label>
-          <input
-            id="email"
-            formControlName="email"
-            type="email"
-            autocomplete="email"
-            placeholder="entrenador@miclub.com"
-            class="form-control custom-input"
-            [class.is-invalid]="loginForm.controls.email.touched && loginForm.controls.email.invalid"
-          />
-          @if (loginForm.controls.email.touched && loginForm.controls.email.invalid) {
-            <small class="error-text">Ingresa un correo válido</small>
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate [attr.aria-busy]="submitting()">
+        <div class="rf-body lg-body">
+          @if (errorMessage(); as message) {
+            <div class="rf-note rf-note-error" role="alert">
+              <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+              <span>{{ message }}</span>
+            </div>
           }
+
+          <div class="rf-field">
+            <label class="rf-label" for="email">Correo electrónico</label>
+            <input id="email" type="email" class="rf-input" formControlName="email" autocomplete="email"
+              inputmode="email" placeholder="nombre@tuclub.com" [readonly]="submitting()"
+              [class.is-invalid]="showError('email')" />
+            @if (showError('email')) { <span class="rf-error">Ingresá un correo válido.</span> }
+          </div>
+
+          <div class="rf-field">
+            <div class="lg-label-row">
+              <label class="rf-label" for="password">Contraseña</label>
+              <a class="rf-link lg-forgot" routerLink="/auth/forgot-password"
+                [queryParams]="loginForm.controls.email.valid ? { email: loginForm.controls.email.value } : {}">
+                ¿Olvidaste tu contraseña?
+              </a>
+            </div>
+            <div class="rf-input-group">
+              <input id="password" class="rf-input" formControlName="password" autocomplete="current-password"
+                [type]="showPassword() ? 'text' : 'password'" [readonly]="submitting()"
+                [class.is-invalid]="showError('password')" />
+              <button type="button" class="rf-input-action" (click)="togglePassword()"
+                [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'" [attr.aria-pressed]="showPassword()">
+                <i class="bi" [class.bi-eye]="!showPassword()" [class.bi-eye-slash]="showPassword()" aria-hidden="true"></i>
+              </button>
+            </div>
+            @if (showError('password')) { <span class="rf-error">Ingresá tu contraseña.</span> }
+          </div>
         </div>
 
-        <!-- Password -->
-        <div class="form-field mb-4">
-          <div class="d-flex justify-content-between align-items-center mb-1">
-            <label for="password" class="custom-label mb-0">CONTRASEÑA</label>
-            <span class="forgot-link">¿Olvidaste tu clave?</span>
-          </div>
-          <div class="input-password-wrapper">
-            <input
-              #myPassword
-              id="password"
-              formControlName="password"
-              type="password"
-              autocomplete="current-password"
-              placeholder="••••••••"
-              class="form-control custom-input"
-              [class.is-invalid]="loginForm.controls.password.touched && loginForm.controls.password.invalid"
-            />
-            <button
-              type="button"
-              class="btn-toggle-eye"
-              (click)="visiblePassword()"
-              aria-label="Ver u ocultar contraseña"
-            >
-              <i #myBtnChangeVisibity class="bi bi-eye-slash"></i>
-            </button>
-          </div>
-          @if (loginForm.controls.password.touched && loginForm.controls.password.invalid) {
-            <small class="error-text">La contraseña es obligatoria</small>
-          }
+        <div class="rf-actions">
+          <button type="submit" class="btn btn-primary-rugby lg-submit" [disabled]="submitting()">
+            @if (submitting()) {
+              <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+              <span>Ingresando…</span>
+            } @else {
+              <span>Ingresar</span>
+            }
+          </button>
         </div>
-
-        <!-- Error del backend -->
-        @if (errorMessage) {
-          <div class="custom-alert mb-4 d-flex align-items-center gap-2" role="alert">
-            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="8" x2="12" y2="12"></line>
-              <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
-            <span>{{ errorMessage }}</span>
-          </div>
-        }
-
-        <button
-          type="submit"
-          class="btn btn-auth-submit"
-          [disabled]="loginForm.invalid"
-        >
-          Iniciar Sesión
-        </button>
       </form>
 
-      <div class="auth-footer-prompt">
-        <span>¿Aún no tienes cuenta?</span>
-        <a routerLink="/auth/register" class="auth-switch-link">Crear una cuenta nueva</a>
-      </div>
-    </div>
+      <footer class="rf-footer">
+        ¿Todavía no tenés cuenta? <a routerLink="/auth/register">Crear una cuenta</a>
+      </footer>
+    </section>
   </div>
-</main>
+</div>

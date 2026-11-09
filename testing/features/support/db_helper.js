@@ -66,3 +66,40 @@ export async function createSentInvitation(email, divisionId, { rawToken = rando
     [email, divisionId, sha256(rawToken), expiresInHours],
   );
 }
+
+/**
+ * Crea (o reinicia) una cuenta activa sin persona, para probar flujos que cambian la contraseña
+ * sin tocar las cuentas compartidas del seed.
+ */
+export async function upsertLoginAccount(email, password) {
+  const passwordHash = await bcrypt.hash(password, 10);
+  await query(
+    `INSERT INTO users (id, login_email, password_hash, role, account_status, active, created_at)
+     VALUES (gen_random_uuid(), $1, $2, 'COACH_ANALYST', 'ACTIVE', true, now())
+     ON CONFLICT (login_email) DO UPDATE SET password_hash = EXCLUDED.password_hash, password_changed_at = NULL`,
+    [email, passwordHash],
+  );
+  await query(`DELETE FROM tokens WHERE lower(email) = lower($1) AND purpose = 'PASSWORD_RESET'`, [email]);
+}
+
+/**
+ * Registra un enlace de recupero ya enviado, como haría POST /api/auth/password-reset/request
+ * tras mandar el correo (el backend guarda el SHA-256 del valor en crudo).
+ */
+export async function createPasswordResetToken(email, rawToken, { expiresInHours = 1, purpose = 'PASSWORD_RESET' } = {}) {
+  await query(
+    `INSERT INTO tokens (id, email, expires_at, hash, used, purpose)
+     VALUES (gen_random_uuid(), $1, now() + make_interval(secs => $3::float * 3600), $2, false, $4)`,
+    [email, sha256(rawToken), expiresInHours, purpose],
+  );
+}
+
+/** Enlaces de recupero sin usar ni vencer de un correo. */
+export async function countActivePasswordResetTokens(email) {
+  const result = await query(
+    `SELECT count(*)::int AS total FROM tokens
+     WHERE lower(email) = lower($1) AND purpose = 'PASSWORD_RESET' AND used = false AND expires_at > now()`,
+    [email],
+  );
+  return result.rows[0].total;
+}

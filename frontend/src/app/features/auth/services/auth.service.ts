@@ -1,7 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { AuthResponse, ClubRegistrationDTO, CurrentUserSession, LoginRequest, MemberRegistrationDTO, TokenPayload, UserRole } from '../types/auth.types';
+import { AuthResponse, ClubRegistrationDTO, PasswordResetLink, CurrentUserSession, LoginRequest, MemberRegistrationDTO, TokenPayload, UserRole } from '../types/auth.types';
 import { environment } from '@environments/environment';
 import { TokenService } from '../../../core/services/token.service';
 import { UserContextService } from '../../../core/services/user-context.service';
@@ -42,6 +42,20 @@ export class AuthService {
   registerMember(data: MemberRegistrationDTO): Observable<MessageResponse> {
     return this.http.post<MessageResponse>(`${this.apiUrl}/register`, data);
   }
+  /** Siempre responde lo mismo, exista o no la cuenta. */
+  requestPasswordReset(email: string): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(`${this.apiUrl}/password-reset/request`, { email });
+  }
+
+  validatePasswordResetToken(token: string): Observable<PasswordResetLink> {
+    return this.http.post<PasswordResetLink>(`${this.apiUrl}/password-reset/validate`, { token });
+  }
+
+  /** Cambia la contraseña y cierra las sesiones abiertas de la cuenta. */
+  confirmPasswordReset(token: string, password: string): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(`${this.apiUrl}/password-reset/confirm`, { token, password });
+  }
+
   login(credentials: LoginRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/login`, credentials).pipe(
       tap(res => this.handleAuthSuccess(res.token))
@@ -58,6 +72,8 @@ export class AuthService {
     }
 
     if (error.status === 400) {
+      // El backend no distingue correo inexistente de contraseña incorrecta, y el mensaje tampoco
+      if (action === 'login') return 'Correo o contraseña incorrectos.';
       return this.readBackendMessage(error) ?? 'Los datos enviados no son válidos.';
     }
 
