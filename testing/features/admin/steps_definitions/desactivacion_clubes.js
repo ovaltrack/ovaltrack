@@ -113,3 +113,7 @@ Then('{string} puede iniciar sesión', async function (email) {
   assert.equal(response.status, 200, `${email} no pudo iniciar sesión: ${response.body?.message}`);
   assert.ok(response.body?.token, 'El login no devolvió token');
 });
+
+When('consulta los clubes disponibles para registrarse con la sesión abierta', async function () {
+  this.response = await makeHttpRequest('GET', 'club/registration-options', null, this.memberToken);
+});
