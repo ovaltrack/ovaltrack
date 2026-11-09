@@ -453,6 +453,11 @@ select.rf-input {
   cursor: pointer;
 }
 
+.rf-check a {
+  color: var(--grass-deep);
+  font-weight: 700;
+}
+
 .rf-check input {
   flex: none;
   width: 20px;
@@ -489,6 +494,16 @@ select.rf-input {
 .rf-footer a {
   color: var(--grass-deep);
   font-weight: 700;
+}
+
+.rf-footer-legal {
+  display: block;
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+.rf-footer-legal a {
+  font-weight: 500;
 }
 
 /* ---------- Envío correcto ---------- */

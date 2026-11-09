@@ -139,7 +139,11 @@
                 </div>
                 <label class="rf-check">
                   <input type="checkbox" formControlName="termsAccepted" [class.is-invalid]="showError('termsAccepted')" />
-                  <span>Acepto los términos, las condiciones y la política de privacidad de la plataforma.</span>
+                  <span>
+                    Leí y acepto los <a routerLink="/legal/terminos" target="_blank" rel="noopener">Términos y Condiciones</a>
+                    y la <a routerLink="/legal/privacidad" target="_blank" rel="noopener">Política de Privacidad</a>
+                    <span class="visually-hidden">(se abren en una pestaña nueva)</span>.
+                  </span>
                 </label>
                 @if (showError('termsAccepted')) { <span class="rf-error">Tenés que aceptar los términos para enviar la solicitud.</span> }
               }
@@ -168,6 +172,9 @@
       <footer class="rf-footer">
         ¿Ya tenés cuenta? <a routerLink="/auth/login">Iniciá sesión</a>
         · <a routerLink="/auth/register">Otro tipo de registro</a>
+        <span class="rf-footer-legal">
+          <a routerLink="/legal/terminos">Términos</a> · <a routerLink="/legal/privacidad">Privacidad</a>
+        </span>
       </footer>
     </section>
   </div>

@@ -58,6 +58,10 @@ export class InvitationComponent implements OnInit {
         nonNullable: true,
         validators: [Validators.required],
       }),
+      termsAccepted: new FormControl(false, {
+        nonNullable: true,
+        validators: [Validators.requiredTrue],
+      }),
     },
     { validators: passwordsMatch },
   );
@@ -127,6 +131,11 @@ export class InvitationComponent implements OnInit {
     return control.invalid && (control.touched || control.dirty);
   }
 
+  get termsInvalid(): boolean {
+    const control = this.form.controls.termsAccepted;
+    return control.invalid && control.touched;
+  }
+
   get confirmInvalid(): boolean {
     const control = this.form.controls.confirmPassword;
     return (control.touched || control.dirty) &&
@@ -146,7 +155,11 @@ export class InvitationComponent implements OnInit {
     }
     this.submitting = true;
     this.authService
-      .registerFromInvitation({ token: this.token, password: this.form.controls.password.value })
+      .registerFromInvitation({
+        token: this.token,
+        password: this.form.controls.password.value,
+        termsAccepted: this.form.controls.termsAccepted.value,
+      })
       .subscribe({
         next: () => this.finish(),
         error: (error: HttpErrorResponse) => this.handleSubmitError(error),

@@ -100,6 +100,7 @@ export class ClubRegisterComponent {
         contactEmail: raw.email.trim(),
         contactPhone: raw.clubContactPhone.trim() || undefined,
       },
+      termsAccepted: raw.termsAccepted,
     };
 
     this.submitting.set(true);

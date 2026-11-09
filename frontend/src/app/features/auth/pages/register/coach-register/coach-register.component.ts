@@ -170,6 +170,7 @@ export class CoachRegisterComponent {
         birthDate: raw.birthDate,
       },
       club: { id: raw.clubId },
+      termsAccepted: raw.termsAccepted,
     };
 
     this.submitting.set(true);

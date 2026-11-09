@@ -1,0 +1,238 @@
+<div class="layout-container page legal-page">
+  <div class="legal-shell">
+    <nav class="legal-toc" aria-labelledby="toc-title">
+      <h2 id="toc-title">Contenido</h2>
+      <ol>
+        @for (s of sections; track s.id) {
+          <li><button type="button" (click)="goToSection(s.id)">{{ s.title }}</button></li>
+        }
+      </ol>
+      <a class="legal-toc-other" routerLink="/legal/terminos">Ver los Términos y Condiciones</a>
+    </nav>
+
+    <article class="legal-doc" aria-labelledby="legal-title">
+      <header class="legal-header">
+        <h1 id="legal-title">Política de Privacidad</h1>
+        <p class="legal-meta">Última actualización: {{ updatedAt }} · Versión <span>{{ version }}</span></p>
+      </header>
+
+      <div class="legal-body">
+        <div class="legal-summary">
+          <p>
+            <strong>En resumen:</strong> guardamos los datos necesarios para que tu club use OvalTrack: tu cuenta, tus datos
+            de contacto y la actividad deportiva que se registra en los partidos. No vendemos datos, no usamos publicidad ni
+            cookies de seguimiento, y solo ven tus datos las personas de tu club según su rol. Podés pedir verlos, corregirlos
+            o borrarlos cuando quieras.
+          </p>
+        </div>
+
+        <section id="responsable" tabindex="-1">
+          <h2>1. Responsable de los datos</h2>
+          <p>
+            El responsable de la base de datos de OvalTrack es el {{ provider }}. Podés contactarnos por cualquier tema de
+            privacidad en <a [href]="'mailto:' + contactEmail">{{ contactEmail }}</a>.
+          </p>
+          <p>
+            Tratamos los datos según la Ley de Protección de los Datos Personales N.º 25.326, su Decreto Reglamentario
+            N.º 1558/2001 y las normas de la Agencia de Acceso a la Información Pública.
+          </p>
+          <p>
+            Los datos de jugadores y jugadoras que carga un club los tratamos por cuenta de ese club, que decide qué
+            información cargar y es responsable de contar con el consentimiento de las personas (ver el punto 5).
+          </p>
+        </section>
+
+        <section id="datos" tabindex="-1">
+          <h2>2. Qué datos tratamos</h2>
+          <h3>Datos de la cuenta</h3>
+          <ul>
+            <li>Correo electrónico de inicio de sesión.</li>
+            <li>Contraseña, que guardamos cifrada con un algoritmo irreversible: nadie, ni siquiera nosotros, puede leerla.</li>
+            <li>Rol, estado de la cuenta, fecha de alta y fecha y versión de los términos aceptados.</li>
+          </ul>
+          <h3>Datos personales</h3>
+          <ul>
+            <li>Nombre, apellido y fecha de nacimiento (para ubicar a cada persona en su categoría).</li>
+            <li>Correo y teléfono de contacto.</li>
+            <li>Club y divisiones a las que pertenecés.</li>
+          </ul>
+          <h3>Datos del club</h3>
+          <ul>
+            <li>Nombre, ciudad, logo y datos de contacto del club.</li>
+          </ul>
+          <h3>Datos de la actividad deportiva</h3>
+          <ul>
+            <li>Convocatorias, rivales, resultados y partidos.</li>
+            <li>Jugadas registradas en los partidos (por ejemplo, tackles, tries o sanciones) con el jugador que intervino, el minuto y la zona de la cancha.</li>
+            <li>Estadísticas calculadas a partir de esas jugadas.</li>
+          </ul>
+          <h3>Datos técnicos</h3>
+          <ul>
+            <li>Registros técnicos del servidor (fecha, hora y operación realizada) para seguridad y diagnóstico de errores.</li>
+          </ul>
+          <p>
+            <strong>No pedimos ni queremos datos sensibles</strong>, como datos de salud, origen étnico, religión u opiniones
+            políticas, ni números de documento. Los clubes no deben cargarlos en la plataforma.
+          </p>
+        </section>
+
+        <section id="origen" tabindex="-1">
+          <h2>3. De dónde salen los datos</h2>
+          <ul>
+            <li><strong>De vos</strong>, cuando te registrás o completás tu perfil.</li>
+            <li><strong>De tu club</strong>, cuando un administrador o entrenador te carga en el plantel, te invita o registra tu participación en un partido.</li>
+          </ul>
+        </section>
+
+        <section id="finalidades" tabindex="-1">
+          <h2>4. Para qué los usamos</h2>
+          <ul>
+            <li>Crear y administrar tu cuenta y verificar tu identidad al iniciar sesión.</li>
+            <li>Permitir que tu club gestione divisiones, convocatorias, partidos y estadísticas.</li>
+            <li>Enviarte correos necesarios para el servicio: invitaciones, aprobación de solicitudes y recuperación de contraseña.</li>
+            <li>Mantener la seguridad de la plataforma, evitar abusos y corregir errores.</li>
+            <li>Cumplir obligaciones legales.</li>
+          </ul>
+          <p>No usamos tus datos para publicidad, no los vendemos y no armamos perfiles comerciales.</p>
+        </section>
+
+        <section id="base" tabindex="-1">
+          <h2>5. Consentimiento</h2>
+          <p>
+            Tratamos tus datos con tu consentimiento libre, expreso e informado, que das al aceptar esta Política al
+            registrarte o al aceptar una invitación. Registramos la fecha y la versión aceptada.
+          </p>
+          <p>
+            Si tu club carga tus datos sin que tengas cuenta, el club es responsable de haberte informado y de haber obtenido
+            tu consentimiento antes de cargarlos.
+          </p>
+          <p>
+            Podés revocar tu consentimiento en cualquier momento pidiendo la baja. La revocación no afecta lo hecho antes
+            de pedirla.
+          </p>
+        </section>
+
+        <section id="menores" tabindex="-1">
+          <h2>6. Datos de menores de edad</h2>
+          <p>
+            OvalTrack puede contener datos de jugadores y jugadoras menores de 18 años. Antes de cargarlos o de invitarlos,
+            el club debe contar con el consentimiento de su madre, padre o persona a cargo. Esas personas pueden ejercer en
+            nombre del menor todos los derechos descritos en el punto 12.
+          </p>
+          <p>
+            Para los menores tratamos solo los datos imprescindibles para la actividad deportiva. Si detectamos datos de un
+            menor cargados sin autorización, podemos eliminarlos.
+          </p>
+        </section>
+
+        <section id="acceso" tabindex="-1">
+          <h2>7. Quién accede a los datos</h2>
+          <ul>
+            <li><strong>Las personas de tu club</strong>, según su rol: los administradores y entrenadores ven a los integrantes y los partidos de su club; los datos de un club no son visibles para otros clubes.</li>
+            <li><strong>El equipo de OvalTrack</strong>, solo cuando hace falta para aprobar solicitudes, dar soporte o resolver problemas.</li>
+            <li><strong>Nuestros proveedores</strong> (alojamiento y correo electrónico), que procesan los datos solo para prestarnos su servicio y con obligación de confidencialidad.</li>
+            <li><strong>Autoridades</strong>, únicamente si una ley o una orden judicial lo exige.</li>
+          </ul>
+          <p>El nombre y la ciudad de los clubes activos son públicos, para que quienes se registran puedan encontrar su club.</p>
+        </section>
+
+        <section id="transferencias" tabindex="-1">
+          <h2>8. Proveedores y transferencias</h2>
+          <p>
+            Para listar provincias y localidades usamos el servicio público Georef del Estado Nacional. Solo le enviamos el
+            código de la provincia elegida, sin ningún dato personal ni la sesión de tu cuenta.
+          </p>
+          <p>
+            Si algún proveedor de alojamiento o de correo procesa datos fuera de la Argentina, lo hacemos únicamente con
+            países que brindan un nivel de protección adecuado o con las garantías contractuales que exige el artículo 12 de
+            la Ley N.º 25.326.
+          </p>
+        </section>
+
+        <section id="local" tabindex="-1">
+          <h2>9. Almacenamiento en tu dispositivo</h2>
+          <p>OvalTrack no usa cookies de publicidad ni de seguimiento. En tu navegador guarda solo lo necesario para funcionar:</p>
+          <ul>
+            <li>La sesión iniciada, para que no tengas que ingresar en cada visita.</li>
+            <li>Tu preferencia de tema (claro u oscuro).</li>
+            <li>Una copia de los datos de tu club y del panel de inicio, para mostrarlos más rápido.</li>
+            <li>Los datos de los partidos que estás registrando y las jugadas pendientes de sincronizar, para poder trabajar sin conexión.</li>
+          </ul>
+          <p>
+            Al cerrar sesión se borra esa información, salvo los cambios que todavía no se sincronizaron: quedan en el
+            dispositivo hasta que vuelvas a iniciar sesión con conexión y se envíen. Si borrás los datos del navegador, esos
+            cambios pendientes se pierden.
+          </p>
+        </section>
+
+        <section id="conservacion" tabindex="-1">
+          <h2>10. Cuánto tiempo los guardamos</h2>
+          <ul>
+            <li>Mientras tu cuenta esté activa o seas integrante de un club que usa OvalTrack.</li>
+            <li>
+              Si pedís la baja, eliminamos o anonimizamos tus datos personales en un plazo razonable. Las jugadas y estadísticas
+              de partidos ya jugados forman parte del historial del club: podemos conservarlas, pero desvinculadas de tu identidad.
+            </li>
+            <li>Podemos conservar algunos datos por más tiempo solo si una ley lo exige o para defendernos ante un reclamo.</li>
+          </ul>
+        </section>
+
+        <section id="seguridad" tabindex="-1">
+          <h2>11. Seguridad</h2>
+          <p>Aplicamos medidas técnicas y organizativas para proteger los datos, entre ellas:</p>
+          <ul>
+            <li>Contraseñas cifradas de forma irreversible.</li>
+            <li>Conexión cifrada entre tu dispositivo y nuestros servidores.</li>
+            <li>Sesiones con vencimiento y permisos según el rol de cada cuenta.</li>
+            <li>Separación de los datos de cada club.</li>
+          </ul>
+          <p>
+            Ningún sistema es infalible. Si ocurre un incidente de seguridad que afecte tus datos, te vamos a avisar y vamos a
+            tomar las medidas necesarias según la normativa vigente.
+          </p>
+        </section>
+
+        <section id="derechos" tabindex="-1">
+          <h2>12. Tus derechos</h2>
+          <p>Como titular de los datos tenés derecho a:</p>
+          <ul>
+            <li><strong>Acceso:</strong> saber qué datos tuyos tenemos. Respondemos dentro de los 10 días corridos.</li>
+            <li><strong>Rectificación y actualización:</strong> corregir datos incorrectos o desactualizados.</li>
+            <li><strong>Supresión:</strong> pedir que borremos tus datos, salvo que debamos conservarlos por ley.</li>
+            <li><strong>Revocar el consentimiento</strong> en cualquier momento.</li>
+          </ul>
+          <p>
+            Los pedidos de rectificación, actualización o supresión se resuelven dentro de los 5 días hábiles. Para ejercer
+            cualquiera de estos derechos, escribinos a <a [href]="'mailto:' + contactEmail">{{ contactEmail }}</a> desde el
+            correo de tu cuenta o acreditando tu identidad. También podés pedírselo al administrador de tu club.
+          </p>
+          <p class="legal-statutory">
+            El titular de los datos personales tiene la facultad de ejercer el derecho de acceso a los mismos en forma gratuita
+            a intervalos no inferiores a seis meses, salvo que se acredite un interés legítimo al efecto conforme lo establecido
+            en el artículo 14, inciso 3 de la Ley N.º 25.326.
+          </p>
+          <p class="legal-statutory">
+            La Agencia de Acceso a la Información Pública, en su carácter de Órgano de Control de la Ley N.º 25.326, tiene la
+            atribución de atender las denuncias y reclamos que interpongan quienes resulten afectados en sus derechos por
+            incumplimiento de las normas vigentes en materia de protección de datos personales.
+          </p>
+        </section>
+
+        <section id="cambios" tabindex="-1">
+          <h2>13. Cambios en esta política</h2>
+          <p>
+            Si modificamos esta Política vamos a publicar la nueva versión en esta página con su fecha. Si los cambios afectan
+            cómo usamos tus datos, te vamos a avisar y a pedir tu consentimiento de nuevo.
+          </p>
+        </section>
+      </div>
+
+      <footer class="legal-footer">
+        <a routerLink="/legal/terminos">Términos y Condiciones</a>
+        <button type="button" class="btn btn-outline" (click)="print()">
+          <i class="bi bi-printer" aria-hidden="true"></i> Imprimir
+        </button>
+      </footer>
+    </article>
+  </div>
+</div>
