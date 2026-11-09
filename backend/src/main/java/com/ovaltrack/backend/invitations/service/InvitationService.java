@@ -77,8 +77,8 @@ public class InvitationService {
             throw new BusinessException("Error la division no se encontro");
         }
 
-        User user = userService.findUserByEmail(person.getContactEmail());
-        if (user != null && user.getPerson().getId().equals(person.getId())) {
+        // La cuenta se busca por la persona: el correo de contacto puede cambiar desde el perfil
+        if (userService.findUserByPersonId(person.getId()) != null) {
             logger.warn("Intento de invitar a una persona ya asociada. Email: {}", person.getContactEmail());
             throw new BusinessException("La persona ya se encuentra asociado");
         }
@@ -139,6 +139,11 @@ public class InvitationService {
 
         Person person = invitation.getPerson();
         Action action;
+        // Primero por la persona (el correo de contacto puede cambiar desde el perfil); después por correo
+        if (userService.findUserByPersonId(person.getId()) != null) {
+            logger.warn("El usuario ya está asociado a esta división");
+            throw new BusinessException("Ya estás asociado a esta división.");
+        }
         User user = userService.findUserByEmail(person.getContactEmail());
 
         if (user == null) {
