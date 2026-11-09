@@ -19,3 +19,10 @@ Ejemplos: Alta de clubes
 | Admin  | Puerto   | admin_puerto@test.com    | PassSegura123! | 1980-01-01      | ADMIN_CLUB | PMRC       | Puerto Madryn | +542804010203 | 409          | El email ya fue registrado con una cuenta                       |
 
 
+
+
+Escenario: No se puede solicitar el alta del club sin aceptar los términos
+Dado que el usuario completa el formulario de registro con los datos "Admin", "Sin Terminos", "admin_sin_terminos@test.com", "PassSegura123!", "1980-01-01", "ADMIN_CLUB", "Club Sin Terminos", "Puerto Madryn" y "+542804010299"
+Y no acepta los términos y condiciones
+Cuando presiona el boton "Guardar" para dar de alta su club
+Entonces el sistema responde con 409 y "Tenés que aceptar los Términos y Condiciones y la Política de Privacidad."

@@ -32,6 +32,7 @@ When('el coach presiona el botón para enviar su solicitud', async function () {
   this.response = await makeHttpRequest("POST", "api/auth/register", {
     applicant: this.applicant,
     club: this.club ? { id: this.club.id } : null,
+    termsAccepted: this.termsAccepted ?? true,
   });
 });
 

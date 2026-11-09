@@ -31,7 +31,7 @@ When('valida el token de invitación {string}', async function (token) {
 });
 
 When('se registra con el token {string} y la contraseña {string}', async function (token, password) {
-  this.response = await makeHttpRequest("POST", "api/auth/register/invitation", { token, password });
+  this.response = await makeHttpRequest("POST", "api/auth/register/invitation", { token, password, termsAccepted: this.termsAccepted ?? true });
 });
 
 Then('la validación indica la acción {string} para la persona {string} en la division {string}', async function (accion, email, nombreDivision) {

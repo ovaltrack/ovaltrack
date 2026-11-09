@@ -87,6 +87,22 @@
             Mostrar contraseñas
           </label>
 
+          <div class="field terms-field">
+            <label class="terms-check">
+              <input type="checkbox" formControlName="termsAccepted"
+                     [attr.aria-invalid]="termsInvalid" aria-describedby="terms-error" />
+              <span>
+                Leí y acepto los <a routerLink="/legal/terminos" target="_blank" rel="noopener">Términos y Condiciones</a>
+                y la <a routerLink="/legal/privacidad" target="_blank" rel="noopener">Política de Privacidad</a>
+                <span class="visually-hidden">(se abren en una pestaña nueva)</span>.
+                Si sos menor de 18 años, tu madre, padre o persona a cargo debe aceptarlos con vos.
+              </span>
+            </label>
+            <p id="terms-error" class="field-error" role="alert">
+              @if (termsInvalid) { Tenés que aceptar los términos para crear la cuenta. }
+            </p>
+          </div>
+
           <button type="submit" class="btn btn-invite btn-block" [disabled]="submitting">
             {{ submitting ? 'Creando cuenta…' : 'Crear cuenta' }}
           </button>

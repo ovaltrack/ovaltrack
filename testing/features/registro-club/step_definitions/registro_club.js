@@ -28,7 +28,7 @@ Given('que el usuario completa el formulario de registro con los datos {string},
 When(
   'presiona el boton {string} para dar de alta su club',
   async function (string1) {
-      this.response = await makeHttpRequest('POST', 'api/auth/register-club', this.clubRegistrationDTO);
+      this.response = await makeHttpRequest('POST', 'api/auth/register-club', { ...this.clubRegistrationDTO, termsAccepted: this.termsAccepted ?? true });
   }
 );
 

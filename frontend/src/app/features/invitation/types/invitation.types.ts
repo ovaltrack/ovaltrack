@@ -19,6 +19,8 @@ export interface InvitationSummary {
 export interface RegisterFromInvitationRequest {
   token: string;
   password: string;
+  /** Aceptación de los Términos y la Política de Privacidad vigentes. */
+  termsAccepted: boolean;
 }
 
 /** Body de POST /api/invitation/accept (aceptar la asociación). */

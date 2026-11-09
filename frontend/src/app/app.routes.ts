@@ -268,6 +268,19 @@ export const routes: Routes = [
         canActivate: [hasRoleGuard],
         data: { roles: ['PLAYER'] },
     },
+    // Textos legales: públicos, con o sin sesión
+    {
+        path: 'legal/terminos',
+        title: 'Términos y Condiciones · OvalTrack',
+        loadComponent: () =>
+            import('./features/legal/terms/terms.component').then(m => m.TermsComponent)
+    },
+    {
+        path: 'legal/privacidad',
+        title: 'Política de Privacidad · OvalTrack',
+        loadComponent: () =>
+            import('./features/legal/privacy/privacy.component').then(m => m.PrivacyComponent)
+    },
     // Wildcard para rutas no encontradas
     {
         path: '**',

@@ -104,6 +104,19 @@
 }
 .show-toggle input { width: 18px; height: 18px; accent-color: var(--btn-primary-bg); }
 
+.terms-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.terms-check input { flex: none; width: 20px; height: 20px; margin-top: 1px; accent-color: var(--btn-primary-bg); }
+.terms-check input:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--border-sport); }
+.terms-check a { color: var(--btn-primary-bg); font-weight: 700; }
+
 /* Botones */
 a.btn {
   display: inline-flex;

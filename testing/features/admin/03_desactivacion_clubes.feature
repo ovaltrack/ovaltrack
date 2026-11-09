@@ -69,3 +69,12 @@ Característica: Desactivación y reactivación de clubes desde el panel de Oval
     Y que el club "Club Desactivable" fue desactivado
     Cuando consulta los clubes revisados del panel
     Entonces el sistema responde con 200
+
+  # Un token de una cuenta bloqueada no rompe las rutas públicas (p. ej. el registro de entrenador)
+  Escenario: Una ruta pública sigue respondiendo con la sesión de una cuenta desactivada
+    Dado que el administrador de OvalTrack ha iniciado sesión
+    Y que el club "Club Cuenta Baja" de la ciudad "Sarmiento" está activo con el administrador "admin.cuentabaja@test.com"
+    Y que "admin.cuentabaja@test.com" tiene la sesión abierta
+    Y que la cuenta "admin.cuentabaja@test.com" fue desactivada
+    Cuando consulta los clubes disponibles para registrarse con la sesión abierta
+    Entonces el sistema responde con 200

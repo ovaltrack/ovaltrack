@@ -67,6 +67,8 @@ export interface ApplicantData {
 export interface MemberRegistrationDTO {
   applicant: ApplicantData;
   club: Pick<Club, 'id'>;
+  /** Aceptación de los Términos y la Política de Privacidad vigentes. */
+  termsAccepted: boolean;
 }
  
 export interface AdminData {
@@ -90,4 +92,6 @@ export interface ClubData {
 export interface ClubRegistrationDTO {
   admin: AdminData;
   club: ClubData;
+  /** Aceptación de los Términos y la Política de Privacidad vigentes. */
+  termsAccepted: boolean;
 }

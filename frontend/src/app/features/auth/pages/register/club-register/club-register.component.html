@@ -1,233 +1,181 @@
-<div class="register-wrapper">
-  <div class="container py-4">
-    <div class="row justify-content-center">
-      <div class="col-lg-9 col-xl-8">
-        
-        <div class="auth-split-card">
-          
-          <!-- Lateral Izquierdo: Branding Informativo -->
-          <div class="auth-brand-side d-none d-md-flex">
-            <div class="brand-top">
-              <a routerLink="/auth/register" class="brand-glass-badge">
-                <div class="brand-icon-box">OT</div>
-                <span class="brand-name">OvalTrack</span>
-              </a>
-              <div class="brand-pill">
-                <span class="pill-dot"></span>
-                <span>Alta Institucional</span>
-              </div>
-              <h2 class="brand-headline">Registra tu club en la plataforma</h2>
-              <p class="brand-subtext">
-                Centraliza la gestión de tus planteles, organiza divisiones y habilita el control en vivo de tus partidos.
-              </p>
-            </div>
+<div class="rf-page">
+  <div class="rf-shell">
+    <aside class="rf-aside" aria-label="Sobre el alta de clubes">
+      <span class="rf-aside-pill">Alta de club</span>
+      <h2>Sumá tu club a OvalTrack</h2>
+      <p>En tres pasos enviás la solicitud. El equipo de OvalTrack la revisa y te avisa por correo.</p>
+      <ul class="rf-aside-list">
+        <li><i class="bi bi-check2-circle" aria-hidden="true"></i><span>Vos quedás como administrador del club.</span></li>
+        <li><i class="bi bi-check2-circle" aria-hidden="true"></i><span>Después invitás a entrenadores y jugadores.</span></li>
+        <li><i class="bi bi-check2-circle" aria-hidden="true"></i><span>Divisiones, partidos y estadísticas en un solo lugar.</span></li>
+      </ul>
+    </aside>
 
-            <div class="brand-footer">
-              <div class="category-avatars">
-                <div class="cat-pill cat-m19">M19</div>
-                <div class="cat-pill cat-ps">PS</div>
-                <div class="cat-pill cat-m16">M16</div>
-              </div>
-              <div class="brand-footer-text">
-                <strong>Ecosistema OvalTrack</strong>
-                <span>Gestión oficial para clubes</span>
-              </div>
-            </div>
-          </div>
+    <section class="rf-main" aria-labelledby="rf-title">
+      <header class="rf-header">
+        <h1 id="rf-title">Solicitud de alta de club</h1>
+        <p>Completá los datos del responsable y del club.</p>
+        @if (!doneMessage()) {
+          <app-register-steps [steps]="steps" [current]="step()" />
+        }
+      </header>
 
-          <!-- Lateral Derecho: Formulario de Registro de Club -->
-          <div class="auth-form-side">
-            
-            <div class="form-header">
-              <h1 class="auth-title">Solicitud de Club</h1>
-              <p class="auth-subtitle">Completa los datos del responsable y de la institución.</p>
-            </div>
-
-            @if (successMessage) {
-              <div class="custom-alert success-alert text-center my-4 py-4">
-                <h5 class="fw-bold mb-2">¡Solicitud Enviada!</h5>
-                <p class="small mb-3">{{ successMessage }}</p>
-                <a routerLink="/auth/login" class="btn btn-auth-submit text-decoration-none d-inline-block py-2 px-4">
-                  Ir al inicio de sesión
-                </a>
-              </div>
-            } @else {
-              <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
-                
-                <!-- Sección 1: Datos del Responsable -->
-                <h6 class="section-heading mb-3 text-uppercase fw-bold small">1. Datos del Solicitante (Administrador)</h6>
-                
-                <div class="row g-3 mb-3">
-                  <div class="col-sm-6">
-                    <div class="form-field">
-                      <label class="custom-label">Nombre</label>
-                      <input 
-                        type="text" 
-                        formControlName="firstName" 
-                        class="custom-input" 
-                        [class.is-invalid]="registerForm.get('firstName')?.invalid && registerForm.get('firstName')?.touched"
-                        placeholder="Ej: Carlos" 
-                      />
-                      @if (registerForm.get('firstName')?.invalid && registerForm.get('firstName')?.touched) {
-                        <span class="error-text">El nombre del usuario es obligatorio.</span>
-                      }
-                    </div>
-                  </div>
-                  <div class="col-sm-6">
-                    <div class="form-field">
-                      <label class="custom-label">Apellido</label>
-                      <input 
-                        type="text" 
-                        formControlName="lastName" 
-                        class="custom-input" 
-                        [class.is-invalid]="registerForm.get('lastName')?.invalid && registerForm.get('lastName')?.touched"
-                        placeholder="Ej: Gómez" 
-                      />
-                      @if (registerForm.get('lastName')?.invalid && registerForm.get('lastName')?.touched) {
-                        <span class="error-text">El apellido del usuario es obligatorio.</span>
-                      }
-                    </div>
-                  </div>
-                </div>
-
-                <div class="mb-3">
-                  <div class="form-field">
-                    <label class="custom-label">Correo Electrónico de cuenta y club</label>
-                    <input 
-                      type="email" 
-                      formControlName="email" 
-                      class="custom-input" 
-                      [class.is-invalid]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched"
-                      placeholder="admin@tuclub.com" 
-                    />
-                    @if (registerForm.get('email')?.invalid && registerForm.get('email')?.touched) {
-                      <span class="error-text">Ingresa un correo electrónico válido.</span>
-                    }
-                  </div>
-                </div>
-
-                <div class="row g-3 mb-3">
-                  <div class="col-sm-6">
-                    <div class="form-field">
-                      <label class="custom-label">Contraseña</label>
-                      <input 
-                        type="password" 
-                        formControlName="password" 
-                        class="custom-input" 
-                        [class.is-invalid]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched"
-                        placeholder="Mínimo 8 caracteres" 
-                      />
-                      @if (registerForm.get('password')?.invalid && registerForm.get('password')?.touched) {
-                        <span class="error-text">La contraseña debe tener al menos 8 caracteres.</span>
-                      }
-                    </div>
-                  </div>
-                  <div class="col-sm-6">
-                    <div class="form-field">
-                      <label class="custom-label">Fecha de Nacimiento</label>
-                      <input 
-                        type="date" 
-                        formControlName="birthDate" 
-                        class="custom-input" 
-                        [class.is-invalid]="registerForm.get('birthDate')?.invalid && registerForm.get('birthDate')?.touched"
-                      />
-                      @if (registerForm.get('birthDate')?.invalid && registerForm.get('birthDate')?.touched) {
-                        <span class="error-text">La fecha de nacimiento es obligatoria.</span>
-                      }
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Sección 2: Datos del Club -->
-                <h6 class="section-heading my-3 pt-2 text-uppercase fw-bold small border-top border-secondary">2. Información del Club</h6>
-
-                <div class="mb-3">
-                  <div class="form-field">
-                    <label class="custom-label">Nombre del Club</label>
-                    <input 
-                      type="text" 
-                      formControlName="clubName" 
-                      class="custom-input" 
-                      [class.is-invalid]="registerForm.get('clubName')?.invalid && registerForm.get('clubName')?.touched"
-                      placeholder="Ej: Puerto Madryn Rugby Club" 
-                    />
-                    @if (registerForm.get('clubName')?.invalid && registerForm.get('clubName')?.touched) {
-                      <span class="error-text">El nombre del club es obligatorio.</span>
-                    }
-                  </div>
-                </div>
-
-                <div class="mb-4">
-                  <div class="form-field">
-                    <label class="custom-label">Ciudad</label>
-                    <input 
-                      type="text" 
-                      formControlName="clubCity" 
-                      class="custom-input" 
-                      [class.is-invalid]="registerForm.get('clubCity')?.invalid && registerForm.get('clubCity')?.touched"
-                      placeholder="Ej: Puerto Madryn, Trelew" 
-                    />
-                    @if (registerForm.get('clubCity')?.invalid && registerForm.get('clubCity')?.touched) {
-                      <span class="error-text">La ciudad del club es obligatoria.</span>
-                    }
-                  </div>
-                </div>
-
-                <div class="mb-4">
-                  <div class="form-field">
-                    <label class="custom-label" for="clubContactPhone">Teléfono de contacto del club (opcional)</label>
-                    <input
-                      id="clubContactPhone"
-                      type="tel"
-                      formControlName="clubContactPhone"
-                      class="custom-input"
-                      placeholder="Ej: +54 280 400-0000"
-                      autocomplete="tel"
-                    />
-                  </div>
-                </div>
-
-                <!-- Términos y condiciones -->
-                <div class="mb-4 form-check">
-                  <input type="checkbox" formControlName="termsAccepted" class="form-check-input" id="termsCheck" />
-                  <label class="form-check-label small" for="termsCheck">
-                    Acepto los términos, condiciones y la política de privacidad de la plataforma.
-                  </label>
-                </div>
-
-                @if (errorMessage) {
-                  <div class="custom-alert mb-3">
-                    {{ errorMessage }}
-                  </div>
-                }
-
-                <!-- Botón de envío condicionado por la validez del formulario -->
-                <button 
-                  type="submit" 
-                  class="btn-auth-submit" 
-                  [disabled]="registerForm.invalid || isSubmitting"
-                >
-                  @if (isSubmitting) {
-                    <span>Enviando solicitud...</span>
-                  } @else {
-                    <span>Enviar solicitud de alta</span>
-                  }
-                </button>
-
-              </form>
-            }
-
-            <div class="auth-footer-prompt">
-              <span>¿Ya tienes cuenta o solicitud previa?</span>
-              <a routerLink="/auth/login" class="auth-switch-link">Iniciar sesión</a>
-            </div>
-
-          </div>
-
+      @if (doneMessage(); as message) {
+        <div class="rf-done" role="status">
+          <i class="bi bi-envelope-check" aria-hidden="true"></i>
+          <h2>¡Solicitud enviada!</h2>
+          <p>{{ message }}</p>
+          <p>Te vamos a escribir a <strong>{{ form.controls.email.value }}</strong> cuando la revisemos.</p>
+          <a routerLink="/auth/login" class="btn btn-primary-rugby">Ir al inicio de sesión</a>
         </div>
+      } @else {
+        <form [formGroup]="form" (ngSubmit)="step() === steps.length - 1 ? submit() : next()" novalidate>
+          <div class="rf-body">
+            @switch (step()) {
+              @case (0) {
+                <h2 #stepTitle class="rf-step-title" tabindex="-1">Tus datos</h2>
+                <p class="rf-step-intro">Sos la persona responsable: vas a administrar el club en la plataforma.</p>
+                <div class="rf-grid">
+                  <div class="rf-field">
+                    <label class="rf-label" for="firstName">Nombre</label>
+                    <input id="firstName" class="rf-input" formControlName="firstName" autocomplete="given-name"
+                      [class.is-invalid]="showError('firstName')" placeholder="Ej.: Carla" />
+                    @if (showError('firstName')) { <span class="rf-error">Ingresá tu nombre.</span> }
+                  </div>
+                  <div class="rf-field">
+                    <label class="rf-label" for="lastName">Apellido</label>
+                    <input id="lastName" class="rf-input" formControlName="lastName" autocomplete="family-name"
+                      [class.is-invalid]="showError('lastName')" placeholder="Ej.: Gómez" />
+                    @if (showError('lastName')) { <span class="rf-error">Ingresá tu apellido.</span> }
+                  </div>
+                  <div class="rf-field rf-span-2">
+                    <label class="rf-label" for="email">Correo electrónico</label>
+                    <input id="email" type="email" class="rf-input" formControlName="email" autocomplete="email"
+                      [class.is-invalid]="showError('email')" placeholder="nombre@tuclub.com" aria-describedby="email-hint" />
+                    @if (showError('email')) {
+                      <span class="rf-error">Ingresá un correo válido.</span>
+                    } @else {
+                      <span class="rf-hint" id="email-hint">Con este correo vas a iniciar sesión y te avisamos el resultado.</span>
+                    }
+                  </div>
+                  <div class="rf-field">
+                    <label class="rf-label" for="password">Contraseña</label>
+                    <div class="rf-input-group">
+                      <input id="password" class="rf-input" formControlName="password" autocomplete="new-password"
+                        [type]="showPassword() ? 'text' : 'password'" [class.is-invalid]="showError('password')"
+                        aria-describedby="password-hint" />
+                      <button type="button" class="rf-input-action" (click)="showPassword.set(!showPassword())"
+                        [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'" [attr.aria-pressed]="showPassword()">
+                        <i class="bi" [class.bi-eye]="!showPassword()" [class.bi-eye-slash]="showPassword()" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                    @if (showError('password')) {
+                      <span class="rf-error">Usá al menos 8 caracteres.</span>
+                    } @else {
+                      <span class="rf-hint" id="password-hint">Mínimo 8 caracteres.</span>
+                    }
+                  </div>
+                  <div class="rf-field">
+                    <label class="rf-label" for="birthDate">Fecha de nacimiento</label>
+                    <input id="birthDate" type="date" class="rf-input" formControlName="birthDate" autocomplete="bday"
+                      [max]="today" [class.is-invalid]="showError('birthDate')" />
+                    @if (showError('birthDate')) {
+                      <span class="rf-error">
+                        {{ form.controls.birthDate.hasError('future') ? 'La fecha no puede ser futura.' : 'Ingresá tu fecha de nacimiento.' }}
+                      </span>
+                    }
+                  </div>
+                </div>
+              }
 
-      </div>
-    </div>
+              @case (1) {
+                <h2 #stepTitle class="rf-step-title" tabindex="-1">El club</h2>
+                <p class="rf-step-intro">Así lo van a encontrar los entrenadores y jugadores al registrarse.</p>
+                <div class="rf-grid">
+                  <div class="rf-field rf-span-2">
+                    <label class="rf-label" for="clubName">Nombre del club</label>
+                    <input id="clubName" class="rf-input" formControlName="clubName" autocomplete="organization"
+                      [class.is-invalid]="showError('clubName')" placeholder="Ej.: Rawson Rugby Club" />
+                    @if (showError('clubName')) { <span class="rf-error">Ingresá el nombre del club.</span> }
+                  </div>
+                  <div class="rf-span-2">
+                    <app-city-picker inputId="clubCity" formControlName="clubCity" [invalid]="showError('clubCity')" />
+                    @if (showError('clubCity')) { <span class="rf-error">Elegí la ciudad del club.</span> }
+                  </div>
+                  <div class="rf-field rf-span-2">
+                    <label class="rf-label" for="clubContactPhone">Teléfono de contacto <span class="rf-optional">(opcional)</span></label>
+                    <input id="clubContactPhone" type="tel" class="rf-input" formControlName="clubContactPhone" autocomplete="tel"
+                      inputmode="tel" placeholder="Ej.: +54 280 400-0000" />
+                  </div>
+                </div>
+              }
+
+              @case (2) {
+                <h2 #stepTitle class="rf-step-title" tabindex="-1">Revisá y enviá</h2>
+                <p class="rf-step-intro">Confirmá que los datos estén bien antes de enviar la solicitud.</p>
+                <div class="rf-review">
+                  <section class="rf-review-block" aria-labelledby="review-you">
+                    <div class="rf-review-head">
+                      <h3 id="review-you">Tus datos</h3>
+                      <button type="button" class="rf-link" (click)="goTo(0)">Editar</button>
+                    </div>
+                    <dl>
+                      <dt>Nombre</dt><dd>{{ form.controls.firstName.value }} {{ form.controls.lastName.value }}</dd>
+                      <dt>Correo</dt><dd>{{ form.controls.email.value }}</dd>
+                      <dt>Nacimiento</dt><dd>{{ formatDate(form.controls.birthDate.value) }}</dd>
+                    </dl>
+                  </section>
+                  <section class="rf-review-block" aria-labelledby="review-club">
+                    <div class="rf-review-head">
+                      <h3 id="review-club">El club</h3>
+                      <button type="button" class="rf-link" (click)="goTo(1)">Editar</button>
+                    </div>
+                    <dl>
+                      <dt>Nombre</dt><dd>{{ form.controls.clubName.value }}</dd>
+                      <dt>Ciudad</dt><dd>{{ form.controls.clubCity.value }}</dd>
+                      <dt>Teléfono</dt><dd>{{ form.controls.clubContactPhone.value || '—' }}</dd>
+                    </dl>
+                  </section>
+                </div>
+                <label class="rf-check">
+                  <input type="checkbox" formControlName="termsAccepted" [class.is-invalid]="showError('termsAccepted')" />
+                  <span>
+                    Leí y acepto los <a routerLink="/legal/terminos" target="_blank" rel="noopener">Términos y Condiciones</a>
+                    y la <a routerLink="/legal/privacidad" target="_blank" rel="noopener">Política de Privacidad</a>
+                    <span class="visually-hidden">(se abren en una pestaña nueva)</span>.
+                  </span>
+                </label>
+                @if (showError('termsAccepted')) { <span class="rf-error">Tenés que aceptar los términos para enviar la solicitud.</span> }
+              }
+            }
+          </div>
+
+          <div class="rf-actions">
+            @if (step() > 0) {
+              <button type="button" class="btn btn-outline" (click)="back()">
+                <i class="bi bi-arrow-left" aria-hidden="true"></i> Atrás
+              </button>
+            }
+            @if (step() < steps.length - 1) {
+              <button type="submit" class="btn btn-primary-rugby rf-next">
+                Continuar <i class="bi bi-arrow-right" aria-hidden="true"></i>
+              </button>
+            } @else {
+              <button type="submit" class="btn btn-primary-rugby rf-next" [disabled]="submitting()">
+                {{ submitting() ? 'Enviando…' : 'Enviar solicitud' }}
+              </button>
+            }
+          </div>
+        </form>
+      }
+
+      <footer class="rf-footer">
+        ¿Ya tenés cuenta? <a routerLink="/auth/login">Iniciá sesión</a>
+        · <a routerLink="/auth/register">Otro tipo de registro</a>
+        <span class="rf-footer-legal">
+          <a routerLink="/legal/terminos">Términos</a> · <a routerLink="/legal/privacidad">Privacidad</a>
+        </span>
+      </footer>
+    </section>
   </div>
 </div>
-

@@ -42,6 +42,7 @@ const requestClubRegistration = async (nombreClub, ciudad, email) => {
       role: 'ADMIN_CLUB',
     },
     club: { name: nombreClub, city: ciudad, contactEmail: email, contactPhone: '+542804000000' },
+    termsAccepted: true,
   });
   const alreadyRegistered = response.status === 409 && response.body?.message === 'El email ya fue registrado con una cuenta';
   assert.ok(response.status === 201 || alreadyRegistered, `No se pudo registrar el club ${nombreClub}: ${response.body?.message}`);

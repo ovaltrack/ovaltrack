@@ -2,6 +2,7 @@ package com.ovaltrack.backend.auth.registration.domain.dto;
 
 import com.ovaltrack.backend.club.domain.dto.ClubResponseDTO;
 import com.ovaltrack.backend.user.domain.UserRole;
+import com.ovaltrack.backend.auth.registration.domain.LegalTerms;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
@@ -22,7 +23,12 @@ public record MemberRegistrationDTO(
         // Sin @Valid: el cliente solo envía el id de un club existente.
         // El servicio debe cargar el club desde la base de datos.
         @NotNull(message = "El club es obligatorio")
-        ClubResponseDTO club) {
+        ClubResponseDTO club,
+
+        @NotNull(message = LegalTerms.NOT_ACCEPTED_MESSAGE)
+        @AssertTrue(message = LegalTerms.NOT_ACCEPTED_MESSAGE)
+        @Schema(description = "Aceptación de los Términos y Condiciones y de la Política de Privacidad vigentes", example = "true")
+        Boolean termsAccepted) {
 
     /** Datos de la cuenta que se solicita. */
     public record ApplicantData(

@@ -23,6 +23,11 @@ Given('que el administrador del club con email {string} y contraseña {string} h
   this.club = this.response.body;
 });
 
+// Los registros envían termsAccepted: true salvo que el escenario diga lo contrario
+Given('no acepta los términos y condiciones', function () {
+  this.termsAccepted = false;
+});
+
 Then('el sistema responde con {int} y {string}', function (statusCode, statusText) {
     assert.equal(this.response.body?.message, statusText);
     assert.equal(this.response.status, statusCode);

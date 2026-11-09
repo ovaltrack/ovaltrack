@@ -1,5 +1,6 @@
 package com.ovaltrack.backend.auth.registration.domain.dto;
 
+import com.ovaltrack.backend.auth.registration.domain.LegalTerms;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
@@ -20,7 +21,12 @@ public record ClubRegistrationDTO(
 
         @Valid
         @NotNull(message = "Los datos del club son obligatorios")
-        ClubData club) {
+        ClubData club,
+
+        @NotNull(message = LegalTerms.NOT_ACCEPTED_MESSAGE)
+        @AssertTrue(message = LegalTerms.NOT_ACCEPTED_MESSAGE)
+        @Schema(description = "Aceptación de los Términos y Condiciones y de la Política de Privacidad vigentes", example = "true")
+        Boolean termsAccepted) {
 
     /** Datos de la cuenta que administrará el club. */
     public record AdminData(

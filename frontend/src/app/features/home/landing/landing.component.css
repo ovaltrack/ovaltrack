@@ -454,6 +454,21 @@
   flex-wrap: wrap;
 }
 
+.footer-legal {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.footer-legal a {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.footer-legal a:hover {
+  color: var(--text-primary);
+}
+
 .footer-brand {
   font-family: var(--font-head);
   font-weight: 800;

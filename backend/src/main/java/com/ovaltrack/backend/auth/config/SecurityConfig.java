@@ -1,6 +1,7 @@
 package com.ovaltrack.backend.auth.config;
 
 import com.ovaltrack.backend.auth.security.JwtAuthenticationFilter;
+import com.ovaltrack.backend.auth.access.AccountAccessService;
 import com.ovaltrack.backend.common.config.exceptions.GlobalExceptionHandler;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
@@ -35,7 +36,9 @@ public class SecurityConfig {
                     res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     res.setContentType("application/json");
                     res.setCharacterEncoding("UTF-8");
-                    res.getWriter().write("{\"message\": \"" + GlobalExceptionHandler.UNAUTHORIZED_MESSAGE + "\"}");
+                    Object denied = req.getAttribute(AccountAccessService.DENIED_MESSAGE_ATTRIBUTE);
+                    String message = denied != null ? denied.toString() : GlobalExceptionHandler.UNAUTHORIZED_MESSAGE;
+                    res.getWriter().write("{\"message\": \"" + message + "\"}");
                 }))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()

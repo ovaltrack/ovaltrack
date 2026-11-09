@@ -1,0 +1,250 @@
+<div class="layout-container page legal-page">
+  <div class="legal-shell">
+    <nav class="legal-toc" aria-labelledby="toc-title">
+      <h2 id="toc-title">Contenido</h2>
+      <ol>
+        @for (s of sections; track s.id) {
+          <li><button type="button" (click)="goToSection(s.id)">{{ s.title }}</button></li>
+        }
+      </ol>
+      <a class="legal-toc-other" routerLink="/legal/privacidad">Ver la Política de Privacidad</a>
+    </nav>
+
+    <article class="legal-doc" aria-labelledby="legal-title">
+      <header class="legal-header">
+        <h1 id="legal-title">Términos y Condiciones</h1>
+        <p class="legal-meta">Última actualización: {{ updatedAt }} · Versión <span>{{ version }}</span></p>
+      </header>
+
+      <div class="legal-body">
+        <div class="legal-summary">
+          <p>
+            <strong>En resumen:</strong> OvalTrack es una herramienta para que los clubes de rugby organicen sus planteles,
+            registren partidos y analicen estadísticas. Cada club es responsable de los datos que carga sobre sus jugadores
+            y jugadoras, en especial de los menores de edad. Usá la plataforma para fines deportivos, cuidá tu contraseña y
+            respetá los datos de las demás personas.
+          </p>
+        </div>
+
+        <section id="aceptacion" tabindex="-1">
+          <h2>1. Aceptación</h2>
+          <p>
+            Estos Términos y Condiciones regulan el uso de la plataforma web y de la aplicación instalable OvalTrack
+            (en adelante, “OvalTrack” o “la plataforma”), provista por el {{ provider }} (en adelante, “nosotros”).
+          </p>
+          <p>
+            Al crear una cuenta, aceptar una invitación o usar la plataforma, declarás haber leído y aceptado estos
+            Términos y nuestra <a routerLink="/legal/privacidad">Política de Privacidad</a>, que forma parte de ellos.
+            Si no estás de acuerdo, no uses OvalTrack. Registramos la fecha y la versión de los textos que aceptaste.
+          </p>
+        </section>
+
+        <section id="servicio" tabindex="-1">
+          <h2>2. Qué es OvalTrack</h2>
+          <p>OvalTrack permite a clubes, entrenadores, analistas y jugadores de rugby:</p>
+          <ul>
+            <li>Organizar el club en divisiones y gestionar sus integrantes.</li>
+            <li>Armar la convocatoria de cada partido.</li>
+            <li>Registrar las jugadas en vivo desde el borde de la cancha, incluso sin conexión a internet.</li>
+            <li>Revisar y corregir los partidos después de jugarlos y consultar estadísticas.</li>
+          </ul>
+          <p>
+            Las funciones disponibles pueden cambiar con el tiempo. Si en el futuro alguna función pasa a ser paga,
+            lo vamos a informar antes, y no vamos a cobrar nada que no hayas aceptado expresamente.
+          </p>
+        </section>
+
+        <section id="cuentas" tabindex="-1">
+          <h2>3. Cuentas y roles</h2>
+          <p>Hay cuatro tipos de cuenta, cada una con permisos distintos:</p>
+          <ul>
+            <li><strong>Administrador de club:</strong> solicita el alta del club y, una vez aprobado por OvalTrack, lo gestiona y aprueba a sus miembros.</li>
+            <li><strong>Entrenador / analista:</strong> pide acceso a un club activo; el administrador del club aprueba la solicitud.</li>
+            <li><strong>Jugador:</strong> se suma por invitación del club o pidiendo acceso.</li>
+            <li><strong>Administrador de OvalTrack:</strong> el equipo que opera la plataforma y revisa las solicitudes de alta de clubes.</li>
+          </ul>
+          <p>Al usar tu cuenta te comprometés a:</p>
+          <ul>
+            <li>Dar datos verdaderos y mantenerlos actualizados.</li>
+            <li>Usar una contraseña segura y no compartirla. La cuenta es personal: lo que se haga con ella se presume hecho por vos.</li>
+            <li>Avisarnos de inmediato si sospechás que otra persona usó tu cuenta.</li>
+            <li>Tener una sola cuenta por persona.</li>
+          </ul>
+          <p>Podemos rechazar una solicitud de alta o de acceso si los datos parecen falsos o incompletos.</p>
+        </section>
+
+        <section id="menores" tabindex="-1">
+          <h2>4. Menores de edad</h2>
+          <p>
+            El rugby se juega desde edades tempranas, por eso OvalTrack puede contener datos de jugadores y jugadoras menores
+            de 18 años, cargados por su club.
+          </p>
+          <ul>
+            <li>Las cuentas de administrador de club y de entrenador / analista son solo para personas mayores de 18 años.</li>
+            <li>
+              Una persona menor de 18 años solo puede crear su cuenta de jugador con la autorización de su madre, padre o
+              persona a cargo, que acepta estos Términos en su nombre.
+            </li>
+            <li>
+              El club es responsable de contar con esa autorización antes de cargar o invitar a un menor (ver la sección siguiente).
+            </li>
+          </ul>
+        </section>
+
+        <section id="clubes" tabindex="-1">
+          <h2>5. Obligaciones de los clubes</h2>
+          <p>El club, a través de sus administradores y entrenadores, se compromete a:</p>
+          <ul>
+            <li>
+              Cargar únicamente datos de personas que integran el club y que fueron informadas de que sus datos se van a
+              registrar en OvalTrack, con su consentimiento o, si son menores, el de sus representantes legales.
+            </li>
+            <li>Cargar solo los datos necesarios para la actividad deportiva. No se deben cargar datos de salud, documentos de identidad ni otros datos sensibles.</li>
+            <li>Mantener los datos correctos y atender los pedidos de las personas que quieran consultarlos, corregirlos o eliminarlos.</li>
+            <li>Dar de baja o desactivar a quienes dejan el club y revisar periódicamente quién tiene acceso.</li>
+          </ul>
+          <p>
+            Respecto de los datos que el club carga sobre sus integrantes, OvalTrack actúa como plataforma que los procesa
+            por cuenta del club, según lo explicado en la <a routerLink="/legal/privacidad">Política de Privacidad</a>.
+          </p>
+        </section>
+
+        <section id="uso" tabindex="-1">
+          <h2>6. Uso permitido</h2>
+          <p>OvalTrack está pensado para fines deportivos. No está permitido:</p>
+          <ul>
+            <li>Acceder o intentar acceder a datos de otros clubes o a funciones que tu rol no habilita.</li>
+            <li>Suplantar a otra persona o a otro club, o registrar un club sin estar autorizado.</li>
+            <li>Cargar contenido ofensivo, discriminatorio, ilegal o que vulnere derechos de terceros.</li>
+            <li>Usar los datos de otras personas para fines ajenos al club (por ejemplo, publicidad o reventa).</li>
+            <li>Interferir con el funcionamiento de la plataforma, probar sus vulnerabilidades sin autorización o automatizar su uso de forma abusiva.</li>
+            <li>Copiar, descompilar o revender la plataforma.</li>
+          </ul>
+        </section>
+
+        <section id="contenido" tabindex="-1">
+          <h2>7. Datos y contenido cargado</h2>
+          <p>
+            Los datos que cargan los clubes y usuarios (planteles, partidos, jugadas, estadísticas) les pertenecen. Nos das
+            permiso para guardarlos, procesarlos y mostrarlos solo en la medida necesaria para prestar el servicio.
+          </p>
+          <p>
+            Podemos usar información estadística agregada y anónima, que no permita identificar a ninguna persona ni club,
+            para mejorar la plataforma.
+          </p>
+          <p>
+            Las estadísticas se calculan a partir de lo que registran los usuarios. Su exactitud depende de la carga: OvalTrack
+            no garantiza que reflejen fielmente lo ocurrido en el partido.
+          </p>
+        </section>
+
+        <section id="offline" tabindex="-1">
+          <h2>8. Uso sin conexión</h2>
+          <p>
+            Durante un partido, OvalTrack guarda las jugadas en tu dispositivo y las sincroniza cuando vuelve la conexión.
+            Mientras no se sincronicen, esos datos existen solo en ese dispositivo:
+          </p>
+          <ul>
+            <li>No borres los datos del navegador ni desinstales la aplicación con jugadas pendientes de sincronizar.</li>
+            <li>Protegé el dispositivo con bloqueo de pantalla: quien lo use puede ver la información guardada.</li>
+            <li>Si compartís el dispositivo, cerrá la sesión al terminar.</li>
+          </ul>
+        </section>
+
+        <section id="disponibilidad" tabindex="-1">
+          <h2>9. Disponibilidad del servicio</h2>
+          <p>
+            Trabajamos para que OvalTrack funcione de forma continua y segura, pero no podemos garantizar que esté siempre
+            disponible ni libre de errores. Puede haber interrupciones por mantenimiento, actualizaciones o causas ajenas a
+            nosotros. Cuando sea posible, vamos a avisar las interrupciones programadas.
+          </p>
+          <p>Te recomendamos no depender de OvalTrack como único registro de información importante para tu club.</p>
+        </section>
+
+        <section id="propiedad" tabindex="-1">
+          <h2>10. Propiedad intelectual</h2>
+          <p>
+            El software, el diseño, la marca y el logo de OvalTrack pertenecen al {{ provider }}. Estos Términos te dan un
+            permiso de uso personal, no exclusivo e intransferible, mientras tengas una cuenta activa; no te transfieren
+            ningún otro derecho.
+          </p>
+          <p>Los nombres, escudos y logos de los clubes pertenecen a cada club.</p>
+        </section>
+
+        <section id="baja" tabindex="-1">
+          <h2>11. Suspensión y baja</h2>
+          <ul>
+            <li>Podés dejar de usar OvalTrack en cualquier momento y pedir la baja de tu cuenta escribiendo a <a [href]="'mailto:' + contactEmail">{{ contactEmail }}</a> o al administrador de tu club.</li>
+            <li>El administrador del club puede desactivar las cuentas de sus miembros.</li>
+            <li>
+              Podemos suspender o dar de baja cuentas o clubes que incumplan estos Términos o que pongan en riesgo la
+              seguridad de la plataforma o de otras personas. Salvo urgencia, vamos a avisar antes y explicar el motivo.
+            </li>
+          </ul>
+          <p>Qué pasa con los datos después de la baja está explicado en la <a routerLink="/legal/privacidad">Política de Privacidad</a>.</p>
+        </section>
+
+        <section id="responsabilidad" tabindex="-1">
+          <h2>12. Responsabilidad</h2>
+          <p>En la medida permitida por la ley, no somos responsables por:</p>
+          <ul>
+            <li>Datos incorrectos cargados por los usuarios o por los clubes.</li>
+            <li>Decisiones deportivas, médicas o de cualquier otro tipo tomadas a partir de la información de la plataforma.</li>
+            <li>Pérdidas de datos causadas por el borrado del dispositivo antes de sincronizar, o por el uso indebido de una cuenta cuya contraseña fue compartida.</li>
+            <li>Interrupciones causadas por fallas de internet, de los proveedores o de fuerza mayor.</li>
+          </ul>
+          <p>
+            Nada de lo dispuesto en estos Términos limita los derechos que te reconoce la Ley de Defensa del Consumidor
+            N.º 24.240 y demás normas de orden público, en caso de que te resulten aplicables.
+          </p>
+        </section>
+
+        <section id="terceros" tabindex="-1">
+          <h2>13. Servicios de terceros</h2>
+          <p>OvalTrack usa algunos servicios externos para funcionar, por ejemplo:</p>
+          <ul>
+            <li>
+              El Servicio de Normalización de Datos Geográficos de Argentina (Georef, del Estado Nacional), para listar
+              provincias y localidades al registrar un club. Solo se le envía la provincia elegida, nunca datos personales.
+            </li>
+            <li>Un proveedor de correo electrónico, para enviar invitaciones y avisos.</li>
+            <li>Proveedores de alojamiento (hosting) donde funciona la plataforma.</li>
+          </ul>
+          <p>Esos servicios tienen sus propios términos; no somos responsables por sus fallas o cambios.</p>
+        </section>
+
+        <section id="cambios" tabindex="-1">
+          <h2>14. Cambios en los términos</h2>
+          <p>
+            Podemos actualizar estos Términos para reflejar cambios en la plataforma o en la ley. Vamos a publicar la nueva
+            versión en esta página con su fecha. Si los cambios son importantes, te vamos a avisar con anticipación y te
+            vamos a pedir que los aceptes de nuevo para seguir usando OvalTrack.
+          </p>
+        </section>
+
+        <section id="ley" tabindex="-1">
+          <h2>15. Ley aplicable y jurisdicción</h2>
+          <p>
+            Estos Términos se rigen por las leyes de la República Argentina. Cualquier conflicto se someterá a los tribunales
+            ordinarios de {{ jurisdiction }}, salvo que seas consumidor: en ese caso podés recurrir también a los tribunales
+            de tu domicilio, según la Ley N.º 24.240.
+          </p>
+        </section>
+
+        <section id="contacto" tabindex="-1">
+          <h2>16. Contacto</h2>
+          <p>
+            Para consultas sobre estos Términos escribinos a <a [href]="'mailto:' + contactEmail">{{ contactEmail }}</a>.
+          </p>
+        </section>
+      </div>
+
+      <footer class="legal-footer">
+        <a routerLink="/legal/privacidad">Política de Privacidad</a>
+        <button type="button" class="btn btn-outline" (click)="print()">
+          <i class="bi bi-printer" aria-hidden="true"></i> Imprimir
+        </button>
+      </footer>
+    </article>
+  </div>
+</div>
