@@ -41,12 +41,12 @@ public class Invitation {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    /** División que envía la invitación. */
+    /** Club que envía la invitación. */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "club_id", nullable = false)
     private Club club;
 
-    /** División que envía la invitación. */
+    /** División activa del jugador al invitarlo. */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "division_id", nullable = false)
     private Division division;
@@ -60,7 +60,21 @@ public class Invitation {
     @JoinColumn(name = "token_id", nullable = false)
     private Token token;
 
+    /** Último envío: se renueva al reenviar. */
     @CreationTimestamp
-    @Column(name = "sent_at", nullable = false, updatable = false)
+    @Column(name = "sent_at", nullable = false)
     private LocalDateTime sentAt;
+
+    /** Reenvío: el enlace anterior deja de servir y se registra el nuevo envío. */
+    public void resend(Token newToken) {
+        if (this.token != null) {
+            this.token.setUsed(true);
+        }
+        this.token = newToken;
+        this.sentAt = LocalDateTime.now();
+    }
+
+    public boolean isPending() {
+        return token != null && !token.isUsed() && token.getExpiresAt().isAfter(LocalDateTime.now());
+    }
 }

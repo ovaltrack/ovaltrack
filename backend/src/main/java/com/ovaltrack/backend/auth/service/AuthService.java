@@ -33,6 +33,7 @@ import com.ovaltrack.backend.invitations.domain.Invitation;
 import com.ovaltrack.backend.invitations.service.InvitationService;
 import com.ovaltrack.backend.person.business.PersonService;
 import com.ovaltrack.backend.person.domain.Person;
+import com.ovaltrack.backend.token.domain.TokenPurpose;
 import com.ovaltrack.backend.token.service.TokenService;
 
 @Service
@@ -195,32 +196,19 @@ public class AuthService {
         return true;
     }
 
-    // ---- AuthService ----
-    // Inyecta además: InvitationService invitationService, TokenService
-    // tokenService,
-    // UserService userService, PasswordEncoder passwordEncoder
-
+    /** Alta desde una invitación: crea la cuenta de jugador vinculada a la persona invitada. */
     @Transactional
     public void registerFromInvitation(RegisterFromInvitationRequest request) {
-        // 1. Leer y comprobar (sin modificar nada todavía)
-        Invitation invitation = invitationService.findUsableInvitation(request.token());
+        // 1. Comprobar el enlace y la persona (mensajes específicos en InvitationService)
+        Invitation invitation = invitationService.findValidInvitation(request.token());
         Person person = invitation.getPerson();
         String email = person.getContactEmail();
 
-        if (userService.existsByEmail(email)) {
-            throw new BusinessException(
-                    "Ya existe una cuenta con este correo. Inicia sesión para aceptar la asociación.");
+        // 2. Consumir el enlace ANTES de crear el usuario: el UPDATE atómico decide quién gana si
+        // llegan dos pedidos a la vez. Si algo falla después, la transacción revierte y el enlace queda libre.
+        if (!tokenService.consume(request.token(), TokenPurpose.INVITATION)) {
+            throw new BusinessException("Esta invitación ya se usó. Si ya creaste tu cuenta, iniciá sesión.");
         }
-        if (userService.findUserByPersonId(person.getId()) != null) {
-            throw new BusinessException("Esta persona ya tiene una cuenta vinculada.");
-        }
-
-        // 2. Consumir el token ANTES de crear el usuario: el UPDATE atómico decide
-        // quién gana
-        // si llegan dos peticiones a la vez. Si algo falla después, la transacción
-        // revierte
-        // y el token queda libre otra vez.
-        tokenService.consume(request.token());
 
         // 3. Crear la cuenta vinculada a la persona. Sin aprobación pendiente:
         // el club ya invitó a este jugador, a diferencia de /register.

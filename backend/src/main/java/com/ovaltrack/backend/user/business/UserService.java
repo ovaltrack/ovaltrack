@@ -1,6 +1,7 @@
 package com.ovaltrack.backend.user.business;
 
 import java.util.Collection;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -122,6 +123,15 @@ public class UserService {
 					return new UserClubRegistration(userDto, clubDto);
 				})
 				.collect(Collectors.toList());
+	}
+
+	public Set<UUID> findPersonIdsWithAccount(Collection<UUID> personIds) {
+		return personIds.isEmpty() ? Set.of() : userRepository.findPersonIdsWithAccount(personIds);
+	}
+
+	/** Correos (en minúsculas) que ya son correo de acceso de alguna cuenta. */
+	public Set<String> findUsedLoginEmails(Collection<String> lowercaseEmails) {
+		return lowercaseEmails.isEmpty() ? Set.of() : userRepository.findUsedLoginEmails(lowercaseEmails);
 	}
 
 	public boolean existsByEmail(String email) {

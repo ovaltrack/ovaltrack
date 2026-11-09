@@ -1,20 +1,30 @@
 package com.ovaltrack.backend.invitations.repository;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
-import com.ovaltrack.backend.division.domain.Division;
 import com.ovaltrack.backend.invitations.domain.Invitation;
-import com.ovaltrack.backend.person.domain.Person;
 
 public interface InvitationRepository extends JpaRepository<Invitation, UUID> {
 
-    @Query("SELECT COUNT(i) > 0 FROM Invitation i WHERE i.person = ?1 AND i.division = ?2")
-    boolean existsByPersonIdAndDivisionId(Person personId, Division divisionId);
+    /** Invitaciones (con su token) de varias personas: una sola consulta para la tabla de jugadores. */
+    @Query("SELECT i FROM Invitation i JOIN FETCH i.token WHERE i.person.id IN :personIds")
+    List<Invitation> findWithTokenByPersonIds(@Param("personIds") Collection<UUID> personIds);
 
-    @Query ("SELECT i FROM Invitation i WHERE i.token.hash = :hash")
-    Optional<Invitation> findByTokenHash(String hash);
+    /** Invitación con todo lo que muestra el formulario de alta. */
+    @Query("""
+            SELECT i FROM Invitation i
+            JOIN FETCH i.token t
+            JOIN FETCH i.person p
+            JOIN FETCH i.club
+            JOIN FETCH i.division
+            WHERE t.hash = :hash
+            """)
+    Optional<Invitation> findByTokenHash(@Param("hash") String hash);
 }

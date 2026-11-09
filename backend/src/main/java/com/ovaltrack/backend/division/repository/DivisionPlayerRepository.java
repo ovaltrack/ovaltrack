@@ -47,6 +47,18 @@ public interface DivisionPlayerRepository extends JpaRepository<DivisionPlayer, 
         """)
     List<Object[]> findDivisionPlayersWithPersonAndUser(@Param("divisionId") UUID divisionId);
 
+    /** Jugadores activos de todas las divisiones del club, con persona y división (una sola consulta). */
+    @Query("""
+            SELECT dp
+            FROM DivisionPlayer dp
+            JOIN FETCH dp.person p
+            JOIN FETCH dp.division d
+            WHERE d.club.id = :clubId
+            AND dp.endDate IS NULL
+            ORDER BY p.lastName, p.firstName, dp.startDate DESC
+        """)
+    List<DivisionPlayer> findActiveByClubId(@Param("clubId") UUID clubId);
+
     @Query("SELECT dp FROM DivisionPlayer dp JOIN FETCH dp.division d WHERE dp.person.id = :personId AND dp.endDate IS NULL")
     Collection<DivisionPlayer> findActiveByPersonId(@Param("personId") UUID personId);
 

@@ -154,6 +154,11 @@ public class DivisionPlayerService {
                 user == null ? null : user.getActive());
     }
 
+    /** Jugadores activos del club (persona y división cargadas), ordenados por apellido. */
+    public List<DivisionPlayer> findActivePlayersByClubId(UUID clubId) {
+        return divisionPlayerRepository.findActiveByClubId(clubId);
+    }
+
     public DivisionPlayer findDivisionPlayerEntityById(UUID divisionPlayerId) {
         return divisionPlayerRepository.findById(divisionPlayerId).orElse(null);
     }

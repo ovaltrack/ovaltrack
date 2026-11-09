@@ -59,6 +59,12 @@ public class GlobalExceptionHandler {
                                 .body(new MessageResponse(ex.getMessage()));
         }
 
+        @ExceptionHandler(MailDeliveryException.class)
+        public ResponseEntity<MessageResponse> handleMailDelivery(MailDeliveryException ex) {
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                                .body(new MessageResponse(ex.getMessage()));
+        }
+
         @ExceptionHandler(BusinessException.class)
         public ResponseEntity<MessageResponse> handleBusinessException(BusinessException ex) {
                 return ResponseEntity.status(HttpStatus.CONFLICT)
