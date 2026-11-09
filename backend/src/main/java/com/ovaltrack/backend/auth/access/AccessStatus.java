@@ -6,5 +6,7 @@ public enum AccessStatus {
     /** La cuenta no existe o está inactiva. */
     ACCOUNT_INACTIVE,
     /** La cuenta está activa pero su club fue desactivado (REJECTED). */
-    CLUB_INACTIVE
+    CLUB_INACTIVE,
+    /** El token se emitió para un correo de acceso que la cuenta ya no tiene (cambió el correo). */
+    SESSION_EXPIRED
 }

@@ -28,7 +28,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByPersonId(UUID personId);
 
     /** Datos mínimos para revisar el acceso (cuenta activa y estado del club). */
-    @Query("SELECT u.active AS active, u.role AS role, c.status AS clubStatus FROM User u LEFT JOIN u.person p LEFT JOIN p.club c WHERE u.id = :userId")
+    @Query("SELECT u.active AS active, u.loginEmail AS loginEmail, u.role AS role, c.status AS clubStatus FROM User u LEFT JOIN u.person p LEFT JOIN p.club c WHERE u.id = :userId")
     Optional<UserAccessView> findAccessById(@Param("userId") UUID userId);
 
     @Query("SELECT u FROM User u WHERE u.person.club.id = :clubId")

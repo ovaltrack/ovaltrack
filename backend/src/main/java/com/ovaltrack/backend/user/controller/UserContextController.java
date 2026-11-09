@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ovaltrack.backend.user.business.UserContextService;
 import com.ovaltrack.backend.user.business.UserProfileService;
+import com.ovaltrack.backend.common.dto.response.MessageResponse;
+import com.ovaltrack.backend.user.domain.dto.ChangeLoginEmailRequest;
 import com.ovaltrack.backend.user.domain.dto.UpdateContactRequest;
 import com.ovaltrack.backend.user.domain.dto.UserProfileDTO;
 import com.ovaltrack.backend.user.domain.dto.UserContextDTO;
@@ -61,5 +63,18 @@ public class UserContextController {
     public ResponseEntity<UserProfileDTO> updateContact(Authentication authentication,
             @Valid @RequestBody UpdateContactRequest request) {
         return ResponseEntity.ok(userProfileService.updateContact(authentication.getName(), request));
+    }
+
+    @Operation(summary = "Change the authenticated user's login email", description = "Requires the current password and applies immediately. Tokens issued for the previous email stop working, so the user must sign in again.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Login email changed; the client must sign in again."),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - Missing or invalid token."),
+            @ApiResponse(responseCode = "409", description = "Wrong password, invalid email, same email or email already in use.")
+    })
+    @PatchMapping("/profile/login-email")
+    public ResponseEntity<MessageResponse> changeLoginEmail(Authentication authentication,
+            @Valid @RequestBody ChangeLoginEmailRequest request) {
+        userProfileService.changeLoginEmail(authentication.getName(), request);
+        return ResponseEntity.ok(new MessageResponse("Tu correo de acceso cambió. Iniciá sesión con el correo nuevo."));
     }
 }

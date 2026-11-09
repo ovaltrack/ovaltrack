@@ -1,5 +1,6 @@
 package com.ovaltrack.backend.user.business;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -9,6 +10,7 @@ import com.ovaltrack.backend.common.config.exceptions.EntityNotFoundException;
 import com.ovaltrack.backend.person.domain.Person;
 import com.ovaltrack.backend.person.repository.PersonRepository;
 import com.ovaltrack.backend.user.domain.User;
+import com.ovaltrack.backend.user.domain.dto.ChangeLoginEmailRequest;
 import com.ovaltrack.backend.user.domain.dto.UpdateContactRequest;
 import com.ovaltrack.backend.user.domain.dto.UserProfileDTO;
 import com.ovaltrack.backend.user.domain.dto.UserProfileDTO.AccountData;
@@ -25,10 +27,14 @@ public class UserProfileService {
 
     static final String NO_PERSON_MESSAGE = "Tu cuenta no tiene datos personales para editar.";
     static final String EMAIL_TAKEN_MESSAGE = "El correo de contacto ya lo usa otra persona.";
+    static final String WRONG_PASSWORD_MESSAGE = "La contraseña actual no es correcta.";
+    static final String SAME_LOGIN_EMAIL_MESSAGE = "El correo nuevo es igual al actual.";
+    static final String LOGIN_EMAIL_TAKEN_MESSAGE = "Ese correo ya lo usa otra cuenta o persona.";
 
     private final UserRepository userRepository;
     private final PersonRepository personRepository;
     private final UserContextService userContextService;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
     public UserProfileDTO getProfile(String loginEmail) {
@@ -55,6 +61,41 @@ public class UserProfileService {
         person.setContactPhone(phone == null || phone.isEmpty() ? null : phone);
         personRepository.save(person);
         return toProfile(user);
+    }
+
+    /**
+     * Cambia el correo de acceso después de verificar la contraseña. Si el correo de contacto era
+     * el mismo, pasa también al nuevo. Los tokens emitidos para el correo anterior dejan de servir.
+     */
+    @Transactional
+    public void changeLoginEmail(String loginEmail, ChangeLoginEmailRequest request) {
+        User user = findUser(loginEmail);
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
+            throw new BusinessException(WRONG_PASSWORD_MESSAGE);
+        }
+
+        String newEmail = request.newEmail().trim();
+        String oldEmail = user.getLoginEmail();
+        if (newEmail.equalsIgnoreCase(oldEmail)) {
+            throw new BusinessException(SAME_LOGIN_EMAIL_MESSAGE);
+        }
+
+        Person person = user.getPerson();
+        boolean takenByAccount = userRepository.existsByLoginEmailIgnoreCaseAndIdNot(newEmail, user.getId());
+        // Otra persona con ese contacto podría invitarse y vincularse a esta cuenta: no se permite
+        boolean takenByPerson = person == null
+                ? personRepository.existsByContactEmailIgnoreCase(newEmail)
+                : personRepository.existsByContactEmailIgnoreCaseAndIdNot(newEmail, person.getId());
+        if (takenByAccount || takenByPerson) {
+            throw new BusinessException(LOGIN_EMAIL_TAKEN_MESSAGE);
+        }
+
+        user.setLoginEmail(newEmail);
+        userRepository.save(user);
+        if (person != null && oldEmail.equalsIgnoreCase(person.getContactEmail())) {
+            person.setContactEmail(newEmail);
+            personRepository.save(person);
+        }
     }
 
     private User findUser(String loginEmail) {
