@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ovaltrack.backend.statistic.business.StatisticService;
+import com.ovaltrack.backend.statistic.business.player.PlayerStatisticService;
+import com.ovaltrack.backend.statistic.domain.dto.PlayerMatchStatisticsDTO;
+import com.ovaltrack.backend.statistic.domain.dto.PlayerStatisticsDTO;
 import com.ovaltrack.backend.statistic.domain.dto.DivisionStatisticsDTO;
 import com.ovaltrack.backend.statistic.domain.dto.PeriodStatisticDTO;
 
@@ -30,6 +33,7 @@ import lombok.RequiredArgsConstructor;
 public class StatisticController {
 
     private final StatisticService statisticService;
+    private final PlayerStatisticService playerStatisticService;
 
     @Operation(
         summary = "Get period statistics for a match",
@@ -68,5 +72,46 @@ public class StatisticController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             Authentication authentication) {
         return ResponseEntity.ok(statisticService.calculateDivisionStatistics(divisionId, from, to, authentication));
+    }
+
+    @Operation(
+        summary = "Get general statistics of a player",
+        description = "Returns the finished matches a player played in a division and season, totals, zone map and "
+            + "per-match metrics compared with the squad average of that division in the same season. Without divisionId, "
+            + "the division of the latest match; without season, the latest season with matches. A player can only see "
+            + "their own statistics; staff, players of divisions they can access."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Statistics returned successfully."),
+        @ApiResponse(responseCode = "403", description = "The user cannot see this player or division."),
+        @ApiResponse(responseCode = "404", description = "Player not found or not related to the division.")
+    })
+    @GetMapping("/player/{personId}")
+    @PreAuthorize("hasAnyRole('ADMIN_CLUB', 'COACH_ANALYST', 'ADMIN_OVALTRACK', 'PLAYER')")
+    public ResponseEntity<PlayerStatisticsDTO> getPlayerStatistics(
+            @PathVariable UUID personId,
+            @RequestParam(required = false) UUID divisionId,
+            @RequestParam(required = false) Integer season,
+            Authentication authentication) {
+        return ResponseEntity.ok(playerStatisticService.playerStatistics(personId, divisionId, season, authentication));
+    }
+
+    @Operation(
+        summary = "Get the statistics of a player in a match",
+        description = "Returns what the player did in a finished match, compared with the average of the match squad."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Statistics returned successfully."),
+        @ApiResponse(responseCode = "403", description = "The user cannot see this player or match."),
+        @ApiResponse(responseCode = "404", description = "Player or match not found, or the player was not in the squad."),
+        @ApiResponse(responseCode = "409", description = "The match is not finished.")
+    })
+    @GetMapping("/player/{personId}/match/{matchId}")
+    @PreAuthorize("hasAnyRole('ADMIN_CLUB', 'COACH_ANALYST', 'ADMIN_OVALTRACK', 'PLAYER')")
+    public ResponseEntity<PlayerMatchStatisticsDTO> getPlayerMatchStatistics(
+            @PathVariable UUID personId,
+            @PathVariable UUID matchId,
+            Authentication authentication) {
+        return ResponseEntity.ok(playerStatisticService.playerMatchStatistics(personId, matchId, authentication));
     }
 }

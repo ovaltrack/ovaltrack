@@ -269,11 +269,28 @@ export const routes: Routes = [
     },
     {
         path: 'player-statistics/:matchId',
-        loadComponent: () => import('./features/player-statistics/player-match-statistics/player-match-statistics.component')
-            .then(c => c.PlayerMatchStatisticsComponent),
+        loadComponent: () => import('./features/player-statistics/player-statistics.component')
+            .then(c => c.PlayerStatisticsComponent),
         canMatch: [authGuard],
         canActivate: [hasRoleGuard],
         data: { roles: ['PLAYER'] },
+    },
+    // Estadísticas de un jugador para el staff (el backend valida el acceso a su división)
+    {
+        path: 'players/:personId/statistics',
+        loadComponent: () => import('./features/player-statistics/player-statistics.component')
+            .then(c => c.PlayerStatisticsComponent),
+        canMatch: [authGuard],
+        canActivate: [hasRoleGuard, hasClubGuard],
+        data: { roles: ['ADMIN_OVALTRACK', 'ADMIN_CLUB', 'COACH_ANALYST'] },
+    },
+    {
+        path: 'players/:personId/statistics/:matchId',
+        loadComponent: () => import('./features/player-statistics/player-statistics.component')
+            .then(c => c.PlayerStatisticsComponent),
+        canMatch: [authGuard],
+        canActivate: [hasRoleGuard, hasClubGuard],
+        data: { roles: ['ADMIN_OVALTRACK', 'ADMIN_CLUB', 'COACH_ANALYST'] },
     },
     // Textos legales: públicos, con o sin sesión
     {

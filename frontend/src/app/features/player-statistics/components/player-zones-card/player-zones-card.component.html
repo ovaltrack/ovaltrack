@@ -1,0 +1,46 @@
+<section class="form-card">
+  <div class="form-card-header">
+    <h2 class="form-card-title"><i class="bi bi-geo-alt" aria-hidden="true"></i> Dónde juega</h2>
+    <p class="form-card-subtitle">
+      Acciones del jugador por zona{{ scopeLabel() ? ' · ' + scopeLabel() : '' }}. Se ataca siempre hacia la derecha.
+    </p>
+  </div>
+
+  <div class="form-card-body">
+    @if (zones().zonedEvents === 0) {
+      <div class="empty">
+        <i class="bi bi-map" aria-hidden="true"></i>
+        <p>
+          @if (zones().matchesWithZones === 0) {
+            Todavía no hay tramos de zona asignados en estos partidos. Se cargan desde la vista de zonas del post-partido.
+          } @else {
+            Ninguna acción del jugador cae dentro de un tramo con zona asignada.
+          }
+        </p>
+      </div>
+    } @else {
+      <app-rugby-field
+        [cells]="cells()"
+        [selectable]="false"
+        [ownClubName]="ownClubName()"
+        [opponentName]="opponentName()" />
+
+      <div class="zones-foot">
+        <ol class="top-zones" aria-label="Zonas con más acciones">
+          @for (zone of top(); track zone.label; let i = $index) {
+            <li class="top-zone">
+              <span class="rank">{{ i + 1 }}</span>
+              <span class="zone-code">{{ zone.label }}</span>
+              <span class="zone-name">{{ zone.name }}</span>
+              <span class="zone-count">{{ zone.count }} · {{ zone.percent }} %</span>
+            </li>
+          }
+        </ol>
+        <p class="coverage">
+          {{ zones().zonedEvents }} de {{ totalEvents() }} acciones con zona ·
+          {{ zones().matchesWithZones }} {{ zones().matchesWithZones === 1 ? 'partido' : 'partidos' }} con tramos
+        </p>
+      </div>
+    }
+  </div>
+</section>

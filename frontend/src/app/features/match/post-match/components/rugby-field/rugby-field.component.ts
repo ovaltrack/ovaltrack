@@ -105,7 +105,9 @@ export class RugbyFieldComponent {
     return `${describeZone(cell)} · ${events}`;
   });
 
-  readonly gridLabel = 'Cancha: elegí la franja y el lateral del tramo';
+  readonly gridLabel = computed(() => this.selectable()
+    ? 'Cancha: elegí la franja y el lateral del tramo'
+    : 'Cancha: eventos por zona');
 
   isSelected(cell: ZoneCellRef): boolean {
     const selected = this.selectedCell();

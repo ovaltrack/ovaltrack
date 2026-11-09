@@ -25,4 +25,13 @@ public interface MatchPlayerRepository extends JpaRepository<MatchPlayer, UUID> 
             """)
     Collection<MatchPlayer> findPlayedByPersonId(@Param("personId") UUID personId);
 
+    /** Planteles de varios partidos, con la persona de cada jugador (para promedios del plantel). */
+    @Query("""
+                SELECT mp FROM MatchPlayer mp
+                JOIN FETCH mp.divisionPlayer dp
+                JOIN FETCH dp.person
+                WHERE mp.match.id IN :matchIds
+            """)
+    Collection<MatchPlayer> findRosterByMatchIds(@Param("matchIds") Collection<UUID> matchIds);
+
 }

@@ -190,6 +190,13 @@
             <!-- Action Buttons -->
             <td class="text-right">
               <div class="actions-cell">
+                <a
+                  class="btn btn-secondary"
+                  [routerLink]="['/players', player.personId, 'statistics']"
+                  [attr.aria-label]="'Estadísticas de ' + (activePersons[index].firstName || 'la persona') + ' ' + (activePersons[index].lastName || '')"
+                >
+                  Estadísticas
+                </a>
                 <button
                   type="button"
                   class="btn btn-secondary"

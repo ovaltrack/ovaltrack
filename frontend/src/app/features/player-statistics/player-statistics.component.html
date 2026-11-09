@@ -1,261 +1,192 @@
 <div class="layout-container page">
 
-  <!-- Cabecera de Página (HUD) -->
   <header class="hud">
     <div class="hud-brand">
-      <div class="badge-tech">
-        <span>Mi desempeño</span>
-      </div>
+      <span class="avatar" aria-hidden="true">{{ initials() || '–' }}</span>
       <div class="brand-text">
-        <h1 class="title">Mis estadísticas</h1>
-        <p class="club">Tu rendimiento e historial de partidos con el club</p>
+        <div class="badge-tech"><span>{{ isOwnView() ? 'Mi desempeño' : 'Estadísticas del jugador' }}</span></div>
+        <h1 class="title">{{ fullName() || (isOwnView() ? 'Mis estadísticas' : 'Jugador') }}</h1>
+        <p class="club">{{ subtitle() }}</p>
       </div>
     </div>
 
     <div class="hud-actions">
-      <label class="season-select">
-        <span class="form-label">Temporada</span>
-        <select class="form-control" [value]="selectedSeason()" (change)="setSeason($any($event.target).value)">
-          @for (season of seasons(); track season) {
-          <option [value]="season">{{ season }}</option>
-          }
-        </select>
-      </label>
+      @if (data(); as d) {
+        @if (d.divisions.length > 1) {
+          <label class="select-field">
+            <span class="form-label">División</span>
+            <select class="form-control" [value]="d.divisionId" (change)="setDivision($any($event.target).value)">
+              @for (division of d.divisions; track division.divisionId) {
+                <option [value]="division.divisionId">{{ division.name }}</option>
+              }
+            </select>
+          </label>
+        }
+        @if (d.seasons.length > 1) {
+          <label class="select-field">
+            <span class="form-label">Temporada</span>
+            <select class="form-control" [value]="d.season" (change)="setSeason($any($event.target).value)">
+              @for (season of d.seasons; track season) {
+                <option [value]="season">{{ season }}</option>
+              }
+            </select>
+          </label>
+        }
+      }
+      @if (backLink(); as link) {
+        <a class="btn btn-outline back-btn" [routerLink]="link"><i class="bi bi-arrow-left" aria-hidden="true"></i> Jugadores</a>
+      }
     </div>
   </header>
 
-  @if (isLoading()) {
-  <!-- Skeleton de Carga -->
-  <div class="stats-skeleton" aria-busy="true" aria-label="Cargando estadísticas">
-    <section class="form-card profile-card">
-      <div class="sk sk-avatar sk-profile-avatar"></div>
-      <div class="profile-info">
-        <div class="sk sk-line"></div>
-        <div class="sk sk-line s"></div>
-      </div>
-    </section>
-
-    <section class="kpi-grid">
-      @for (i of [1, 2, 3, 4, 5]; track i) {
-      <article class="form-card kpi-card">
-        <div class="sk sk-line s"></div>
-        <div class="sk sk-kpi-value"></div>
-        <div class="sk sk-line"></div>
-      </article>
-      }
-    </section>
-
-    <div class="stats-row">
-      <section class="form-card chart-card">
-        <div class="form-card-body">
-          <div class="sk sk-chart"></div>
-        </div>
-      </section>
-      <section class="form-card side-card">
-        <div class="form-card-body side-body">
-          @for (i of [1, 2, 3]; track i) {
-          <div class="sk sk-line"></div>
-          <div class="sk sk-progress"></div>
-          }
-        </div>
-      </section>
-    </div>
-
-    <section class="form-card history-card">
-      <div class="form-card-body">
-        @for (i of [1, 2, 3, 4]; track i) {
-        <div class="sk sk-table-row"></div>
-        }
-      </div>
-    </section>
-  </div>
-  } @else if (matchStatistics().length === 0) {
-  <!-- Estado Vacío -->
-  <div class="empty-state">
-    <div class="empty-icon" aria-hidden="true">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M3 3v18h18" />
-        <path d="M7 15l4-4 3 3 5-6" />
-      </svg>
-    </div>
-    <div class="empty-title">Todavía no jugaste partidos</div>
-    <p class="empty-copy">
-      Cuando juegues tu primer partido y se finalice, vas a ver acá tus estadísticas e historial.
-    </p>
-  </div>
-  } @else {
-
-  <!-- Perfil del Jugador -->
-  <section class="form-card profile-card">
-    <div class="profile-avatar" aria-hidden="true">{{ profile().initials }}</div>
-    <div class="profile-info">
-      <h2 class="profile-name">{{ profile().fullName }}</h2>
-      <div class="profile-meta">
-        <span>{{ profile().clubName }}</span>
-        @if (profile().divisionName) {
-        <span class="meta-sep" aria-hidden="true">·</span>
-        <span>División {{ profile().divisionName }}</span>
-        }
-      </div>
-    </div>
-  </section>
-
-  <!-- KPIs de Temporada -->
-  <section class="kpi-grid" aria-label="Resumen de la temporada">
-    @for (kpi of kpis(); track kpi.label) {
-    <article class="form-card kpi-card">
-      <span class="kpi-label">{{ kpi.label }}</span>
-      <span class="kpi-value">{{ kpi.value }}</span>
-      <span class="kpi-detail">{{ kpi.detail }}</span>
-    </article>
+  @switch (general().status) {
+    @case ('loading') {
+      <app-rugby-ball-loader message="Calculando estadísticas del jugador..." />
     }
-  </section>
-
-  <div class="stats-row">
-    <!-- Puntos por Partido -->
-    <section class="form-card chart-card">
-      <div class="form-card-header card-header-inline">
-        <h2 class="form-card-title">Puntos por partido</h2>
-        <span class="form-card-subtitle">Promedio <strong class="mono">{{ averagePoints() }}</strong> pts</span>
+    @case ('error') {
+      <div class="state-box state-box--error">
+        <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+        <p>No se pudieron cargar las estadísticas de este jugador.</p>
       </div>
-      <div class="form-card-body">
-        <div class="points-chart" role="img" aria-label="Gráfico de puntos anotados por partido">
-          @for (bar of pointsChart(); track bar.matchId) {
-          <div class="points-col">
-            <span class="points-value">{{ bar.points }}</span>
-            <div class="points-bar" [class.is-win]="bar.isWin" [style.height.%]="bar.heightPercent"></div>
-            <span class="points-label">{{ bar.opponent }}</span>
-          </div>
+    }
+    @default {
+      @if (!hasMatches()) {
+        <div class="state-box">
+          <i class="bi bi-bar-chart" aria-hidden="true"></i>
+          <p>Todavía no hay partidos finalizados con este jugador en la nómina.</p>
+        </div>
+      } @else {
+        <div class="toolbar" role="group" aria-label="Vista de estadísticas">
+          <button type="button" class="filter-pill" [class.active]="view() === 'general'" [attr.aria-pressed]="view() === 'general'" (click)="openGeneral()">
+            <i class="bi bi-grid-1x2" aria-hidden="true"></i><span>General</span>
+          </button>
+          <button type="button" class="filter-pill" [class.active]="view() === 'match'" [attr.aria-pressed]="view() === 'match'" (click)="openMatchView()">
+            <i class="bi bi-calendar-event" aria-hidden="true"></i><span>Por partido</span>
+          </button>
+
+          @if (view() === 'match') {
+            <span class="filter-divider" aria-hidden="true"></span>
+            <label class="match-picker">
+              <span class="visually-hidden">Partido</span>
+              <select class="form-control" [value]="matchId()" (change)="openMatch($any($event.target).value)">
+                @for (match of matches(); track match.matchId) {
+                  <option [value]="match.matchId">{{ match.date | date: 'dd/MM/yyyy' }} · vs {{ match.opponentName }}</option>
+                }
+              </select>
+            </label>
           }
         </div>
-        <div class="chart-legend">
-          <span><span class="legend-swatch is-win"></span>Victoria</span>
-          <span><span class="legend-swatch"></span>Derrota / empate</span>
-        </div>
-      </div>
-    </section>
 
-    <!-- Pateo y Disciplina -->
-    <section class="form-card side-card">
-      <div class="form-card-header">
-        <h2 class="form-card-title">Efectividad de pateo</h2>
-      </div>
-      <div class="form-card-body side-body">
-        @for (kick of kicking(); track kick.label) {
-        <div class="kick-stat">
-          <div class="kick-head">
-            <span class="kick-label">{{ kick.label }}</span>
-            <span class="mono">{{ kick.made }}/{{ kick.attempts }} · {{ percentage(kick.made, kick.attempts) }}%</span>
-          </div>
-          <div class="progress-track">
-            <div class="progress-fill" [style.width.%]="percentage(kick.made, kick.attempts)"></div>
-          </div>
-        </div>
+        @if (view() === 'general') {
+          @if (data(); as d) {
+            <section class="kpi-grid" aria-label="Resumen de la temporada">
+              @for (kpi of generalKpis(); track kpi.label) {
+                <article class="kpi-card">
+                  <span class="kpi-label">{{ kpi.label }}</span>
+                  <strong class="kpi-value">{{ kpi.value }}</strong>
+                  <span class="kpi-detail">{{ kpi.detail }}</span>
+                </article>
+              }
+            </section>
+
+            <div class="main-grid">
+              <app-player-comparison-card
+                [rows]="generalRows()"
+                subtitle="Promedio por partido del jugador frente al de todo el plantel de su división en la temporada."
+                squadLabel="Plantel de la división" />
+              <app-player-zones-card
+                [zones]="d.zones"
+                [ownClubName]="ownClubName()"
+                [scopeLabel]="'Temporada ' + d.season" />
+            </div>
+
+            <section class="form-card">
+              <div class="form-card-header">
+                <h2 class="form-card-title"><i class="bi bi-calendar3" aria-hidden="true"></i> Partidos jugados</h2>
+                <p class="form-card-subtitle">Elegí un partido para ver lo que hizo el jugador en ese encuentro.</p>
+              </div>
+              <ul class="match-list">
+                @for (match of d.matches; track match.matchId) {
+                  <li>
+                    <button type="button" class="match-row" (click)="openMatch(match.matchId)">
+                      <span class="result result--{{ resultOf(match) }}" [attr.aria-label]="resultWords[resultOf(match)]">{{ resultLabels[resultOf(match)] }}</span>
+                      <span class="match-main">
+                        <span class="match-rival">vs {{ match.opponentName }}</span>
+                        <span class="match-meta">
+                          {{ match.date | date: 'dd/MM/yyyy' }} ·
+                          {{ match.role === 'TITULAR' ? 'Titular' : 'Suplente' }}@if (match.number) { · #{{ match.number }}}
+                        </span>
+                      </span>
+                      <span class="match-score">{{ match.homeScore }}-{{ match.awayScore }}</span>
+                      <span class="match-stats">
+                        <span><strong>{{ match.metrics.points }}</strong> pts</span>
+                        <span><strong>{{ match.metrics.tries }}</strong> tries</span>
+                        <span><strong>{{ match.metrics.tacklesMade }}</strong> tackles</span>
+                      </span>
+                      <i class="bi bi-chevron-right chevron" aria-hidden="true"></i>
+                    </button>
+                  </li>
+                }
+              </ul>
+            </section>
+
+            <app-player-actions-card [groups]="generalActions()" />
+          }
+        } @else {
+          @switch (matchDetail().status) {
+            @case ('loading') {
+              <app-rugby-ball-loader message="Calculando el partido..." />
+            }
+            @case ('error') {
+              <div class="state-box state-box--error">
+                <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                <p>No se pudieron cargar las estadísticas de este partido.</p>
+                <button type="button" class="btn btn-outline" (click)="openGeneral()">Ver estadísticas generales</button>
+              </div>
+            }
+            @default {
+              @if (detail(); as m) {
+                <section class="match-banner form-card">
+                  <span class="result result--lg result--{{ resultOf(m.match) }}" [attr.aria-label]="resultWords[resultOf(m.match)]">{{ resultLabels[resultOf(m.match)] }}</span>
+                  <div class="banner-main">
+                    <span class="banner-rival">{{ ownClubName() }} vs {{ m.match.opponentName }}</span>
+                    <span class="match-meta">
+                      {{ m.match.date | date: 'dd/MM/yyyy' }} · {{ m.divisionName }} ·
+                      {{ m.match.role === 'TITULAR' ? 'Titular' : 'Suplente' }}@if (m.match.number) { · #{{ m.match.number }}}
+                    </span>
+                  </div>
+                  <span class="banner-score">{{ m.match.homeScore }}<span class="sep">-</span>{{ m.match.awayScore }}</span>
+                </section>
+
+                <section class="kpi-grid" aria-label="Resumen del partido">
+                  @for (kpi of matchKpis(); track kpi.label) {
+                    <article class="kpi-card">
+                      <span class="kpi-label">{{ kpi.label }}</span>
+                      <strong class="kpi-value">{{ kpi.value }}</strong>
+                      <span class="kpi-detail">{{ kpi.detail }}</span>
+                    </article>
+                  }
+                </section>
+
+                <div class="main-grid">
+                  <app-player-comparison-card
+                    [rows]="matchRows()"
+                    title="Comparación con el plantel del partido"
+                    [subtitle]="matchSquadLabel()"
+                    squadLabel="Plantel del partido" />
+                  <app-player-zones-card
+                    [zones]="m.zones"
+                    [ownClubName]="ownClubName()"
+                    [opponentName]="m.match.opponentName ?? 'Rival'"
+                    scopeLabel="Este partido" />
+                </div>
+
+                <app-player-actions-card [groups]="matchActions()" />
+              }
+            }
+          }
         }
-
-        <h3 class="section-label">Disciplina</h3>
-        <div class="discipline-grid">
-          @for (stat of disciplineStats(); track stat.label) {
-          <div class="discipline-item" [class.is-warning]="stat.tone === 'warning'" [class.is-error]="stat.tone === 'error'">
-            <span class="discipline-value">{{ stat.value }}</span>
-            <span class="discipline-label">{{ stat.label }}</span>
-          </div>
-          }
-        </div>
-      </div>
-    </section>
-  </div>
-
-  <!-- Juego con la Pelota -->
-  <section class="form-card">
-    <div class="form-card-header">
-      <h2 class="form-card-title">Juego con la pelota</h2>
-    </div>
-    <div class="form-card-body play-grid">
-      @for (stat of playStats(); track stat.label) {
-      <div class="play-item">
-        <span class="play-value">{{ stat.value }}</span>
-        <span class="play-label">{{ stat.label }}</span>
-      </div>
       }
-    </div>
-  </section>
-
-  <!-- Historial de Partidos -->
-  <section class="form-card history-card">
-    <div class="form-card-header card-header-inline">
-      <div>
-        <h2 class="form-card-title">Historial de partidos</h2>
-        <p class="form-card-subtitle">{{ filteredHistory().length }} partidos jugados · Tocá un partido para ver el detalle</p>
-      </div>
-      <div class="status-segment" role="tablist" aria-label="Filtrar partidos por rol">
-        @for (filter of roleFilters; track filter) {
-        <button
-          type="button"
-          class="status-tab"
-          role="tab"
-          [attr.aria-selected]="roleFilter() === filter"
-          [class.active]="roleFilter() === filter"
-          (click)="setRoleFilter(filter)">
-          {{ roleFilterLabels[filter] }}
-        </button>
-        }
-      </div>
-    </div>
-
-    <div class="table-scroll">
-      <table class="history-table">
-        <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Rival</th>
-            <th>Resultado</th>
-            <th>Rol</th>
-            <th class="num">Pts</th>
-            <th class="num">Tries</th>
-            <th class="num">Conv</th>
-            <th class="num">Pen</th>
-            <th>Tarjetas</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (match of filteredHistory(); track match.matchId) {
-          <tr class="is-clickable" (click)="openMatch(match.matchId)">
-            <td class="mono muted">{{ match.date | date:'dd/MM/yy' }}</td>
-            <td class="opponent">
-              <a class="match-link" [routerLink]="['/player-statistics', match.matchId]" (click)="$event.stopPropagation()">{{ match.opponent }}</a>
-            </td>
-            <td class="result-cell">
-              <span class="result-pill" [class.is-win]="match.result === 'win'" [class.is-loss]="match.result === 'loss'" [class.is-draw]="match.result === 'draw'">{{ resultLabels[match.result] }}</span>
-              <span class="mono score">{{ match.ownScore }}–{{ match.opponentScore }}</span>
-            </td>
-            <td>
-              <span class="role-tag" [class.is-starter]="match.isStarter">{{ match.isStarter ? 'Titular' : 'Suplente' }}</span>
-            </td>
-            <td class="num mono strong">{{ match.totalPoints }}</td>
-            <td class="num mono">{{ match.tries }}</td>
-            <td class="num mono">{{ match.conversionsMade }}/{{ match.conversionAttempts }}</td>
-            <td class="num mono">{{ match.penaltyKicksMade }}/{{ match.penaltyKickAttempts }}</td>
-            <td>
-              @if (match.yellowCards) {
-              <span class="card-icon is-yellow" role="img" [attr.aria-label]="match.yellowCards + ' tarjeta(s) amarilla(s)'"></span>
-              }
-              @if (match.redCards) {
-              <span class="card-icon is-red" role="img" [attr.aria-label]="match.redCards + ' tarjeta(s) roja(s)'"></span>
-              }
-              @if (!match.yellowCards && !match.redCards) {
-              <span class="muted">—</span>
-              }
-            </td>
-          </tr>
-          } @empty {
-          <tr>
-            <td colspan="9" class="empty-row">No hay partidos para este filtro.</td>
-          </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  </section>
+    }
   }
 </div>

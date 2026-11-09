@@ -1,0 +1,31 @@
+:host { display: block; }
+
+.form-card-title i { color: var(--btn-primary-bg); }
+
+.empty {
+  display: flex; align-items: center; gap: 12px; padding: 16px;
+  border: 1px dashed var(--border-strong); border-radius: var(--radius-lg); background: var(--surface-alt);
+  color: var(--text-secondary); font-size: 14px;
+}
+.empty i { font-size: 22px; color: var(--text-muted); }
+.empty p { margin: 0; }
+
+.zones-foot { display: flex; flex-direction: column; gap: 10px; }
+.top-zones { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.top-zone {
+  display: grid; grid-template-columns: 24px 40px 1fr auto; align-items: center; gap: 10px;
+  min-height: 44px; padding: 6px 12px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface);
+}
+.rank {
+  display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%;
+  background: var(--grass-tint); color: var(--btn-primary-bg); font: 700 12px var(--font-mono);
+}
+.zone-code { font: 700 14px var(--font-mono); color: var(--text-primary); }
+.zone-name { font: 500 13.5px var(--font-body); color: var(--text-secondary); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zone-count { font: 700 13px var(--font-mono); color: var(--text-primary); white-space: nowrap; }
+.coverage { margin: 0; font-size: 12.5px; color: var(--text-muted); }
+
+@media (max-width: 560px) {
+  .top-zone { grid-template-columns: 24px 36px minmax(0, 1fr) auto; gap: 8px; }
+  .zone-name { white-space: normal; overflow: visible; font-size: 12.5px; }
+}
