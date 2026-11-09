@@ -53,11 +53,11 @@ Característica: Perfil del usuario
 
   Escenario: Con el contacto cambiado, el club no puede volver a invitar al jugador que ya tiene cuenta
     Dado que el usuario "admin_puerto@test.com" con contraseña "PassSegura123!" inició sesión
-    Cuando invita a la persona "jugador.temporal.nuevo@test.com" a la division "M19"
-    Entonces el sistema responde con 409 y "La persona ya se encuentra asociado"
+    Cuando invita a la persona "jugador.temporal.nuevo@test.com" a crear su cuenta
+    Entonces el sistema responde con 409 y "Jugador Temporal ya tiene una cuenta vinculada."
 
   Escenario: Con el contacto cambiado, un enlace de invitación no ofrece crear otra cuenta
     Dado que el usuario "admin_puerto@test.com" con contraseña "PassSegura123!" inició sesión
     Y que el jugador con email "jugador.temporal.nuevo@test.com" recibió una invitación a la division "M19" con el token "token-contacto-cambiado"
     Cuando valida el token de invitación "token-contacto-cambiado"
-    Entonces el sistema responde con 409 y "Ya estás asociado a esta división."
+    Entonces el sistema responde con 409 y "Ya tenés una cuenta en OvalTrack. Iniciá sesión con tu correo."

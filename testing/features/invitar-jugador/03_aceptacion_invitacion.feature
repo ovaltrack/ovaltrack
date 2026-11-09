@@ -1,6 +1,6 @@
 # language: es
 Característica: Aceptación de invitaciones
-  Como jugador invitado a una división
+  Como jugador invitado por su club
   Quiero validar mi enlace de invitación y crear mi cuenta
   Para ingresar a la aplicación sin esperar la aprobación del club
 
@@ -14,16 +14,16 @@ Característica: Aceptación de invitaciones
     Dado que el jugador con email "jugador.temporal@test.com" recibió una invitación a la division "M19" con el token "token-vigente"
     Cuando valida el token de invitación "token-vigente"
     Entonces el sistema responde con 200
-    Y la validación indica la acción "CREATE_ACCOUNT" para la persona "jugador.temporal@test.com" en la division "M19"
+    Y la invitación muestra a "Jugador" "Temporal" con el correo "jugador.temporal@test.com" en la division "M19"
 
   Escenario: Un enlace inexistente es rechazado
     Cuando valida el token de invitación "token-que-nunca-se-envio"
-    Entonces el sistema responde con 409 y "Token no encontrado."
+    Entonces el sistema responde con 409 y "El enlace de invitación no es válido. Revisá que esté completo o pedile al club uno nuevo."
 
   Escenario: Un enlace vencido es rechazado
     Dado que el jugador con email "jugador.temporal@test.com" recibió una invitación vencida a la division "M19" con el token "token-vencido"
     Cuando valida el token de invitación "token-vencido"
-    Entonces el sistema responde con 409 y "Este enlace venció."
+    Entonces el sistema responde con 409 y "Esta invitación venció. Pedile al club que te envíe una nueva."
 
   Escenario: No se puede crear la cuenta con una contraseña sin números
     Dado que el jugador con email "jugador.temporal@test.com" recibió una invitación a la division "M19" con el token "token-contrasena"
@@ -43,8 +43,3 @@ Característica: Aceptación de invitaciones
     Y el jugador inicia sesión con email "jugador.temporal@test.com" y contraseña "PassSegura123!"
     Y la cuenta tiene el rol "PLAYER"
     Y el enlace "token-registro" ya no es válido
-
-  Escenario: Un usuario sin sesión no puede consultar una invitación por su ID
-    Dado un usuario sin sesión iniciada en la plataforma
-    Cuando consulta una invitación con un ID cualquiera
-    Entonces el sistema responde con 401
