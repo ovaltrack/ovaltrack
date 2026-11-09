@@ -1,0 +1,27 @@
+<div class="layout-container page members-page">
+  <header class="mp-header">
+    <h1 class="mp-title">Miembros</h1>
+    <p class="mp-subtitle">
+      {{ canManageAccounts() ? 'Cuentas del club e invitaciones a jugadores.' : 'Jugadores de tus divisiones e invitaciones.' }}
+    </p>
+  </header>
+
+  @if (canManageAccounts()) {
+    <nav class="mp-tabs" aria-label="Secciones de Miembros">
+      <button type="button" class="mp-tab" [class.is-active]="tab() === 'cuentas'" [attr.aria-current]="tab() === 'cuentas' ? 'page' : null"
+        (click)="select('cuentas')">
+        <i class="bi bi-person-badge" aria-hidden="true"></i> Cuentas
+      </button>
+      <button type="button" class="mp-tab" [class.is-active]="tab() === 'jugadores'" [attr.aria-current]="tab() === 'jugadores' ? 'page' : null"
+        (click)="select('jugadores')">
+        <i class="bi bi-envelope-paper" aria-hidden="true"></i> Jugadores e invitaciones
+      </button>
+    </nav>
+  }
+
+  @if (tab() === 'cuentas') {
+    <app-members-list />
+  } @else {
+    <app-players-invitations />
+  }
+</div>

@@ -327,13 +327,6 @@ export class MembersListComponent implements OnInit {
     });
   }
 
-  onInviteClick(): void {
-    this.showBanner(
-      'info',
-      'Invitar miembro',
-      'Esta acción abriría el flujo de invitación por email (fuera del alcance de esta maqueta).'
-    );
-  }
 
   discardChanges(): void {
     const initial = this.initialRoles();

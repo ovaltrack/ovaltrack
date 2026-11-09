@@ -1,24 +1,20 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import {
-  AbstractControl, FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, Validators,
+  AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators,
 } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
-import { ToastService } from 'src/app/core/services/toast.service';
-// ADAPTA: rutas y nombres de tus servicios/modelos existentes de persona y división.
-import { Division } from 'src/app/features/division/types/division.types';
-
-import { InvitationService } from './service/invitation.service';
-import {
-  InvitationAction, InvitationSummary, InvitationValidationResponse,
-} from './types/invitation.types';
-import { PersonService } from 'src/app/services/person.service';
-import { DivisionService } from 'src/app/services/division.service';
-import { PersonResponse } from '../person/types/person.types';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { finalize, map } from 'rxjs';
+import { ToastService } from '../../core/services/toast.service';
 import { AuthService } from '../auth/services/auth.service';
+import { InvitationService } from './service/invitation.service';
+import { InvitationSummary } from './types/invitation.types';
 
-type View = 'loading' | 'invalid' | 'create' | 'link' | 'done';
+type View = 'loading' | 'invalid' | 'create' | 'done';
+
+const MISSING_LINK = 'El enlace de invitación está incompleto. Abrilo de nuevo desde el correo que te llegó.';
+const GENERIC_ERROR = 'No pudimos verificar la invitación. Revisá tu conexión e intentá de nuevo.';
 
 /** Marca el error `mismatch` en el grupo si las contraseñas no coinciden. */
 function passwordsMatch(group: AbstractControl): ValidationErrors | null {
@@ -27,103 +23,84 @@ function passwordsMatch(group: AbstractControl): ValidationErrors | null {
   return password && confirm && password !== confirm ? { mismatch: true } : null;
 }
 
+/** Página pública del enlace de invitación: el jugador crea su cuenta con el correo de contacto. */
 @Component({
   selector: 'app-invitation',
   standalone: true,
   imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './invitation.component.html',
-  styleUrl: './invitation.component.css'
+  styleUrl: './invitation.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class InvitationComponent implements OnInit {
-  private token: string = '';
+export class InvitationComponent {
+  private readonly route = inject(ActivatedRoute);
+  private readonly toast = inject(ToastService);
+  private readonly invitationService = inject(InvitationService);
+  private readonly authService = inject(AuthService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly fb = inject(FormBuilder);
 
-  view: View = 'loading';
-  action: InvitationAction | null = null;
-  summary: InvitationSummary | null = null;
-  errorMessage = '';
-  submitting = false;
-  showPasswords = false;
+  private readonly token = this.route.snapshot.queryParamMap.get('token')?.trim() ?? '';
 
-  readonly form = new FormGroup(
+  readonly view = signal<View>('loading');
+  readonly summary = signal<InvitationSummary | null>(null);
+  readonly errorMessage = signal('');
+  readonly submitting = signal(false);
+  readonly showPasswords = signal(false);
+
+  readonly form = this.fb.nonNullable.group(
     {
-      password: new FormControl('', {
-        nonNullable: true,
-        validators: [
-          Validators.required,
-          Validators.minLength(8),
-          Validators.pattern(/^(?=.*[A-Za-z])(?=.*\d).+$/),
-        ],
-      }),
-      confirmPassword: new FormControl('', {
-        nonNullable: true,
-        validators: [Validators.required],
-      }),
-      termsAccepted: new FormControl(false, {
-        nonNullable: true,
-        validators: [Validators.requiredTrue],
-      }),
+      password: ['', [
+        Validators.required,
+        Validators.minLength(8),
+        Validators.maxLength(72),
+        Validators.pattern(/^(?=.*[A-Za-z])(?=.*\d).+$/),
+      ]],
+      confirmPassword: ['', [Validators.required]],
+      termsAccepted: [false, [Validators.requiredTrue]],
     },
     { validators: passwordsMatch },
   );
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private toastService: ToastService,
-    private invitationService: InvitationService,
-    private personService: PersonService,
-    private divisionService: DivisionService,
-    private authService: AuthService
-  ) { }
-
-  ngOnInit(): void {
-    const token = this.route.snapshot.queryParamMap.get('token');
-    if (!token) {
-      this.toastService.show('error', 'No se encontro el token de acceso');
-      this.router.navigateByUrl('/home');
-      return;
-    }
-    this.token = token;
-
-    this.invitationService.validate(token).subscribe({
-      next: (response) => this.loadSummary(response),
-      error: (error: HttpErrorResponse) =>
-        this.markInvalid(error.error?.message ?? 'El enlace venció o no es válido.'),
-    });
-  }
-
-  /** Trae a la persona y la división para mostrarlas, y decide qué formulario abrir. */
-  private loadSummary(response: InvitationValidationResponse): void {
-    forkJoin({
-      person: this.personService.getPersonById(response.personId),
-      division: this.divisionService.getDivisionById(response.divisionId),
-    }).subscribe({
-      next: ({ person, division }) => {
-        this.summary = this.toSummary(person, division);
-        this.action = response.action;
-        this.view = response.action === 'CREATE_ACCOUNT' ? 'create' : 'link';
-      },
-      error: () => this.markInvalid('No pudimos cargar los datos de la invitación.'),
-    });
-  }
-
-  // ADAPTA: nombres de campos de tus modelos.
-  private toSummary(person: PersonResponse, division: Division): InvitationSummary {
-    return {
-      playerName: `${person.firstName} ${person.lastName}`,
-      email: person.contactEmail!,
-      divisionName: division.name,
-    };
-  }
+  private readonly password = toSignal(
+    this.form.controls.password.valueChanges.pipe(map((value) => value ?? '')),
+    { initialValue: '' },
+  );
 
   /** Requisitos que se marcan en vivo mientras escribe. */
-  get rules(): { label: string; ok: boolean }[] {
-    const value = this.form.controls.password.value;
+  readonly rules = computed(() => {
+    const value = this.password();
     return [
       { label: 'Al menos 8 caracteres', ok: value.length >= 8 },
       { label: 'Una letra', ok: /[A-Za-z]/.test(value) },
       { label: 'Un número', ok: /\d/.test(value) },
     ];
+  });
+
+  readonly playerName = computed(() => {
+    const s = this.summary();
+    return s ? `${s.firstName} ${s.lastName}` : '';
+  });
+
+  constructor() {
+    this.load();
+  }
+
+  private load(): void {
+    if (!this.token) {
+      this.markInvalid(MISSING_LINK);
+      return;
+    }
+    this.invitationService
+      .validate(this.token)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (summary) => {
+          this.summary.set(summary);
+          this.view.set('create');
+        },
+        error: (error: HttpErrorResponse) => this.markInvalid(this.messageOf(error, GENERIC_ERROR)),
+      });
   }
 
   get passwordInvalid(): boolean {
@@ -139,58 +116,59 @@ export class InvitationComponent implements OnInit {
   get confirmInvalid(): boolean {
     const control = this.form.controls.confirmPassword;
     return (control.touched || control.dirty) &&
-           (control.hasError('required') || this.form.hasError('mismatch'));
+      (control.hasError('required') || this.form.hasError('mismatch'));
   }
 
   get confirmError(): string {
     return this.form.hasError('mismatch')
       ? 'Las contraseñas no coinciden.'
-      : 'Repite la contraseña para continuar.';
+      : 'Repetí la contraseña para continuar.';
+  }
+
+  toggleShowPasswords(): void {
+    this.showPasswords.update((value) => !value);
   }
 
   createAccount(): void {
+    if (this.submitting()) return;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
-    this.submitting = true;
+    const { password, termsAccepted } = this.form.getRawValue();
+    this.submitting.set(true);
     this.authService
-      .registerFromInvitation({
-        token: this.token,
-        password: this.form.controls.password.value,
-        termsAccepted: this.form.controls.termsAccepted.value,
-      })
+      .registerFromInvitation({ token: this.token, password, termsAccepted })
+      .pipe(
+        finalize(() => this.submitting.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe({
-        next: () => this.finish(),
+        next: () => this.view.set('done'),
         error: (error: HttpErrorResponse) => this.handleSubmitError(error),
       });
   }
 
-  acceptLink(): void {
-    this.submitting = true;
-    this.invitationService.accept({ token: this.token }).subscribe({
-      next: () => this.finish(),
-      error: (error: HttpErrorResponse) => this.handleSubmitError(error),
-    });
-  }
-
-  private finish(): void {
-    this.submitting = false;
-    this.view = 'done';
-  }
-
+  /**
+   * Un 409 significa que el enlace dejó de servir (usado, vencido o cuenta existente):
+   * se muestra en pantalla. El resto (datos inválidos, red) va como aviso y deja reintentar.
+   */
   private handleSubmitError(error: HttpErrorResponse): void {
-    this.submitting = false;
-    const message = error.error?.message;
-    if (error.status === 410) {
-      this.markInvalid(message ?? 'El enlace venció o ya se usó.');
+    const message = this.messageOf(error, 'No pudimos crear tu cuenta. Intentá de nuevo en unos minutos.');
+    if (error.status === 409) {
+      this.markInvalid(message);
       return;
     }
-    this.toastService.error(message ?? 'No pudimos completar la acción. Intenta de nuevo.', 'Error');
+    this.toast.error(message, 'No se pudo crear la cuenta');
+  }
+
+  private messageOf(error: HttpErrorResponse, fallback: string): string {
+    const message = error.error?.message;
+    return typeof message === 'string' && message.trim() ? message : fallback;
   }
 
   private markInvalid(message: string): void {
-    this.errorMessage = message;
-    this.view = 'invalid';
+    this.errorMessage.set(message);
+    this.view.set('invalid');
   }
 }

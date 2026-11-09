@@ -56,7 +56,7 @@ export const NAV_MODULES: readonly NavModule[] = [
     label: 'Miembros',
     icon: 'bi-people',
     route: '/members',
-    roles: ['ADMIN_CLUB'],
+    roles: ['ADMIN_CLUB', 'COACH_ANALYST'],
   },
   {
     id: 'player-statistics',

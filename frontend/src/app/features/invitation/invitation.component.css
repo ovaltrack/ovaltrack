@@ -41,13 +41,6 @@
   color: var(--btn-primary-bg);
 }
 
-.lead {
-  margin: 0 0 24px;
-  font-size: 14.5px;
-  line-height: 1.6;
-  color: var(--text-secondary);
-}
-
 /* Campos */
 .field { margin-bottom: 18px; }
 .field-label {
@@ -126,11 +119,6 @@ a.btn {
 }
 .btn-block { width: 100%; }
 .btn-invite:disabled { opacity: 0.6; cursor: progress; }
-.actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-}
 .btn:focus-visible,
 .show-toggle input:focus-visible {
   outline: none;
@@ -176,6 +164,4 @@ a.btn {
 @media (max-width: 768px) {
   .form-card-body { padding: 20px 20px 24px; }
   .state-box { padding: 32px 20px; }
-  .actions { flex-direction: column-reverse; }
-  .actions .btn { width: 100%; }
 }

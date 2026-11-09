@@ -1,0 +1,100 @@
+<section class="pi" aria-labelledby="pi-title">
+  <header class="pi-head">
+    <div>
+      <h2 id="pi-title" class="pi-title">Jugadores e invitaciones</h2>
+      <p class="pi-subtitle">Invitá a los jugadores sin cuenta: reciben un enlace de 72 horas para crearla.</p>
+    </div>
+    <label class="pi-search">
+      <i class="bi bi-search" aria-hidden="true"></i>
+      <span class="visually-hidden">Buscar jugador</span>
+      <input type="search" placeholder="Buscar por nombre, correo o división" [value]="search()" (input)="onSearch($event)" />
+    </label>
+  </header>
+
+  <div class="pi-filters" role="group" aria-label="Filtrar jugadores por estado">
+    @for (f of FILTERS; track f.key) {
+      <button type="button" class="pi-chip" [class.is-active]="filter() === f.key" [attr.aria-pressed]="filter() === f.key"
+        (click)="filter.set(f.key)">
+        {{ f.label }} <span class="pi-count">{{ counts()[f.key] }}</span>
+      </button>
+    }
+  </div>
+
+  @switch (state()) {
+    @case ('loading') {
+      <div class="pi-card" aria-busy="true" aria-label="Cargando jugadores">
+        @for (i of [1, 2, 3, 4]; track i) { <div class="pi-skeleton"></div> }
+      </div>
+    }
+
+    @case ('error') {
+      <div class="pi-card pi-empty" role="alert">
+        <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+        <p><strong>No pudimos cargar los jugadores</strong></p>
+        <button type="button" class="btn btn-outline pi-btn" (click)="load()">
+          <i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Reintentar
+        </button>
+      </div>
+    }
+
+    @default {
+      @if (players().length === 0) {
+        <div class="pi-card pi-empty">
+          <i class="bi bi-people" aria-hidden="true"></i>
+          <p><strong>Todavía no hay jugadores</strong></p>
+          <p class="pi-muted">Cargalos en sus divisiones y después invitalos desde acá.</p>
+        </div>
+      } @else if (visiblePlayers().length === 0) {
+        <div class="pi-card pi-empty">
+          <i class="bi bi-search" aria-hidden="true"></i>
+          <p><strong>Ningún jugador coincide con la búsqueda</strong></p>
+        </div>
+      } @else {
+        <div class="pi-card">
+          <table class="pi-table">
+            <thead>
+              <tr>
+                <th scope="col">Jugador</th>
+                <th scope="col">Divisiones</th>
+                <th scope="col">Estado</th>
+                <th scope="col"><span class="visually-hidden">Acción</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of visiblePlayers(); track p.personId) {
+                <tr>
+                  <td class="pi-player" data-label="Jugador">
+                    <strong>{{ playerName(p) }}</strong>
+                    <span class="pi-email">{{ p.contactEmail || 'Sin correo de contacto' }}</span>
+                  </td>
+                  <td data-label="Divisiones">
+                    <span class="pi-divisions">
+                      @for (d of p.divisions; track d.id) { <span class="pi-division">{{ d.name }}</span> }
+                    </span>
+                  </td>
+                  <td data-label="Estado">
+                    <span class="pi-status" [attr.data-tone]="STATUS[p.status].tone">{{ STATUS[p.status].label }}</span>
+                    @if (statusDetail(p); as detail) { <span class="pi-detail">{{ detail }}</span> }
+                  </td>
+                  <td class="pi-action">
+                    @if (STATUS[p.status].action; as action) {
+                      <button type="button" class="btn btn-outline pi-btn" [disabled]="isSending(p)" (click)="invite(p)"
+                        [attr.aria-label]="action + ' a ' + playerName(p)">
+                        @if (isSending(p)) {
+                          <span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Enviando…
+                        } @else {
+                          <i class="bi" [class.bi-envelope]="action === 'Invitar'" [class.bi-arrow-repeat]="action === 'Reenviar'" aria-hidden="true"></i>
+                          {{ action }}
+                        }
+                      </button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+  }
+</section>

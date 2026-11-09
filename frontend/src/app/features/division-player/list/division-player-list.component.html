@@ -12,10 +12,10 @@
     </div>
 
     <div class="hud-actions">
-      <!-- Botón de máxima jerarquía: Invitar a la plataforma (Acción de sistema / Onboarding) -->
-      <button class="btn btn-invite-platform" (click)="sendInvitation()">
-        <i class="bi bi-person-plus"></i> Invitar a la plataforma
-      </button>
+      <!-- Las invitaciones a crear cuenta se gestionan en Miembros > Jugadores -->
+      <a routerLink="/members" [queryParams]="{ tab: 'jugadores' }" class="btn btn-outline">
+        <i class="bi bi-envelope"></i> Invitaciones
+      </a>
 
       <!-- Botón secundario: Asociar jugadores existentes del club -->
       <button
@@ -38,14 +38,6 @@
     </div>
   </header>
 
-  @if (showInvite) {
-    <app-invite-player-modal
-      [division]="division"
-      [sending]="sending"
-      (invited)="onInvite($event)"
-      (closed)="showInvite = false"
-    />
-  }
   <!-- Section: Available Club Players to Register (Visible when toggled ON) -->
   <section
     class="table-card"
