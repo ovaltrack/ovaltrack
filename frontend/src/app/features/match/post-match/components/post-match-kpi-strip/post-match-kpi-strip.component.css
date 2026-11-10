@@ -168,10 +168,6 @@
   background: rgba(163, 230, 53, 0.15);
 }
 
-:host-context([data-theme="dark"]) .strip-progress-fill {
-  background: #a3e635;
-}
-
 :host-context([data-theme="dark"]) .strip-filter-btn {
   color: #a3e635;
 }

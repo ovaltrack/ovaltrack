@@ -196,7 +196,6 @@
 :host-context([data-theme="dark"]) .score-delta-badge {
   background-color: #162238;
   border-color: #a3e635;
-  color: #a3e635;
 }
 
 :host-context([data-theme="dark"]) .view-switch {
