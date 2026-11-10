@@ -85,7 +85,8 @@ public final class EventDTOMapper {
                 eventType.getActor() == null ? Actor.ATTACKING : eventType.getActor(),
                 eventType.getPossessionAfter() == null ? PossessionAfter.KEEP : eventType.getPossessionAfter(),
                 eventType.getFollowUpChoices() == null ? List.of() : eventType.getFollowUpChoices(),
-                eventType.getTemplateEventFields());
+                eventType.getTemplateEventFields(),
+                null);
     }
 
     public static MatchTimelineEventResponseDTO toTimelineResponseDTO(Event event) {

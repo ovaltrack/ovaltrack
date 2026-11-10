@@ -8,6 +8,7 @@ import com.ovaltrack.backend.event.domain.EventCategory;
 import com.ovaltrack.backend.event.domain.FollowUpChoice;
 import com.ovaltrack.backend.event.domain.PossessionAfter;
 import com.ovaltrack.backend.event.domain.TemplateField;
+import com.ovaltrack.backend.zone.domain.ZoneRule;
 
 public record EventTypeResponseDTO(
     UUID id,
@@ -40,6 +41,8 @@ public record EventTypeResponseDTO(
 
     List<FollowUpChoice> followUpChoices,
 
-    List<TemplateField> templateEventFields
+    List<TemplateField> templateEventFields,
+
+    ZoneRule zoneRule
 ) {
 }

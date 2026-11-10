@@ -30,6 +30,8 @@ import com.ovaltrack.backend.event.domain.dto.event.EventUpdateDTO;
 import com.ovaltrack.backend.event.domain.dto.event.MatchTimelineEventResponseDTO;
 import com.ovaltrack.backend.event.repository.EventRepository;
 import com.ovaltrack.backend.match.repository.MatchRepository;
+import com.ovaltrack.backend.zone.business.EventZoneRuleValidator;
+import com.ovaltrack.backend.zone.repository.ZoneAssignmentRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -50,6 +52,8 @@ public class EventService {
 	private final MatchRepository matchRepository;
 	private final MatchSecurityValidator matchSecurityValidator;
 	private final SubstitutionDependencyChecker substitutionDependencyChecker;
+	private final ZoneAssignmentRepository zoneAssignmentRepository;
+	private final EventZoneRuleValidator zoneRuleValidator;
 
 	public Collection<EventResponseDTO> findEventsByClubId(UUID clubId) {
 		if (clubService.findClubById(clubId) == null) {

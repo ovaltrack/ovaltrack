@@ -32,6 +32,7 @@ public class ZoneAssignmentService {
     private final EventRepository eventRepository;
     private final ZoneAssignmentValidator validator;
     private final ZoneSummaryCalculator summaryCalculator;
+    private final EventZoneRuleValidator ruleValidator;
 
     @Transactional(readOnly = true)
     public MatchZonesResponseDTO findByMatch(UUID matchId, Authentication authentication) {

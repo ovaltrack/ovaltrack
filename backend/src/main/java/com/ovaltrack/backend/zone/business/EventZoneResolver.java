@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import com.ovaltrack.backend.zone.domain.ZoneAssignment;
 import com.ovaltrack.backend.zone.domain.ZoneCell;
+import com.ovaltrack.backend.zone.domain.ZoneQuery;
 
 /**
  * Deriva la zona de un evento comparando su minuto de juego contra las asignaciones del partido.
@@ -32,6 +33,11 @@ public class EventZoneResolver {
                         && effectiveSeconds < zone.getEndMinute() * SECONDS_PER_MINUTE)
                 .findFirst()
                 .map(zone -> new ZoneCell(zone.getRow(), zone.getCol()));
+    }
+
+    /** Igual que la anterior pero aplicando la regla de zona del tipo de evento y la perspectiva de quien lo ejecuta. */
+    public Optional<ZoneCell> resolve(ZoneQuery query, List<ZoneAssignment> assignments) {
+        throw new UnsupportedOperationException("Sin implementar");
     }
 
     /**

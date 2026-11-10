@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ovaltrack.backend.event.business.EventTypeService;
 import com.ovaltrack.backend.event.domain.dto.event.MatchTimelineEventResponseDTO;
 import com.ovaltrack.backend.zone.domain.ZoneAssignment;
 import com.ovaltrack.backend.zone.repository.ZoneAssignmentRepository;
@@ -20,6 +21,7 @@ public class PostMatchZoneEnricher {
 
     private final ZoneAssignmentRepository zoneAssignmentRepository;
     private final EventZoneResolver resolver;
+    private final EventTypeService eventTypeService;
 
     @Transactional(readOnly = true)
     public List<MatchTimelineEventResponseDTO> enrich(UUID matchId, Collection<MatchTimelineEventResponseDTO> events) {

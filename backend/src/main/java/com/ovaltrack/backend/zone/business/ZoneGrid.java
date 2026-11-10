@@ -1,5 +1,7 @@
 package com.ovaltrack.backend.zone.business;
 
+import com.ovaltrack.backend.zone.domain.ZoneCell;
+
 /**
  * Geometría fija de la zonificación: 3 filas (ancho de la cancha) x 6 columnas (ingoal, 22, mitad, mitad, 22, ingoal)
  * y la duración reglamentaria de cada tiempo. Es el único lugar donde viven estas constantes.
@@ -12,6 +14,16 @@ public final class ZoneGrid {
     public static final int PERIODS = 2;
 
     private ZoneGrid() {
+    }
+
+    /** Celda vista desde el otro equipo: la columna se invierte (6 <-> 1) y la fila también (I <-> D). */
+    public static ZoneCell mirror(ZoneCell cell) {
+        throw new UnsupportedOperationException("Sin implementar");
+    }
+
+    /** Etiqueta de la celda: letra de fila + columna (I1 ... D6). */
+    public static String label(ZoneCell cell) {
+        throw new UnsupportedOperationException("Sin implementar");
     }
 
     public static boolean isValidCell(int row, int col) {

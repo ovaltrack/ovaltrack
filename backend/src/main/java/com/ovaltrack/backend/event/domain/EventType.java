@@ -6,6 +6,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import com.ovaltrack.backend.zone.domain.ZoneRule;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -76,6 +78,11 @@ public class EventType {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     private List<TemplateField> templateEventFields; // antes: Map<String,Object>
+
+    /** Zonas de la cancha donde este tipo de evento puede ocurrir; null = sin restricción. */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
+    private ZoneRule zoneRule;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
