@@ -108,21 +108,9 @@
   font-weight: 700;
 }
 
-.status-active {
-  background: #d6f2c4;
-  color: #1e4513;
-  border: 1.5px solid rgba(30, 69, 19, 0.3);
-}
-
 .status-active .dot {
   background: #2a6119;
   box-shadow: 0 0 6px rgba(42, 97, 25, 0.4);
-}
-
-.status-inactive {
-  background: #f1f3ed;
-  color: #6b7565;
-  border: 1.5px solid rgba(0, 0, 0, 0.12);
 }
 
 .status-inactive .dot {
@@ -187,28 +175,6 @@
   text-transform: uppercase;
 }
 
-.history-close {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: 1px solid rgba(32, 75, 34, 0.22);
-  border-radius: 8px;
-  background: transparent;
-  color: #204b22;
-  font-size: 24px;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.history-close:hover,
-.history-close:focus-visible {
-  background: #dcebd6;
-  outline: none;
-}
-
 /* Responsive */
 @media (max-width: 760px) {
   .division-card {
@@ -229,11 +195,6 @@
 /* ==========================================================================
    Modo Oscuro (Dark Rugby Tech)
    ========================================================================== */
-:host-context([data-theme="dark"]) .division-card {
-  background: #131c2e;
-  border-color: #1f2e47;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
-}
 
 :host-context([data-theme="dark"]) .division-card:hover {
   border-color: #2a3c5a;
@@ -246,32 +207,8 @@
   color: #a3e635;
 }
 
-:host-context([data-theme="dark"]) .division-name {
-  color: #ffffff;
-}
-
 :host-context([data-theme="dark"]) .division-meta,
 :host-context([data-theme="dark"]) .meta-gender {
   color: #94a3b8;
 }
 
-:host-context([data-theme="dark"]) .status-active {
-  background: rgba(163, 230, 53, 0.15);
-  color: #a3e635;
-  border-color: rgba(163, 230, 53, 0.3);
-}
-
-:host-context([data-theme="dark"]) .status-active .dot {
-  background: #a3e635;
-  box-shadow: 0 0 6px #a3e635;
-}
-
-:host-context([data-theme="dark"]) .status-inactive {
-  background: #162238;
-  color: #64748b;
-  border-color: #1f2e47;
-}
-
-:host-context([data-theme="dark"]) .status-inactive .dot {
-  background: #64748b;
-}
