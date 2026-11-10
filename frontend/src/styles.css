@@ -473,6 +473,17 @@ button {
   --layout-max: 1560px;
 }
 
+/* Escritorio grande (1600 px o más): las pantallas aprovechan el ancho sin estirar formularios */
+@media (min-width: 1600px) {
+  :root {
+    --layout-max: 1360px;
+  }
+
+  .layout-wide {
+    --layout-max: 1800px;
+  }
+}
+
 /* Clase de layout compartida y universal (Navbar y Páginas) */
 .layout-container {
   width: min(100% - 2 * var(--layout-pad), var(--layout-max));
