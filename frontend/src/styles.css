@@ -369,22 +369,6 @@ html:has(.pm-shell) {
   border-top-color: #1f2e47;
 }
 
-[data-theme="dark"] .filters {
-  background: #162238;
-  border-color: #1f2e47;
-}
-
-[data-theme="dark"] .chip.active {
-  background: #131c2e;
-  border-color: #2a3c5a;
-  color: #ffffff;
-}
-
-[data-theme="dark"] .status-segment {
-  background: #162238;
-  border-color: #1f2e47;
-}
-
 [data-theme="dark"] .status-tab.active {
   background: #131c2e;
   color: #ffffff;
@@ -394,11 +378,6 @@ html:has(.pm-shell) {
 [data-theme="dark"] .status-tab.active .status-badge-count {
   background: #162238;
   color: #a3e635;
-}
-
-[data-theme="dark"] .empty-state {
-  background: #131c2e;
-  border-color: #1f2e47;
 }
 
 [data-theme="dark"] .empty-icon {
@@ -412,14 +391,6 @@ html:has(.pm-shell) {
 
 [data-theme="dark"] .empty-copy {
   color: #94a3b8;
-}
-
-[data-theme="dark"] .status-pill,
-[data-theme="dark"] .position-badge,
-[data-theme="dark"] .tag {
-  background: #162238;
-  border-color: #2a3c5a;
-  color: #cbd5e1;
 }
 
 body {
@@ -448,7 +419,6 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
-
 
 button,
 input,
@@ -519,10 +489,6 @@ button {
   justify-content: space-between;
   gap: 20px;
   flex-wrap: wrap;
-}
-
-.hud::before {
-  display: none;
 }
 
 .hud-brand {
@@ -718,14 +684,6 @@ button {
   color: var(--text-primary);
 }
 
-
-
-.btn-logout {
-  background: var(--error-tint);
-  border: 1px solid var(--error-border);
-  color: var(--error);
-}
-
 /* ==========================================================================
    Formularios y Controles Globales (Cards Elevadas con Identidad Deportiva)
    ========================================================================== */
@@ -846,8 +804,6 @@ button {
   border-top: 1px solid rgba(32, 75, 34, 0.10);
 }
 
-
-
 /* ==========================================================================
    Filtros, Tabs y Chips
    ========================================================================== */
@@ -957,12 +913,6 @@ button {
 /* ==========================================================================
    Banners de Feedback
    ========================================================================== */
-.banner-region {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 16px;
-}
 
 .banner {
   display: flex;
@@ -1071,19 +1021,6 @@ button {
   background: var(--player);
 }
 
-.status-pill {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
-  padding: 6px 14px;
-  font-size: 12.5px;
-  font-weight: 700;
-  color: var(--text-secondary);
-}
-
 .eyebrow {
   display: inline-flex;
   background: var(--navy-tint);
@@ -1093,29 +1030,6 @@ button {
   font-weight: 700;
   padding: 5px 12px;
   border-radius: var(--radius-pill);
-}
-
-.position-badge {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-
-.tag {
-  background: var(--surface-alt);
-  color: var(--text-secondary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 2px 8px;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
 /* ==========================================================================

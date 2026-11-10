@@ -332,7 +332,7 @@ Cuando decidas abordar y definir el **Modo Oscuro** para estas vistas en una eta
 2. **Respetar la jerarquía visual de botones:**
    - Verde Rugby / Botella (`#204b22` o `--btn-invite`): Únicamente para la acción principal más importante de la pantalla.
    - Outline Blanco Deportivo (`.btn-outline`): Para acciones secundarias, filtros o cancelar.
-   - Rojo destructivo (`.btn-logout`, `.btn-delete`): Reservado para eliminar o cerrar sesión.
+   - Rojo destructivo (tokens `--error`, `--error-tint` y `--error-border`): Reservado para eliminar o cerrar sesión.
 3. **Mantener la consistencia de elevación:** Toda tarjeta, tabla o contenedor de datos debe tener borde de `2px` con radio redondeado (`16px` o `20px`) y sombra de elevación profunda.
 4. **Las acciones de una vista viven en la barra de esa vista:** el encabezado común solo contiene lo que vale para todas las vistas (volver, etiqueta, título, marcador, hora y selector de vistas), para que quede en las mismas coordenadas en todas.
 5. **No alterar ni forzar contenedores en Carga en Vivo ni Entretiempo:** Dichas pantallas (`/live-capture/:matchId` y `/live-capture/:matchId/halftime`) son instrumentos tácticos especializados para tablet en tiempo real; deben mantenerse a pantalla completa y están exentas de `.layout-container`.
