@@ -21,7 +21,7 @@ export type SearchMode = 'inline' | 'collapsed' | 'open' | 'wrapped';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './post-match-timeline.component.html',
-  styleUrl: './post-match-timeline.component.css'
+  styleUrls: ['../../styles/filter-pills.css', './post-match-timeline.component.css']
 })
 export class PostMatchTimelineComponent implements AfterViewInit, OnDestroy {
   readonly store = inject(MatchReviewStore);

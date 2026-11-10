@@ -37,7 +37,7 @@ const HELP_VIEWPORT_MARGIN = 24;
   standalone: true,
   imports: [RugbyFieldComponent, ZoneAssignmentPanelComponent, ZoneTerritoryGridComponent, ZoneKpiStripComponent, RugbyBallLoaderComponent],
   templateUrl: './post-match-zones.component.html',
-  styleUrl: './post-match-zones.component.css'
+  styleUrls: ['../../styles/filter-pills.css', './post-match-zones.component.css']
 })
 export class PostMatchZonesComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);

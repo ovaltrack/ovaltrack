@@ -16,21 +16,7 @@
 .toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 14px; margin-bottom: 14px; }
 
 .filter-group { display: flex; align-items: center; flex-wrap: wrap; gap: .45rem; }
-.filter-pill-btn {
-  display: inline-flex; align-items: center; gap: .35rem; min-height: 44px; padding: .25rem .9rem;
-  background: var(--surface); border: 1px solid var(--border-strong);
-  border-radius: 9999px; font-size: .8rem; font-weight: 700; color: var(--text-primary);
-  cursor: pointer; transition: all .15s ease;
-}
-.filter-pill-btn:hover { background: var(--surface-alt); }
-.filter-pill-btn.active {
-  background-color: #d6eac0; border-color: var(--btn-primary-bg); color: var(--btn-primary-bg);
-  box-shadow: inset 0 0 0 1px var(--btn-primary-bg);
-}
-:host-context([data-theme="dark"]) .filter-pill-btn.active {
-  background-color: rgba(163, 230, 53, .18); border-color: #a3e635; color: #a3e635; box-shadow: inset 0 0 0 1px #a3e635;
-}
-.filter-divider { display: inline-block; width: 1px; height: 22px; background: var(--border); margin: 0 .25rem; }
+.filter-pill-btn { min-height: 44px; padding: .25rem .9rem; }
 
 .shortcuts { position: relative; }
 .help-btn {
