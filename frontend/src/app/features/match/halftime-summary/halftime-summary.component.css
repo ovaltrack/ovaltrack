@@ -157,7 +157,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 40px;
+  min-height: 44px;
   padding: 0 14px;
   border: 1px solid transparent;
   border-radius: var(--radius-sm, 6px);
@@ -754,6 +754,35 @@
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+}
+
+/* ==========================================================================
+   Responsive (tablet horizontal y escritorio angosto): el partido pasa a una
+   segunda fila para que la marca y los controles no se corten
+   ========================================================================== */
+@media (min-width: 901px) and (max-width: 1439px) {
+  .hud-bar {
+    grid-template-columns: auto minmax(0, 1fr);
+    row-gap: 8px;
+  }
+
+  .hud-bar__actions {
+    grid-column: 2;
+  }
+
+  .match-heading {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-content: center;
+    min-width: 0;
+    font-size: 22px;
+  }
+
+  .match-heading__team {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 /* ==========================================================================

@@ -76,7 +76,8 @@ export class HalftimeSummaryComponent implements OnInit {
 
   readonly opponentPossessionPercentage = computed(() => {
     const own = this.generalStats()?.ownPossessionPercentage ?? 0;
-    return Math.max(0, 100 - own);
+    // Redondeo a un decimal: evita restos de coma flotante (ej. 16.200000000000003)
+    return Math.round(Math.max(0, 100 - own) * 10) / 10;
   });
 
   /** Desglose del marcador: los tipos que suman. */
