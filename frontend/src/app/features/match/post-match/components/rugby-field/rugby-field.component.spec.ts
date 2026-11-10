@@ -137,6 +137,16 @@ describe('RugbyFieldComponent', () => {
 
       expect(reading()).toContain('Pasá el cursor');
     });
+
+    it('al tocar una zona de solo lectura la describe (táctil, sin hover)', () => {
+      fixture.componentRef.setInput('selectable', false);
+      render([{ row: 3, col: 5, eventCount: 5 }]);
+
+      cellAt(3, 5)?.dispatchEvent(new Event('click'));
+      fixture.detectChanges();
+
+      expect(reading()).toBe('D5 · Derecha (55–70 m) · 22 rival (78–100 m) · 5 eventos');
+    });
   });
 
   describe('identidad de la cancha', () => {

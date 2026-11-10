@@ -78,6 +78,12 @@
   margin-left: 4px;
 }
 
+@media (pointer: coarse) {
+  .strip-filter-btn {
+    min-height: 44px;
+  }
+}
+
 .strip-filter-btn:hover {
   background: var(--surface-hover, #f1f3ea);
   text-decoration: underline;

@@ -208,6 +208,15 @@ export class MatchSelectComponent implements OnInit {
         && this.selectedDivisionId.length > 0;
   }
 
+  /** Elige el estado y, si la fila de estados scrollea (pantallas angostas), deja visible la pestaña tocada. */
+  onFilterClick(filter: MatchFilter, event: Event): void {
+    this.setFilter(filter);
+    const tab = event.currentTarget;
+    if (tab instanceof HTMLElement) {
+      tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+    }
+  }
+
   setFilter(filter: MatchFilter): void {
     this.activeFilter = filter;
     

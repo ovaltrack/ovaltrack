@@ -6,25 +6,90 @@
   display: block;
 }
 
-/* Barra de Filtros Segmentados */
+/* ===== Encabezado: el texto se ajusta y las acciones bajan de línea sin desbordar ===== */
+.hud-brand {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.hud-actions {
+  flex-wrap: wrap;
+}
+
+/* ===== Barra de filtros: división + estado en una sola tarjeta ===== */
 .filter-toolbar {
   background: #eaf3e6;
   border: 2px solid rgba(32, 75, 34, 0.22);
   border-radius: 16px;
-  padding: 8px 12px;
+  padding: 12px 16px;
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 20px;
   box-shadow: 0 2px 8px rgba(15, 35, 15, 0.04);
 }
 
-.status-segment {
-  display: inline-flex;
+.filter-field {
+  display: flex;
+  flex-direction: column;
   gap: 6px;
-  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.filter-field:not(.filter-field--status) {
+  flex: 0 1 220px;
+}
+
+.filter-field--status {
+  flex: 1 1 420px;
+}
+
+.filter-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.filter-division-badge {
+  align-self: flex-start;
+  min-height: 44px;
+  font-size: 13px;
+}
+
+/* Los estados nunca se parten en varias líneas: si no entran, scrollean dentro de su fila */
+.status-segment {
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 2px;
+  /* Desvanecido a la derecha para indicar que hay más estados */
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
+  padding-right: 28px;
+}
+
+.status-segment .status-tab {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  scroll-snap-align: start;
+}
+
+/* Fila del botón Ver calendario / Ver como tarjetas */
+.view-toggle-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
 }
 
 .status-tab {
-  height: 36px;
+  height: 44px;
   padding: 0 16px;
   border-radius: 999px;
   background: transparent;
@@ -482,8 +547,8 @@
 /* ===== Botones anterior / siguiente: circulares ===== */
 .calendar-wrapper ::ng-deep .fc .fc-prev-button,
 .calendar-wrapper ::ng-deep .fc .fc-next-button {
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   display: inline-flex;
   align-items: center;
@@ -495,6 +560,7 @@
 
 /* ===== Botón "Hoy" ===== */
 .calendar-wrapper ::ng-deep .fc .fc-today-button {
+  min-height: 44px;
   border-radius: 20px;
   padding: 8px 18px;
   font-weight: 600;
@@ -509,6 +575,7 @@
   color: #1d3b20;
   border-color: #1d3b20;
   font-weight: 600;
+  min-height: 44px;
   padding: 8px 18px;
   box-shadow: none !important;
 }
@@ -699,10 +766,11 @@
 }
 
 :host-context([data-theme="dark"]) .status-tab.active {
-  background: #162238;
-  color: #ffffff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-  border: 1px solid #2a3c5a;
+  /* Mismo activo que los filtros del post-partido en oscuro: se distingue a simple vista */
+  background: rgba(163, 230, 53, 0.18);
+  color: #a3e635;
+  box-shadow: inset 0 0 0 1px #a3e635;
+  border: 1px solid #a3e635;
 }
 
 :host-context([data-theme="dark"]) .match-card-shell {
@@ -871,6 +939,52 @@
 /* ===== Wrapper ===== */
 .calendar-wrapper {
   position: relative;
+  padding: 20px;
+  border-radius: 16px;
+  border: 2px solid var(--border-sport);
+  box-shadow: var(--shadow-elevation);
+}
+
+/* ===== Barra del calendario en pantallas angostas: el título va en su propia fila ===== */
+@media (max-width: 700px) {
+  .calendar-wrapper {
+    padding: 12px;
+  }
+
+  .calendar-wrapper ::ng-deep .fc .fc-header-toolbar {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .calendar-wrapper ::ng-deep .fc .fc-header-toolbar .fc-toolbar-chunk:nth-child(2) {
+    order: -1;
+    flex: 1 0 100%;
+    text-align: center;
+  }
+
+  .calendar-wrapper ::ng-deep .fc .fc-toolbar-title {
+    font-size: 1.15rem;
+  }
+}
+
+/* ===== Celular: acciones del encabezado en grilla (la principal ocupa todo el ancho) ===== */
+@media (max-width: 600px) {
+  .hud-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+
+  /* La principal y un secundario solo (sin "Rivales") ocupan todo el ancho */
+  .hud-actions .btn-invite,
+  .hud-actions .btn-outline:nth-child(2):last-child {
+    grid-column: 1 / -1;
+  }
+
+  .filter-field:not(.filter-field--status),
+  .filter-field--status {
+    flex-basis: 100%;
+  }
 }
 
 /* ===== Título clickeable ===== */
@@ -1084,6 +1198,7 @@
 }
 
 .calendar-view-toggle {
+  min-height: 44px;
   background: var(--surface);
   border: 1px solid var(--border-strong);
   color: var(--text-primary);

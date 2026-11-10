@@ -137,7 +137,10 @@ export class RugbyFieldComponent {
   select(cell: ZoneCellRef): void {
     if (this.selectable()) {
       this.cellSelected.emit({ row: cell.row, col: cell.col });
+      return;
     }
+    // Solo lectura: tocar una celda muestra su lectura, igual que el hover (en táctil no hay hover).
+    this.onEnter(cell);
   }
 
   onEnter(cell: ZoneCellRef): void {

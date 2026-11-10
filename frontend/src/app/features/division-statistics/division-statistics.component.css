@@ -25,12 +25,14 @@
 .ds-field { display: flex; flex-direction: column; gap: 4px; }
 .ds-field label { font-size: 0.8rem; font-weight: 600; color: var(--text-secondary, #4b5540); }
 .ds-field input {
+  min-height: 44px;
   padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border-strong, rgba(27, 33, 22, 0.22));
   background: var(--surface, #ffffff); color: var(--text-primary, #1b2116);
 }
 .ds-presets { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
 
 .ds-chip {
+  display: inline-flex; align-items: center; min-height: 44px;
   padding: 6px 14px; border-radius: 999px; font-size: 0.85rem; cursor: pointer;
   border: 1px solid var(--border-strong, rgba(27, 33, 22, 0.22)); background: var(--surface, #ffffff);
   color: var(--text-secondary, #4b5540);
@@ -60,7 +62,7 @@
 .ds-result { display: inline-block; min-width: 22px; text-align: center; padding: 1px 6px; margin-right: 6px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; background: var(--surface-alt, #eef1e7); }
 .ds-win { background: var(--grass-tint-strong, rgba(145, 218, 64, 0.30)); color: var(--grass-deep, #3a6410); }
 .ds-loss { background: rgba(180, 35, 24, 0.12); color: #8a1c12; }
-.ds-link { color: var(--blue-mid, #2b6ca3); text-decoration: none; font-weight: 600; }
+.ds-link { display: inline-flex; align-items: center; min-height: 44px; color: var(--blue-mid, #2b6ca3); text-decoration: none; font-weight: 600; }
 .ds-link:hover { text-decoration: underline; }
 
 @media (max-width: 560px) {

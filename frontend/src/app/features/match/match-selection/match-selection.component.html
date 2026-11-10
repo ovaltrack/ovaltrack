@@ -15,10 +15,7 @@
       <button type="button" class="btn btn-invite" (click)="openCreateModal()">
         + Crear partido
       </button>
-       <button class="calendar-view-toggle"
-        type="button"
-        (click)="goToDivisionStatistics()"
-        style="padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+      <button type="button" class="btn btn-outline" (click)="goToDivisionStatistics()">
         Reporte de partidos
       </button>
       @if (isAdmin) {
@@ -29,65 +26,63 @@
     </div>
   </header>
 
-  <!-- Selector de División -->
-  <div class="division-selector-container mb-3" style="display: flex; gap: 15px; align-items: center;">
-    <!-- Se muestra si el usuario tiene MÁS de una división -->
+  <!-- Barra de filtros: división + estado. En pantallas angostas los estados scrollean dentro de su fila -->
+  <section class="filter-toolbar mb-4" aria-label="Filtros de partidos">
     @if (userDivisions.length > 1) {
-      <label for="divisionSelect" class="form-label mb-0"><strong>División:</strong></label>
-      <select 
-        #divisionSelect
-        id="divisionSelect" 
-        class="form-control custom-input dropdown-division" 
-        [value]="selectedDivisionId"
-        (change)="onDivisionChange(divisionSelect.value)">
-        <option value="" disabled [selected]="!selectedDivisionId">Selecciona una división...</option>
-        @for (div of userDivisions; track div.id) {
-          <option [value]="div.id">{{ div.name }}</option>
-        }
-      </select>
+      <div class="filter-field">
+        <label for="divisionSelect" class="filter-label">División</label>
+        <select
+          #divisionSelect
+          id="divisionSelect"
+          class="form-control custom-input dropdown-division"
+          [value]="selectedDivisionId"
+          (change)="onDivisionChange(divisionSelect.value)">
+          <option value="" disabled [selected]="!selectedDivisionId">Selecciona una división...</option>
+          @for (div of userDivisions; track div.id) {
+            <option [value]="div.id">{{ div.name }}</option>
+          }
+        </select>
+      </div>
     }
 
-    <!-- Se muestra si el usuario tiene SOLO UNA división -->
     @if (userDivisions.length === 1) {
-    <div class="badge-tech">
-      <span>{{ userDivisions[0].name }}</span>
-    </div>
+      <div class="filter-field">
+        <span class="filter-label">División</span>
+        <span class="badge-tech filter-division-badge">{{ userDivisions[0].name }}</span>
+      </div>
     }
-  </div>
 
-  <!-- Barra de Filtros Segmentados -->
-  <div class="filter-toolbar mb-4">
-    <div class="status-segment" role="tablist" aria-label="Filtrar partidos por estado">
-      @for (filter of filters; track filter) {
-      <button
-        type="button"
-        class="status-tab"
-        role="tab"
-        [attr.aria-selected]="activeFilter === filter"
-        [class.active]="activeFilter === filter"
-        (click)="setFilter(filter)">
-        <span>{{ statusLabels[filter] }}</span>
-      </button>
-      }
+    <div class="filter-field filter-field--status">
+      <span class="filter-label" id="statusFilterLabel">Estado</span>
+      <div class="status-segment" role="tablist" aria-labelledby="statusFilterLabel">
+        @for (filter of filters; track filter) {
+        <button
+          type="button"
+          class="status-tab"
+          role="tab"
+          [attr.aria-selected]="activeFilter === filter"
+          [class.active]="activeFilter === filter"
+          (click)="onFilterClick(filter, $event)">
+          <span>{{ statusLabels[filter] }}</span>
+        </button>
+        }
+      </div>
     </div>
-  </div>
+  </section>
 
   <!-- 1. BOTONES: Solo se muestran si el filtro activo es 'finished' -->
   @if (activeFilter === 'finished') {
-    <div style="display: flex; justify-content: flex-end; margin-bottom: 20px; gap: 8px;">
-      <button class="calendar-view-toggle"
-        (click)="isCalendarView = !isCalendarView" 
-        style="padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+    <div class="view-toggle-row">
+      <button type="button" class="btn btn-outline" (click)="isCalendarView = !isCalendarView">
         {{ isCalendarView ? 'Ver Calendario' : 'Ver como Tarjetas' }}
       </button>
     </div>
   }
 
   <!-- 2. VISTA CALENDARIO: Usamos [hidden] en lugar de @if para no perder el estado del mes -->
-  <div class="calendar-wrapper" 
+  <div class="calendar-wrapper"
        [hidden]="activeFilter === 'finished' && isCalendarView"
-       (click)="onCalendarClick($event)" 
-       style="padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+       (click)="onCalendarClick($event)">
        
     <full-calendar #calendar [options]="calendarOptions"></full-calendar>
 
@@ -200,7 +195,7 @@
     <div class="calendar-modal-content" (click)="$event.stopPropagation()">
       
       @if (selectedMatchForModal) {
-        <article class="match-card-shell" [class.is-cancelled]="selectedMatchForModal.status === 'cancelled'" style="margin: 0; min-width: 360px; max-width: 100%;">
+        <article class="match-card-shell" [class.is-cancelled]="selectedMatchForModal.status === 'cancelled'" style="margin: 0; min-width: min(360px, 100%); max-width: 100%;">
           
           <header class="match-card-header">
             <span class="status-pill status-{{ selectedMatchForModal.status }}">
@@ -342,14 +337,14 @@
 
   <!-- MODAL DE DÍA (Para la Vista Anual) -->
   <div class="calendar-modal-overlay" *ngIf="isDayModalOpen" (click)="closeDayModal()" style="z-index: 1060;">
-    <div class="calendar-modal-content" (click)="$event.stopPropagation()" style="background: white; border-radius: 12px; padding: 20px; width: 340px; box-shadow: 0 10px 25px rgba(0,0,0,0.15);">
+    <div class="calendar-modal-content" (click)="$event.stopPropagation()" style="background: white; border-radius: 12px; padding: 20px; width: min(340px, calc(100vw - 32px)); box-shadow: 0 10px 25px rgba(0,0,0,0.15);">
       
       <!-- Encabezado del modal -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h3 style="margin: 0; color: #1d3b20; font-family: var(--font-head); font-weight: 800; font-size: 1.2rem;">
           Partidos del Día
         </h3>
-        <button type="button" class="btn-delete-match" (click)="closeDayModal()" title="Cerrar" style="width: 32px; height: 32px;">
+        <button type="button" class="btn-delete-match" (click)="closeDayModal()" title="Cerrar" aria-label="Cerrar" style="width: 44px; height: 44px;">
           <i class="bi bi-x-lg" aria-hidden="true"></i>
         </button>
       </div>
