@@ -10,8 +10,14 @@
 @import "@fontsource/jetbrains-mono/latin-500.css";
 @import "@fontsource/jetbrains-mono/latin-600.css";
 @import "@fontsource/jetbrains-mono/latin-700.css";
+@import "@fontsource/manrope/latin-400.css";
+@import "@fontsource/manrope/latin-600.css";
+@import "@fontsource/manrope/latin-700.css";
+@import "@fontsource/manrope/latin-800.css";
+@import "@fontsource/space-grotesk/latin-500.css";
+@import "@fontsource/space-grotesk/latin-600.css";
+@import "@fontsource/space-grotesk/latin-700.css";
 @import "@tabler/icons-webfont/dist/tabler-icons.min.css";
-@import './styles/ovaltrack-tokens.css';
 @import "bootstrap-icons/font/bootstrap-icons.css";
 
 /* ==========================================================================
@@ -115,6 +121,7 @@
   --font-mono: 'JetBrains Mono', monospace;
 
   --hit: 48px; /* Hit target táctil accesible */
+  --ot-radius-md: 0.375rem; /* Radio de la captura en vivo (carga-en-vivo) */
 
   /* ==========================================================================
      Tokens de Layout Canónico OvalTrack
@@ -126,11 +133,6 @@
 
   /* Tokens de Eventos y Línea de Tiempo */
   --lane-h: 32px;
-  --event-try: #15803d;
-  --event-penalty: #b91c1c;
-  --event-tackle: #1e3a8a;
-  --event-setpiece: #c2410c;
-  --event-neutral: #475569;
 }
 
 @media (pointer: coarse) {
