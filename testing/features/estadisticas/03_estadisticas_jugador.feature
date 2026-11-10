@@ -41,7 +41,8 @@ Característica: Estadísticas de un jugador
     Dado que el partido tiene asignada la zona fila 1 columna 5 en el periodo 1 entre el minuto 0 y el minuto 40
     Cuando consulta las estadísticas de "Blue Album" en el partido
     Entonces el sistema responde con 200
-    Y el mapa de zonas del jugador tiene 3 eventos en la celda fila 1 columna 5
+    Y el mapa de zonas del jugador tiene 2 eventos en la celda fila 1 columna 5
+    Y el mapa de zonas del jugador tiene 1 eventos en la celda fila 1 columna 6
     Y el mapa de zonas del jugador tiene 2 eventos sin zona
 
   Escenario: El entrenador ve las estadísticas generales del jugador en la temporada

@@ -91,10 +91,11 @@ export async function startMatch(match, token) {
   return changeMatchStatus(match, 'PUT', 'start', token);
 }
 
-// Cada partido de prueba se crea en un día distinto para no chocar con la franja horaria de otro
+// Cada partido de prueba se crea en un día distinto para no chocar con la franja horaria de otro.
+// La serie arranca en 2028, año sin fechas fijas en los features, para que el contador no alcance a las de otros partidos.
 let createdMatchCount = 0;
 const nextMatchDate = () => {
-  const date = new Date(Date.UTC(2027, 1, 1, 15, 30));
+  const date = new Date(Date.UTC(2028, 0, 1, 15, 30));
   date.setUTCDate(date.getUTCDate() + createdMatchCount++);
   return date.toISOString().slice(0, 19);
 };

@@ -41,11 +41,11 @@ Característica: Edición y eliminación de eventos post-partido (HU 8.2)
     Y que existe un partido finalizado para la división "Primera" contra "Deportivo Portugués"
     Y que el partido tiene asignada la zona fila 2 columna 3 en el periodo 1 entre el minuto 10 y el minuto 25
     Y que se han registrado los siguientes eventos en el partido:
-      | tipo_evento | posesion | tiempo_segundos | periodo | atributos   |
-      | Try         | OWN      | 300             | 1       | zone=center |
-    Cuando el entrenador corrige el tiempo del evento "Try" al segundo 900 del periodo 1
+      | tipo_evento       | posesion | tiempo_segundos | periodo | atributos |
+      | Tackle completado | OWN      | 300             | 1       |           |
+    Cuando el entrenador corrige el tiempo del evento "Tackle completado" al segundo 900 del periodo 1
     Entonces el sistema responde con 200
-    Y el evento "Try" del minuto 15 del periodo 1 pertenece a la zona fila 2 columna 3
+    Y el evento "Tackle completado" del minuto 15 del periodo 1 pertenece a la zona fila 2 columna 3
 
   Escenario: Eliminación lógica de un evento existente
     Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
