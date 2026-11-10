@@ -55,8 +55,7 @@
 }
 
 /* --- Tokens Modo Claro (Sport Pro Salvia) --- */
-:host-context([data-theme="light"]),
-:host-context(.light-theme) {
+:host-context([data-theme="light"]) {
   --r-bg: transparent;
   background-color: transparent;
   --r-surface: #ffffff;

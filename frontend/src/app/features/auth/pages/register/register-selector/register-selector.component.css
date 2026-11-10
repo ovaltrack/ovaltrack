@@ -106,66 +106,55 @@
 /* ==========================================================================
    TEMA CLARO (Activado con data-theme="light" o .light-theme)
    ========================================================================== */
-:host-context([data-theme="light"]),
-:host-context(.light-theme) {
+:host-context([data-theme="light"]) {
   background-color: #f6f7f1;
   color: #1b2116;
 }
 
-:host-context([data-theme="light"]) .selector-title,
-:host-context(.light-theme) .selector-title {
+:host-context([data-theme="light"]) .selector-title {
   color: #111d0e;
 }
 
-:host-context([data-theme="light"]) .selector-subtitle,
-:host-context(.light-theme) .selector-subtitle {
+:host-context([data-theme="light"]) .selector-subtitle {
   color: #4a6042;
 }
 
-:host-context([data-theme="light"]) .selector-card,
-:host-context(.light-theme) .selector-card {
+:host-context([data-theme="light"]) .selector-card {
   background: #ffffff;
   border: 2px solid rgba(32, 75, 34, 0.28);
   box-shadow: 0 16px 36px rgba(15, 35, 15, 0.08);
 }
 
-:host-context([data-theme="light"]) .selector-card:hover,
-:host-context(.light-theme) .selector-card:hover {
+:host-context([data-theme="light"]) .selector-card:hover {
   border-color: #204b22;
   box-shadow: 0 20px 40px rgba(15, 35, 15, 0.14);
 }
 
-:host-context([data-theme="light"]) .card-icon-wrapper,
-:host-context(.light-theme) .card-icon-wrapper {
+:host-context([data-theme="light"]) .card-icon-wrapper {
   background-color: #edf5e9;
   border: 1px solid rgba(32, 75, 34, 0.25);
   color: #204b22;
 }
 
-:host-context([data-theme="light"]) .card-title,
-:host-context(.light-theme) .card-title {
+:host-context([data-theme="light"]) .card-title {
   color: #111d0e;
 }
 
-:host-context([data-theme="light"]) .card-desc,
-:host-context(.light-theme) .card-desc {
+:host-context([data-theme="light"]) .card-desc {
   color: #4a6042;
 }
 
-:host-context([data-theme="light"]) .card-action,
-:host-context(.light-theme) .card-action {
+:host-context([data-theme="light"]) .card-action {
   color: #204b22;
 }
 
-:host-context([data-theme="light"]) .badge-role-pill,
-:host-context(.light-theme) .badge-role-pill {
+:host-context([data-theme="light"]) .badge-role-pill {
   background-color: rgba(22, 50, 79, 0.08);
   color: #16324f;
   border-color: rgba(22, 50, 79, 0.2);
 }
 
-:host-context([data-theme="light"]) .badge-coach,
-:host-context(.light-theme) .badge-coach {
+:host-context([data-theme="light"]) .badge-coach {
   background-color: rgba(43, 108, 163, 0.08);
   color: #2b6ca3;
   border-color: rgba(43, 108, 163, 0.2);
@@ -187,13 +176,11 @@
 }
 
 /* Modo claro */
-:host-context([data-theme="light"]) .return-link-item,
-:host-context(.light-theme) .return-link-item {
+:host-context([data-theme="light"]) .return-link-item {
   color: #4a6042;
 }
 
-:host-context([data-theme="light"]) .return-link-item:hover,
-:host-context(.light-theme) .return-link-item:hover {
+:host-context([data-theme="light"]) .return-link-item:hover {
   color: #204b22; /* Color verde rugby principal en modo claro al hacer hover */
   text-decoration: underline;
 }
