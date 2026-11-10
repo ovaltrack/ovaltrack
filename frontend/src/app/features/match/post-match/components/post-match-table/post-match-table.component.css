@@ -365,9 +365,25 @@
 }
 
 .table-grid-row:hover .btn-row-action,
+.table-grid-row:focus-within .btn-row-action,
 .table-grid-row.selected-row .btn-row-action {
   opacity: 1;
   pointer-events: auto;
+}
+
+/* Táctil (sin hover): las acciones quedan siempre visibles y con zona de toque de 44px */
+@media (hover: none) {
+  .btn-row-action {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+@media (pointer: coarse) {
+  .btn-row-action {
+    width: 32px;
+    height: 32px;
+  }
 }
 
 .btn-edit {

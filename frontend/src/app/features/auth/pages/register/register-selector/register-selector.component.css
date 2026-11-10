@@ -176,7 +176,9 @@
 .return-link-item {
   color: #94a3b8; /* Color neutro secundario para modo oscuro */
   transition: color 0.2s ease, transform 0.2s ease;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
 }
 
 .return-link-item:hover {

@@ -57,7 +57,7 @@ label {
 
 select {
   width: min(100%, 420px);
-  min-height: 42px;
+  min-height: 44px;
   padding: 0 12px;
   border: 1px solid #b7c9c4;
   border-radius: 5px;

@@ -124,7 +124,7 @@
 }
 
 .btn-outline {
-  height: 42px;
+  height: 44px;
   padding: 0 18px;
   border-radius: 10px;
   background-color: var(--r-btn-outline-bg);
@@ -203,7 +203,7 @@
 }
 
 .status-tab {
-  height: 38px;
+  height: 44px;
   padding: 0 16px;
   border-radius: 999px;
   background: var(--r-tab-inactive-bg);
@@ -448,6 +448,14 @@
   appearance: textfield;
 }
 
+/* Táctil: el dorsal editable alcanza los 44px de toque */
+@media (pointer: coarse) {
+  .slot-number {
+    width: 52px;
+    min-height: 44px;
+  }
+}
+
 .slot-number::-webkit-outer-spin-button,
 .slot-number::-webkit-inner-spin-button {
   margin: 0;
@@ -613,7 +621,7 @@
 
 .pool-search-input {
   width: 100%;
-  height: 40px;
+  height: 44px;
   font-size: 13.5px;
   background: var(--r-surface);
   color: var(--r-text-title);

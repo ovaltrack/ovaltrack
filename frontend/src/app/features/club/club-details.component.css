@@ -108,6 +108,13 @@
   opacity: 1;
 }
 
+/* Táctil (sin hover): en modo edición la invitación a cambiar el logo queda siempre visible */
+@media (hover: none) {
+  .club-logo-wrapper.editable .logo-overlay {
+    opacity: 1;
+  }
+}
+
 .club-name-display {
   font-family: var(--font-head);
   font-weight: 800;

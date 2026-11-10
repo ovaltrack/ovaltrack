@@ -707,7 +707,7 @@ button {
 .btn-ghost {
   background: transparent;
   color: var(--text-secondary);
-  height: 40px;
+  height: 44px;
   padding: 0 12px;
 }
 
