@@ -310,7 +310,7 @@
 }
 
 .custom-input.is-invalid {
-  border-color: var(--error, #b42318);
+  border-color: var(--error);
   background: #fffafa;
 }
 
@@ -319,7 +319,7 @@
 }
 
 .field-error {
-  color: var(--error, #b42318);
+  color: var(--error);
   font-size: 12px;
   font-weight: 600;
   margin-top: 5px;

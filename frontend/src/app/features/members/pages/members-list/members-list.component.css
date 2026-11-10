@@ -481,7 +481,7 @@
   opacity: 0.45;
   cursor: not-allowed;
   background: transparent !important;
-  color: var(--text-muted, #718096) !important;
+  color: var(--text-muted) !important;
 }
 
 .role-opt .limit-badge {
@@ -491,7 +491,7 @@
   padding: 2px 6px;
   border-radius: 4px;
   background: rgba(0, 0, 0, 0.07);
-  color: var(--text-muted, #718096);
+  color: var(--text-muted);
   letter-spacing: 0.3px;
   white-space: nowrap;
 }

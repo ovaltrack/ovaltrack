@@ -56,7 +56,7 @@
   max-width: calc(100vw - 32px);
   padding: 16px;
   border: 2px solid var(--border-sport);
-  border-radius: var(--radius-lg, 16px);
+  border-radius: var(--radius-lg);
   background: var(--surface);
   box-shadow: var(--shadow-elevation);
   color: var(--text-primary);
@@ -123,7 +123,7 @@
 .role-chip {
   margin-top: 2px;
   padding: 2px 8px;
-  border-radius: var(--radius-pill, 999px);
+  border-radius: var(--radius-pill);
   background: var(--role-tint);
   color: var(--role-color);
   font-size: 11.5px;
@@ -142,7 +142,7 @@
   gap: 10px;
   padding: 10px 12px;
   border: 1px solid var(--warning-border);
-  border-radius: var(--radius-md, 10px);
+  border-radius: var(--radius-md);
   background: var(--warning-tint);
   color: var(--warning);
   font-size: 12.5px;
@@ -171,7 +171,7 @@
   margin-top: 6px;
   padding: 0 12px;
   border: 1px solid var(--warning-border);
-  border-radius: var(--radius-md, 10px);
+  border-radius: var(--radius-md);
   background: var(--surface);
   color: var(--warning);
   font-size: 12.5px;
@@ -208,7 +208,7 @@
 .theme-switch {
   display: inline-flex;
   padding: 3px;
-  border-radius: var(--radius-md, 10px);
+  border-radius: var(--radius-md);
   background: var(--surface-alt);
 }
 

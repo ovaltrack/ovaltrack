@@ -132,7 +132,7 @@
   background: #edf5e9;
   border: 1.5px solid rgba(32, 75, 34, 0.22);
   color: #204b22;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-weight: 800;
   font-size: 14px;
 }
