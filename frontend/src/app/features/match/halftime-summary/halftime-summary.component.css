@@ -426,12 +426,6 @@
   border-color: var(--warning-border, rgba(154, 104, 0, 0.4));
 }
 
-.status-chip--danger {
-  color: var(--error, #b42318);
-  background: var(--error-tint, rgba(240, 68, 56, 0.14));
-  border-color: var(--error-border, rgba(180, 35, 24, 0.35));
-}
-
 .status-chip--neutral {
   color: var(--text-secondary, #3b4e33);
   background: var(--surface-alt, #eef1e7);
