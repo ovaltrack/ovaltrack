@@ -58,8 +58,8 @@
   align-items: center;
   gap: 10px;
   background: #fef3f2;
-  border: 1.5px solid var(--error-border, #fecdca);
-  color: var(--error, #b42318);
+  border: 1.5px solid var(--error-border);
+  color: var(--error);
   padding: 14px 18px;
   border-radius: 12px;
   font-size: 13.5px;

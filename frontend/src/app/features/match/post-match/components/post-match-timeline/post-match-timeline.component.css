@@ -3,8 +3,8 @@
   --lanes: 8;
   --lane-h: clamp(24px, calc(260px / var(--lanes, 8)), 30px);
   --lane-label-w: 168px;
-  background: var(--surface, #ffffff);
-  border: 2px solid var(--border-sport, rgba(32, 75, 34, 0.28));
+  background: var(--surface);
+  border: 2px solid var(--border-sport);
   border-radius: 14px;
   padding: 0;
   overflow: hidden;
@@ -45,9 +45,9 @@
   /* Alto fijo de la barra (44px de control + padding): los controles de la derecha pueden ser más bajos sin achicarla */
   min-height: 52px;
   box-sizing: border-box;
-  background: var(--surface-toolbar, #eaf3e6);
+  background: var(--surface-toolbar);
   border: none;
-  border-bottom: 1px solid var(--border-sport, rgba(32, 75, 34, 0.28));
+  border-bottom: 1px solid var(--border-sport);
   border-radius: 0;
   margin-bottom: 0;
   flex: none;
@@ -77,13 +77,13 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  background: var(--surface, #ffffff);
-  border: 1px solid var(--border-strong, rgba(27, 33, 22, 0.22));
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
   border-radius: 9999px;
   padding: 0.25rem 0.75rem;
   font-size: 0.8rem;
   font-weight: 700;
-  color: var(--text-primary, #111d0e);
+  color: var(--text-primary);
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -97,14 +97,14 @@
 }
 
 .filter-pill-btn:hover {
-  background: var(--surface-alt, #eef1e7);
+  background: var(--surface-alt);
 }
 
 .filter-pill-btn.active {
   background-color: #d6eac0;
-  border-color: var(--btn-primary-bg, #204b22);
-  color: var(--btn-primary-bg, #204b22);
-  box-shadow: inset 0 0 0 1px var(--btn-primary-bg, #204b22);
+  border-color: var(--btn-primary-bg);
+  color: var(--btn-primary-bg);
+  box-shadow: inset 0 0 0 1px var(--btn-primary-bg);
   font-weight: 700;
 }
 
@@ -119,7 +119,7 @@
   display: inline-block;
   width: 1px;
   height: 22px;
-  background: var(--border, rgba(27, 33, 22, 0.15));
+  background: var(--border);
   margin: 0 0.25rem;
 }
 
@@ -144,9 +144,9 @@
   border-radius: 8px;
   font-size: 0.8rem;
   font-weight: 700;
-  color: var(--text-secondary, #3b4e33);
+  color: var(--text-secondary);
   text-decoration: underline;
-  text-decoration-color: var(--border-strong, rgba(27, 33, 22, 0.22));
+  text-decoration-color: var(--border-strong);
   text-underline-offset: 3px;
   cursor: pointer;
 }
@@ -162,7 +162,7 @@
 }
 
 .clear-filters-btn:hover {
-  color: var(--text-primary, #111d0e);
+  color: var(--text-primary);
   text-decoration-color: currentColor;
 }
 
@@ -183,7 +183,7 @@
 
 .filter-right-group .filter-divider {
   height: 24px;
-  background: var(--border-strong, rgba(27, 33, 22, 0.22));
+  background: var(--border-strong);
 }
 
 /* Campo visible: de 220 a 250px, a la izquierda de la acción primaria (el componente decide si entra) */
@@ -222,15 +222,15 @@
   height: var(--toolbar-ctl-h);
   flex: none;
   border-radius: 10px;
-  background: var(--surface, #ffffff);
-  border: 1px solid var(--border-strong, rgba(27, 33, 22, 0.22));
-  color: var(--text-primary, #111d0e);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  color: var(--text-primary);
   cursor: pointer;
 }
 
 .search-toggle.has-term {
-  border-color: var(--btn-primary-bg, #204b22);
-  color: var(--btn-primary-bg, #204b22);
+  border-color: var(--btn-primary-bg);
+  color: var(--btn-primary-bg);
 }
 
 /*
@@ -328,7 +328,7 @@
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--text-muted, #7a8c74);
+  color: var(--text-muted);
   font-size: 0.85rem;
   pointer-events: none;
   z-index: 2;
@@ -342,16 +342,16 @@
   height: var(--toolbar-ctl-h);
   padding: 0.25rem 2rem 0.25rem 2.2rem;
   font-size: 0.8rem;
-  background: var(--surface, #ffffff);
-  border: 1px solid var(--border-strong, rgba(27, 33, 22, 0.22));
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
   border-radius: 9999px;
-  color: var(--text-primary, #111d0e);
+  color: var(--text-primary);
   outline: none;
   transition: border-color 0.15s ease;
 }
 
 .search-input:focus {
-  border-color: var(--btn-primary-bg, #204b22);
+  border-color: var(--btn-primary-bg);
 }
 
 .search-clear-btn {
@@ -364,7 +364,7 @@
   border-radius: 50%;
   background: none;
   border: none;
-  color: var(--text-muted, #7a8c74);
+  color: var(--text-muted);
   font-size: 0.8rem;
   cursor: pointer;
   padding: 0;
@@ -375,8 +375,8 @@
 }
 
 .search-clear-btn:hover {
-  background: var(--surface-alt, #eef1e7);
-  color: var(--text-primary, #111d0e);
+  background: var(--surface-alt);
+  color: var(--text-primary);
 }
 
 /* Regla Temporal Superior Fija (fuera del scroller vertical) */
@@ -384,8 +384,8 @@
   display: flex;
   height: 26px;
   flex: none;
-  border-bottom: 2px solid var(--border-sport, rgba(32, 75, 34, 0.28));
-  background: var(--surface-alt, #eef1e7);
+  border-bottom: 2px solid var(--border-sport);
+  background: var(--surface-alt);
   position: relative;
   z-index: 5;
 }
@@ -401,8 +401,8 @@
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--text-muted, #7a8c74);
-  border-right: 1px solid var(--border, rgba(27, 33, 22, 0.10));
+  color: var(--text-muted);
+  border-right: 1px solid var(--border);
 }
 
 .ruler-track {
@@ -425,13 +425,13 @@
 .tick-label {
   font-size: 0.7rem;
   font-weight: 700;
-  color: var(--text-secondary, #3b4e33);
+  color: var(--text-secondary);
   line-height: 1;
   white-space: nowrap;
 }
 
 .ruler-tick.milestone .tick-label {
-  color: var(--text-primary, #111d0e);
+  color: var(--text-primary);
   font-weight: 800;
 }
 
@@ -440,7 +440,7 @@
   bottom: 0;
   width: 1px;
   height: 4px;
-  background: var(--border-strong, rgba(27, 33, 22, 0.22));
+  background: var(--border-strong);
 }
 
 /* Scroller Vertical para Carriles */
@@ -448,7 +448,7 @@
   width: 100%;
   border: none;
   border-radius: 0;
-  background: var(--surface, #ffffff);
+  background: var(--surface);
   overflow-x: auto;
   overflow-y: auto;
   flex: 1;
@@ -494,7 +494,7 @@
   top: 0;
   bottom: 0;
   width: 2px;
-  background: var(--btn-primary-bg, #204b22);
+  background: var(--btn-primary-bg);
   box-shadow: 0 0 8px rgba(32, 75, 34, 0.5);
   z-index: 2;
   transition: left 0.15s ease-out;
@@ -507,7 +507,7 @@
   transform: translateX(-50%);
   width: 8px;
   height: 8px;
-  background: var(--btn-primary-bg, #204b22);
+  background: var(--btn-primary-bg);
   border: 2px solid #ffffff;
   border-radius: 50%;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
@@ -519,12 +519,12 @@
   z-index: 2;
   display: flex;
   height: var(--lane-h);
-  border-bottom: 1px solid var(--border, rgba(27, 33, 22, 0.10));
+  border-bottom: 1px solid var(--border);
   transition: background-color 0.15s ease, opacity 0.15s ease;
 }
 
 .timeline-lane-row:hover {
-  background-color: var(--surface-hover, #f1f3ea);
+  background-color: var(--surface-hover);
 }
 
 .timeline-lane-row.lane-dimmed {
@@ -533,7 +533,7 @@
 
 .timeline-lane-row.lane-hidden {
   opacity: 0.35;
-  background: var(--surface-alt, #eef1e7);
+  background: var(--surface-alt);
 }
 
 .timeline-lane-row.lane-hidden .lane-name {
@@ -550,7 +550,7 @@
   gap: 8px;
   background: transparent;
   border: none;
-  border-right: 1px solid var(--border, rgba(27, 33, 22, 0.10));
+  border-right: 1px solid var(--border);
   cursor: pointer;
   text-align: left;
 }
@@ -569,7 +569,7 @@
   font-size: 12px;
   font-weight: 600;
   line-height: 1.2;
-  color: var(--text-primary, #111d0e);
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -593,11 +593,11 @@
 }
 
 .lane-count {
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  color: var(--text-secondary, #4b5540);
+  color: var(--text-secondary);
   flex: none;
   min-width: 14px;
   text-align: right;
@@ -625,7 +625,7 @@
   cursor: pointer;
   z-index: 1;
   box-sizing: border-box;
-  box-shadow: 0 0 0 1px var(--surface, #ffffff), 0 1px 3px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0 0 1px var(--surface), 0 1px 3px rgba(0, 0, 0, 0.15);
   transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
@@ -648,7 +648,7 @@
 
 .marker:hover {
   transform: translate(-50%, -50%) scale(1.25);
-  box-shadow: 0 0 0 1px var(--surface, #ffffff), 0 2px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 0 1px var(--surface), 0 2px 6px rgba(0, 0, 0, 0.3);
   z-index: 5;
 }
 
@@ -668,7 +668,7 @@
   z-index: 3;
   transform: translate(-50%, -50%) scale(1.3);
   outline: none;
-  box-shadow: 0 0 0 1px var(--surface, #ffffff), 0 0 0 3px var(--btn-primary-bg, #204b22), 0 2px 8px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 0 0 1px var(--surface), 0 0 0 3px var(--btn-primary-bg), 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
 .marker.marker-dimmed {

@@ -4,8 +4,8 @@
 }
 
 .kpi-strip-card {
-  background: var(--surface, #ffffff);
-  border: 2px solid var(--border-sport, rgba(32, 75, 34, 0.28));
+  background: var(--surface);
+  border: 2px solid var(--border-sport);
   border-radius: 12px;
   padding: 8px 18px;
   display: flex;
@@ -24,17 +24,17 @@
 }
 
 .strip-value {
-  font-family: var(--font-head, 'Hanken Grotesk', sans-serif);
+  font-family: var(--font-head);
   font-weight: 800;
   font-size: 1.25rem;
-  color: var(--text-primary, #111d0e);
+  color: var(--text-primary);
   line-height: 1;
 }
 
 .strip-label {
   font-size: 0.82rem;
   font-weight: 600;
-  color: var(--text-secondary, #4b5540);
+  color: var(--text-secondary);
 }
 
 .text-amber {
@@ -45,7 +45,7 @@
 .strip-accent-bar {
   width: 2.5px;
   height: 22px;
-  background: var(--border, rgba(27, 33, 22, 0.15));
+  background: var(--border);
   border-radius: 2px;
   flex: none;
 }
@@ -57,7 +57,7 @@
 .strip-divider {
   width: 1px;
   height: 22px;
-  background: var(--border, rgba(27, 33, 22, 0.15));
+  background: var(--border);
   flex: none;
 }
 
@@ -65,7 +65,7 @@
 .strip-filter-btn {
   background: transparent;
   border: none;
-  color: var(--btn-primary-bg, #204b22);
+  color: var(--btn-primary-bg);
   font-size: 0.8rem;
   font-weight: 700;
   display: inline-flex;
@@ -85,7 +85,7 @@
 }
 
 .strip-filter-btn:hover {
-  background: var(--surface-hover, #f1f3ea);
+  background: var(--surface-hover);
   text-decoration: underline;
 }
 
@@ -115,7 +115,7 @@
 
 .strip-progress-fill {
   height: 100%;
-  background: var(--btn-primary-bg, #204b22);
+  background: var(--btn-primary-bg);
   border-radius: 9999px;
   transition: width 0.3s ease;
 }
@@ -160,7 +160,7 @@
 .legend-text {
   font-size: 0.76rem;
   font-weight: 600;
-  color: var(--text-secondary, #4b5540);
+  color: var(--text-secondary);
 }
 
 /* Modo Oscuro */

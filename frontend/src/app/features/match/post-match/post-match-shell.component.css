@@ -17,8 +17,8 @@
 
 /* Eventos: la vista ocupa el alto de la ventana y la tabla virtual usa el resto */
 .pm-shell--locked {
-  height: calc(100vh - var(--navbar-h, 64px) - 26px);
-  height: calc(100dvh - var(--navbar-h, 64px) - 26px);
+  height: calc(100vh - var(--navbar-h) - 26px);
+  height: calc(100dvh - var(--navbar-h) - 26px);
   min-height: 640px;
   padding-bottom: 12px !important;
   box-sizing: border-box;
@@ -55,10 +55,10 @@
   gap: 12px;
   padding: 48px 24px;
   text-align: center;
-  color: var(--text-secondary, #3b4e33);
-  background: var(--surface, #ffffff);
-  border: 2px solid var(--border-sport, rgba(32, 75, 34, 0.28));
-  border-radius: var(--radius-xl, 20px);
+  color: var(--text-secondary);
+  background: var(--surface);
+  border: 2px solid var(--border-sport);
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-elevation);
 }
 
@@ -72,8 +72,8 @@
 }
 
 .state-box--error {
-  color: var(--error, #b42318);
-  border-color: var(--error-border, rgba(180, 35, 24, 0.35));
+  color: var(--error);
+  border-color: var(--error-border);
 }
 
 .state-actions {
@@ -90,9 +90,9 @@
   height: 44px;
   padding: 0 20px;
   border-radius: 10px;
-  background: var(--btn-outline-bg, #ffffff);
-  border: 1.5px solid var(--btn-outline-border, rgba(32, 75, 34, 0.25));
-  color: var(--btn-outline-fg, #204b22);
+  background: var(--btn-outline-bg);
+  border: 1.5px solid var(--btn-outline-border);
+  color: var(--btn-outline-fg);
   font-weight: 700;
   cursor: pointer;
 }
