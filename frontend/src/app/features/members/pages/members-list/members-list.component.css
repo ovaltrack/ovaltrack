@@ -1,3 +1,9 @@
+/* El texto del encabezado se ajusta en vez de empujar la página hacia los costados */
+.hud-brand {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
 .hud-search {
   flex: 1 1 260px;
   min-width: 200px;
@@ -543,15 +549,52 @@
     align-items: stretch;
     gap: 10px;
   }
-  .status-segment {
+
+  /* Los grupos de filtros no se parten en varias líneas: si no entran, se deslizan dentro de su fila */
+  .filter-toolbar .status-segment,
+  .filter-toolbar .filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+  }
+
+  .filter-toolbar .status-segment {
     align-self: flex-start;
   }
+
+  .filter-toolbar .filters {
+    mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
+    padding-right: 28px;
+  }
+
+  .filter-toolbar .status-tab,
+  .filter-toolbar .chip {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  /* Tarjeta en dos filas: identidad, estado y menú arriba; rol abajo a todo el ancho */
   .member-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) auto 44px;
+    grid-template-areas:
+      "identity status actions"
+      "role role role";
     gap: 12px;
   }
-  .row-actions {
-    justify-content: flex-start;
+
+  .member-row > .identity { grid-area: identity; }
+  .member-row > .role-zone { grid-area: role; }
+  .member-row > .status-cell { grid-area: status; }
+  .member-row > .row-actions { grid-area: actions; }
+}
+
+@media (max-width: 420px) {
+  .member-row {
+    padding: 12px 14px;
+    gap: 10px;
   }
 }
 
