@@ -6,20 +6,20 @@
   gap: 4px 16px;
   margin-bottom: 6px;
   font-size: 0.8rem;
-  color: var(--text-secondary, #4b5540);
+  color: var(--text-secondary);
 }
 
 .legend-item { display: inline-flex; align-items: center; gap: 6px; }
 
 .chart { width: 100%; height: auto; display: block; overflow: visible; }
 
-.grid { stroke: var(--border, rgba(27, 33, 22, 0.10)); stroke-width: 1; }
+.grid { stroke: var(--border); stroke-width: 1; }
 
-.axis-label { font-size: 11px; fill: var(--text-muted, #7c8571); }
+.axis-label { font-size: 11px; fill: var(--text-muted); }
 
 .line { fill: none; stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
 
-.point { stroke: var(--surface, #ffffff); stroke-width: 2; cursor: default; }
+.point { stroke: var(--surface); stroke-width: 2; cursor: default; }
 .point:hover { r: 6.5; }
 
 /* Número del punto; el halo del color de la tarjeta lo mantiene legible si cruza una línea. */
@@ -28,7 +28,7 @@
   font-weight: 700;
   pointer-events: none;
   paint-order: stroke;
-  stroke: var(--surface, #ffffff);
+  stroke: var(--surface);
   stroke-width: 3px;
   stroke-linejoin: round;
 }

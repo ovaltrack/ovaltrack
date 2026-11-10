@@ -382,7 +382,7 @@
 }
 
 .event-catalog__label--disabled {
-	color: var(--text-muted, var(--text-2));
+	color: var(--text-muted);
 }
 
 .event-catalog__grid {
