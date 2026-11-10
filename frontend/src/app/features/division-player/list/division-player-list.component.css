@@ -247,16 +247,14 @@
   white-space: nowrap;
 }
 
-.btn-primary,
-.btn-invite {
+.btn-primary {
   background-color: #204b22;
   color: #ffffff;
   border: 1px solid #204b22;
   box-shadow: 0 2px 8px rgba(32, 75, 34, 0.2);
 }
 
-.btn-primary:hover,
-.btn-invite:hover {
+.btn-primary:hover {
   background-color: #163618;
   border-color: #163618;
   color: #ffffff;
@@ -421,16 +419,14 @@
   box-shadow: 0 0 0 3px rgba(163, 230, 53, 0.2);
 }
 
-:host-context([data-theme="dark"]) .btn-primary,
-:host-context([data-theme="dark"]) .btn-invite {
+:host-context([data-theme="dark"]) .btn-primary {
   background-color: #a3e635;
   color: #0b111e;
   border-color: #a3e635;
   box-shadow: 0 2px 8px rgba(163, 230, 53, 0.25);
 }
 
-:host-context([data-theme="dark"]) .btn-primary:hover,
-:host-context([data-theme="dark"]) .btn-invite:hover {
+:host-context([data-theme="dark"]) .btn-primary:hover {
   background-color: #bef264;
   border-color: #bef264;
   color: #0b111e;
