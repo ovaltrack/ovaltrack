@@ -197,10 +197,6 @@
   border-radius: 4px;
 }
 
-.btn-start-match:active {
-  transform: scale(0.97);
-}
-
 .match-card-body {
   background: transparent;
   border: none;
@@ -285,15 +281,6 @@
 }
 
 /* Badges de Estado */
-.status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 11.5px;
-  font-weight: 700;
-}
 
 .status-in_progress {
   background: #fef08a;
@@ -325,13 +312,6 @@
   border: 1px solid rgba(0, 0, 0, 0.12);
 }
 
-.status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: currentColor;
-}
-
 .status-dot-pulse {
   width: 8px;
   height: 8px;
@@ -339,10 +319,6 @@
   background-color: #ca8a04;
   box-shadow: 0 0 8px #ca8a04;
   animation: pulse 1.6s ease-in-out infinite;
-}
-
-.match-card-shell {
-  position: relative;
 }
 
 .match-card-link {
@@ -378,26 +354,6 @@
     opacity: 0.4;
     transform: scale(0.85);
   }
-}
-
-/* Alertas */
-.custom-alert {
-  background: #fef3f2;
-  border: 1.5px solid #fecdca;
-  color: #b42318;
-  padding: 12px 16px;
-  border-radius: 12px;
-  font-size: 13.5px;
-  font-weight: 600;
-}
-
-.btn-close-alert {
-  background: transparent;
-  border: none;
-  color: #b42318;
-  cursor: pointer;
-  font-size: 14px;
-  padding: 4px;
 }
 
 /* Modal de Creación */
@@ -503,7 +459,6 @@
   }
 }
 
-
 /* ===== Variables de FullCalendar con la paleta verde de la app ===== */
 .calendar-wrapper ::ng-deep .fc {
   --fc-button-bg-color: #1d3b20;
@@ -580,19 +535,11 @@
   box-shadow: none !important;
 }
 
-.calendar-wrapper ::ng-deep .fc .fc-dayGridMonth-button {
-  border-radius: 20px 0 0 20px;
-}
-
 .calendar-wrapper ::ng-deep .fc .fc-multiMonthYear-button {
   border-radius: 0 20px 20px 0;
 }
 .calendar-wrapper ::ng-deep .fc .fc-dayGridMonth-button {
   border-radius: 20px 0 0 20px;
-}
-
-.calendar-wrapper ::ng-deep .fc .fc-dayGridWeek-button {
-  border-radius: 0 20px 20px 0;
 }
 
 .calendar-wrapper ::ng-deep .fc .fc-button-primary.fc-button-active {
@@ -601,21 +548,6 @@
 }
 
 /* ===== Modal Match Card ===== */
-.modal-match-card {
-  background: #ffffff;
-  border-radius: 12px;
-  width: 400px;
-  max-width: 100%;
-  overflow: hidden;
-  font-family: 'Inter', sans-serif;
-}
-
-.card-header-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 24px 12px 24px;
-}
 
 .status-pill {
   display: flex;
@@ -636,88 +568,6 @@
   background-color: #1a3c20;
   border-radius: 50%;
 }
-
-.btn-delete-icon {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-}
-
-.btn-delete-icon:hover svg {
-  stroke: #ff4d4f;
-}
-
-.card-main-info {
-  padding: 0 24px 20px 24px;
-}
-
-.opponent-title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #0f2914;
-  font-size: 1.25rem;
-  font-weight: 800;
-  margin: 0 0 12px 0;
-}
-
-.vs-badge {
-  background-color: #eef5ef;
-  color: #1a3c20;
-  font-size: 0.75rem;
-  font-weight: 800;
-  padding: 4px 8px;
-  border-radius: 6px;
-  border: 1px solid #d3e2d5;
-}
-
-.match-date-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #3b4e33;
-  font-weight: 700;
-  font-size: 0.95rem;
-}
-
-.card-actions-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 24px;
-  border-top: 1px solid #e9ecea;
-}
-
-.btn-text-action {
-  background: none;
-  border: none;
-  color: #1a3c20;
-  font-weight: 700;
-  font-size: 0.95rem;
-  cursor: pointer;
-  padding: 0;
-}
-
-.btn-text-action:hover {
-  text-decoration: underline;
-}
-
-.btn-primary-action {
-  background-color: #1d3b20;
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  padding: 12px 20px;
-  font-weight: 600;
-  font-size: 0.95rem;
-  cursor: pointer;
-}
-
-.btn-primary-action:hover {
-  background-color: #2d5a32;
-}
-
 
 /* Overlay oscuro de fondo */
 .calendar-modal-overlay {
@@ -1192,17 +1042,6 @@
 }
 
 /* ===== Ajustes del tema oscuro para historial y calendario ===== */
-.secondary-filters {
-  background: var(--surface);
-  color: var(--text-primary);
-}
-
-.calendar-view-toggle {
-  min-height: 44px;
-  background: var(--surface);
-  border: 1px solid var(--border-strong);
-  color: var(--text-primary);
-}
 
 .calendar-wrapper,
 .calendar-modal-content {
@@ -1210,23 +1049,10 @@
   color: var(--text-primary);
 }
 
-.day-modal-title {
-  color: var(--text-primary);
-}
-
-:host-context([data-theme="dark"]) .secondary-filters {
-  box-shadow: var(--shadow-elevation);
-}
-
-:host-context([data-theme="dark"]) .calendar-view-toggle:hover {
-  background: var(--surface-hover);
-}
-
 :host-context([data-theme="dark"]) .calendar-wrapper ::ng-deep .fc {
   --fc-border-color: var(--border);
   --fc-page-bg-color: var(--surface);
   --fc-neutral-bg-color: var(--surface-alt);
-  --fc-list-event-hover-bg-color: var(--surface-hover);
   --fc-today-bg-color: rgba(163, 230, 53, 0.12);
 }
 
