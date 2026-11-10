@@ -80,19 +80,6 @@
   gap: 8px;
 }
 
-.offline-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  border-radius: var(--radius-pill);
-  background: var(--error-tint);
-  border: 1px solid var(--error-border);
-  color: var(--error);
-  font-size: 12px;
-  font-weight: 700;
-}
-
 .clock-chip {
   display: inline-flex;
   align-items: center;
@@ -171,14 +158,6 @@
 }
 
 /* Valores numéricos: JetBrains Mono (§2) */
-.value {
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.value--own { color: var(--own); }
-.value--opp { color: var(--opp); }
 
 .scoreboard {
   display: flex;
@@ -287,21 +266,6 @@
   color: var(--text-muted);
 }
 
-.possession-bar {
-  display: flex;
-  height: 12px;
-  overflow: hidden;
-  border-radius: var(--radius-pill);
-  background: var(--surface-alt);
-}
-
-.possession-bar__fill {
-  transition: width 0.4s ease;
-}
-
-.possession-bar__fill--own { background: var(--own); }
-.possession-bar__fill--opp { background: var(--opp); }
-
 .cards-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -355,33 +319,6 @@
   color: var(--text-muted);
 }
 
-.status-chip {
-  padding: 3px 10px;
-  border-radius: var(--radius-pill);
-  border: 1px solid transparent;
-  font-size: 11.5px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.status-chip--success {
-  color: var(--positive);
-  background: var(--grass-tint);
-  border-color: var(--grass-border);
-}
-
-.status-chip--warning {
-  color: var(--warning);
-  background: var(--warning-tint);
-  border-color: var(--warning-border);
-}
-
-.status-chip--neutral {
-  color: var(--text-secondary);
-  background: var(--surface-alt);
-  border-color: var(--border);
-}
-
 .rows {
   display: flex;
   flex-direction: column;
@@ -398,19 +335,9 @@
   font-size: 13.5px;
 }
 
-.stat-row__label {
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-
 .stat-row--sub {
   padding-left: 12px;
   font-size: 12.5px;
-}
-
-.stat-row--sub .stat-row__label {
-  font-weight: 500;
-  color: var(--text-muted);
 }
 
 .pair {
@@ -419,6 +346,3 @@
   gap: 4px;
 }
 
-.pair__dot {
-  color: var(--text-muted);
-}

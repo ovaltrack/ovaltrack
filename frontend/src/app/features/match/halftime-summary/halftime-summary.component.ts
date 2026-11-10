@@ -26,7 +26,7 @@ import { UserContextService } from '../../../core/services/user-context.service'
   standalone: true,
   imports: [CommonModule],
   templateUrl: './halftime-summary.component.html',
-  styleUrl: './halftime-summary.component.css',
+  styleUrls: ['../styles/match-stats.css', './halftime-summary.component.css'],
 })
 export class HalftimeSummaryComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);

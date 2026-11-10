@@ -14,7 +14,7 @@ import {
   standalone: true,
   imports: [CommonModule],
   templateUrl: './current-stats-modal.component.html',
-  styleUrl: './current-stats-modal.component.css'
+  styleUrls: ['../../../styles/match-stats.css', './current-stats-modal.component.css']
 })
 export class CurrentStatsModalComponent {
   /** Estadísticas de la vista `basic`: tipos marcados con `stat_view` "basic" en el catálogo. */

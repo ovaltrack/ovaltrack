@@ -48,14 +48,7 @@
 }
 
 /* ---------- Tipografía numérica (§2) ---------- */
-.value {
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
 
-.value--own { color: var(--own); }
-.value--opp { color: var(--opp); }
 .value--empty { color: var(--text-muted); font-weight: 500; }
 
 /* ==========================================================================
@@ -107,19 +100,6 @@
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
-}
-
-.offline-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  border-radius: var(--radius-pill);
-  background: var(--error-tint);
-  border: 1px solid var(--error-border);
-  color: var(--error);
-  font-size: 12px;
-  font-weight: 700;
 }
 
 /* Botón de icono outline con hit target táctil de 48px (§3.3, §4.6) */
@@ -296,21 +276,6 @@
   white-space: nowrap;
 }
 
-.possession-bar {
-  display: flex;
-  height: 12px;
-  overflow: hidden;
-  border-radius: var(--radius-pill);
-  background: var(--surface-alt);
-}
-
-.possession-bar__fill {
-  transition: width 0.4s ease;
-}
-
-.possession-bar__fill--own { background: var(--own); }
-.possession-bar__fill--opp { background: var(--opp); }
-
 .score-tiles {
   display: flex;
   flex-wrap: wrap;
@@ -341,10 +306,6 @@
   align-items: center;
   gap: 4px;
   font-size: 18px;
-}
-
-.pair__dot {
-  color: var(--text-muted);
 }
 
 /* ---------- Tarjetas de indicadores y grupos ---------- */
@@ -405,33 +366,6 @@
   color: var(--text-muted);
 }
 
-.status-chip {
-  padding: 3px 10px;
-  border-radius: var(--radius-pill);
-  border: 1px solid transparent;
-  font-size: 11.5px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.status-chip--success {
-  color: var(--positive);
-  background: var(--grass-tint);
-  border-color: var(--grass-border);
-}
-
-.status-chip--warning {
-  color: var(--warning);
-  background: var(--warning-tint);
-  border-color: var(--warning-border);
-}
-
-.status-chip--neutral {
-  color: var(--text-secondary);
-  background: var(--surface-alt);
-  border-color: var(--border);
-}
-
 .rows {
   display: flex;
   flex-direction: column;
@@ -450,19 +384,9 @@
   font-size: 16px;
 }
 
-.stat-row__label {
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-
 .stat-row--sub {
   padding-left: 14px;
   font-size: 13.5px;
-}
-
-.stat-row--sub .stat-row__label {
-  font-weight: 500;
-  color: var(--text-muted);
 }
 
 .stat-row--sub .pair {
