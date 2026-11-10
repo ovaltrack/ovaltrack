@@ -1,4 +1,3 @@
-
 :host {
   display: block;
   height: 100%;
@@ -249,20 +248,6 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23fbbf24' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
 }
 
-.btn-row-select {
-  background: transparent;
-  border: none;
-  color: var(--text-muted, #7a8c74);
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-}
-
-.btn-row-select:hover {
-  background: var(--surface-alt, #eef1e7);
-  color: var(--text-primary, #111d0e);
-}
-
 /* Compacto: entra completo (mensaje + botón) en la tabla baja de 1366×768, sin scrollear */
 .table-empty-state {
   padding: 16px;
@@ -482,35 +467,6 @@
   gap: 12px;
   margin-top: 24px;
 }
-
-/* ===== Columna de Notas ===== */
-.col-note {
-  /* Asegura que la columna tenga un ancho definido en tu grid (ej. flex: 1 o width específico) */
-  min-width: 150px; 
-  display: flex;
-  align-items: center;
-}
-
-
-/* Contenedor del adelanto de la nota */
-.note-preview-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  max-width: 100%;
-  padding: 2px 6px;
-  border-radius: 4px;
-  transition: background-color 0.2s ease;
-}
-
-.note-preview-wrapper:hover {
-  background-color: rgba(29, 59, 32, 0.08);
-}
-
-
-/* Texto truncado con ellipsis (...) */
-
 
 /* 1. Definición exacta de las columnas de la tabla */
 .table-grid-header,
