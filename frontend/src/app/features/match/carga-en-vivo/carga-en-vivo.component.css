@@ -112,11 +112,11 @@
 }
 
 .live-capture__header {
-	display: flex;
+	/* Grilla de 3 columnas: el marcador queda centrado sin posicionamiento absoluto, así nunca pisa los botones */
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
 	align-items: center;
-	justify-content: space-between;
 	position: relative;
-	flex-wrap: wrap;
 	gap: var(--ot-stack-default);
 	padding: var(--ot-stack-default) var(--ot-margin-screen);
 	background: var(--surface);
@@ -124,6 +124,8 @@
 }
 
 .live-capture__brand {
+	grid-column: 1;
+	grid-row: 1;
 	display: flex;
 	align-items: center;
 	gap: var(--ot-stack-compact);
@@ -155,11 +157,10 @@
 	display: flex;
 	align-items: center;
 	gap: calc(22px * var(--ot-live-scale));
-	flex-wrap: wrap;
+	flex-wrap: nowrap;
 	min-width: 0;
-	position: absolute;
-	left: 50%;
-	transform: translateX(-50%);
+	grid-column: 2;
+	grid-row: 1;
 	justify-content: center;
 }
 
@@ -210,6 +211,9 @@
 }
 
 .live-capture__actions {
+	grid-column: 3;
+	grid-row: 1;
+	justify-content: flex-end;
 	display: flex;
 	align-items: center;
 	gap: var(--ot-stack-compact);
@@ -259,6 +263,7 @@
 	font-family: var(--font-manrope);
 	font-weight: 600;
 	padding: calc(8px * var(--ot-live-scale)) calc(16px * var(--ot-live-scale));
+	min-height: var(--ot-touch-target-min);
 	cursor: pointer;
 	border-radius: var(--ot-radius-lg);
 	transition: all 0.2s ease;
@@ -455,13 +460,21 @@
 	background: var(--bg-neutral);
 }
 
+.event-catalog,
+.event-catalog--own,
+.event-catalog--away {
+	overflow-x: hidden;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+}
+
 .event-catalog--disabled {
 	opacity: 0.72;
 }
 
 .event-catalog__category {
-	flex: 1;
-	min-height: 0;
+	/* No se encoge por debajo de su contenido: si no entra, el catálogo scrollea en vez de superponer secciones */
+	flex: 1 0 auto;
 	display: flex;
 	flex-direction: column;
 }
@@ -501,7 +514,8 @@
 	border-radius: var(--ot-radius-lg);
 	font-family: var(--font-manrope);
 	font-weight: 1000;
-	font-size: calc(30px * var(--ot-live-scale));
+	/* Se achica en tablet (por ancho y por alto) para que el catálogo entre sin scroll */
+	font-size: clamp(18px, min(2.2vw, 3.4dvh), calc(30px * var(--ot-live-scale)));
 	color: #FFFFFF;
 	cursor: pointer;
 	min-width: 0;
@@ -714,6 +728,67 @@
 .possession-bar__btn:focus-visible {
 	outline: calc(2px * var(--ot-live-scale)) solid var(--navy-900);
 	outline-offset: calc(2px * var(--ot-live-scale));
+}
+
+/* Tablet y escritorio angosto: el marcador pasa a una segunda fila del encabezado */
+@media (min-width: 769px) and (max-width: 1439px) {
+	.live-capture__header {
+		grid-template-columns: auto minmax(0, 1fr);
+		row-gap: calc(6px * var(--ot-live-scale));
+		padding-block: calc(10px * var(--ot-live-scale));
+	}
+
+	.live-capture__brand-icon {
+		width: calc(140px * var(--ot-live-scale));
+		height: calc(48px * var(--ot-live-scale));
+	}
+
+	.live-capture__actions {
+		grid-column: 2;
+	}
+
+	.live-capture__scoreboard {
+		grid-column: 1 / -1;
+		grid-row: 2;
+		gap: calc(14px * var(--ot-live-scale));
+	}
+
+	.live-capture__score {
+		font-size: var(--ot-size-body-lg);
+		white-space: nowrap;
+	}
+
+	.live-capture__clock {
+		padding-block: 2px;
+	}
+
+	.live-capture__clock-time {
+		font-size: calc(22px * var(--ot-live-scale));
+	}
+}
+
+/* Pantallas bajas (iPad mini horizontal): catálogo más compacto para que entren las 5 categorías sin scroll */
+@media (min-width: 769px) and (max-height: 820px) {
+	.event-catalog,
+	.event-catalog--own,
+	.event-catalog--away {
+		padding: calc(14px * var(--ot-live-scale)) var(--ot-margin-screen);
+		gap: calc(10px * var(--ot-live-scale));
+	}
+
+	.event-catalog__label {
+		margin-bottom: 4px;
+	}
+
+	.event-catalog__grid {
+		gap: calc(10px * var(--ot-live-scale));
+	}
+
+	.event-chip {
+		padding-block: calc(6px * var(--ot-live-scale));
+		font-size: clamp(18px, min(1.9vw, 2.9dvh), calc(30px * var(--ot-live-scale)));
+		line-height: 1.25;
+	}
 }
 
 @media (max-width: 991px) {
