@@ -243,6 +243,22 @@
     flex-basis: 100%;
   }
 
+  /* Filtros en una fila que se desliza, igual que en Cuentas y Partidos */
+  .pi-filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
+    padding-right: 28px;
+  }
+
+  .pi-chip {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
   .pi-table thead {
     position: absolute;
     width: 1px;
@@ -253,6 +269,9 @@
 
   .pi-table tr {
     display: grid;
+    /* División y estado comparten fila; jugador y acción van a todo el ancho */
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
     gap: 10px;
     padding: 16px;
     border-bottom: 1px solid var(--border);
@@ -265,6 +284,11 @@
   .pi-table td {
     padding: 0;
     border: 0;
+  }
+
+  .pi-player,
+  .pi-action {
+    grid-column: 1 / -1;
   }
 
   .pi-action {
