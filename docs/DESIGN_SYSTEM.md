@@ -423,7 +423,7 @@ La pantalla de post-partido está estructurada como una estación de trabajo de 
 ### 8.2 Componentes de la Estación de Trabajo
 1. **Encabezado común (`PostMatchHeaderComponent` dentro de `PostMatchShellComponent`):**
    - Compartido por Eventos (`/post-match/:id`), Zonas (`/zones`) y Estadísticas (`/statistics`), que son rutas hijas del shell.
-   - Botón `.hud-back` (`←`) de 44px, etiqueta fija `ANÁLISIS POST-PARTIDO`, píldora de marcador con `--score-pill-bg` / `--score-pill-fg` (mono tabular) y línea inferior siempre `Hora de inicio HH:MM:SS`.
+   - Etiqueta fija `ANÁLISIS POST-PARTIDO` (volver al inicio se hace desde el logo de la barra), píldora de marcador con `--score-pill-bg` / `--score-pill-fg` (mono tabular) y línea inferior siempre `Hora de inicio HH:MM:SS`.
    - Burbuja flotante animada `.score-delta-badge` (`+5`), con `scoreDeltaPop` y temporizador de 3 segundos (solo cuando Eventos la informa).
    - Selector de vistas en la misma fila del título: `routerLink` + `routerLinkActive` (`aria-current="page"`), contenedor gris claro y vista activa **blanca elevada** (el verde queda para filtros). Entre 960px y 1279px comparte fila con el partido (si no entra, baja a su propia fila); con < 960px baja a su propia fila con tres partes iguales.
    - El encabezado no tiene acciones propias de una vista: el selector queda siempre pegado al borde derecho. Lo que es de una vista vive en la barra de esa vista (p. ej. «Agregar evento», en la barra de Eventos).
