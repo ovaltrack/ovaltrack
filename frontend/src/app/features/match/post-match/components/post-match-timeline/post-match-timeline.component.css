@@ -123,23 +123,10 @@
   margin: 0 0.25rem;
 }
 
-.filter-pill-btn.unassigned-pill .badge-count-text {
-  color: #b45309;
-}
-
 .filter-pill-btn.unassigned-pill.active {
   background: #fef3c7;
   border-color: #b45309;
   color: #78350f;
-}
-
-.filter-pill-btn.unassigned-pill.active .badge-count-text {
-  color: #78350f;
-}
-
-.badge-count-text {
-  font-weight: 800;
-  margin-left: 2px;
 }
 
 /*
@@ -200,8 +187,7 @@
 }
 
 /* Campo visible: de 220 a 250px, a la izquierda de la acción primaria (el componente decide si entra) */
-.search-wrapper,
-.search-wrap {
+.search-wrapper {
   position: relative;
   flex: 0 1 250px;
   min-width: 220px;

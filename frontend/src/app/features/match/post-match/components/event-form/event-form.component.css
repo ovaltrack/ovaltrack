@@ -115,13 +115,6 @@
   cursor: pointer;
 }
 
-.form-hint-sport {
-  font-size: 0.72rem;
-  color: var(--text-muted, #7a8c74);
-  margin-top: 2px;
-  display: block;
-}
-
 .custom-sport-input.is-invalid {
   border-color: var(--danger, #dc3545) !important;
 }
@@ -140,8 +133,6 @@
   align-items: center;
   gap: 4px;
 }
-
-
 
 /* Origen de un valor precargado (filtro o evento seleccionado) */
 .prefill-hint {
