@@ -57,7 +57,7 @@
 
 .table-grid-wrapper {
   /* Período | Juego | Video | Jugada | Jugador | Zona | Nota | Acción */
-  --table-cols: 56px 64px 64px minmax(150px, 1fr) minmax(150px, 1.1fr) 48px minmax(96px, 1fr) 72px;
+  --table-cols: 56px 64px 64px minmax(150px, 1fr) minmax(150px, 1.1fr) 40px minmax(104px, 1.5fr) 72px;
   min-width: 550px; /* Ancho cómodo optimizado para 6 columnas con acciones en hover */
   width: 100%;
   flex: 1;
