@@ -13,6 +13,7 @@ import { Match } from '../../../types/match.types';
 import { MatchTimelineEventResponse } from '../../../types/event.types';
 import { ZoneAssignmentResponse } from '../../../types/zone.types';
 import { ZoneAssignmentPanelComponent } from '../zone-assignment-panel/zone-assignment-panel.component';
+import { clearPersistedSignals } from '../../../../../shared/utils/persisted-signal';
 
 describe('PostMatchZonesComponent', () => {
   let fixture: ComponentFixture<PostMatchZonesComponent>;
@@ -57,6 +58,8 @@ describe('PostMatchZonesComponent', () => {
   }
 
   beforeEach(async () => {
+    // Los filtros se guardan en sessionStorage por partido: sin esto, un test le pasaría sus filtros al siguiente.
+    clearPersistedSignals();
     await TestBed.configureTestingModule({
       imports: [PostMatchZonesComponent],
       providers: [

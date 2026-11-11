@@ -1,15 +1,55 @@
 import { TestBed } from '@angular/core/testing';
 import { MatchReviewStore } from './match-review.store';
 import { MatchTimelineEventResponse } from '../../types/event.types';
+import { clearPersistedSignals } from '../../../../shared/utils/persisted-signal';
 
 describe('MatchReviewStore (HU-8.4)', () => {
   let store: MatchReviewStore;
 
   beforeEach(() => {
+    // Los filtros se guardan en sessionStorage por partido: sin esto, un test le pasaría sus filtros al siguiente.
+    clearPersistedSignals();
     TestBed.configureTestingModule({
       providers: [MatchReviewStore]
     });
     store = TestBed.inject(MatchReviewStore);
+  });
+
+  describe('filtros recordados por partido', () => {
+    it('al volver a un partido recupera sus filtros, y otro partido arranca sin filtros', () => {
+      store.setMatchId('match-1');
+      store.setTeamFilter('OWN');
+
+      store.resetSession();
+      store.setMatchId('match-2');
+      expect(store.filters().team).withContext('otro partido').toBe('ALL');
+
+      store.resetSession();
+      store.setMatchId('match-1');
+      expect(store.filters().team).toBe('OWN');
+    });
+
+    it('resetSession vuelve a los filtros por defecto sin borrar los guardados', () => {
+      store.setMatchId('match-1');
+      store.setTeamFilter('OWN');
+
+      store.resetSession();
+
+      expect(store.filters().team).toBe('ALL');
+      store.setMatchId('match-1');
+      expect(store.filters().team).toBe('OWN');
+    });
+
+    it('limpiar filtros también borra los guardados del partido', () => {
+      store.setMatchId('match-1');
+      store.setTeamFilter('OWN');
+
+      store.clearFilters();
+      store.resetSession();
+      store.setMatchId('match-1');
+
+      expect(store.filters().team).toBe('ALL');
+    });
   });
 
   it('should initialize with empty state', () => {

@@ -24,6 +24,7 @@ import {
 import { PostMatchShellStore } from '../../store/post-match-shell.store';
 import { LoadingGate } from '../../../../../shared/utils/loading-gate';
 import { RugbyBallLoaderComponent } from '../../../../../shared/components/rugby-ball-loader/rugby-ball-loader.component';
+import { oneOf, persistedSignal } from '../../../../../shared/utils/persisted-signal';
 
 export type StatsPeriodFilter = 'ALL' | 1 | 2;
 export type StatsTab = 'team' | 'players';
@@ -58,7 +59,8 @@ export class PostMatchStatisticsComponent implements OnInit, OnDestroy {
   readonly ownClubName = computed(() => this.userContext.currentClub()?.name || 'Mi Club');
 
   readonly activeTab = signal<StatsTab>('team');
-  readonly period = signal<StatsPeriodFilter>('ALL');
+  /** Se recuerda por partido en la pestaña: la clave se asigna al conocer el partido (ngOnInit). */
+  readonly period = persistedSignal<StatsPeriodFilter>(null, 'ALL', { isValid: oneOf<StatsPeriodFilter>(['ALL', 1, 2]) });
   readonly selectedPlayerId = signal<string | null>(null);
 
   private readonly events = signal<BackendEventResponse[]>([]);
@@ -163,6 +165,7 @@ export class PostMatchStatisticsComponent implements OnInit, OnDestroy {
       this.errorMessage.set('No se indicó el partido.');
       return;
     }
+    this.period.useKey(`post-match.${id}.statistics.period`);
     await this.load(id);
   }
 

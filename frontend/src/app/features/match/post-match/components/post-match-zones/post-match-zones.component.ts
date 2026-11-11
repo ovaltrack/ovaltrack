@@ -20,6 +20,7 @@ import { ZoneAssignmentPanelComponent } from '../zone-assignment-panel/zone-assi
 import { ZoneKpiStripComponent } from '../zone-kpi-strip/zone-kpi-strip.component';
 import { RugbyBallLoaderComponent } from '../../../../../shared/components/rugby-ball-loader/rugby-ball-loader.component';
 import { TerritoryGapSelection, ZoneTerritoryGridComponent } from '../zone-territory-grid/zone-territory-grid.component';
+import { oneOf, persistedSignal } from '../../../../../shared/utils/persisted-signal';
 
 /** Lateral que se propone al tocar una fila de la grilla: el centro de la cancha. */
 const DEFAULT_LATERAL_ROW = 2;
@@ -61,8 +62,11 @@ export class PostMatchZonesComponent implements OnInit, OnDestroy {
 
   /** Zona elegida en la grilla o la cancha: la usa el formulario. */
   readonly selectedCell = signal<ZoneCellRef | null>(null);
-  readonly periodFilter = signal<ZonePeriodFilter>('ALL');
-  readonly possessionFilter = signal<Possession | 'ALL'>('ALL');
+  /** Se recuerdan por partido en la pestaña: la clave se asigna al conocer el partido (ngOnInit). */
+  readonly periodFilter = persistedSignal<ZonePeriodFilter>(null, 'ALL', { isValid: oneOf<ZonePeriodFilter>(['ALL', 1, 2]) });
+  readonly possessionFilter = persistedSignal<Possession | 'ALL'>(null, 'ALL', {
+    isValid: oneOf<Possession | 'ALL'>(['ALL', 'OWN', 'OPPONENT']),
+  });
 
   /** Pantalla angosta: la grilla muestra un tiempo por vez y el formulario es una hoja inferior. */
   readonly compact = watchCompactLayout(this.destroyRef);
@@ -130,6 +134,9 @@ export class PostMatchZonesComponent implements OnInit, OnDestroy {
       this.errorMessage.set('No se indicó el partido.');
       return;
     }
+    this.possessionFilter.useKey(`post-match.${id}.zones.possession`);
+    // En pantalla angosta el período lo maneja la vista (arranca en 1T y sigue al cursor): no se recuerda.
+    if (!this.compact()) this.periodFilter.useKey(`post-match.${id}.zones.period`);
     this.load(id);
   }
 

@@ -24,11 +24,32 @@ import {
 } from '../utils/match-review.utils';
 import { zoneForEvent } from '../utils/zone-event-link';
 import { countsAsScoring, scoringTeam } from '../../statistics/calculators/event-rules';
+import { oneOf, persistedSignal } from '../../../../shared/utils/persisted-signal';
 
 export { RUGBY_HALF_TIME_MIN, RUGBY_FULL_TIME_MIN, EMPTY_TIME_PLACEHOLDER };
 
 /** Filtro de Eventos que puede dejar un evento fuera de la vista. */
 export type HidingFilter = 'period' | 'team' | 'unassigned' | 'search' | 'lane';
+
+const DEFAULT_REVIEW_FILTERS: ReviewFilters = {
+  period: 'ALL',
+  team: 'ALL',
+  onlyUnassigned: false,
+  searchTerm: '',
+  hiddenLaneIds: [],
+};
+
+/** Valida los filtros guardados: una versión vieja o editada a mano vuelve a los filtros por defecto. */
+function isReviewFilters(value: unknown): value is ReviewFilters {
+  if (typeof value !== 'object' || value === null) return false;
+  const filters = value as Record<string, unknown>;
+  return oneOf<ReviewFilters['period']>(['ALL', 1, 2])(filters['period'])
+    && oneOf<ReviewFilters['team']>(['ALL', 'OWN', 'OPPONENT'])(filters['team'])
+    && typeof filters['onlyUnassigned'] === 'boolean'
+    && typeof filters['searchTerm'] === 'string'
+    && Array.isArray(filters['hiddenLaneIds'])
+    && filters['hiddenLaneIds'].every(laneId => typeof laneId === 'string');
+}
 
 @Injectable({
   providedIn: 'root'
@@ -58,13 +79,11 @@ export class MatchReviewStore {
   private readonly confirmedChange = new Subject<void>();
   readonly confirmedChange$ = this.confirmedChange.asObservable();
 
-  readonly filters = signal<ReviewFilters>({
-    period: 'ALL',
-    team: 'ALL',
-    onlyUnassigned: false,
-    searchTerm: '',
-    hiddenLaneIds: []
-  });
+  /**
+   * Se recuerdan por partido en la pestaña (recarga o volver a la pantalla). La clave se asigna en `setMatchId`;
+   * `resetSession` la suelta sin borrar lo guardado.
+   */
+  readonly filters = persistedSignal<ReviewFilters>(null, DEFAULT_REVIEW_FILTERS, { isValid: isReviewFilters });
 
   /**
    * Eventos que se muestran en el post-partido: se ocultan los de tipos dados de baja en el
@@ -253,6 +272,7 @@ export class MatchReviewStore {
 
   setMatchId(id: string): void {
     this.matchId.set(id);
+    this.filters.useKey(`post-match.${id}.review`);
   }
 
   setZoneAssignments(assignments: ZoneAssignmentResponse[]): void {
@@ -394,13 +414,7 @@ export class MatchReviewStore {
   }
 
   clearFilters(): void {
-    this.filters.set({
-      period: 'ALL',
-      team: 'ALL',
-      onlyUnassigned: false,
-      searchTerm: '',
-      hiddenLaneIds: []
-    });
+    this.filters.set(DEFAULT_REVIEW_FILTERS);
   }
 
   resetSession(): void {
@@ -408,7 +422,8 @@ export class MatchReviewStore {
     this.scoreDelta.set(null);
     this.zoneAssignments.set([]);
     this.zonesStatus.set('idle');
-    this.clearFilters();
+    // Vuelve a los filtros por defecto solo en memoria: lo guardado para el partido se recupera en setMatchId.
+    this.filters.useKey(null);
   }
 
   removeEvent(eventId: string): void {
