@@ -12,7 +12,7 @@
 /* Tarjeta de Entrenador (Elevación y Borde Mi Club) */
 .division-card {
   background: #ffffff;
-  border: 2px solid rgba(32, 75, 34, 0.26);
+  border: 2px solid var(--border-sport);
   border-radius: 16px;
   box-shadow: 0 10px 28px rgba(15, 35, 15, 0.10), 0 3px 8px rgba(15, 35, 15, 0.05);
   padding: 20px 24px;
@@ -22,10 +22,13 @@
   gap: 20px;
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
+:host-context([data-theme="dark"]) .division-card {
+  border-color: rgba(32, 75, 34, 0.26);
+}
 
 .division-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(32, 75, 34, 0.40);
+  border-color: var(--grass-border);
   box-shadow: 0 16px 36px rgba(15, 35, 15, 0.14), 0 4px 12px rgba(15, 35, 15, 0.08);
 }
 
@@ -43,7 +46,7 @@
   height: 48px;
   border-radius: 12px;
   background-color: var(--surface-header-start);
-  border: 1.5px solid rgba(32, 75, 34, 0.24);
+  border: 1.5px solid var(--border-sport);
   color: var(--btn-primary-bg);
   font-family: var(--font-head);
   font-weight: 800;
@@ -52,6 +55,9 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(16, 24, 16, 0.08);
+}
+:host-context([data-theme="dark"]) .division-badge-icon {
   box-shadow: 0 2px 6px rgba(32, 75, 34, 0.08);
 }
 
@@ -64,9 +70,12 @@
   font-family: var(--font-head);
   font-weight: 800;
   font-size: 17px;
-  color: #111d0e;
+  color: var(--text-primary);
   line-height: 1.25;
   margin-bottom: 2px;
+}
+:host-context([data-theme="dark"]) .division-name {
+  color: #111d0e;
 }
 
 .division-meta {
@@ -76,18 +85,21 @@
   flex-wrap: wrap;
   margin-top: 3px;
   font-size: 13px;
-  color: #4a6042;
+  color: var(--text-secondary);
 }
 
 .meta-gender {
-  color: #4a6042;
+  color: var(--text-secondary);
   font-size: 13px;
   font-weight: 500;
 }
 
 .meta-dot {
-  color: rgba(32, 75, 34, 0.35);
+  color: var(--text-muted);
   font-size: 10px;
+}
+:host-context([data-theme="dark"]) .meta-dot {
+  color: rgba(32, 75, 34, 0.35);
 }
 
 /* Zona de Estado y Acciones */
@@ -132,9 +144,12 @@
 .history-card {
   margin-top: 24px;
   background: #fafcf9;
-  border: 2px solid rgba(32, 75, 34, 0.18);
+  border: 2px solid var(--border-sport);
   border-radius: 16px;
   overflow: hidden;
+}
+:host-context([data-theme="dark"]) .history-card {
+  border-color: rgba(32, 75, 34, 0.18);
 }
 
 .history-header {
@@ -143,8 +158,12 @@
   justify-content: space-between;
   gap: 16px;
   padding: 16px 24px;
+  background: linear-gradient(180deg, var(--surface-header-start) 0%, var(--surface-header-end) 100%);
+  border-bottom: 2px solid var(--border-sport-subtle);
+}
+:host-context([data-theme="dark"]) .history-header {
   background: linear-gradient(180deg, #f2f7ef 0%, #eaf3e6 100%);
-  border-bottom: 2px solid rgba(32, 75, 34, 0.16);
+  border-bottom-color: rgba(32, 75, 34, 0.16);
 }
 
 .history-header .card-title,
@@ -161,13 +180,19 @@
 .history-table th,
 .history-table td {
   padding: 14px 24px;
-  border-bottom: 1px solid rgba(32, 75, 34, 0.10);
+  border-bottom: 1px solid var(--border-sport-subtle);
+}
+:host-context([data-theme="dark"]) .history-table td {
+  border-bottom-color: rgba(32, 75, 34, 0.10);
 }
 
 .history-table th {
   color: #204b22;
   font-size: 11.5px;
   text-transform: uppercase;
+}
+:host-context([data-theme="dark"]) .history-table th {
+  border-bottom-color: rgba(32, 75, 34, 0.10);
 }
 
 /* Responsive */
@@ -183,7 +208,10 @@
     justify-content: space-between;
     width: 100%;
     padding-top: 12px;
-    border-top: 1px solid rgba(32, 75, 34, 0.10);
+    border-top: 1px solid var(--border-sport-subtle);
+  }
+  :host-context([data-theme="dark"]) .division-status-zone {
+    border-top-color: rgba(32, 75, 34, 0.10);
   }
 }
 
