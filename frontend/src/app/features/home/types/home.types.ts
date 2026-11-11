@@ -19,8 +19,7 @@ export type PrimaryActionKind =
   | 'schedule-match'
   | 'assign-coach'
   | 'create-division'
-  | 'view-my-match'
-  | 'view-live-match';
+  | 'view-my-match';
 
 /** Dónde se dibuja el único botón primario de la pantalla. */
 export type PrimaryActionTarget = 'board' | 'debt-tile' | 'inbox-tile';

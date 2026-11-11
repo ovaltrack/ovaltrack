@@ -140,33 +140,6 @@ describe('adminRules', () => {
   const admin = (overrides: Partial<AdminRuleContext>): AdminRuleContext => ({ now, divisions: [division('d1')], matches: [], ...overrides });
   const clubMatch = (id: string, divisionId: string, status: RuleMatch['status'], date: string) => ({ ...match(id, status, date), divisionId });
 
-  it('0 · partido en curso en cualquier división: ver partidos, nunca capturar', () => {
-    const action = resolve(admin({ matches: [clubMatch('m1', 'd1', 'in_progress', at(0, 16))] }));
-    expect(action).toEqual(jasmine.objectContaining({ kind: 'view-live-match', label: 'Ver partidos', route: '/match-selection' }));
-  });
-
-  it('0 · en el entretiempo también ofrece ver partidos', () => {
-    expect(resolve(admin({ matches: [clubMatch('m1', 'd1', 'halftime', at(0, 16))] }))?.kind).toBe('view-live-match');
-  });
-
-  it('0 · tiene prioridad sobre definir alineación y asignar entrenador', () => {
-    const action = resolve(admin({
-      divisions: [division('d1'), division('d2', false)],
-      matches: [clubMatch('vivo', 'd1', 'in_progress', at(0, 16)), clubMatch('proximo', 'd2', 'empty_roster', at(1, 10))]
-    }));
-    expect(action?.kind).toBe('view-live-match');
-  });
-
-  it('0 · sin partido en curso no aparece', () => {
-    expect(resolve(admin({ matches: [clubMatch('m1', 'd1', 'finished', at(-1, 16))] }))?.kind).not.toBe('view-live-match');
-  });
-
-  it('0 · ver partidos necesita conexión', () => {
-    const action = resolve(admin({ matches: [clubMatch('m1', 'd1', 'in_progress', at(0, 16))] }))!;
-    expect(isActionEnabled(action, false)).toBeFalse();
-    expect(isActionEnabled(action, true)).toBeTrue();
-  });
-
   it('1 · partido en not_started con nómina incompleta a 72 h o menos: definir alineación', () => {
     const action = resolvePrimaryAction(adminRules, {
       now, divisions: [{ id: 'd1', hasCoach: true }], matches: [clubMatch('m1', 'd1', 'not_started', at(0, 20))], rosters: { m1: { starters: 0 } }

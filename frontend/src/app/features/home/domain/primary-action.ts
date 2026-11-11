@@ -123,10 +123,6 @@ export interface AdminRuleContext {
 
 /** Reglas del administrador del club, en orden de prioridad. */
 export const adminRules: readonly PrimaryRule<AdminRuleContext>[] = [
-  // 0. Partido en curso en el club: se ofrece verlo en el listado. Nunca capturar desde acá (evita duplicar eventos).
-  ctx => ctx.matches.some(isLive)
-    ? { kind: 'view-live-match', label: 'Ver partidos', route: '/match-selection', target: 'board', requiresConnection: true }
-    : null,
   // 1. Partido con la alineación incompleta a 72 h o menos en cualquier división: gana el que juega primero.
   ctx => {
     const next = upcomingMatches(ctx.matches, ctx.now).find(match => {
