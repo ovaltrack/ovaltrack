@@ -115,10 +115,10 @@
             aria-label="Catálogo de eventos">
 
             @for (category of categories; track category.name) {
-            <div class="event-catalog__category">
+            <div class="event-catalog__category" [attr.data-group]="category.name">
                 <p
                     class="event-catalog__label"
-                    [class.event-catalog__label--disabled]="!isStarted">{{
+                    [class.event-catalog__label--disabled]="!isStarted"><span class="event-catalog__flag" aria-hidden="true"></span>{{
                     category.name }}</p>
 
                 <div class="event-catalog__grid">
@@ -132,6 +132,9 @@
                         [class.event-chip--primary]="eventVariant(event) === 'primary'"
                         [disabled]="!isStarted"
                         (click)="onEventTap(event)">
+                        @if (event.code === 'YELLOW_CARD' || event.code === 'RED_CARD') {
+                        <span class="event-chip__card" [class.event-chip__card--red]="event.code === 'RED_CARD'" aria-hidden="true"></span>
+                        }
                         {{ event.name }}
                     </button>
                     }

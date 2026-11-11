@@ -35,14 +35,24 @@
 	--navy-text: var(--navy-900);
 	--green-500: #57AD16;
 	--green-700: #3D8712;
-	--green-100: #E4F3D9;
 	--orange-500: #F5821F;
-	--orange-600: #D96A0A;
-	--orange-100: #FDE9D3;
 	--red-600: #C6403A;
-	--red-100: #FBE1DF;
-	--purple-900: #7952B3;
-	--purple-100: #e5d3ff;
+
+	/* Jugadas por categoría: relleno con texto blanco (≥ 5,3 : 1) y su banderita (en claro, el mismo relleno) */
+	--tone-score: #8a6408;
+	--tone-attack: #2e7a3c;
+	--tone-set-piece: #3a6bb5;
+	--tone-turnover: #a8521a;
+	--tone-neutral: #626979;
+	--tone-defense: #1f7380;
+	--tone-score-flag: var(--tone-score);
+	--tone-attack-flag: var(--tone-attack);
+	--tone-set-piece-flag: var(--tone-set-piece);
+	--tone-turnover-flag: var(--tone-turnover);
+	--tone-neutral-flag: var(--tone-neutral);
+	--tone-defense-flag: var(--tone-defense);
+	--card-yellow: #e9b54f;
+	--card-red: #f07a72;
 
 	/* Neutros — Modo claro (default en cancha) */
 	--paused-bg: var(--bg);
@@ -73,13 +83,19 @@
 	--bg-own: #0d642c;
 	--bg-neutral: #1e3c63;
 	--bg-away: #772c2c;
-	--surface-alt-chip: #EEF1F4;
 	--text: var(--text-primary);
 	--text-2: var(--text-primary);
 	--navy-text: var(--text-primary);
 	--hud-bg: var(--surface-sunken);
 	--hud-well: var(--surface-track);
 	--hud-well-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
+	/* Banderitas: variante clara de cada categoría, legible sobre el fondo oscuro */
+	--tone-score-flag: var(--event-try);
+	--tone-attack-flag: var(--event-default);
+	--tone-set-piece-flag: var(--event-set-piece);
+	--tone-turnover-flag: var(--event-turnover);
+	--tone-neutral-flag: var(--event-penalty);
+	--tone-defense-flag: var(--event-tackle);
 }
 
 .live-capture[data-theme="light"] {
@@ -89,7 +105,6 @@
 	--bg-away: rgb(255, 148, 141);
 	--surface: #FFFFFF;
 	--surface-alt: #EEF1F4;
-	--surface-alt-chip: #EEF1F4;
 	--text: #16191C;
 	--text-2: #000000;
 	--border: #949393;
@@ -375,13 +390,25 @@
 	flex: 1 0 auto;
 	display: flex;
 	flex-direction: column;
+	/* Color de la categoría (por defecto, neutro): lo heredan los botones y la banderita */
+	--tone: var(--tone-neutral);
+	--tone-flag: var(--tone-neutral-flag);
 }
 
+.event-catalog__category[data-group="Puntuación" i] { --tone: var(--tone-score); --tone-flag: var(--tone-score-flag); }
+.event-catalog__category[data-group="Ataque" i] { --tone: var(--tone-attack); --tone-flag: var(--tone-attack-flag); }
+.event-catalog__category[data-group="Juego Fijo" i] { --tone: var(--tone-set-piece); --tone-flag: var(--tone-set-piece-flag); }
+.event-catalog__category[data-group="Cambio de Posesión" i] { --tone: var(--tone-turnover); --tone-flag: var(--tone-turnover-flag); }
+.event-catalog__category[data-group="Defensa" i] { --tone: var(--tone-defense); --tone-flag: var(--tone-defense-flag); }
+
 .event-catalog__label {
-	font-family: var(--font-manrope);
-	font-weight: 700;
+	display: flex;
+	align-items: center;
+	gap: calc(8px * var(--ot-live-scale));
+	font-family: var(--font-mono);
+	font-weight: 600;
 	font-size: var(--ot-size-label-caps);
-	letter-spacing: 0.05em;
+	letter-spacing: 0.14em;
 	text-transform: uppercase;
 	color: var(--text-2);
 	margin: 0 0 var(--ot-stack-compact);
@@ -389,6 +416,14 @@
 
 .event-catalog__label--disabled {
 	color: var(--text-muted);
+}
+
+.event-catalog__flag {
+	flex: none;
+	width: calc(10px * var(--ot-live-scale));
+	height: calc(10px * var(--ot-live-scale));
+	border-radius: 2px;
+	background: var(--tone-flag);
 }
 
 .event-catalog__grid {
@@ -405,71 +440,47 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	gap: calc(12px * var(--ot-live-scale));
 	text-align: center;
 	padding: calc(12px * var(--ot-live-scale)) calc(10px * var(--ot-live-scale));
-	background: var(--navy-700);
-	border: 2px solid var(--navy-900);
-	border-radius: var(--ot-radius-lg);
-	font-family: var(--font-manrope);
-	font-weight: 1000;
+	background: var(--tone);
+	/* Borde y sombra marcan el botón sobre el fondo de posesión, aunque el relleno sea de un tono parecido */
+	border: 1px solid rgba(255, 255, 255, 0.16);
+	border-radius: calc(12px * var(--ot-live-scale));
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 6px 14px rgba(0, 0, 0, 0.35);
+	font-family: var(--font-body);
+	font-weight: 800;
 	/* Se achica en tablet (por ancho y por alto) para que el catálogo entre sin scroll */
-	font-size: clamp(18px, min(2.2vw, 3.4dvh), calc(30px * var(--ot-live-scale)));
+	font-size: clamp(16px, min(1.8vw, 2.9dvh), calc(26px * var(--ot-live-scale)));
+	letter-spacing: 0.01em;
 	color: #FFFFFF;
 	cursor: pointer;
 	min-width: 0;
 	overflow-wrap: anywhere;
-	transition: all 0.2s ease;
+	transition: filter 0.15s ease, transform 0.15s ease;
 	text-transform: uppercase;
 }
 
 .event-chip:hover {
-	background: var(--surface-alt-chip);
-	border-color: var(--navy-900);
-	color: #000;
+	filter: brightness(1.08);
 }
 
-.event-chip--success {
-	background: var(--green-500);
-	color: #FFFFFF;
+.event-chip:active {
+	transform: translateY(1px);
 }
 
-.event-chip--success:hover {
-	background: var(--green-100);
-	border-color: var(--green-500);
-	color: var(--green-700);
+/* Tarjeta amarilla y roja: chip con el color de la tarjeta dentro del botón */
+.event-chip__card {
+	flex: none;
+	width: calc(16px * var(--ot-live-scale));
+	height: calc(22px * var(--ot-live-scale));
+	border-radius: 3px;
+	border: 1px solid rgba(0, 0, 0, 0.25);
+	background: var(--card-yellow);
 }
 
-.event-chip--primary {
-	background: var(--purple-900);
-	color: #FFFFFF;
-}
-
-.event-chip--primary:hover {
-	background: var(--purple-100);
-	border-color: var(--purple-900);
-	color: var(--purple-900);
-}
-
-.event-chip--danger {
-	background: var(--red-600);
-	color: #FFFFFF;
-}
-
-.event-chip--danger:hover {
-	background: var(--red-100);
-	border-color: var(--red-600);
-	color: var(--red-600);
-}
-
-.event-chip--warning {
-	background: var(--orange-500);
-	color: #FFFFFF;
-}
-
-.event-chip--warning:hover {
-	background: var(--orange-100);
-	border-color: var(--orange-500);
-	color: var(--orange-600);
+.event-chip__card--red {
+	background: var(--card-red);
 }
 
 .event-chip:disabled {
@@ -677,7 +688,7 @@
 
 	.event-chip {
 		padding-block: calc(6px * var(--ot-live-scale));
-		font-size: clamp(18px, min(1.9vw, 2.9dvh), calc(30px * var(--ot-live-scale)));
+		font-size: clamp(15px, min(1.6vw, 2.6dvh), calc(24px * var(--ot-live-scale)));
 		line-height: 1.25;
 	}
 }
