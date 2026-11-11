@@ -220,7 +220,7 @@
             <div class="match-opponent-row">
               <span class="vs-label">VS</span>
               <h2 class="match-opponent-name">
-                <button type="button" class="match-card-link" [disabled]="selectedMatchForModal.status === 'cancelled'" (click)="onSelectMatch(selectedMatchForModal); closeMatchModal()">
+                <button type="button" class="match-card-link" [disabled]="selectedMatchForModal.status === 'cancelled' || openingMatchId() !== null" (click)="onSelectMatch(selectedMatchForModal)">
                   {{ selectedMatchForModal.opponent.name }}
                 </button>
               </h2>
@@ -241,31 +241,35 @@
           </div>
 
           @if (selectedMatchForModal.status !== 'cancelled') {
-          <footer class="match-card-action">
+          <footer class="match-card-action" [attr.aria-busy]="openingMatchId() === selectedMatchForModal.id">
             @if ( selectedMatchForModal.status === 'empty_roster' || selectedMatchForModal.status === 'not_started') {
             <div class="match-actions-group">
-              <button type="button" class="action-link" (click)="onSelectMatch(selectedMatchForModal); closeMatchModal()">
+              <button type="button" class="action-link" [disabled]="openingMatchId() !== null" (click)="onSelectMatch(selectedMatchForModal)">
                 Definir alineación
               </button>
-              <button type="button" class="btn btn-invite" (click)="startMatch(selectedMatchForModal.id); closeMatchModal()">
+              <button type="button" class="btn btn-invite" [disabled]="openingMatchId() !== null" (click)="startMatch(selectedMatchForModal.id)">
                 Empezar partido
               </button>
+              <ng-container *ngTemplateOutlet="openingSpinner; context: { $implicit: selectedMatchForModal.id }" />
             </div>
             } @else if (selectedMatchForModal.status === 'finished') {
               <div>
-                <button type="button" class="btn btn-invite" (click)="onSelectMatch(selectedMatchForModal); closeMatchModal()">
+                <button type="button" class="btn btn-invite" [disabled]="openingMatchId() !== null" (click)="onSelectMatch(selectedMatchForModal)">
+                  <ng-container *ngTemplateOutlet="openingSpinner; context: { $implicit: selectedMatchForModal.id }" />
                   Ver estadisticas
                 </button>
               </div>
             } @else if (selectedMatchForModal.status === 'halftime'){
               <div class="match-actions-group">
-                <button type="button" class="btn btn-invite" (click)="onSelectMatch(selectedMatchForModal); closeMatchModal()">
+                <button type="button" class="btn btn-invite" [disabled]="openingMatchId() !== null" (click)="onSelectMatch(selectedMatchForModal)">
+                  <ng-container *ngTemplateOutlet="openingSpinner; context: { $implicit: selectedMatchForModal.id }" />
                   Entretiempo
                 </button>
               </div>
             } @else {
               <div class="match-actions-group">
-                <button type="button" class="action-link" (click)="onSelectMatch(selectedMatchForModal); closeMatchModal()">
+                <button type="button" class="action-link" [disabled]="openingMatchId() !== null" (click)="onSelectMatch(selectedMatchForModal)">
+                  <ng-container *ngTemplateOutlet="openingSpinner; context: { $implicit: selectedMatchForModal.id }" />
                     Capturar en vivo
                 </button>
               </div>
@@ -296,7 +300,7 @@
             <div class="match-opponent-row">
               <span class="vs-label">VS</span>
               <h2 class="match-opponent-name">
-                <button type="button" class="match-card-link" (click)="openMatch(match)">
+                <button type="button" class="match-card-link" [disabled]="openingMatchId() !== null" (click)="openMatch(match)">
                   {{ match.opponent.name }}
                 </button>
               </h2>
@@ -315,8 +319,9 @@
             </div>
           </div>
 
-          <footer class="match-card-action">
-            <button type="button" class="btn btn-invite" (click)="openMatch(match)" style="width: 100%;">
+          <footer class="match-card-action" [attr.aria-busy]="openingMatchId() === match.id">
+            <button type="button" class="btn btn-invite" [disabled]="openingMatchId() !== null" (click)="openMatch(match)" style="width: 100%;">
+              <ng-container *ngTemplateOutlet="openingSpinner; context: { $implicit: match.id }" />
               Ver estadísticas completas
             </button>
           </footer>
@@ -387,3 +392,12 @@
     </div>
   </div>
 </div>
+
+<!-- Indicador mientras se abre un partido (validación de nómina + navegación); solo si tarda, ver LoadingGate. -->
+<ng-template #openingSpinner let-matchId>
+  @if (isShowingOpening(matchId)) {
+    <span class="spinner-border spinner-border-sm" role="status">
+      <span class="visually-hidden">Abriendo partido…</span>
+    </span>
+  }
+</ng-template>

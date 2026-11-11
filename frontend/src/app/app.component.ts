@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './shared/components/navbar/navbar.component';
 import { ToastContainerComponent } from './shared/components/toast-container/toast-container.component';
 import { SyncManagerService } from './core/synchronization/SyncManagerService';
+import { BackendHealthService } from './core/services/backend-health.service';
 import { LayoutService } from './core/services/layout.service';
 import { NavbarModeService } from './core/navigation/navbar-mode.service';
 
@@ -18,7 +19,7 @@ export class AppComponent {
   readonly navbarMode = inject(NavbarModeService);
 
   constructor() {
-    // Se inyecta al arrancar para que el sincronizador offline quede activo desde el inicio.
-    inject(SyncManagerService);
+    inject(SyncManagerService); //Synchronization service
+    inject(BackendHealthService); //Ping service to keep Render backend awake. Doesn't work if no one is using the app
   }
 }

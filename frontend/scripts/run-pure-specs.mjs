@@ -11,7 +11,7 @@ import { join, relative, resolve } from 'node:path';
 
 const require = createRequire(import.meta.url);
 const root = resolve(import.meta.dirname, '..');
-const DEFAULT_TARGETS = ['src/app/features/match/post-match/utils', 'src/app/features/match/post-match/store'];
+const DEFAULT_TARGETS = ['src/app/features/match/post-match/utils', 'src/app/features/match/post-match/store', 'src/app/shared/utils'];
 const NEEDS_BROWSER = /TestBed|@angular\/core\/testing|@angular\/common\/http\/testing/;
 
 function collectSpecs(target) {

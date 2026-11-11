@@ -103,9 +103,10 @@ export class LiveCaptureService {
     let players: AvailablePlayer[];
     let rosterPlayers: MatchRosterPlayer[];
 
+    this.rosterService.getAvailablePlayers(query.matchId).subscribe();
+
     const remote$ = forkJoin({
       bootstrap: this.matchService.getLiveMatchBootstrap(query.matchId),
-      players: this.rosterService.getAvailablePlayers(query.matchId),
       rosterPlayers: this.rosterService.getMatchRosterPlayers(query.matchId),
     }).pipe(shareReplay({ bufferSize: 1, refCount: false }));
 
@@ -119,7 +120,6 @@ export class LiveCaptureService {
         });
       match = remote.bootstrap.match;
       remoteEvents = remote.bootstrap.events;
-      players = remote.players;
       rosterPlayers = remote.rosterPlayers;
       eventTypes = remote.bootstrap.eventTypes.map(toLiveCaptureEventType);
       await this.cache.syncActiveEventTypes(eventTypes);

@@ -8,7 +8,7 @@ import { ZoneAssignmentResponse, ZoneCellRef } from '../../../types/zone.types';
 import { MatchZonesStore } from '../../store/match-zones.store';
 import { PostMatchShellStore } from '../../store/post-match-shell.store';
 import { watchCompactLayout } from '../../utils/zone-compact';
-import { LoadingGate } from '../../utils/loading-gate';
+import { LoadingGate } from '../../../../../shared/utils/loading-gate';
 import { ZoneDeepLinkTarget, resolveZoneDeepLink } from '../../utils/zone-deep-link';
 import { ZONE_SHORTCUT_HELP, isSaveShortcut, isTypingTarget, shortcutCell } from '../../utils/zone-shortcuts';
 import {

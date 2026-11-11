@@ -69,7 +69,8 @@ describe('LiveCaptureService', () => {
         .error(new ProgressEvent('error'), { status: 0 });
 
       const bootstrap = await loading;
-      // forkJoin cancela las consultas de plantel al fallar el bootstrap; se descartan del mock.
+      (await nextRequest(httpMock, req => req.url.endsWith('/matches/match-1')))
+        .error(new ProgressEvent('error'), { status: 0 });
       expect(httpMock.match(() => true).every(request => request.cancelled)).toBeTrue();
 
       expect(bootstrap.rosterPlayers.map(player => player.id)).toEqual(['p-2', 'p-1']);
@@ -89,7 +90,6 @@ describe('LiveCaptureService', () => {
       expect(bootstrap.rosterPlayers.map(player => player.id)).toEqual(['p-2', 'p-1']);
       expect(bootstrap.eventTypes.map(type => type.id)).toEqual(['tackle']);
 
-      // La consulta al backend sigue en vuelo: se cierra para el verify del mock (forkJoin cancela el resto).
       httpMock.expectOne(req => req.url.endsWith('/matches/match-1/live-bootstrap'))
         .error(new ProgressEvent('error'), { status: 0 });
       httpMock.match(() => true);
@@ -131,11 +131,27 @@ describe('LiveCaptureService', () => {
 
     httpMock.expectOne(req => req.url.endsWith('/matches/match-1/live-bootstrap'))
       .flush({ match: buildBackendMatch(), events: [], eventTypes: [] });
-    (await nextRequest(httpMock, req => req.url.endsWith('/matches/match-1'))).flush(buildBackendMatch());
-    (await nextRequest(httpMock, req => req.url.endsWith('/division/division-1/players'))).flush([]);
     (await nextRequest(httpMock, req => req.url.endsWith('/matches/match-1/roster/players'))).flush([]);
 
     expect((await loading).match.id).toBe('match-1');
+    (await nextRequest(httpMock, req => req.url.endsWith('/matches/match-1'))).flush(buildBackendMatch());
+    (await nextRequest(httpMock, req => req.url.endsWith('/division/division-1/players'))).flush([]);
+  });
+
+  it('abre sin esperar a los jugadores de la división y igual los deja en Dexie', async () => {
+    const loading = firstValueFrom(service.getLiveCaptureBootstrap({ matchId: 'match-1' }));
+    (await nextRequest(httpMock, req => req.url.endsWith('/matches/match-1/live-bootstrap')))
+      .flush({ match: buildBackendMatch(), events: [], eventTypes: [] });
+    (await nextRequest(httpMock, req => req.url.endsWith('/matches/match-1/roster/players'))).flush([]);
+
+    expect((await loading).match.id).withContext('abre sin la respuesta de los jugadores').toBe('match-1');
+
+    (await nextRequest(httpMock, req => req.url.endsWith('/matches/match-1'))).flush(buildBackendMatch());
+    (await nextRequest(httpMock, req => req.url.endsWith('/division/division-1/players')))
+      .flush([{ id: 'p-1', fullName: 'Uno', jerseyNumber: 1, position: null }]);
+    await settle();
+
+    expect((await cache.getPersonsByDivisionId('division-1')).map(player => player.id)).toEqual(['p-1']);
   });
 
   it('actualiza clockUpdatedAt del partido cacheado al guardar el reloj', async () => {

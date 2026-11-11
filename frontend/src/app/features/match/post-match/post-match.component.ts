@@ -13,7 +13,7 @@ import { HidingFilter, MatchReviewStore } from './store/match-review.store';
 import { MatchTimelineEventResponse } from '../types/event.types';
 import { PostMatchShellStore } from './store/post-match-shell.store';
 import { RugbyBallLoaderComponent } from '../../../shared/components/rugby-ball-loader/rugby-ball-loader.component';
-import { LoadingGate } from './utils/loading-gate';
+import { LoadingGate } from '../../../shared/utils/loading-gate';
 import { PostMatchKpiStripComponent } from './components/post-match-kpi-strip/post-match-kpi-strip.component';
 import { PostMatchTimelineComponent } from './components/post-match-timeline/post-match-timeline.component';
 import { PostMatchTableComponent } from './components/post-match-table/post-match-table.component';

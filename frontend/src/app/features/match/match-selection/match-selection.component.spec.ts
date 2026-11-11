@@ -21,6 +21,8 @@ describe('MatchSelectionComponent', () => {
   let savedRosterRequests: string[];
   let matchEventsRequests: string[];
   let divisionMatches: Match[];
+  let navigations: unknown[][];
+  let finishNavigation: () => void;
 
   beforeEach(async () => {
     divisionPlayersRequests = [];
@@ -28,12 +30,23 @@ describe('MatchSelectionComponent', () => {
     savedRosterRequests = [];
     matchEventsRequests = [];
     divisionMatches = [];
+    navigations = [];
+    finishNavigation = () => undefined;
     await TestBed.configureTestingModule({
       imports: [MatchSelectComponent],
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
-        { provide: Router, useValue: { navigate: () => Promise.resolve(true) } },
+        {
+          provide: Router,
+          useValue: {
+            // La navegación queda pendiente hasta que el test llama a finishNavigation().
+            navigate: (commands: unknown[]) => {
+              navigations.push(commands);
+              return new Promise<boolean>(resolve => { finishNavigation = () => resolve(true); });
+            },
+          },
+        },
         {
           provide: MatchService,
           useValue: {
@@ -167,6 +180,48 @@ describe('MatchSelectionComponent', () => {
       ];
 
       expect(component.getDayClassNames(multiMonthDay)).toEqual(['day-with-match', 'day-status-ready']);
+    });
+  });
+
+  describe('opening a match', () => {
+    const settle = () => new Promise(resolve => setTimeout(resolve));
+
+    it('should mark the match as opening until the navigation finishes', async () => {
+      component.openMatch(divisionMatch('played', 'finished'));
+
+      expect(component.openingMatchId()).toBe('played');
+      expect(navigations).toEqual([['/post-match', 'played']]);
+
+      finishNavigation();
+      await settle();
+
+      expect(component.openingMatchId()).toBeNull();
+    });
+
+    it('should ignore another match while one is opening', () => {
+      component.openMatch(divisionMatch('played', 'finished'));
+      component.openMatch(divisionMatch('ready', 'not_started'));
+
+      expect(navigations).toEqual([['/post-match', 'played']]);
+      expect(component.openingMatchId()).toBe('played');
+    });
+
+    it('should stop opening without navigating when the roster is incomplete', async () => {
+      component.startMatch('ready');
+      await settle();
+
+      expect(navigations).toEqual([]);
+      expect(savedRosterRequests).toEqual(['ready']);
+      expect(component.openingMatchId()).toBeNull();
+    });
+
+    it('should not show the indicator when the match opens quickly', async () => {
+      component.openMatch(divisionMatch('played', 'finished'));
+      finishNavigation();
+      await settle();
+
+      expect(component.openingGate.showIndicator()).toBeFalse();
+      expect(component.isShowingOpening('played')).toBeFalse();
     });
   });
 });

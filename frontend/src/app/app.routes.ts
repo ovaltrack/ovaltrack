@@ -200,7 +200,8 @@ export const routes: Routes = [
         canMatch: [authGuard],
         canActivate: [hasRoleGuard, hasClubGuard],
         data: {
-            roles: ['ADMIN_OVALTRACK', 'ADMIN_CLUB', 'COACH_ANALYST']
+            roles: ['ADMIN_OVALTRACK', 'ADMIN_CLUB', 'COACH_ANALYST'],
+            preload: true
         },
         loadComponent: () =>
             import('./features/match/selection-roster/selection-roster.component').then(

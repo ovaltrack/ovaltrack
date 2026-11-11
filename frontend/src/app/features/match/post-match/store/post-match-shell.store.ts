@@ -4,7 +4,7 @@ import { EMPTY, Subject, catchError, map, of, switchMap, takeUntil, tap } from '
 import { MatchService } from '../../services/match.service';
 import { Match } from '../../types/match.types';
 import { EMPTY_TIME_PLACEHOLDER, formatOnlyTime } from '../utils/match-review.utils';
-import { LoadingGate } from '../utils/loading-gate';
+import { LoadingGate } from '../../../../shared/utils/loading-gate';
 
 export type ShellStatus = 'loading' | 'ready' | 'error';
 

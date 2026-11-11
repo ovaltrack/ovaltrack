@@ -1,11 +1,11 @@
 import { signal } from '@angular/core';
 
-/** Tiempos de carga comunes a Eventos, Zonas y Estadísticas. */
+/** Tiempos de carga comunes a las vistas que esperan datos (post-partido, selección de partidos). */
 export const LOADING_INDICATOR_DELAY_MS = 100;
 export const LOADING_INDICATOR_MIN_VISIBLE_MS = 400;
 
 /**
- * Carga sin parpadeos, compartida por las tres vistas del análisis. `pending` sigue en true mientras la vista espera
+ * Carga sin parpadeos, compartida por las vistas que esperan datos. `pending` sigue en true mientras la vista espera
  * datos (no se dibuja el contenido); `showIndicator` (la pelota) se enciende solo si la carga supera `delayMs` y, una
  * vez encendido, queda al menos `minVisibleMs`: hasta entonces `pending` tampoco se apaga, así la pelota no aparece y
  * desaparece en un parpadeo. Una carga más rápida que `delayMs` pasa directo al contenido.
