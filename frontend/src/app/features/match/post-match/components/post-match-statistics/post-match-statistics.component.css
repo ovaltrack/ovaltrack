@@ -77,16 +77,7 @@
 }
 
 /* ---------- Estados ---------- */
-.state-box {
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
-  padding: 64px 24px; text-align: center; color: var(--text-secondary);
-  background: var(--surface); border: 2px solid var(--border-sport);
-  border-radius: var(--radius-xl); box-shadow: var(--shadow-elevation);
-}
-.state-box--inline { border: 0; box-shadow: none; border-radius: 0; }
-.state-box--error { color: var(--error); border-color: var(--error-border); }
-.state-box i { font-size: 2rem; }
-.state-box p { margin: 0; }
+.feedback-state--inline { border: 0; box-shadow: none; border-radius: 0; }
 .btn-outline {
   height: 44px; padding: 0 20px; border-radius: 10px; background: #fff; cursor: pointer;
   border: 1px solid var(--btn-outline-border); color: var(--btn-outline-fg); font-weight: 600;
@@ -182,7 +173,7 @@
 .players-layout { display: grid; grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); gap: 20px; align-items: start; }
 .players-card { display: flex; flex-direction: column; height: 600px; min-height: 0; }
 .players-card .form-card-header { flex: none; }
-.players-card .state-box--inline { flex: 1; }
+.players-card .feedback-state--inline { flex: 1; }
 .roster-scroll, .player-body {
   flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin;
   scrollbar-color: var(--border-sport) transparent;

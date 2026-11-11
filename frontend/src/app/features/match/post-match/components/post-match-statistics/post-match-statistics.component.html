@@ -5,13 +5,13 @@
       <app-rugby-ball-loader message="Calculando estadísticas del partido..." />
     }
   } @else if (errorMessage()) {
-    <div class="state-box state-box--error">
+    <div class="feedback-state feedback-state--error">
       <i class="bi bi-exclamation-triangle"></i>
       <p>{{ errorMessage() }}</p>
       <button type="button" class="btn-outline" (click)="goBack()">Volver</button>
     </div>
   } @else if (!hasEvents()) {
-    <div class="state-box">
+    <div class="feedback-state">
       <i class="bi bi-bar-chart"></i>
       <p>Este partido todavía no tiene eventos registrados.</p>
     </div>
@@ -171,7 +171,7 @@
           </div>
 
           @if (players().length === 0) {
-            <div class="state-box state-box--inline">
+            <div class="feedback-state feedback-state--inline">
               <i class="bi bi-people"></i>
               <p>No hay jugadores cargados para este partido.</p>
             </div>
@@ -232,7 +232,7 @@
               }
             </div>
           } @else {
-            <div class="state-box state-box--inline">
+            <div class="feedback-state feedback-state--inline">
               <i class="bi bi-person-lines-fill"></i>
               <p>Seleccioná un jugador del plantel para ver sus estadísticas.</p>
             </div>

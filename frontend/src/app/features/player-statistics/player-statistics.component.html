@@ -44,14 +44,14 @@
       <app-rugby-ball-loader message="Calculando estadísticas del jugador..." />
     }
     @case ('error') {
-      <div class="state-box state-box--error">
+      <div class="feedback-state feedback-state--error">
         <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
         <p>No se pudieron cargar las estadísticas de este jugador.</p>
       </div>
     }
     @default {
       @if (!hasMatches()) {
-        <div class="state-box">
+        <div class="feedback-state">
           <i class="bi bi-bar-chart" aria-hidden="true"></i>
           <p>Todavía no hay partidos finalizados con este jugador en la nómina.</p>
         </div>
@@ -138,7 +138,7 @@
               <app-rugby-ball-loader message="Calculando el partido..." />
             }
             @case ('error') {
-              <div class="state-box state-box--error">
+              <div class="feedback-state feedback-state--error">
                 <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
                 <p>No se pudieron cargar las estadísticas de este partido.</p>
                 <button type="button" class="btn btn-outline" (click)="openGeneral()">Ver estadísticas generales</button>
