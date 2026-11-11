@@ -34,7 +34,6 @@
   /* Fondo cal con líneas a 135° (el mismo de `body` en styles.css) */
   background-color: var(--bg-canvas);
   background-image: var(--canvas-image);
-  background-attachment: fixed;
 }
 
 /* ---------- Tipografía numérica (§2) ---------- */
