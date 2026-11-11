@@ -20,6 +20,7 @@ import { RosterPlayerInfo } from '../statistics/calculators';
 import { LocalDatabaseService } from '../../local-database/services/local-database.service';
 import { HALF_DURATION_SECONDS } from '../types/match.types';
 import { UserContextService } from '../../../core/services/user-context.service';
+import { ThemeService } from '../../../core/services/theme.service';
 
 @Component({
   selector: 'ot-halftime-summary',
@@ -41,7 +42,9 @@ export class HalftimeSummaryComponent implements OnInit {
 
   readonly matchId = signal<string>('');
   readonly activeTab = signal<'general' | 'players'>('general');
-  readonly currentTheme = signal<'light' | 'dark'>('light');
+  private readonly themeService = inject(ThemeService);
+  /** Tema global de la app: el botón de esta pantalla lo cambia para todas. */
+  readonly currentTheme = this.themeService.theme;
   readonly isLoading = signal<boolean>(true);
   readonly isOffline = signal<boolean>(!navigator.onLine);
   readonly homeTeam = computed(() => this.userContextService.currentClub()?.name || 'Mi Club');
@@ -176,7 +179,7 @@ export class HalftimeSummaryComponent implements OnInit {
   }
 
   toggleTheme(): void {
-    this.currentTheme.update(theme => (theme === 'light' ? 'dark' : 'light'));
+    this.themeService.toggleTheme();
   }
 
   switchTab(tab: 'general' | 'players'): void {

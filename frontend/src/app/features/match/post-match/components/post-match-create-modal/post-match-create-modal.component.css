@@ -69,3 +69,8 @@
   border-top: 1px solid var(--border-sport-subtle);
 }
 
+.modal-footer-actions .btn {
+  height: 44px;
+  padding: 0 20px;
+}
+

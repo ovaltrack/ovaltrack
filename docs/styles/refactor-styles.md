@@ -15,8 +15,9 @@ Decisiones del usuario: literal → token solo si el token vale lo mismo en clar
 
 - Rama `refactor/styles`: 29 commits sobre `main` (`main` no se tocó). Las ramas `refactor/styles-dead-code` (fase 1) y `refactor/styles-deduplicacion` (fase 2) quedaron incluidas y son redundantes.
 - Resultado: CSS de 20.492 a 18.561 líneas; `opponent-manager` deja de cargar ~1.300 líneas de Partidos; bundle inicial ~ −2,8 kB.
-- Verificado: build de producción OK, `./ds test-front` 232/232, comparación de equivalencia por selector, clases usadas siguen definidas. **Falta la verificación visual manual** (390/1024/1440 px, claro y oscuro); la lista de pantallas está en el PR.
-- `supp/styles/` (ignorado por git) tiene `cambios.txt` (resumen para el grupo), `pr.md` (descripción del PR único), `pr_1.md` y `pr_2.md` (por fase).
+- Correcciones tras comparar contra `main` (commits `fix(styles)`): se restauraron la animación `modalIn` del modal de Partidos y Rivales (el `@keyframes` debe vivir en la misma hoja que la regla `animation`), el padding del botón del pie del modal de alta post-partido en celular y el fondo `--surface` de `.sheet-wrapper` en oscuro. Caso latente: se quitó `.status-chip--danger`; hoy no se ve porque `derived-metrics.ts` nunca devuelve `danger`, pero `MetricStatusType` lo permite.
+- Verificado: build de producción OK, `./ds test-front` en verde (448 pruebas), comparación de equivalencia por selector, clases usadas siguen definidas. **Falta la verificación visual manual** (390/1024/1440 px, claro y oscuro); la lista de pantallas está en el PR.
+- `supp/refactor-styles/` (ignorado por git) tiene `cambios.txt` (resumen para el grupo) y `pr.md` (título y descripción del PR).
 
 ## 3. Cómo quedaron organizados los estilos
 
@@ -26,16 +27,16 @@ Tres niveles (detalle en `DESIGN_SYSTEM.md` §10):
 2. **CSS compartido de feature** `features/<dominio>/styles/*.css`, incluido con `styleUrls: ['<compartido>', './x.component.css']` (el compartido primero).
 3. **CSS del componente**: solo lo específico.
 
-| Archivo compartido | Lo incluyen |
-|---|---|
+| Archivo compartido                                                                                    | Lo incluyen                                                        |
+| ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
 | `admin/styles/admin-panel.css`, `auth/styles/register-form.css`, `legal/legal-page.css` (ya existían) | tablas/diálogos de admin; formularios de registro; páginas legales |
-| `match/post-match/styles/kpi-strip.css` | `post-match-kpi-strip`, `zone-kpi-strip` |
-| `match/post-match/styles/filter-pills.css` | `post-match-zones`, `post-match-timeline` |
-| `match/styles/match-stats.css` | `halftime-summary`, `current-stats-modal` |
-| `match/styles/match-shared.css` | `match-selection`, `opponent-manager` |
-| `division/styles/division-lists.css` | `division-list`, `division-coach-list`, `division-player-list` |
-| `division/styles/division-forms.css` | `division-form`, `division-player-form` |
-| `home/views/styles/home-views.css` | `admin-home`, `coach-home`, `player-home` |
+| `match/post-match/styles/kpi-strip.css`                                                               | `post-match-kpi-strip`, `zone-kpi-strip`                           |
+| `match/post-match/styles/filter-pills.css`                                                            | `post-match-zones`, `post-match-timeline`                          |
+| `match/styles/match-stats.css`                                                                        | `halftime-summary`, `current-stats-modal`                          |
+| `match/styles/match-shared.css`                                                                       | `match-selection`, `opponent-manager`                              |
+| `division/styles/division-lists.css`                                                                  | `division-list`, `division-coach-list`, `division-player-list`     |
+| `division/styles/division-forms.css`                                                                  | `division-form`, `division-player-form`                            |
+| `home/views/styles/home-views.css`                                                                    | `admin-home`, `coach-home`, `player-home`                          |
 
 Globales nuevos: `.feedback-state` (+ `--error`; estado de carga/error de Zonas, Estadísticas y Estadísticas de jugador) y `.hud-brand--fluid`. Se eliminó `src/styles/ovaltrack-tokens.css` (las fuentes Manrope/Space Grotesk y `--ot-radius-md` están en `styles.css`) y `src/styles/live-capture.css`. En Inicio del entrenador `.pending-*` pasó a `.inbox-*`.
 
@@ -45,7 +46,7 @@ Globales nuevos: `.feedback-state` (+ `--error`; estado de carga/error de Zonas,
 2. **Overrides oscuros y estados.** `:host-context([data-theme="dark"]) .x` pesa más que `.x.active`/`.x:hover` claros. Borrar el override oscuro de `.x` deja que la regla clara de estado le gane a la oscura base. Los overrides de `:hover`/`.active` se dejaron.
 3. **Varias clases en un mismo elemento.** Ej.: `status-pill status-not_started` en `match-selection`: `.status-pill` (0,2,0, posterior) pisaba el fondo claro del estado, y borrar el override oscuro habría mostrado el color claro en oscuro. Antes de borrar un override, mirar las otras clases del elemento en la plantilla; si hay clases dinámicas (`[ngClass]`, `{{ }}`) no se toca.
 4. **`@keyframes` por hoja de estilos.** Angular renombra los keyframes en cada hoja; la regla que los usa debe estar en el mismo archivo (por eso `spin` quedó junto a `.spinner` y no en `match-stats.css`).
-5. **Fugas de un CSS compartido.** Cada componente incluye *todo* el compartido: hay que comprobar que ninguna regla pueda matchear elementos de la plantilla de un componente que no la tenía. Ocurrió con `@media .app` y `.form-actions` (se separó `division-forms.css`).
+5. **Fugas de un CSS compartido.** Cada componente incluye _todo_ el compartido: hay que comprobar que ninguna regla pueda matchear elementos de la plantilla de un componente que no la tenía. Ocurrió con `@media .app` y `.form-actions` (se separó `division-forms.css`).
 6. **Orden de la cascada al mover reglas.** El compartido va primero; una regla local de igual especificidad que antes aparecía antes de la movida pasaría a ganar. Comparar orden, especificidad, propiedades y elemento.
 7. **Fallbacks de `var()`.** `var(--x, valor)` con `--x` definido en `:root` equivale a `var(--x)`. No tocar tokens locales ni indefinidos (`--danger`, `--accent`, `--heat`, `--role-*`).
 8. **Nombres que chocan.** `.state-box`, `.scoreboard`, `.custom-input`, `.spinner`, `.status-chip` existen con estilos distintos en varias pantallas: nada de eso va a global con el mismo nombre.
@@ -65,24 +66,10 @@ Se usaron scripts temporales de Python con un parser de llaves (no regex sobre e
 ## 6. Pendientes y posibles siguientes pasos
 
 Cambian lo que se ve, por eso no se hicieron (decidir aparte):
+
 - `match-selection`: en claro todas las píldoras de estado se ven iguales (`.status-pill` pisa a `.status-*`); las reglas claras por estado se conservaron para el arreglo.
 - `post-match-zones` / `post-match-statistics`: su `.btn-outline` local fija fondo blanco y en oscuro queda texto claro sobre blanco.
 - `carga-en-vivo`: `.confirm-icon` usa `var(--green-600)` (token inexistente).
 - `PlayerRegisterComponent` no está referenciado por ninguna ruta.
 
 Posibles mejoras (bajo ahorro o mayor riesgo, hoy fuera de alcance): unificar `app-modal` y `deactivate-modal`; backdrop común de modales; avatares/tablas/tarjetas base (valores distintos); token `--selected-bg` para los estados `.active` (requiere resolver la trampa 2); `.btn*`/`.form-control` locales (trampa 1).
-
-## 7. Prompt para retomar en otra sesión
-
-Pegar tal cual, completando `<TAREA>`:
-
-```
-Retomá la limpieza de estilos del frontend de OvalTrack (rama refactor/styles).
-Contexto: leé SOLO docs/styles/refactor-styles.md (y DESIGN_SYSTEM.md §10 si hace falta). No re-explores el repo ni releas todos los CSS.
-Reglas: no cambiar cómo se ve ninguna pantalla (claro/oscuro); respetar las trampas de la sección 4; cambios mínimos y un commit por refactor (`refactor(styles): <técnica> — <razón>`); responder en español; sin npm/ng en el host (build con docker exec ovaltrack-frontend ...); no hacer push ni PR.
-Antes de tocar un archivo: verificá en el código que existan las clases/rutas citadas.
-Verificá cada cambio con build + ./ds test-front + equivalencia por selector (sección 5), y listá los pasos manuales que me tocan.
-Tarea: <TAREA>
-```
-
-Ejemplos de `<TAREA>`: "corregir los pendientes de la sección 6 uno por uno, pidiéndome confirmación antes de cada cambio visual"; "revisar el feedback del PR y ajustar"; "aplicar la misma limpieza a <carpeta o feature>".

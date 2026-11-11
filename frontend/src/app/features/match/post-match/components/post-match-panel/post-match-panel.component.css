@@ -262,6 +262,7 @@
 }
 
 :host-context([data-theme="dark"]) .sheet-wrapper {
+  background: var(--surface);
   border-top-color: rgba(163, 230, 53, 0.3);
   box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.4);
 }
