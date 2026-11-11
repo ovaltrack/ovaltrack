@@ -1,0 +1,159 @@
+/* Generado por scripts/icons/build-icon-subset.py: no editar a mano.
+   Solo los íconos usados de Bootstrap Icons (MIT) y Tabler Icons (MIT). */
+
+@font-face {
+  font-display: block;
+  font-family: "bootstrap-icons";
+  src: url("./bootstrap-icons.woff2") format("woff2");
+}
+
+.bi::before,
+[class^="bi-"]::before,
+[class*=" bi-"]::before {
+  display: inline-block;
+  font-family: bootstrap-icons !important;
+  font-style: normal;
+  font-weight: normal !important;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  vertical-align: -.125em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.bi-arrow-clockwise::before { content: "\f116"; }
+.bi-arrow-counterclockwise::before { content: "\f117"; }
+.bi-arrow-down-right::before { content: "\f123"; }
+.bi-arrow-left::before { content: "\f12f"; }
+.bi-arrow-repeat::before { content: "\f130"; }
+.bi-arrow-right::before { content: "\f138"; }
+.bi-arrow-up::before { content: "\f148"; }
+.bi-arrow-up-right::before { content: "\f144"; }
+.bi-bar-chart::before { content: "\f17e"; }
+.bi-bar-chart-line::before { content: "\f17c"; }
+.bi-box-arrow-in-right::before { content: "\f1be"; }
+.bi-box-arrow-right::before { content: "\f1c3"; }
+.bi-broadcast::before { content: "\f1d6"; }
+.bi-building::before { content: "\f1dd"; }
+.bi-building-add::before { content: "\f867"; }
+.bi-buildings::before { content: "\f87d"; }
+.bi-calendar-event::before { content: "\f1e8"; }
+.bi-calendar-fill::before { content: "\f1e9"; }
+.bi-calendar3::before { content: "\f214"; }
+.bi-chat-text::before { content: "\f267"; }
+.bi-chat-text-fill::before { content: "\f266"; }
+.bi-check-circle::before { content: "\f26b"; }
+.bi-check-circle-fill::before { content: "\f26a"; }
+.bi-check-lg::before { content: "\f633"; }
+.bi-check2::before { content: "\f272"; }
+.bi-check2-circle::before { content: "\f270"; }
+.bi-chevron-down::before { content: "\f282"; }
+.bi-chevron-left::before { content: "\f284"; }
+.bi-chevron-right::before { content: "\f285"; }
+.bi-chevron-up::before { content: "\f286"; }
+.bi-circle::before { content: "\f28a"; }
+.bi-clipboard-check::before { content: "\f28b"; }
+.bi-clipboard-data::before { content: "\f28c"; }
+.bi-clock-history::before { content: "\f292"; }
+.bi-cloud-check::before { content: "\f299"; }
+.bi-dash::before { content: "\f2ea"; }
+.bi-diagram-3::before { content: "\f2ee"; }
+.bi-envelope::before { content: "\f32f"; }
+.bi-envelope-check::before { content: "\f68c"; }
+.bi-envelope-paper::before { content: "\f73d"; }
+.bi-exclamation-circle::before { content: "\f333"; }
+.bi-exclamation-circle-fill::before { content: "\f332"; }
+.bi-exclamation-triangle::before { content: "\f33b"; }
+.bi-exclamation-triangle-fill::before { content: "\f33a"; }
+.bi-eye::before { content: "\f341"; }
+.bi-eye-slash::before { content: "\f340"; }
+.bi-file-earmark-check::before { content: "\f360"; }
+.bi-funnel-fill::before { content: "\f3e0"; }
+.bi-gear::before { content: "\f3e5"; }
+.bi-geo-alt::before { content: "\f3e8"; }
+.bi-graph-up::before { content: "\f3f2"; }
+.bi-grid-1x2::before { content: "\f3f4"; }
+.bi-grid-3x3::before { content: "\f3fa"; }
+.bi-grid-3x3-gap::before { content: "\f3f9"; }
+.bi-hourglass-split::before { content: "\f41f"; }
+.bi-house::before { content: "\f425"; }
+.bi-inbox::before { content: "\f42d"; }
+.bi-info-circle::before { content: "\f431"; }
+.bi-journal-x::before { content: "\f445"; }
+.bi-layers::before { content: "\f45b"; }
+.bi-lightning-charge::before { content: "\f46d"; }
+.bi-link-45deg::before { content: "\f470"; }
+.bi-list-check::before { content: "\f473"; }
+.bi-list-ul::before { content: "\f478"; }
+.bi-map::before { content: "\f47f"; }
+.bi-moon::before { content: "\f497"; }
+.bi-pencil::before { content: "\f4cb"; }
+.bi-people::before { content: "\f4d0"; }
+.bi-person::before { content: "\f4e1"; }
+.bi-person-badge::before { content: "\f4d3"; }
+.bi-person-dash::before { content: "\f4d9"; }
+.bi-person-gear::before { content: "\f8a7"; }
+.bi-person-lines-fill::before { content: "\f4db"; }
+.bi-person-vcard::before { content: "\f8c9"; }
+.bi-person-x::before { content: "\f4e0"; }
+.bi-plus-circle::before { content: "\f4fa"; }
+.bi-plus-circle-fill::before { content: "\f4f9"; }
+.bi-plus-lg::before { content: "\f64d"; }
+.bi-printer::before { content: "\f501"; }
+.bi-search::before { content: "\f52a"; }
+.bi-shield::before { content: "\f53f"; }
+.bi-slash-circle::before { content: "\f567"; }
+.bi-sliders::before { content: "\f56b"; }
+.bi-speedometer2::before { content: "\f580"; }
+.bi-sun::before { content: "\f5a2"; }
+.bi-trash::before { content: "\f5de"; }
+.bi-trash3::before { content: "\f78b"; }
+.bi-trophy::before { content: "\f5e7"; }
+.bi-wifi-off::before { content: "\f61b"; }
+.bi-x-lg::before { content: "\f659"; }
+
+@font-face {
+  font-family: "tabler-icons";
+  font-style: normal;
+  font-weight: 400;
+  src: url("./tabler-icons.woff2") format("woff2");
+}
+
+.ti {
+  font-family: "tabler-icons" !important;
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.ti-arrow-back-up:before { content: "\eb77"; }
+.ti-arrow-left:before { content: "\ea19"; }
+.ti-chart-bar:before { content: "\ea59"; }
+.ti-check:before { content: "\ea5e"; }
+.ti-chevron-left:before { content: "\ea60"; }
+.ti-clock-pause:before { content: "\f548"; }
+.ti-clock-play:before { content: "\f549"; }
+.ti-cloud-check:before { content: "\f84d"; }
+.ti-cloud-off:before { content: "\ed3e"; }
+.ti-cloud-upload:before { content: "\ea75"; }
+.ti-filter:before { content: "\eaa5"; }
+.ti-flag-check:before { content: "\fb8c"; }
+.ti-history:before { content: "\ebea"; }
+.ti-history-off:before { content: "\f3fb"; }
+.ti-layout-grid:before { content: "\edba"; }
+.ti-list-details:before { content: "\ef40"; }
+.ti-moon:before { content: "\eaf8"; }
+.ti-player-pause:before { content: "\ed45"; }
+.ti-player-play:before { content: "\ed46"; }
+.ti-player-play-filled:before { content: "\f691"; }
+.ti-sun:before { content: "\eb30"; }
+.ti-trash:before { content: "\eb41"; }
+.ti-user-off:before { content: "\ecf9"; }
+.ti-users:before { content: "\ebf2"; }
+.ti-x:before { content: "\eb55"; }
