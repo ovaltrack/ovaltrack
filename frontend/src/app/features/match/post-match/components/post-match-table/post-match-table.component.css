@@ -135,11 +135,6 @@
   box-shadow: inset 4px 0 0 var(--unassigned-border) !important;
 }
 
-:host-context([data-theme="dark"]) .table-grid-row.unassigned-row {
-  background-color: var(--warning-tint);
-  box-shadow: inset 3px 0 0 var(--warning);
-}
-
 :host-context([data-theme="dark"]) .table-grid-row.selected-row {
   background-color: var(--grass-tint) !important;
   box-shadow: inset 4px 0 0 var(--warning) !important;
@@ -245,7 +240,6 @@
 }
 
 :host-context([data-theme="dark"]) .unassigned-inline-select {
-  background-color: var(--warning-tint);
   border-color: var(--warning-border);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23fbbf24' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
 }
@@ -528,12 +522,6 @@
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-}
-
-/* Modo oscuro: hover del selector «sin asignar» en ámbar de advertencia */
-:host-context([data-theme="dark"]) .unassigned-inline-select:hover:not(:disabled) {
-  background-color: var(--warning-tint);
-  border-color: var(--warning);
 }
 
 /* Modo oscuro: texto secundario del sistema en las notas y el rival (antes gris oscuro fijo y gris tenue) */

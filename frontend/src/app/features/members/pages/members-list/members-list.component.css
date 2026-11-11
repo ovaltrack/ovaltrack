@@ -597,12 +597,6 @@
    ========================================================================== */
 :host-context([data-theme="dark"]) .hud-search input {
   background: var(--surface-alt);
-  border-color: var(--border-strong);
-  color: var(--text-primary);
-}
-
-:host-context([data-theme="dark"]) .hud-search input::placeholder {
-  color: var(--text-muted);
 }
 
 :host-context([data-theme="dark"]) .hud-search input:focus {
@@ -611,13 +605,11 @@
 }
 
 :host-context([data-theme="dark"]) .filter-toolbar {
-  border-color: var(--border);
   box-shadow: none;
 }
 
 :host-context([data-theme="dark"]) .filter-toolbar .status-segment {
   background: var(--surface-alt);
-  border-color: var(--border-sport);
 }
 
 :host-context([data-theme="dark"]) .filter-toolbar .status-tab {
@@ -646,7 +638,6 @@
 
 :host-context([data-theme="dark"]) .filter-toolbar .filters {
   background: var(--surface-alt);
-  border-color: var(--border-sport);
 }
 
 :host-context([data-theme="dark"]) .filter-toolbar .chip {
@@ -676,7 +667,6 @@
 :host-context([data-theme="dark"]) .role-btn {
   background: var(--surface-alt);
   border-color: var(--border-strong);
-  color: var(--text-primary);
 }
 
 :host-context([data-theme="dark"]) .role-btn:hover:not(:disabled) {

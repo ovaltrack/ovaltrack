@@ -92,6 +92,5 @@ app-zone-territory-grid { margin-bottom: 16px; }
 /* Modo oscuro: la ayuda activa usa el acento sobre la selección */
 :host-context([data-theme="dark"]) .help-btn:hover,
 :host-context([data-theme="dark"]) .help-btn[aria-expanded='true'] {
-  background: var(--grass-tint-strong);
   border-color: var(--grass);
 }

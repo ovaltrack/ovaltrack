@@ -379,12 +379,10 @@
 
 :host-context([data-theme="dark"]) .data-item {
   background: var(--surface-alt);
-  border-color: var(--border);
 }
 
 :host-context([data-theme="dark"]) .data-item:hover {
   background: var(--surface-hover);
-  border-color: var(--border-sport);
 }
 
 :host-context([data-theme="dark"]) .data-label {
@@ -407,10 +405,6 @@
   background: var(--surface-alt);
   border-color: var(--border-strong);
   color: var(--text-primary);
-}
-
-:host-context([data-theme="dark"]) .custom-input::placeholder {
-  color: var(--text-muted);
 }
 
 :host-context([data-theme="dark"]) .custom-input:focus {

@@ -195,10 +195,6 @@
   border-color: var(--grass);
 }
 
-:host-context([data-theme="dark"]) .handle:hover::before {
-  background: var(--grass-tint-strong);
-}
-
 :host-context([data-theme="dark"]) .hover-gap {
   outline-color: var(--grass);
   background: var(--grass-tint);

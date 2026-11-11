@@ -142,7 +142,6 @@
 
 :host-context([data-theme="dark"]) .match-card-shell {
   background: var(--surface);
-  border-color: var(--border);
   box-shadow: var(--shadow-elevation);
 }
 

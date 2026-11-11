@@ -315,12 +315,6 @@
 :host-context([data-theme="dark"]) .data-table th {
   background: var(--surface-header-start);
   color: var(--text-muted);
-  border-bottom-color: var(--border-sport);
-}
-
-:host-context([data-theme="dark"]) .data-table td {
-  border-bottom-color: var(--border);
-  color: var(--text-primary);
 }
 
 :host-context([data-theme="dark"]) .data-table tbody tr:hover {
@@ -361,7 +355,6 @@
 :host-context([data-theme="dark"]) .btn-primary:hover {
   background-color: var(--btn-primary-hover);
   border-color: var(--btn-primary-hover);
-  color: var(--btn-primary-fg);
   box-shadow: var(--shadow-button-hover);
 }
 
@@ -376,10 +369,6 @@
 :host-context([data-theme="dark"]) .btn-outline:hover {
   background-color: var(--surface-hover);
   border-color: var(--text-secondary);
-  color: var(--text-primary);
-}
-
-:host-context([data-theme="dark"]) .empty-state h2 {
   color: var(--text-primary);
 }
 

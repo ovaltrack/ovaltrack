@@ -233,7 +233,6 @@
 /* Modo oscuro: filtro activo con el tinte de selección y el acento */
 :host-context([data-theme="dark"]) .filter-pill.active,
 :host-context([data-theme="dark"]) .filter-pill.active:hover {
-  background: var(--grass-tint-strong);
   border-color: var(--grass);
   color: var(--grass);
   box-shadow: inset 0 0 0 1px var(--grass);
