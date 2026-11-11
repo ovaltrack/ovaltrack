@@ -91,25 +91,39 @@
 }
 
 /* Modo Oscuro */
+/* «Sin jugador»: ámbar de advertencia; el rayado avisa sin gritar (ámbar sobre el carril hundido) */
+:host-context([data-theme="dark"]) .text-amber {
+  color: var(--warning);
+}
+
+:host-context([data-theme="dark"]) .strip-accent-bar.is-warning {
+  background: var(--warning);
+}
+
+:host-context([data-theme="dark"]) .legend-unassigned {
+  background: repeating-linear-gradient(45deg, var(--warning), var(--warning) 2px, color-mix(in srgb, var(--warning) 38%, var(--surface-track)) 2px, color-mix(in srgb, var(--warning) 38%, var(--surface-track)) 4px);
+  border-color: var(--warning-border);
+}
+
 :host-context([data-theme="dark"]) .strip-progress-track {
-  background: rgba(163, 230, 53, 0.15);
+  background: var(--grass-tint);
 }
 
 :host-context([data-theme="dark"]) .strip-filter-btn {
-  color: #a3e635;
+  color: var(--grass);
 }
 
 :host-context([data-theme="dark"]) .strip-filter-btn:hover {
-  background: rgba(163, 230, 53, 0.15);
+  background: var(--grass-tint);
 }
 
 :host-context([data-theme="dark"]) .strip-filter-btn.active {
-  background: rgba(245, 158, 11, 0.2);
-  color: #fbbf24;
+  background: var(--warning-tint);
+  color: var(--warning);
 }
 
 :host-context([data-theme="dark"]) .legend-text {
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 /* Responsive */

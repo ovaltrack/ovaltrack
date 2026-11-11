@@ -192,16 +192,16 @@
    ========================================================================== */
 
 :host-context([data-theme="dark"]) .division-card:hover {
-  border-color: #2a3c5a;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+  border-color: var(--border-sport);
+  box-shadow: var(--shadow-elevation-hover);
 }
 
 :host-context([data-theme="dark"]) .division-badge-icon {
-  border-color: #2a3c5a;
+  border-color: var(--border-sport);
 }
 
 :host-context([data-theme="dark"]) .division-meta,
 :host-context([data-theme="dark"]) .meta-gender {
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 

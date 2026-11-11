@@ -640,6 +640,19 @@
 }
 
 /* Modo Oscuro */
+/* Sin jugador: el mismo rayado del claro (45°, 2 px), pero en ámbar sobre ámbar apagado: sin el contraste de cinta de advertencia; la regla base usa !important */
+:host-context([data-theme="dark"]) .marker.marker-unassigned {
+  background: repeating-linear-gradient(45deg, var(--warning), var(--warning) 2px, color-mix(in srgb, var(--warning) 38%, var(--surface-track)) 2px, color-mix(in srgb, var(--warning) 38%, var(--surface-track)) 4px) !important;
+  border: 1px solid var(--warning-border) !important;
+}
+
 :host-context([data-theme="dark"]) .marker.marker-selected {
-  box-shadow: 0 0 0 1px #151d14, 0 0 0 3px #a3e635, 0 2px 8px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 0 1px #151d14, 0 0 0 3px var(--grass), 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Modo oscuro: el filtro «solo sin jugador» activo va en ámbar de advertencia */
+:host-context([data-theme="dark"]) .filter-pill-btn.unassigned-pill.active {
+  background: var(--warning-tint);
+  border-color: var(--warning);
+  color: var(--warning);
 }

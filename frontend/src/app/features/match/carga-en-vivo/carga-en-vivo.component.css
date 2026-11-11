@@ -44,17 +44,24 @@
 	--purple-900: #7952B3;
 	--purple-100: #e5d3ff;
 
+	/* Chips de tarjeta */
+	--card-yellow: #e9b54f;
+	--card-red: #f07a72;
+
 	/* Neutros — Modo claro (default en cancha) */
 	--paused-bg: var(--bg);
 
-	/* Tipografías */
-	--font-manrope: 'Manrope', system-ui, sans-serif;
-	--font-space-grotesk: 'Space Grotesk', 'Courier New', monospace;
+	/* HUD (cabecera, reloj, pie): en claro son las superficies de siempre; en oscuro quedan hundidos */
+	--hud-bg: var(--surface);
+	--hud-well: var(--surface-alt);
+	--hud-well-shadow: none;
+	--ctl-border: var(--border);
+	--score-own: var(--grass-deep);
 
 	width: 100vw;
 	max-width: 100%;
 	height: 100dvh;
-	font-family: var(--font-manrope);
+	font-family: var(--font-body);
 	background: var(--bg);
 	color: var(--text);
 	border: 0;
@@ -64,17 +71,19 @@
 
 /* Override: si el elemento tiene data-theme, usa eso directamente sin media query */
 .live-capture[data-theme="dark"] {
-	--bg: #12161B;
+	/* Neutros (--bg, --surface, --surface-alt, --border) heredados de styles.css; la posesión conserva su color */
 	--bg-own: #0d642c;
 	--bg-neutral: #1e3c63;
 	--bg-away: #772c2c;
-	--surface: #1B2027;
-	--surface-alt: #232931;
 	--surface-alt-chip: #EEF1F4;
-	--text: #F2F4F6;
-	--text-2: #e5f1ff;
-	--border: #2E343C;
-	--navy-text: var(--navy-100);
+	--text: var(--text-primary);
+	--text-2: var(--text-primary);
+	--navy-text: var(--text-primary);
+	--hud-bg: var(--surface-sunken);
+	--hud-well: var(--surface-track);
+	--hud-well-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
+	--ctl-border: var(--border-strong);
+	--score-own: var(--grass);
 }
 
 .live-capture[data-theme="light"] {
@@ -105,33 +114,24 @@
 	align-items: center;
 	position: relative;
 	gap: var(--ot-stack-default);
-	padding: var(--ot-stack-default) var(--ot-margin-screen);
-	background: var(--surface);
+	padding: calc(12px * var(--ot-live-scale)) var(--ot-margin-screen);
+	background: var(--hud-bg);
 	border-bottom: 1px solid var(--border);
 }
 
-.live-capture__brand {
+.live-capture__nav {
 	grid-column: 1;
 	grid-row: 1;
 	display: flex;
 	align-items: center;
 	gap: var(--ot-stack-compact);
-	flex: 0 1 auto;
 	min-width: 0;
-}
-
-.live-capture__brand-icon {
-	display: block;
-	width: calc(180px * var(--ot-live-scale));
-	height: calc(60px * var(--ot-live-scale));
-	flex: 0 0 auto;
-	object-fit: contain;
 }
 
 .live-capture__scoreboard {
 	display: flex;
 	align-items: center;
-	gap: calc(22px * var(--ot-live-scale));
+	gap: var(--ot-stack-default);
 	flex-wrap: nowrap;
 	min-width: 0;
 	grid-column: 2;
@@ -140,39 +140,69 @@
 }
 
 .live-capture__score {
-	font-family: var(--font-manrope);
-	font-weight: 700;
+	font-family: var(--font-body);
+	font-weight: 800;
 	font-size: var(--ot-size-headline-md);
 	min-width: 0;
-	overflow-wrap: anywhere;
+	white-space: nowrap;
 	text-align: center;
 	color: var(--text);
 }
 
 .live-capture__score-value {
-	font-family: var(--font-space-grotesk);
-	color: var(--text);
-	font-weight: 700;
+	margin-inline: calc(6px * var(--ot-live-scale));
 	font-variant-numeric: tabular-nums;
 }
 
+.live-capture__score-own {
+	color: var(--score-own);
+}
+
+.live-capture__score-sep {
+	margin-inline: calc(6px * var(--ot-live-scale));
+	color: var(--text-muted);
+	font-weight: 600;
+}
+
+.live-capture__score-rival {
+	color: var(--team-rival);
+}
+
+/* Reloj en un carril hundido, con el botón de pausa adentro */
 .live-capture__clock {
 	display: flex;
 	align-items: center;
-	gap: var(--ot-stack-compact);
-	background: var(--surface-alt);
+	gap: calc(12px * var(--ot-live-scale));
+	background: var(--hud-well);
+	box-shadow: var(--hud-well-shadow);
 	border: 1px solid var(--border);
-	border-radius: var(--ot-radius-default);
-	padding: 6px 14px;
+	border-radius: calc(12px * var(--ot-live-scale));
+	padding: calc(4px * var(--ot-live-scale)) calc(4px * var(--ot-live-scale)) calc(4px * var(--ot-live-scale)) calc(16px * var(--ot-live-scale));
 }
 
 .live-capture__clock-time {
-	font-family: var(--font-space-grotesk);
-	font-weight: 700;
-	font-size: calc(26px * var(--ot-live-scale));
-	letter-spacing: -0.02em;
+	font-family: var(--font-mono);
+	font-weight: 600;
+	font-size: calc(28px * var(--ot-live-scale));
+	letter-spacing: 0.02em;
 	color: var(--navy-text);
 	font-variant-numeric: tabular-nums;
+}
+
+.live-capture__period {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: calc(44px * var(--ot-live-scale));
+	height: calc(36px * var(--ot-live-scale));
+	padding: 0 calc(12px * var(--ot-live-scale));
+	border-radius: 999px;
+	background: var(--surface-alt);
+	color: var(--text);
+	font-family: var(--font-body);
+	font-weight: 700;
+	font-size: var(--ot-size-data-mono);
+	white-space: nowrap;
 }
 
 .live-capture__actions {
@@ -182,37 +212,49 @@
 	display: flex;
 	align-items: center;
 	gap: var(--ot-stack-compact);
-	flex: 0 1 auto;
 	min-width: 0;
 }
 
+/* Estado de sincronización: caja cuadrada con el tinte del estado */
 .live-capture__sync {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: none;
+	width: var(--ot-touch-target-min);
+	height: var(--ot-touch-target-min);
+	border-radius: calc(10px * var(--ot-live-scale));
 	font-size: calc(18px * var(--ot-live-scale));
 }
 
 .live-capture__sync--ok {
-	color: var(--green-500);
+	color: var(--success);
+	background: var(--success-tint);
 }
 
 .live-capture__sync--off {
-	color: var(--orange-500);
+	color: var(--warning);
+	background: var(--warning-tint);
 }
 
 .icon-btn {
-	width: calc(40px * var(--ot-live-scale));
-	height: calc(40px * var(--ot-live-scale));
-	min-width: var(--ot-touch-target-min);
-	min-height: var(--ot-touch-target-min);
+	flex: none;
+	width: var(--ot-touch-target-min);
+	height: var(--ot-touch-target-min);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background: var(--surface-alt);
-	border: 1px solid var(--border);
-	border-radius: var(--ot-radius-lg);
+	background: transparent;
+	border: 1px solid var(--ctl-border);
+	border-radius: calc(10px * var(--ot-live-scale));
 	color: var(--navy-text);
+	font-size: calc(18px * var(--ot-live-scale));
 	cursor: pointer;
-	font-weight: 600;
-	transition: all 0.2s ease;
+	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.live-capture__clock .icon-btn {
+	background: var(--surface-alt);
 }
 
 .icon-btn:hover {
@@ -222,16 +264,25 @@
 }
 
 .btn--outline {
+	display: inline-flex;
+	align-items: center;
+	gap: calc(8px * var(--ot-live-scale));
 	background: transparent;
-	border: 1px solid var(--navy-100);
+	border: 1px solid var(--ctl-border);
 	color: var(--navy-text);
-	font-family: var(--font-manrope);
+	font-family: var(--font-body);
 	font-weight: 600;
-	padding: calc(8px * var(--ot-live-scale)) calc(16px * var(--ot-live-scale));
+	font-size: calc(14px * var(--ot-live-scale));
+	white-space: nowrap;
+	padding: 0 calc(16px * var(--ot-live-scale));
 	min-height: var(--ot-touch-target-min);
 	cursor: pointer;
-	border-radius: var(--ot-radius-lg);
-	transition: all 0.2s ease;
+	border-radius: calc(10px * var(--ot-live-scale));
+	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.btn--outline .ti {
+	font-size: calc(16px * var(--ot-live-scale));
 }
 
 .btn--outline:hover {
@@ -372,10 +423,10 @@
 }
 
 .event-catalog__label {
-	font-family: var(--font-manrope);
-	font-weight: 700;
+	font-family: var(--font-mono);
+	font-weight: 600;
 	font-size: var(--ot-size-label-caps);
-	letter-spacing: 0.05em;
+	letter-spacing: 0.14em;
 	text-transform: uppercase;
 	color: var(--text-2);
 	margin: 0 0 var(--ot-stack-compact);
@@ -399,15 +450,18 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	gap: calc(12px * var(--ot-live-scale));
 	text-align: center;
 	padding: calc(12px * var(--ot-live-scale)) calc(10px * var(--ot-live-scale));
 	background: var(--navy-700);
-	border: 2px solid var(--navy-900);
-	border-radius: var(--ot-radius-lg);
-	font-family: var(--font-manrope);
-	font-weight: 1000;
+	/* Borde fino y sombra: el botón se recorta sobre el fondo de posesión */
+	border: 1px solid rgba(255, 255, 255, 0.16);
+	border-radius: calc(12px * var(--ot-live-scale));
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 6px 14px rgba(0, 0, 0, 0.35);
+	font-family: var(--font-body);
+	font-weight: 800;
 	/* Se achica en tablet (por ancho y por alto) para que el catálogo entre sin scroll */
-	font-size: clamp(18px, min(2.2vw, 3.4dvh), calc(30px * var(--ot-live-scale)));
+	font-size: clamp(16px, min(1.8vw, 2.9dvh), calc(26px * var(--ot-live-scale)));
 	color: #FFFFFF;
 	cursor: pointer;
 	min-width: 0;
@@ -466,6 +520,20 @@
 	color: var(--orange-600);
 }
 
+/* Tarjeta amarilla y roja: chip con el color de la tarjeta dentro del botón */
+.event-chip__card {
+	flex: none;
+	width: calc(16px * var(--ot-live-scale));
+	height: calc(22px * var(--ot-live-scale));
+	border-radius: 3px;
+	border: 1px solid rgba(0, 0, 0, 0.25);
+	background: var(--card-yellow);
+}
+
+.event-chip__card--red {
+	background: var(--card-red);
+}
+
 .event-chip:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
@@ -483,7 +551,7 @@
 }
 
 .history__label {
-	font-family: var(--font-manrope);
+	font-family: var(--font-body);
 	font-weight: 700;
 	font-size: var(--ot-size-label-caps);
 	letter-spacing: 0.05em;
@@ -497,7 +565,7 @@
 	color: var(--text-2);
 	font-size: calc(13px * var(--ot-live-scale));
 	line-height: 1.45;
-	font-family: var(--font-manrope);
+	font-family: var(--font-body);
 }
 
 .history__item {
@@ -520,7 +588,7 @@
 }
 
 .history__time {
-	font-family: var(--font-space-grotesk);
+	font-family: var(--font-mono);
 	font-weight: 600;
 	font-size: var(--ot-size-data-mono);
 	color: var(--green-700);
@@ -552,14 +620,14 @@
 	font-size: calc(13px * var(--ot-live-scale));
 	color: var(--text);
 	overflow-wrap: anywhere;
-	font-family: var(--font-manrope);
+	font-family: var(--font-body);
 }
 
 .possession-bar {
 	display: flex;
 	gap: var(--ot-stack-compact);
 	padding: var(--ot-stack-default) var(--ot-margin-screen);
-	background: var(--surface);
+	background: var(--hud-bg);
 	border-top: 1px solid var(--border);
 	flex: 0 0 auto;
 }
@@ -568,12 +636,16 @@
 	flex: 1;
 	min-height: var(--ot-touch-target-min);
 	padding: calc(12px * var(--ot-live-scale)) calc(16px * var(--ot-live-scale));
-	border: 2px solid var(--border);
-	border-radius: var(--ot-radius-lg);
-	font-family: var(--font-manrope);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: calc(8px * var(--ot-live-scale));
+	border: 1px solid var(--ctl-border);
+	border-radius: calc(10px * var(--ot-live-scale));
+	font-family: var(--font-body);
 	font-weight: 700;
-	font-size: calc(14px * var(--ot-live-scale));
-	letter-spacing: 0.04em;
+	font-size: calc(13px * var(--ot-live-scale));
+	letter-spacing: 0.08em;
 	text-transform: uppercase;
 	cursor: pointer;
 	background: var(--surface-alt);
@@ -616,16 +688,11 @@
 }
 
 /* Tablet y escritorio angosto: el marcador pasa a una segunda fila del encabezado */
-@media (min-width: 769px) and (max-width: 1439px) {
+@media (min-width: 769px) and (max-width: 1279px) {
 	.live-capture__header {
 		grid-template-columns: auto minmax(0, 1fr);
-		row-gap: calc(6px * var(--ot-live-scale));
+		row-gap: calc(8px * var(--ot-live-scale));
 		padding-block: calc(10px * var(--ot-live-scale));
-	}
-
-	.live-capture__brand-icon {
-		width: calc(140px * var(--ot-live-scale));
-		height: calc(48px * var(--ot-live-scale));
 	}
 
 	.live-capture__actions {
@@ -671,7 +738,7 @@
 
 	.event-chip {
 		padding-block: calc(6px * var(--ot-live-scale));
-		font-size: clamp(18px, min(1.9vw, 2.9dvh), calc(30px * var(--ot-live-scale)));
+		font-size: clamp(15px, min(1.6vw, 2.6dvh), calc(24px * var(--ot-live-scale)));
 		line-height: 1.25;
 	}
 }
@@ -684,15 +751,10 @@
 		align-items: center;
 	}
 
-	.live-capture__brand {
+	.live-capture__nav {
 		justify-content: flex-start;
 		grid-column: 1;
 		grid-row: 1;
-	}
-
-	.live-capture__brand-icon {
-		width: 160px;
-		height: 58px;
 	}
 
 	.live-capture__scoreboard {
@@ -818,7 +880,7 @@
 }
 
 .confirm-title {
-	font-family: var(--font-space-grotesk);
+	font-family: var(--font-mono);
 	font-size: 1.25rem;
 	font-weight: 700;
 	color: var(--text);
@@ -826,7 +888,7 @@
 }
 
 .confirm-text {
-	font-family: var(--font-manrope);
+	font-family: var(--font-body);
 	font-size: 0.9rem;
 	line-height: 1.5;
 	color: var(--text-2);
@@ -843,7 +905,7 @@
 	flex: 1;
 	height: 44px;
 	border-radius: var(--ot-radius-md);
-	font-family: var(--font-manrope);
+	font-family: var(--font-body);
 	font-weight: 700;
 	font-size: 0.9rem;
 	display: inline-flex;
@@ -936,6 +998,56 @@
 	background: #156537;
 }
 
+/* ───────── Modo oscuro: HUD grafito (la posesión conserva su color de fondo) ───────── */
+/* Foco visible sobre grafito (el azul marino de la regla base no se ve) */
+.live-capture[data-theme="dark"] .icon-btn:focus-visible,
+.live-capture[data-theme="dark"] .btn:focus-visible,
+.live-capture[data-theme="dark"] .event-chip:focus-visible,
+.live-capture[data-theme="dark"] .history__button:focus-visible,
+.live-capture[data-theme="dark"] .possession-bar__btn:focus-visible {
+	outline-color: var(--grass);
+}
+
+.live-capture[data-theme="dark"] .icon-btn:hover,
+.live-capture[data-theme="dark"] .btn--outline:hover,
+.live-capture[data-theme="dark"] .history__button:hover,
+.live-capture[data-theme="dark"] .possession-bar__btn:not(.is-active):hover,
+.live-capture[data-theme="dark"] .confirm-actions .btn-secondary:hover {
+	background: var(--surface-hover);
+	border-color: var(--text-secondary);
+	color: var(--text-primary);
+}
+
+.live-capture[data-theme="dark"] .possession-bar__btn--own.is-active {
+	background: var(--btn-primary-bg);
+	border-color: var(--btn-primary-bg);
+}
+
+.live-capture[data-theme="dark"] .possession-bar__btn--opponent:not(.is-active) {
+	color: var(--team-rival);
+}
+
+.live-capture[data-theme="dark"] .history__time {
+	color: var(--grass);
+}
+
+.live-capture[data-theme="dark"] .confirm-backdrop,
+.live-capture[data-theme="dark"] .capture-backdrop {
+	background: var(--scrim);
+}
+
+.live-capture[data-theme="dark"] .confirm-dialog,
+.live-capture[data-theme="dark"] .capture {
+	background: var(--surface-overlay);
+	box-shadow: var(--shadow-overlay);
+}
+
+/* Ícono de confirmación: --green-600 no existe, así que en oscuro heredaba el color del texto */
+.live-capture[data-theme="dark"] .confirm-icon {
+	background: var(--success-tint);
+	color: var(--success);
+}
+
 /* ───────── Modal de captura de eventos (pasos) ───────── */
 .capture-backdrop {
 	position: fixed;
@@ -987,14 +1099,14 @@
 .capture__title {
 	flex: 1;
 	margin: 0;
-	font-family: var(--font-manrope);
+	font-family: var(--font-body);
 	font-weight: 800;
 	font-size: 26px;
 	line-height: 1.1;
 }
 
 .capture__step {
-	font-family: var(--font-space-grotesk);
+	font-family: var(--font-mono);
 	font-size: 16px;
 	color: var(--text-2);
 }
@@ -1027,7 +1139,7 @@
 	border: 0;
 	background: var(--surface);
 	color: var(--text);
-	font: 700 15px var(--font-manrope);
+	font: 700 15px var(--font-body);
 	cursor: pointer;
 }
 
@@ -1055,7 +1167,7 @@
 
 .capture__label {
 	margin: 0;
-	font: 700 12px var(--font-manrope);
+	font: 700 12px var(--font-body);
 	letter-spacing: 0.06em;
 	text-transform: uppercase;
 	color: var(--text-2);
@@ -1099,7 +1211,7 @@
 }
 
 .capture__number {
-	font-family: var(--font-space-grotesk);
+	font-family: var(--font-mono);
 	font-weight: 700;
 	font-size: clamp(22px, 3.2vh, 32px);
 	line-height: 1;
@@ -1138,7 +1250,7 @@
 	border-radius: 16px;
 	background: var(--surface-alt);
 	color: var(--text);
-	font: 800 clamp(22px, 4vh, 34px) var(--font-manrope);
+	font: 800 clamp(22px, 4vh, 34px) var(--font-body);
 	cursor: pointer;
 }
 
@@ -1186,7 +1298,7 @@
 .capture__readout {
 	margin: 0;
 	text-align: center;
-	font-family: var(--font-space-grotesk);
+	font-family: var(--font-mono);
 	font-weight: 700;
 	font-size: clamp(56px, 12vh, 110px);
 	line-height: 1;
@@ -1202,7 +1314,7 @@
 .capture__range-scale {
 	display: flex;
 	justify-content: space-between;
-	font-family: var(--font-space-grotesk);
+	font-family: var(--font-mono);
 	color: var(--text-2);
 }
 
@@ -1224,7 +1336,7 @@
 	border-radius: 12px;
 	background: var(--surface);
 	color: var(--text);
-	font: 700 17px var(--font-manrope);
+	font: 700 17px var(--font-body);
 	cursor: pointer;
 }
 

@@ -158,7 +158,7 @@ describe('CargaEnVivoComponent', () => {
     const buttons = fixture.nativeElement.querySelectorAll('.possession-bar__btn');
 
     expect(buttons.length).toBe(2);
-    expect(Array.from(buttons, (button: Element) => button.textContent?.trim())).toEqual(['Propia', 'Rival']);
+    expect(Array.from(buttons, (button: Element) => button.textContent?.trim())).toEqual(['Posesión propia', 'Posesión rival']);
   });
 
   it('should open the capture modal with a player step and cancel it without deleting an event', () => {

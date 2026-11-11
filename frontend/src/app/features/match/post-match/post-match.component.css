@@ -107,3 +107,8 @@
     row-gap: 6px;
   }
 }
+
+/* Modo oscuro */
+:host-context([data-theme="dark"]) .alert-error {
+  background: var(--error-tint);
+}

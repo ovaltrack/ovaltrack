@@ -262,22 +262,22 @@
 }
 
 :host-context([data-theme="dark"]) .sheet-wrapper {
-  background: var(--surface);
-  border-top-color: rgba(163, 230, 53, 0.3);
+  background: var(--surface-overlay);
+  border-top-color: var(--grass-border);
   box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.4);
 }
 
 :host-context([data-theme="dark"]) .sheet-handle {
-  background: #475569;
+  background: var(--border-strong);
 }
 
 :host-context([data-theme="dark"]) .peek-stepper {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(163, 230, 53, 0.2);
+  background: var(--veil);
+  border-color: var(--grass-border);
 }
 
 :host-context([data-theme="dark"]) .btn-peek-edit {
-  border-color: rgba(163, 230, 53, 0.4);
+  border-color: var(--grass-border);
 }
 
 .panel-card {
@@ -388,14 +388,14 @@
 }
 
 :host-context([data-theme="dark"]) .btn-tab-delete {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(248, 113, 113, 0.3);
-  color: #f87171;
+  background: var(--veil);
+  border-color: var(--error-border);
+  color: var(--error);
 }
 
 :host-context([data-theme="dark"]) .btn-tab-delete:hover:not(:disabled) {
-  background: #dc2626;
-  color: #ffffff;
+  background: var(--error-solid);
+  color: var(--text-primary);
 }
 
 .tab-pill-group {
@@ -437,9 +437,9 @@
 }
 
 :host-context([data-theme="dark"]) .panel-tab-btn.active {
-  background: rgba(163, 230, 53, 0.18);
-  border-color: #a3e635;
-  color: #a3e635;
+  background: var(--grass-tint-strong);
+  border-color: var(--grass);
+  color: var(--grass);
 }
 
 .panel-tab-btn:disabled {
@@ -936,50 +936,50 @@
 }
 
 :host-context([data-theme="dark"]) .panel-tab-bar {
-  background: rgba(255, 255, 255, 0.04);
-  border-bottom-color: rgba(163, 230, 53, 0.15);
+  background: var(--veil);
+  border-bottom-color: var(--grass-tint);
 }
 
 :host-context([data-theme="dark"]) .inspector-divider {
-  border-top-color: rgba(163, 230, 53, 0.15);
+  border-top-color: var(--grass-tint);
 }
 
 :host-context([data-theme="dark"]) .btn-stepper-square {
   background: var(--surface);
-  border-color: rgba(163, 230, 53, 0.25);
-  color: #e5e7eb;
+  border-color: var(--grass-tint-strong);
+  color: var(--text-primary);
 }
 
 :host-context([data-theme="dark"]) .queue-card-item {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: var(--veil);
+  border-color: var(--border);
 }
 
 :host-context([data-theme="dark"]) .queue-card-item .qc-name {
-  color: #d1d5db;
+  color: var(--text-secondary);
 }
 
 :host-context([data-theme="dark"]) .queue-card-item .qc-time {
-  color: #e5e7eb;
+  color: var(--text-primary);
 }
 
 :host-context([data-theme="dark"]) .queue-card-item:hover {
-  background: rgba(245, 158, 11, 0.1);
-  border-color: #f59e0b;
+  background: var(--warning-tint);
+  border-color: var(--warning);
 }
 
 :host-context([data-theme="dark"]) .queue-card-item.selected {
-  background: rgba(217, 119, 6, 0.15);
-  border-color: #f59e0b;
-  box-shadow: 0 0 0 1px #f59e0b;
+  background: var(--warning-tint);
+  border-color: var(--warning);
+  box-shadow: 0 0 0 1px var(--warning);
 }
 
 :host-context([data-theme="dark"]) .queue-card-item.selected .qc-name {
-  color: #fef08a;
+  color: var(--warning);
 }
 
 :host-context([data-theme="dark"]) .qc-period {
-  color: #fbbf24;
+  color: var(--warning);
 }
 
 .empty-panel-msg {
@@ -989,3 +989,9 @@
   color: var(--text-muted);
 }
 
+/* Modo oscuro: «sin asignar» en ámbar de advertencia */
+:host-context([data-theme="dark"]) .item-player-control .custom-assign-select.is-unassigned {
+  border-color: var(--warning);
+  background-color: var(--warning-tint);
+  color: var(--warning);
+}

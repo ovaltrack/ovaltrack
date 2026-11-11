@@ -183,37 +183,37 @@
    ========================================================================== */
 
 :host-context([data-theme="dark"]) .division-card:hover {
-  background: #131c2e;
-  border-color: #2a3c5a;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+  background: var(--surface);
+  border-color: var(--border-sport);
+  box-shadow: var(--shadow-elevation-hover);
 }
 
 :host-context([data-theme="dark"]) .division-badge-icon {
-  background: #162238;
-  border-color: #2a3c5a;
+  background: var(--surface-alt);
+  border-color: var(--border-sport);
 }
 
 :host-context([data-theme="dark"]) .division-meta {
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 :host-context([data-theme="dark"]) .meta-tag {
-  border-color: #2a3c5a;
+  border-color: var(--border-sport);
 }
 
 :host-context([data-theme="dark"]) .meta-gender {
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 :host-context([data-theme="dark"]) .division-status-zone .btn-outline {
-  background: #131c2e;
-  border-color: #2a3c5a;
-  color: #cbd5e1;
+  background: var(--btn-outline-bg);
+  border-color: var(--border-strong);
+  color: var(--btn-outline-fg);
 }
 
 :host-context([data-theme="dark"]) .division-status-zone .btn-outline:hover {
-  background: #1c2b44;
-  border-color: #3b82f6;
-  color: #ffffff;
+  background: var(--surface-hover);
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
 }
 

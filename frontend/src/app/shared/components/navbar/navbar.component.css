@@ -24,9 +24,9 @@
   height: var(--navbar-h);
   /* Margen lateral proporcional al ancho: ~56px en 1920, ~43px en 1440, ~31px en 1024; el piso es --layout-pad (16px en celular) */
   padding: 0 clamp(var(--layout-pad), 3vw, 56px);
-  background: var(--surface);
+  background: var(--surface-sunken);
   border-bottom: 2px solid var(--border-sport);
-  box-shadow: 0 4px 14px rgba(20, 45, 20, 0.08);
+  box-shadow: var(--shadow-navbar);
   transition: height 0.2s ease;
 }
 

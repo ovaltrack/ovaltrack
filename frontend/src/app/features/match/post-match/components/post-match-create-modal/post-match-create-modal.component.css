@@ -74,3 +74,7 @@
   padding: 0 20px;
 }
 
+/* Modo oscuro */
+:host-context([data-theme="dark"]) .header-icon-box {
+  background-color: var(--surface-alt);
+}

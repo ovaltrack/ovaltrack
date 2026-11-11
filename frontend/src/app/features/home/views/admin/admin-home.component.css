@@ -168,3 +168,8 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Modo oscuro: el avance del análisis usa el acento (el verde de estado queda para resultados) */
+:host-context([data-theme="dark"]) .analysis:not(.tone-warn):not(.tone-bad) .analysis-fill {
+  background: var(--grass);
+}

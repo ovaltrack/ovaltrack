@@ -57,7 +57,7 @@
   padding: 16px;
   border: 2px solid var(--border-sport);
   border-radius: var(--radius-lg);
-  background: var(--surface);
+  background: var(--surface-overlay);
   box-shadow: var(--shadow-elevation);
   color: var(--text-primary);
   font-family: var(--font-body);

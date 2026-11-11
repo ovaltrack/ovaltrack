@@ -5,32 +5,27 @@
     [class.live-capture--opponent]="currentPossession === 'OPPONENT'"
     [class.live-capture--paused]="clockPaused">
     <header class="live-capture__header">
-        <div class="live-capture__brand">
-            <img class="live-capture__brand-icon"
-                [src]="theme() === 'light' ? 'assets/brand/OvalTrack-fondo-claro.png' : 'assets/brand/OvalTrack-fondo-oscuro.png'"
-                alt="OvalTrack">
+        <div class="live-capture__nav">
             <button
                 type="button"
                 class="btn btn--outline"
                 (click)="goToMatchSelection()"
                 [attr.aria-label]="'Ir a seleccion de partidos'">
-                <i class="ti ti-arrow-left" aria-hidden="true"></i>
-                Selección de partidos
+                <i class="ti ti-chevron-left" aria-hidden="true"></i>
+                Partidos
             </button>
             <button
                 type="button"
                 class="btn btn--outline"
                 (click)="openCurrentStatisticsModal()"
                 [attr.aria-label]="'Abrir estadísticas tácticas'">
-                <i class="ti ti-chart-bar" aria-hidden="true"></i>
                 Estadísticas
             </button>
         </div>
         <div class="live-capture__scoreboard">
             <span class="live-capture__score">
                 {{ homeTeam }}
-                <span class="live-capture__score-value">{{ scoreboard.home }}–{{
-                    scoreboard.away }}</span>
+                <span class="live-capture__score-value"><span class="live-capture__score-own">{{ scoreboard.home }}</span><span class="live-capture__score-sep" aria-hidden="true">–</span><span class="live-capture__score-rival">{{ scoreboard.away }}</span></span>
                 {{ awayTeam }}
             </span>
 
@@ -47,11 +42,7 @@
                 </button>
 
             </div>
-            <div>
-                <span class="live-capture__score">
-                    {{ periodLabel }}
-                </span>
-            </div>
+            <span class="live-capture__period">{{ periodLabel }}</span>
         </div>
 
         <div class="live-capture__actions">
@@ -128,6 +119,9 @@
                         [class.event-chip--primary]="eventVariant(event) === 'primary'"
                         [disabled]="!isStarted"
                         (click)="onEventTap(event)">
+                        @if (event.code === 'YELLOW_CARD' || event.code === 'RED_CARD') {
+                        <span class="event-chip__card" [class.event-chip__card--red]="event.code === 'RED_CARD'" aria-hidden="true"></span>
+                        }
                         {{ event.name }}
                     </button>
                     }
@@ -176,7 +170,10 @@
             [attr.aria-pressed]="currentPossession === possession"
             (click)="selectPossession(possession)"
             [disabled]="!isStarted">
-            {{ possession === 'OWN' ? 'Propia' : 'Rival' }}
+            @if (currentPossession === possession) {
+            <i class="ti ti-check" aria-hidden="true"></i>
+            }
+            {{ possession === 'OWN' ? 'Posesión propia' : 'Posesión rival' }}
         </button>
         }
     </footer>

@@ -1,7 +1,7 @@
 # OvalTrack — Sistema de Diseño Oficial (Design System)
 
 > **Estado:** Activo y alineado al 100% con la interfaz del frontend.  
-> **Identidad Visual:** *Sport Pro Salvia & Dark Rugby Tech* (Estética deportiva de alto rendimiento, contrastes tácticos y elevación física).
+> **Identidad Visual:** *Sport Pro Salvia & Grafito con verde botella* (Estética deportiva de alto rendimiento, contrastes tácticos y elevación física).
 
 Este documento es la **fuente de verdad definitiva y obligatoria** para el diseño y desarrollo de todas las vistas del frontend de OvalTrack. Cualquier componente o pantalla nueva debe construirse respetando los tokens, patrones y lineamientos aquí descritos.
 
@@ -82,6 +82,23 @@ Los tokens oficiales del sistema corresponden a la identidad visual **Sport Pro 
   --shadow-elevation: 0 16px 36px rgba(15, 35, 15, 0.12), 0 4px 12px rgba(15, 35, 15, 0.06);
   --shadow-button: 0 4px 12px rgba(32, 75, 34, 0.20);
   --shadow-button-hover: 0 6px 16px rgba(32, 75, 34, 0.28);
+
+  /* Compartidos con el modo oscuro (§5.1): en claro valen lo de siempre */
+  --surface-sunken: var(--surface);
+  --surface-overlay: var(--surface);
+  --shadow-navbar: 0 4px 14px rgba(20, 45, 20, 0.08);
+  --team-rival: var(--navy);          /* rival en Estadísticas; en oscuro es un azul propio */
+  --on-navy: #ffffff;                 /* texto sobre --navy */
+  --zone-heat-mix: 62%;               /* cuánto del calor se mezcla sobre la cancha */
+  /* Colores de jugadas (línea de tiempo y tabla de post-partido), §5.6 */
+  --event-try: #2e7d32;
+  --event-kick: #7c3aed;
+  --event-tackle-missed: #2563eb;
+  --event-tackle: #16324f;
+  --event-penalty: #b42318;
+  --event-set-piece: #d96a0a;
+  --event-turnover: #d96a0a;
+  --event-default: #204b22;
 }
 ```
 
@@ -298,31 +315,142 @@ Barra superior **sólida, blanca (`--surface`), sin efecto vidrio**, de ancho co
 
 ### 4.6 Captura en Vivo (`/live-capture/:matchId`)
 - **Entorno Especializado de Cancha:** Interfaz de alto contraste, táctil (hit-target mínimo de 48px), optimizada para tablets en tiempo real.
-- **Marcador e Instrumentos:** Cronómetro de partido y marcador en `Space Grotesk` / `JetBrains Mono`.
+- **Marcador e Instrumentos:** Cronómetro, marcador y rótulos en `JetBrains Mono`; el resto de la pantalla en `Inter`, como el sistema de diseño.
 - **Aislamiento:** No incluye la barra de navegación estándar para maximizar el área de control e impedir clics accidentales durante el juego.
 
 ---
 
-## 5. Escalabilidad y Futura Incorporación del Modo Oscuro
+## 5. Modo oscuro: Grafito con verde botella
 
-Actualmente, las vistas de gestión del club, divisiones, planteles y fixture operan bajo el **Modo Claro Deportivo (*Sport Salvia*)** como diseño base oficial y aprobado.
+El modo oscuro es la segunda cara de la misma identidad, no un tema aparte: **grafito neutro con luz desde arriba**, el verde de marca como señal y color solo donde significa algo. El modo claro (*Sport Salvia*) no cambia. Lo elige el `ThemeService` (clave `ovaltrack_theme`, oscuro por defecto) y se aplica con `data-theme="dark"` en `<html>`.
 
-Cuando decidas abordar y definir el **Modo Oscuro** para estas vistas en una etapa futura, el flujo de trabajo será el siguiente:
+### 5.1 Cómo se resuelve
 
-### Pasos para cuando definas el Modo Oscuro:
+- **Todo vive en tokens.** Los valores están en el bloque `[data-theme="dark"]` de `frontend/src/styles.css`. Un componente nunca escribe un color oscuro a mano: usa `var(--token)`. Los pocos literales que quedan en reglas oscuras son deliberados (sombra de la hoja inferior, halo del marcador seleccionado, verde de marca de la mini cancha y de la pelota, colores locales de la cancha nocturna).
+- **Token solo oscuro:** se define únicamente en `[data-theme="dark"]` y se usa solo en reglas oscuras (`--canvas-image`, `--veil`, `--surface-track`, `--scrim`, `--team-rival`, `--focus-ring`, `--shadow-overlay`, `--shadow-elevation-hover`, `--error-solid`, `--success-border`).
+- **Token compartido:** si lo usa una regla que aplica en los dos temas, se define también en `:root` con el valor que ya producía el claro (`--surface-sunken`, `--surface-overlay`, `--shadow-navbar`, `--team-rival`, `--on-navy`, `--zone-heat-mix`, `--event-*`). Así el claro no cambia.
+- Los nombres de los tokens existentes no cambian: solo cambian sus valores en oscuro.
 
-1. **Definir la paleta visual oscura**: Se eligen los tonos exactos (fondos oscuros, contraste de tarjetas, colores de texto y acento de botones).
-2. **Actualizar este documento (`DESIGN_SYSTEM.md`)**: Se agrega la sección oficial de tokens de Modo Oscuro con los valores aprobados.
-3. **Mapear los tokens en `frontend/src/styles.css` bajo `[data-theme="dark"]`**:
-   ```css
-   [data-theme="dark"] {
-     --color-bg-canvas: [color-fondo-definido];
-     --color-surface-card: [color-tarjetas-definido];
-     --color-text-title: [color-titulos-definido];
-     --color-btn-primary-bg: [color-cta-definido];
-   }
-   ```
-4. **Reutilizar los componentes sin reescribir HTML**: Como la arquitectura ya utiliza `ThemeService` y las clases globales (`.form-card`, `.btn-invite`, `.hud`), todo el sistema se adaptará al nuevo modo oscuro de forma limpia y mantenible.
+### 5.2 Neutros y profundidad
+
+Cada nivel es más claro que el anterior: lo que está más cerca del usuario recibe más luz.
+
+| Nivel | Token | Valor | Uso |
+|---|---|---|---|
+| Hundido | `--surface-sunken` | `#0b0c0e` | navbar, cabecera y pie de Captura en vivo |
+| Carril | `--surface-track` | `#111214` | reloj de Captura en vivo |
+| Lienzo | `--bg` / `--bg-canvas` | `#0f1012` | fondo; `--canvas-image` suma un brillo superior y líneas a 135° |
+| Superficie | `--surface` | `#17181b` | tarjetas, tablas, barras de filtros, KPI |
+| Superficie alt | `--surface-alt` | `#1f2124` | inputs, chips, filas internas |
+| Hover y cabecera | `--surface-hover`, `--surface-header-start` | `#25272b` | hover; cabecera de tarjeta (`--surface-header-end` `#1f2124`) |
+| Overlay | `--surface-overlay` | `#282a2e` | modales, menús, hojas, diálogos |
+
+- **Bordes:** `--border`, `--border-sport` y `--border-sport-subtle` son `#2a2c31` (decorativos; la tarjeta mantiene sus 2px). `--border-strong` y `--btn-outline-border` son `#7a7e86`: inputs, botones outline y controles.
+- **Texto:** `--text-primary` `#ededef`, `--text-secondary` `#b3b6bc`, `--text-muted` `#8d9098`. No se usa blanco puro para texto sobre superficies; `#ffffff` queda solo sobre rellenos de color (`--btn-primary-fg`, `--score-pill-fg`).
+- **Velo:** `--veil` (`rgba(255,255,255,.05)`) para fondos suaves de botones pequeños y cola de revisión. `--scrim` (`rgba(0,0,0,.6)`) detrás de modales.
+- **Sombras:** `--shadow-elevation` (con un filo superior de luz y una base dura), `--shadow-elevation-hover`, `--shadow-overlay`, `--shadow-navbar`, `--shadow-button(-hover)`.
+
+### 5.3 Los cuatro verdes
+
+| Verde | Token | Valor | Uso | Nunca |
+|---|---|---|---|---|
+| Marca (botella) | `--board-bg-*`, `--score-pill-bg` | `#204b22` | tablero de Inicio, píldora del marcador | texto, línea ni foco sobre oscuro (1,77 : 1) |
+| Acción | `--btn-primary-*` | `#337838` · hover `#38823d` · texto `#ffffff` | un solo botón primario sólido por pantalla | |
+| Acento | `--grass`, `--grass-deep` | `#8cc98f` | equipo propio, filtro y pestaña activos, foco, trazos, enlaces | relleno de botón primario |
+| Estado | `--success` | `#5fc57d` | resultado correcto, activo, ganado | botones |
+
+- Selección: `--grass-tint-strong` (`#223f26`) de fondo (filtro activo, fila seleccionada, módulo activo del navbar) y `--grass-border` (`rgba(140,201,143,.55)`). `--grass-tint` (`rgba(140,201,143,.15)`) para fondos suaves.
+- Foco: borde `--grass` más `--focus-ring` (`0 0 0 3px rgba(140,201,143,.28)`).
+- El botón outline es neutro: fondo `--btn-outline-bg`, borde `--btn-outline-border`, texto `--btn-outline-fg` y hover con borde `--text-secondary`; no lleva verde.
+- El tablero de Inicio (§9): el fondo es igual en los dos temas; el acento (`--on-board-accent`) es `#91da40` en claro y `#8cc98f` en oscuro, y los tokens del tablero tienen valor propio (no siguen a `--grass`).
+
+### 5.4 Equipos y estados
+
+| Rol | Texto | Tinte | Borde | Sólido |
+|---|---|---|---|---|
+| Propio | `--grass` | | | |
+| Rival | `--team-rival` `#93b4e0` | | | |
+| Éxito | `--success` `#5fc57d` | `--success-tint` | `--success-border` | |
+| Advertencia | `--warning` `#e9b54f` | `--warning-tint` | `--warning-border` | |
+| Error | `--error` `#f07a72` | `--error-tint` | `--error-border` | `--error-solid` `#b03838` con texto blanco |
+
+Reglas de uso:
+- **Ámbar** = falta algo que el usuario puede completar (sin jugador, cola de revisión, cambios sin enviar, por jugar). Nunca para errores.
+- **Rojo** = algo falló, se rechazó o se pierde (error al guardar, 409, partido perdido, eliminar, cerrar sesión). El sólido `--error-solid` es para confirmar un borrado.
+- **Verde de estado ≠ verde de acción ≠ verde de marca.** El de estado nunca va en un botón.
+- **Información** es neutra (`--text-secondary` sobre `--veil`): el azul es del rival.
+- **Siempre ícono + texto:** el color solo no alcanza.
+- **Roles de usuario** (azules desaturados, distintos por luminosidad y no solo por tono): Admin `--navy` `#a9bfdd`, Coach `--blue-mid` `#6fa3d8`, Jugador `--player` `#b3b6bc`. El rival no usa `--navy`: usa `--team-rival` (`#93b4e0`), que en claro sigue valiendo `--navy`. El texto sobre un relleno `--navy` usa `--on-navy` (`#0f1012` en oscuro).
+
+### 5.5 Captura en vivo
+
+- **Cabecera (HUD), en los dos temas:** sin logo. A la izquierda «‹ Partidos» y «Estadísticas»; al centro el marcador (puntaje propio en `--score-own`: `--grass-deep` en claro y `--grass` en oscuro; rival en `--team-rival`), el reloj en un carril (`--hud-well`) con el botón de pausa y el período en píldora; a la derecha «Finalizar partido», «Deshacer» y tres íconos cuadrados de 44 px: tema, historial y sincronización (caja con `--success-tint` o `--warning-tint` según el estado). Botones con radio 10 px y borde `--ctl-border` (`--border` local en claro, `--border-strong` en oscuro), en Inter y JetBrains Mono. Hasta 1279 px el marcador baja a una segunda fila.
+- **Oscuro:** cabecera y pie hundidos (`--hud-bg` = `--surface-sunken`), reloj en carril (`--hud-well` = `--surface-track`) con sombra interior, hover en `--surface-hover`, foco en `--grass` y diálogos sobre `--surface-overlay` con `--scrim` detrás. `.live-capture[data-theme="dark"]` ya no define neutros propios: hereda los del sistema. Los `--hud-*` valen en claro lo de siempre.
+- **La posesión conserva su color de fondo** en los dos temas: `--bg-own` verde, `--bg-away` rojo, `--bg-neutral` azul. La barra dice «Posesión propia» y «Posesión rival», con un check en la activa y radio 10 px; en oscuro, «Propia» activa va en `--btn-primary-bg` y «Rival» inactivo en `--team-rival`.
+- **Botones de jugadas:** radio 12 px, borde `rgba(255,255,255,.16)` y sombra para recortarse sobre el fondo de posesión, en Inter. El relleno sigue saliendo de `eventVariant()` (rotación por posición, igual en claro y oscuro: en el catálogo actual cada jugada de Puntuación tiene su color). Tarjeta amarilla y roja llevan un chip con el color de la tarjeta (por `event.code`).
+- **Rótulos de categoría:** JetBrains Mono en mayúsculas, sin indicador de color.
+- La pantalla sigue a pantalla completa, sin navbar (§6, regla 5).
+
+### 5.6 Jugadas por categoría (post-partido)
+
+La línea de tiempo y la tabla de Eventos colorean cada jugada con `resolveEventColor()` (`post-match/utils/match-review.utils.ts`), que devuelve un token `--event-*` según el nombre del evento. En claro cada token vale el color de siempre; en oscuro toma la variante clara de su categoría, legible sobre el carril (≥ 7 : 1).
+
+| Token | Reglas de nombre | Claro | Oscuro | Categoría |
+|---|---|---|---|---|
+| `--event-try`, `--event-kick` | try; drop, conversión | `#2e7d32`, `#7c3aed` | `#e2b54a` | Puntuación |
+| `--event-tackle`, `--event-tackle-missed` | tackle; tackle fallado | `#16324f`, `#2563eb` | `#72c6d1` | Defensa |
+| `--event-penalty` | penal, infracción, tarjetas | `#b42318` | `#a7adbb` | Neutro / disciplina |
+| `--event-set-piece` | line, scrum | `#d96a0a` | `#79a6ec` | Juego fijo |
+| `--event-turnover` | turnover | `#d96a0a` | `#e9925a` | Cambio de posesión |
+| `--event-default` | el resto | `#204b22` | `#74c785` | Ataque |
+
+«Sin jugador» conserva el rayado del claro (45°, franjas de 2 px) pero en ámbar sobre ámbar apagado (`--warning` y `--warning` al 38 % sobre `--surface-track`), con borde `--warning-border`: sin el contraste de cinta de advertencia que tenían el naranja y el blanco. Es igual en la línea de tiempo y en la leyenda del KPI; el contador usa `--warning`.
+
+### 5.7 Zonas
+
+- **Cancha:** `--pitch-a` `#18241b`, `--pitch-b` `#1c2a20`, `--pitch-ingoal` `#142018` y líneas `rgba(255,255,255,.30)`, definidos en `rugby-field`. El chip de zona (I1…D6) es un chip hundido (`--bg` al 72 %) con `--text-primary`.
+- **Calor:** `--zone-heat-low` `#544a16` → `--zone-heat-high` `#fb982c`, mezclados con `--zone-heat-mix` (62 % en claro, 88 % en oscuro). Los cuatro niveles con color quedan en `#4d4517`, `#7e5c1d`, `#af7324` y `#e08a2a`: más eventos, más luz, y cada escalón se separa 1,48 : 1 o más.
+- **Conteo:** chip hundido (`--surface-sunken`, borde `--border-strong`, texto `--text-primary`), legible sobre cualquier nivel.
+- **Tramos asignados:** en oscuro, fondo `--score-pill-bg` (`#204b22`), borde `--btn-primary-bg` y texto `--text-primary`; no forman una pared brillante ni compiten con el botón primario. La selección usa el acento (`--grass`). Los controles del panel (Lateral, − +, minutos) usan superficies del sistema.
+- Los botones `.btn-outline` locales usan `--btn-outline-bg` para no quedar blancos en oscuro.
+
+### 5.8 Contrastes (WCAG 2.x, calculados)
+
+Mínimos: 4,5 : 1 para texto y 3 : 1 para bordes de controles.
+
+| Par | Ratio |
+|---|---|
+| `--text-primary` sobre hundido / lienzo / superficie / superficie alt / cabecera / overlay | 16,74 / 16,28 / 15,18 / 13,80 / 12,79 / 12,29 |
+| `--text-secondary` sobre las mismas | 9,63 / 9,37 / 8,74 / 7,94 / 7,36 / 7,07 |
+| `--text-muted` sobre las mismas | 6,13 / 5,96 / 5,56 / 5,05 / 4,68 / **4,50** |
+| `--grass` sobre superficie / overlay / `--grass-tint-strong` | 9,19 / 7,44 / 6,01 |
+| `--border-strong` sobre lienzo / superficie / overlay | 4,67 / 4,36 / 3,53 |
+| Blanco sobre `--btn-primary-bg` / hover / `--error-solid` / `#204b22` | 5,41 / 4,74 / 6,05 / 10,04 |
+| `--success` / `--warning` / `--error` sobre superficie | 8,26 / 9,46 / 6,54 |
+| `--team-rival` sobre superficie | 8,32 |
+| `--navy` (Admin) / `--blue-mid` (Coach) sobre superficie y sobre su tinte | 9,45 y 6,95 / 6,68 y 5,25 |
+| `--event-*` (seis categorías) sobre el carril | 7,57 a 9,77 |
+| `--on-navy` sobre `--navy` | 10,14 |
+| `#ededef` sobre un tramo `#204b22`; borde `--btn-primary-bg` sobre superficie | 8,59; 3,28 |
+| `--on-board-accent` `#8cc98f` sobre `#204b22` | 5,20 |
+| `#ededef` sobre el fondo de posesión propia / rival / neutra | 6,24 / 8,24 / 9,54 |
+| `#204b22` como texto sobre superficie | **1,77: prohibido** |
+
+`--text-muted` sobre overlay pasa con 4,5009 : 1, sin margen: no bajar su valor.
+
+### 5.9 Límites conocidos
+
+- `--border-strong` (`#7a7e86`) también lo usan divisores y marcas finas de la línea de tiempo y de las estadísticas: se ven más claros que en el diseño anterior.
+- El pulso de pausa de Captura en vivo usa `color-mix(..., --bg)` sin `var()` y no mezcla; arreglarlo cambiaría el claro.
+- Los colores de jugadas dependen del nombre del evento (no de su categoría del catálogo): «Kick-off», «Maul» y «Quick play» caen en `--event-default` (Ataque), y Tackle completado y fallado comparten color en oscuro (se distinguen por carril). Pasar a `groupName` cambiaría el claro.
+- Fuera de alcance por ser funciones nuevas: tarjetas con degradé y borde superior iluminado, el chip «Sin asignar» con borde punteado y el rayado «sin jugador», la tarjeta de detalle de zona, botones sobre el tablero e íconos en los avisos.
+
+### 5.10 Cómo agregar o cambiar un color oscuro
+
+1. Buscá un token que ya tenga ese rol. Si existe, usalo: no hace falta un override oscuro.
+2. Si el rol no existe, creá un token en `[data-theme="dark"]`. Si lo va a usar una regla que también aplica en claro, definilo en `:root` con el valor claro actual.
+3. Antes de borrar un override oscuro, aplicá las trampas de `docs/styles/refactor-styles.md` §4 (especificidad con encapsulado, estados, varias clases en un elemento, `@media` global, override que hace de fondo base).
+4. Verificá los contrastes y recorré las pantallas en claro y oscuro (390, 1024 y 1440 px).
 
 ---
 
@@ -337,7 +465,7 @@ Cuando decidas abordar y definir el **Modo Oscuro** para estas vistas en una eta
 4. **Las acciones de una vista viven en la barra de esa vista:** el encabezado común solo contiene lo que vale para todas las vistas (volver, etiqueta, título, marcador, hora y selector de vistas), para que quede en las mismas coordenadas en todas.
 5. **No alterar ni forzar contenedores en Carga en Vivo ni Entretiempo:** Dichas pantallas (`/live-capture/:matchId` y `/live-capture/:matchId/halftime`) son instrumentos tácticos especializados para tablet en tiempo real; deben mantenerse a pantalla completa y están exentas de `.layout-container`.
 6. **Tema único:** Carga en Vivo y Entretiempo leen y cambian el mismo `ThemeService` que el navbar y el menú de usuario. Su botón de tema cambia el modo claro/oscuro de toda la app, y la elección se conserva (clave `ovaltrack_theme`).
-6. **Uso obligatorio de `.layout-container.page`:** Toda nueva pantalla o flujo de gestión debe construirse dentro de `.layout-container.page` para garantizar alineación pixel-perfect con la Navbar.
+7. **Uso obligatorio de `.layout-container.page`:** Toda nueva pantalla o flujo de gestión debe construirse dentro de `.layout-container.page` para garantizar alineación pixel-perfect con la Navbar.
 
 ---
 
@@ -426,7 +554,7 @@ La pantalla de post-partido está estructurada como una estación de trabajo de 
    - Compartido por Eventos (`/post-match/:id`), Zonas (`/zones`) y Estadísticas (`/statistics`), que son rutas hijas del shell.
    - Etiqueta fija `ANÁLISIS POST-PARTIDO` (volver al inicio se hace desde el logo de la barra), píldora de marcador con `--score-pill-bg` / `--score-pill-fg` (mono tabular) y línea inferior siempre `Hora de inicio HH:MM:SS`.
    - Burbuja flotante animada `.score-delta-badge` (`+5`), con `scoreDeltaPop` y temporizador de 3 segundos (solo cuando Eventos la informa).
-   - Selector de vistas en la misma fila del título: `routerLink` + `routerLinkActive` (`aria-current="page"`), contenedor gris claro y vista activa **blanca elevada** (el verde queda para filtros). Entre 960px y 1279px comparte fila con el partido (si no entra, baja a su propia fila); con < 960px baja a su propia fila con tres partes iguales.
+   - Selector de vistas en la misma fila del título: `routerLink` + `routerLinkActive` (`aria-current="page"`), contenedor gris claro y vista activa **blanca elevada** (en oscuro, `--surface-overlay` con `--text-primary`; el verde queda para filtros). Entre 960px y 1279px comparte fila con el partido (si no entra, baja a su propia fila); con < 960px baja a su propia fila con tres partes iguales.
    - El encabezado no tiene acciones propias de una vista: el selector queda siempre pegado al borde derecho. Lo que es de una vista vive en la barra de esa vista (p. ej. «Agregar evento», en la barra de Eventos).
 2. **Tira Condensada de KPIs (`PostMatchKpiStripComponent`):**
    - Altura de 44px con 3 secciones: total de eventos, conteo de jugadas sin jugador con botón `"Ver pendientes ›"` y porcentaje de carga con barra de progreso verde.
@@ -438,7 +566,7 @@ La pantalla de post-partido está estructurada como una estación de trabajo de 
    - Altura de carril `--lane-h: 32px;` y marcadores de jugada de `20px`.
    - Container Queries (`@container (max-width: 650px)`) para abreviar nombres largos (*Infracción*, *Penal palos*, *Tackle ✓*, etc.).
 4. **Tabla Cronológica (`PostMatchTableComponent`):**
-   - Columnas (`--table-cols`): `PERÍODO` (56px) | `JUEGO` (64px) | `VIDEO` (64px) | `JUGADA` (1fr) | `JUGADOR` (1.1fr) | `ZONA` (48px) | `NOTA` (1fr) | `ACCIÓN` (72px).
+   - Columnas (`--table-cols`): `PERÍODO` (56px) | `JUEGO` (64px) | `VIDEO` (64px) | `JUGADA` (1fr) | `JUGADOR` (1.1fr) | `ZONA` (40px) | `NOTA` (1.5fr) | `ACCIÓN` (72px).
    - **Zona (solo lectura):** solo la etiqueta mono (C4) en `--text-secondary`, sin mini mapa (el mini mapa queda en el inspector); tooltip y `aria-label` con el nombre completo («Centro · Campo rival»). Sin zona: «—» gris, sin ámbar (son muchos). La zona se edita solo en Zonas.
    - Selector inline `[ Sin asignar ▾ ]`: chip con borde discontinuo ámbar (`#d97706`), fondo crema (`#fffdf0`) y desplegable nativo sin solapamiento de virtual scroll.
 5. **Inspector Dual y Formulario Reactivo (`PostMatchPanelComponent`):**
@@ -464,7 +592,7 @@ Reglas propias del Inicio con sesión (la landing pública no cambia). Se suman 
 4. **Pestañas `.tabs-underline`** (división activa, serie del gráfico): subrayado en la activa, 44px de alto, scroll interno en celular.
 
 ### 9.1 Tokens nuevos (`:root`)
-Valores iguales en claro y oscuro: el tablero conserva sus colores en los dos temas.
+El fondo y los rótulos del tablero son iguales en claro y oscuro. Sus tokens tienen valor propio y no siguen a `--grass` ni a `--zone-heat-low`, para que cambiar la paleta oscura no los arrastre; solo el acento y el chip «ok» tienen una variante oscura.
 
 | Token | Valor |
 |---|---|
@@ -472,9 +600,9 @@ Valores iguales en claro y oscuro: el tablero conserva sus colores en los dos te
 | `--board-line` / `--board-line-strong` | `rgba(255,255,255,.10)` / `rgba(255,255,255,.22)` |
 | `--board-shadow` | `0 18px 40px rgba(15,35,15,.28)` |
 | `--on-board` / `--on-board-muted` | `#ffffff` / `rgba(255,255,255,.72)` |
-| `--on-board-accent` | `var(--grass)` |
-| `--board-chip-ok-bg/fg` | `var(--grass-tint-strong)` / `#ffffff` |
-| `--board-chip-warn-bg/fg` | `var(--zone-heat-low)` / `#3d2600` |
+| `--on-board-accent` | `#91da40` (claro, 5,89 : 1 sobre `#204b22`) / `#8cc98f` (oscuro, 5,20 : 1) |
+| `--board-chip-ok-bg/fg` | `rgba(145,218,64,.30)` (claro) / `rgba(140,201,143,.30)` (oscuro) / `#ffffff` |
+| `--board-chip-warn-bg/fg` | `#fdb022` / `#3d2600` |
 | `--board-chip-neutral-bg/fg` | `rgba(255,255,255,.12)` / `#ffffff` |
 | `--board-digit-bg/border` | `rgba(255,255,255,.08)` / `rgba(255,255,255,.22)` |
 | `--btn-on-board-bg/fg` | `#ffffff` / `var(--btn-primary-bg)` |
@@ -497,13 +625,13 @@ Valores iguales en claro y oscuro: el tablero conserva sus colores en los dos te
 
 Cada estilo vive en el nivel más chico que lo cubre; si lo usan más pantallas, sube un nivel:
 
-1. **Global (`frontend/src/styles.css`):** tokens, base, layout y las clases que usan varias features (`.hud`, `.hud-brand`, `.hud-brand--fluid`, botones, `.form-card*`, `.filters`/`.chip`, `.status-badge`, `.empty-state`, `.feedback-state`, etc.). El modo oscuro de estas clases se resuelve con los tokens de `[data-theme="dark"]`; no se repite el valor en un override.
+1. **Global (`frontend/src/styles.css`):** tokens, base, layout y las clases que usan varias features (`.hud`, `.hud-brand`, `.hud-brand--fluid`, botones, `.form-card*`, `.filters`/`.chip`, `.status-badge`, `.empty-state`, `.feedback-state`, etc.). El modo oscuro de estas clases se resuelve con los tokens de `[data-theme="dark"]` (§5); no se repite el valor en un override.
 2. **CSS compartido de feature (`features/<dominio>/styles/*.css`):** lo que repiten varias pantallas de una misma feature. Se incluye con `styleUrls` antes del CSS del componente (por ejemplo `['../styles/kpi-strip.css', './x.component.css']`), así conserva el encapsulado de Angular. Hoy: `admin/styles/admin-panel.css`, `auth/styles/register-form.css`, `match/post-match/styles/{kpi-strip,filter-pills}.css`, `match/styles/{match-stats,match-shared}.css`, `division/styles/{division-lists,division-forms}.css`, `home/views/styles/home-views.css`.
 3. **CSS del componente (`*.component.css`):** solo lo específico de esa pantalla.
 
 Reglas al tocar estilos:
 - Los `@keyframes` se declaran en el mismo archivo que la regla que los usa (Angular renombra los keyframes por hoja de estilos).
 - Un CSS compartido no debe alcanzar a un componente que no lo necesita: antes de incluirlo, comprobar que ninguna regla pueda matchear elementos de su plantilla.
-- Reemplazar un literal por un token y borrar el override oscuro solo si el token vale lo mismo en claro y en oscuro, y ninguna regla de estado (`:hover`, `.active`) o de otra clase del mismo elemento compite por la propiedad.
+- Un override oscuro (`:host-context([data-theme="dark"])`) usa tokens, no colores escritos a mano (§5.1). Borrarlo solo si el token vale lo mismo en claro y en oscuro, y ninguna regla de estado (`:hover`, `.active`) o de otra clase del mismo elemento compite por la propiedad.
 - No usar `var(--token, valor)` con tokens definidos en `:root`: el respaldo nunca se aplica.
 - El nombre `.state-box` no es global: existe con estilos distintos en entretiempo, invitación y el shell de post-partido. El estado de pantalla común es `.feedback-state`.

@@ -325,3 +325,43 @@
   .panel-card.is-sheet .panel-footer .panel-actions { justify-content: stretch; }
   .panel-card.is-sheet .panel-footer .panel-actions .btn:not(.btn-delete) { flex: 1 1 0; }
 }
+
+/* Modo oscuro: controles sobre superficie grafito; la selección usa el acento y no el verde de acción */
+:host-context([data-theme="dark"]) .selected-cell:not(.is-error) {
+  background: var(--grass-tint-strong);
+  border-color: var(--grass);
+}
+
+:host-context([data-theme="dark"]) .segment,
+:host-context([data-theme="dark"]) .step-btn {
+  background: var(--btn-outline-bg);
+}
+
+:host-context([data-theme="dark"]) .segment:hover:not(:disabled),
+:host-context([data-theme="dark"]) .step-btn:hover:not(:disabled) {
+  background: var(--surface-hover);
+  border-color: var(--text-secondary);
+}
+
+:host-context([data-theme="dark"]) .segment.is-active {
+  background: var(--grass-tint-strong);
+  border-color: var(--grass);
+  box-shadow: inset 0 0 0 1px var(--grass);
+  color: var(--grass);
+}
+
+:host-context([data-theme="dark"]) .form-control {
+  background-color: var(--surface-alt);
+}
+
+:host-context([data-theme="dark"]) .form-control:focus {
+  background-color: var(--surface-hover);
+  border-color: var(--grass);
+  box-shadow: var(--focus-ring);
+}
+
+:host-context([data-theme="dark"]) .zone-badge {
+  background: var(--grass-tint-strong);
+  border-color: var(--grass);
+  color: var(--grass);
+}

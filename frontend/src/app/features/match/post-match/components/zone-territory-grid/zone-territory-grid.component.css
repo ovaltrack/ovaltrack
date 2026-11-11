@@ -129,7 +129,7 @@
   pointer-events: none; white-space: nowrap;
 }
 .drag-tip > span:first-child {
-  padding: 5px 10px; border-radius: var(--radius-md); background: var(--navy); color: #fff;
+  padding: 5px 10px; border-radius: var(--radius-md); background: var(--navy); color: var(--on-navy);
   font: 700 12px var(--font-mono); box-shadow: var(--shadow-elevation);
 }
 .drag-notice {
@@ -164,4 +164,42 @@
 @media (max-width: 768px) {
   :host { --label-w: 112px; }
   .row-range { display: none; }
+}
+
+/* Modo oscuro: los tramos van en verde botella con borde (se leen igual y no compiten con el botón primario); la selección usa el acento */
+:host-context([data-theme="dark"]) .row-label.is-selected {
+  background: var(--grass-tint-strong);
+  box-shadow: inset 3px 0 0 var(--grass);
+}
+
+:host-context([data-theme="dark"]) .block {
+  background: var(--score-pill-bg);
+  border: 1px solid var(--btn-primary-bg);
+  color: var(--text-primary);
+}
+
+:host-context([data-theme="dark"]) .block:hover {
+  background: var(--btn-primary-bg);
+  border-color: var(--grass);
+}
+
+:host-context([data-theme="dark"]) .block.is-linked:not(.is-conflict) {
+  box-shadow: 0 0 0 1px var(--surface), 0 0 0 3px var(--grass);
+}
+
+:host-context([data-theme="dark"]) .block.is-selected:not(.is-conflict) {
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 5px var(--grass);
+}
+
+:host-context([data-theme="dark"]) .handle::before {
+  border-color: var(--grass);
+}
+
+:host-context([data-theme="dark"]) .handle:hover::before {
+  background: var(--grass-tint-strong);
+}
+
+:host-context([data-theme="dark"]) .hover-gap {
+  outline-color: var(--grass);
+  background: var(--grass-tint);
 }

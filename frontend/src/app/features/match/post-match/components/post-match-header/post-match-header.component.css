@@ -190,26 +190,26 @@
 /* Modo Oscuro */
 
 :host-context([data-theme="dark"]) .match-score-pill {
-  border: 1px solid #2a3c5a;
+  border: 1px solid var(--btn-primary-bg);
 }
 
 :host-context([data-theme="dark"]) .score-delta-badge {
-  background-color: #162238;
-  border-color: #a3e635;
+  background-color: var(--surface-alt);
+  border-color: var(--grass);
 }
 
 :host-context([data-theme="dark"]) .view-switch {
-  background: #0b111e;
+  background: var(--bg);
   border-color: var(--border-sport);
 }
 
 :host-context([data-theme="dark"]) .view-option {
-  color: #cbd5e1;
+  color: var(--text-secondary);
 }
 
 :host-context([data-theme="dark"]) .view-option.active {
-  background: rgba(163, 230, 53, 0.18);
-  color: #a3e635;
+  background: var(--surface-overlay);
+  color: var(--text-primary);
 }
 
 /* Tablet vertical y celular: el selector baja a su fila, a ancho completo y en partes iguales.

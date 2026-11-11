@@ -120,7 +120,7 @@ INSERT INTO users (id, login_email, password_hash, role, person_id, active, acco
 -- =========================================
 
 INSERT INTO clubs (id, name, created_at, status, admin_user_id, city, logo_url, contact_email, contact_phone) VALUES
-    ('11111111-1111-1111-1111-000000000010', 'Puerto Madryn Rugby Club', '2026-10-17 17:04:12.746', 'ACTIVE', '11111111-1111-1111-1111-000000000001', 'Puerto Madryn', '/argentina-escudo.png', 'contacto@pmrc.com', '123456789');
+    ('11111111-1111-1111-1111-000000000010', 'Puerto Madryn Rugby Club', '2026-10-17 17:04:12.746', 'ACTIVE', '11111111-1111-1111-1111-000000000001', 'Puerto Madryn', '/escudo.png', 'contacto@pmrc.com', '123456789');
 
 -- Asociar las personas del club (el admin de OvalTrack no pertenece a ningún club)
 UPDATE persons SET club_id = '11111111-1111-1111-1111-000000000010'
