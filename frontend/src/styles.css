@@ -323,15 +323,8 @@ html:has(.pm-shell) {
   color: #ffffff;
 }
 
-[data-theme="dark"] .form-card {
-  background: #131c2e;
-  border-color: #2a3c5a;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45), 0 4px 12px rgba(0, 0, 0, 0.25);
-}
-
 [data-theme="dark"] .card-header,
 [data-theme="dark"] .form-card-header {
-  background: #162238;
   border-bottom: 2px solid #2a3c5a;
 }
 
@@ -699,17 +692,17 @@ button {
 }
 
 .form-card {
-  background: #ffffff;
-  border: 2px solid rgba(32, 75, 34, 0.28);
+  background: var(--surface);
+  border: 2px solid var(--border-sport);
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 16px 36px rgba(15, 35, 15, 0.12), 0 4px 12px rgba(15, 35, 15, 0.06);
+  box-shadow: var(--shadow-elevation);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .card-header,
 .form-card-header {
-  background: linear-gradient(180deg, #edf5e9 0%, #e0ebd8 100%);
+  background: linear-gradient(180deg, var(--surface-header-start) 0%, var(--surface-header-end) 100%);
   border-bottom: 2px solid rgba(32, 75, 34, 0.20);
   padding: 24px 32px 20px;
   margin: 0;
