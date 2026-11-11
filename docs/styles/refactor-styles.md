@@ -13,10 +13,11 @@ Decisiones del usuario: literal → token solo si el token vale lo mismo en clar
 
 ## 2. Estado
 
-- Rama `refactor/styles`: 29 commits sobre `main` (`main` no se tocó). Las ramas `refactor/styles-dead-code` (fase 1) y `refactor/styles-deduplicacion` (fase 2) quedaron incluidas y son redundantes.
+- Rama `refactor/styles`: ver `git log main..refactor/styles` (`main` no se tocó); incluye 3 commits `fix(styles)` de correcciones. Las ramas `refactor/styles-dead-code` (fase 1) y `refactor/styles-deduplicacion` (fase 2) quedaron incluidas y son redundantes.
 - Resultado: CSS de 20.492 a 18.561 líneas; `opponent-manager` deja de cargar ~1.300 líneas de Partidos; bundle inicial ~ −2,8 kB.
 - Correcciones tras comparar contra `main` (commits `fix(styles)`): se restauraron la animación `modalIn` del modal de Partidos y Rivales (el `@keyframes` debe vivir en la misma hoja que la regla `animation`), el padding del botón del pie del modal de alta post-partido en celular y el fondo `--surface` de `.sheet-wrapper` en oscuro. Caso latente: se quitó `.status-chip--danger`; hoy no se ve porque `derived-metrics.ts` nunca devuelve `danger`, pero `MetricStatusType` lo permite.
 - Verificado: build de producción OK, `./ds test-front` en verde (448 pruebas), comparación de equivalencia por selector, clases usadas siguen definidas. **Falta la verificación visual manual** (390/1024/1440 px, claro y oscuro); la lista de pantallas está en el PR.
+- La rama `fix/theme-live-capture` (sale de `refactor/styles`, PR aparte) hace que Captura en vivo y Entretiempo usen `ThemeService`, el mismo tema claro/oscuro que el resto de la app. Cambia comportamiento, no es parte del refactor.
 - `supp/refactor-styles/` (ignorado por git) tiene `cambios.txt` (resumen para el grupo) y `pr.md` (título y descripción del PR).
 
 ## 3. Cómo quedaron organizados los estilos
@@ -50,7 +51,9 @@ Globales nuevos: `.feedback-state` (+ `--error`; estado de carga/error de Zonas,
 6. **Orden de la cascada al mover reglas.** El compartido va primero; una regla local de igual especificidad que antes aparecía antes de la movida pasaría a ganar. Comparar orden, especificidad, propiedades y elemento.
 7. **Fallbacks de `var()`.** `var(--x, valor)` con `--x` definido en `:root` equivale a `var(--x)`. No tocar tokens locales ni indefinidos (`--danger`, `--accent`, `--heat`, `--role-*`).
 8. **Nombres que chocan.** `.state-box`, `.scoreboard`, `.custom-input`, `.spinner`, `.status-chip` existen con estilos distintos en varias pantallas: nada de eso va a global con el mismo nombre.
-9. **Captura en vivo y entretiempo** son pantalla completa (DESIGN_SYSTEM §6.5): se compartió CSS, no se tocaron sus contenedores.
+9. **Reglas globales dentro de `@media`.** Borrar una regla de componente "igual a `.btn` global" no basta si un global con `@media` la pisa: en celular `.btn-invite { padding: 0 16px }` (`@media (max-width: 760px)`) le ganó al botón del pie del modal de alta post-partido. Antes de borrar, buscar la clase en los `@media` de `styles.css`.
+10. **Override oscuro que hace de fondo base.** Si la regla base de `.x` solo existe dentro de un `@media`, el override `:host-context([data-theme="dark"]) .x` puede ser lo único que le da fondo fuera de ese `@media` (pasó con `.sheet-wrapper`). Borrarlo lo deja transparente en otros anchos.
+11. **Captura en vivo y entretiempo** son pantalla completa (DESIGN_SYSTEM §6.5): se compartió CSS, no se tocaron sus contenedores.
 
 ## 5. Cómo se verificó (herramientas efímeras, no versionadas)
 
@@ -61,6 +64,7 @@ Se usaron scripts temporales de Python con un parser de llaves (no regex sobre e
 - **Fugas:** para cada regla de un compartido que no provenía de un componente, verificar que sus clases no estén en un mismo elemento de su plantilla.
 - **Conflictos antes de quitar un override oscuro o cambiar a token:** otras reglas del archivo con la misma clase o con otras clases del mismo elemento que fijen la misma familia de propiedades (`background*`, `border*`, `color`, `box-shadow`).
 - **Comentarios huérfanos** tras borrar reglas.
+- **Ganador por elemento:** para cada elemento de cada plantilla (clases de `class=""`, `[class.x]`, `[ngClass]`), comparar qué regla gana por propiedad (origen, especificidad, orden) con el CSS de `main` y con el de la rama, incluidos Bootstrap y `@media`. Detecta lo que el chequeo por selector no ve: reglas globales que pasan a ganar y keyframes que quedan en otra hoja.
 - Build: `docker exec ovaltrack-frontend npx ng build --configuration production --output-path /tmp/ot-build`. Specs puros: `./ds test-front`. Nunca `npm`/`ng` en el host. Avisos conocidos del build: presupuesto del bundle inicial y `.form-floating>~label`.
 
 ## 6. Pendientes y posibles siguientes pasos
