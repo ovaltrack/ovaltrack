@@ -364,7 +364,7 @@
   background: var(--surface-alt);
   border-color: var(--border-sport);
   color: var(--grass);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-elevation);
 }
 
 :host-context([data-theme="dark"]) .club-name-display {
@@ -429,7 +429,7 @@
 }
 
 :host-context([data-theme="dark"]) .data-empty {
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 :host-context([data-theme="dark"]) .form-label {
@@ -443,13 +443,13 @@
 }
 
 :host-context([data-theme="dark"]) .custom-input::placeholder {
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 :host-context([data-theme="dark"]) .custom-input:focus {
   border-color: var(--grass);
   background: var(--surface-hover);
-  box-shadow: 0 0 0 3px rgba(163, 230, 53, 0.2);
+  box-shadow: var(--focus-ring);
 }
 
 :host-context([data-theme="dark"]) .form-actions-footer {
