@@ -28,12 +28,8 @@
     padding: 0;
   }
 
-  .table-scroll-container {
-    flex: none;
-    height: auto;
-  }
-
-  .table-grid-wrapper {
+  .table-scroll-container,
+.table-grid-wrapper {
     flex: none;
     height: auto;
   }

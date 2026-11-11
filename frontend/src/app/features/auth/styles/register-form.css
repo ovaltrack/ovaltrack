@@ -278,7 +278,8 @@ select.rf-input {
   color: var(--text-primary);
 }
 
-.rf-hint {
+.rf-hint,
+.rf-option-meta {
   font-size: 12.5px;
   color: var(--text-muted);
 }
@@ -331,11 +332,6 @@ select.rf-input {
 .rf-option.is-selected {
   background: var(--grass-tint);
   font-weight: 600;
-}
-
-.rf-option-meta {
-  font-size: 12.5px;
-  color: var(--text-muted);
 }
 
 .rf-options-empty {
@@ -453,7 +449,8 @@ select.rf-input {
   cursor: pointer;
 }
 
-.rf-check a {
+.rf-check a,
+.rf-footer a {
   color: var(--grass-deep);
   font-weight: 700;
 }
@@ -489,11 +486,6 @@ select.rf-input {
   font-size: 14px;
   color: var(--text-secondary);
   text-align: center;
-}
-
-.rf-footer a {
-  color: var(--grass-deep);
-  font-weight: 700;
 }
 
 .rf-footer-legal {

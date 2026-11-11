@@ -372,7 +372,8 @@
   transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
 }
 
-.btn-tab-delete::after {
+.btn-tab-delete::after,
+.btn-stepper-square::after {
   content: '';
   position: absolute;
   top: 50%;
@@ -388,7 +389,8 @@
   border-color: #dc2626;
 }
 
-.btn-tab-delete:disabled {
+.btn-tab-delete:disabled,
+.panel-tab-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -452,11 +454,6 @@
   background: var(--grass-tint-strong);
   border-color: var(--grass);
   color: var(--grass);
-}
-
-.panel-tab-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .save-indicator {
@@ -794,16 +791,6 @@
   position: relative;
 }
 
-.btn-stepper-square::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 44px;
-  height: 44px;
-}
-
 .btn-stepper-square:hover {
   background: var(--surface-hover);
   border-color: var(--btn-primary-bg);
@@ -906,7 +893,8 @@
  * aviso "+N más"; lo que no entra del detalle scrollea dentro de su bloque, con el título fijo.
  */
 @media (min-width: 1121px) {
-  .view-tab-content {
+  .view-tab-content,
+.detail-frame {
     flex: 0 1 auto;
     min-height: 0;
     display: flex;
@@ -915,13 +903,6 @@
 
   .panel-section-header {
     flex: none;
-  }
-
-  .detail-frame {
-    flex: 0 1 auto;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
   }
 
   .detail-scroll {

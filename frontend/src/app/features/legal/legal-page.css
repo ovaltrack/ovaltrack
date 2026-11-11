@@ -90,7 +90,8 @@
   color: var(--grass-deep);
 }
 
-.legal-footer a {
+.legal-footer a,
+.legal-body a {
   color: var(--grass-deep);
   font-weight: 600;
 }
@@ -176,11 +177,6 @@
 
 .legal-body strong {
   color: var(--text-primary);
-}
-
-.legal-body a {
-  color: var(--grass-deep);
-  font-weight: 600;
 }
 
 .legal-statutory {

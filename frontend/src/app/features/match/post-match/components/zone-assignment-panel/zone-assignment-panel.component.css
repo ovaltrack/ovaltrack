@@ -81,7 +81,8 @@
 
 .segment:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.segment:hover:not(:disabled) { background: var(--surface-alt); border-color: var(--btn-primary-bg); }
+.segment:hover:not(:disabled),
+.step-btn:hover:not(:disabled) { background: var(--surface-alt); border-color: var(--btn-primary-bg); }
 
 .segment.is-active {
   background: var(--grass-tint-strong);
@@ -110,8 +111,6 @@
   font-weight: 700;
   line-height: 1;
 }
-
-.step-btn:hover:not(:disabled) { background: var(--surface-alt); border-color: var(--btn-primary-bg); }
 
 .form-control {
   min-height: 44px;

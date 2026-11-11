@@ -55,7 +55,8 @@
 .tracks { touch-action: pan-y; }
 /* Foco del teclado siempre visible: contorno de toda la pista y cursor sobre la fila */
 .tracks:focus { outline: none; }
-.tracks:focus-visible { outline: 3px solid var(--navy); outline-offset: 2px; }
+.tracks:focus-visible,
+.block:focus-visible { outline: 3px solid var(--navy); outline-offset: 2px; }
 .row-label.is-cursor { box-shadow: inset 4px 0 0 var(--navy); background: var(--navy-tint); }
 .cursor-stop, .cursor-minute {
   position: absolute; pointer-events: none; box-sizing: border-box; z-index: 5;
@@ -86,7 +87,6 @@
   transition: opacity .15s ease, box-shadow .15s ease;
 }
 .block:hover { background: var(--btn-primary-hover); }
-.block:focus-visible { outline: 3px solid var(--navy); outline-offset: 2px; }
 .block-label { font: 700 11px var(--font-mono); letter-spacing: .02em; white-space: nowrap; }
 /* Anillos: el ámbar es "sin zona" en esta pantalla, así que no se usa para resaltar. El orden importa: gana el último. */
 /* Resalte cruzado (hover en la cancha): anillo verde oscuro fino; el resto de los bloques se atenúa */
