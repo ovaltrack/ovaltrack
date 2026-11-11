@@ -206,9 +206,11 @@ export class CargaEnVivoComponent implements OnInit, OnDestroy {
     }
     const query = { matchId };
     this.matchId = matchId;
+    const loadingToastId = this.showProgressToast('Cargando partido…');
 
     this.liveCaptureService.getLiveCaptureBootstrap(query).subscribe({
       next: response => {
+        this.toastService.dismiss(loadingToastId);
         const state = response.state;
         this.homeTeam = state.homeTeam;
         this.awayTeam = state.awayTeam;
@@ -461,7 +463,7 @@ export class CargaEnVivoComponent implements OnInit, OnDestroy {
     } else if (this.period === 2 && !this.isHalftime) {
       this.showConfirmFinish = true;
     } else if (this.isHalftime) {
-      this.router?.navigate(['/live-capture', this.matchId, 'halftime']);
+      this.navigateAndDismiss(['/live-capture', this.matchId, 'halftime'], this.showProgressToast('Pasando al entretiempo…'));
     }
   }
 
@@ -510,6 +512,7 @@ export class CargaEnVivoComponent implements OnInit, OnDestroy {
     this.clockElapsedSeconds = this.parseClock(this.gameClock);
     this.periodLabel = 'Finalizado';
     this.persistState();
+    const finishingToastId = this.showProgressToast('Finalizando partido…');
 
     try {
       // 1. Asegurar sincronización de eventos pendientes antes de cerrar el partido
@@ -521,7 +524,7 @@ export class CargaEnVivoComponent implements OnInit, OnDestroy {
       this.isFinished = true;
       this.synchronized = true;
       this.isOfflineMode = false;
-      this.router?.navigate(['/post-match/', this.matchId]);
+      this.navigateAndDismiss(['/post-match/', this.matchId], finishingToastId);
     } catch (error) {
       this.synchronized = false;
       this.toastService.error((error instanceof HttpErrorResponse ? this.readBackendError(error) : null)
@@ -557,7 +560,21 @@ export class CargaEnVivoComponent implements OnInit, OnDestroy {
     });
 
     // 4. Redirigir a la pantalla dedicada de estadísticas de entretiempo
-    this.router?.navigate(['/live-capture', this.matchId, 'halftime']);
+    this.navigateAndDismiss(['/live-capture', this.matchId, 'halftime'], this.showProgressToast('Pasando al entretiempo…'));
+  }
+
+  /** Aviso fijo (sin vencimiento) mientras dura una carga o un cambio de pantalla; devuelve su id para cerrarlo. */
+  private showProgressToast(message: string): string {
+    return this.toastService.info(message, 'Carga en vivo', 0);
+  }
+
+  /** El contenedor de toasts es global: el aviso se cierra recién cuando la pantalla siguiente terminó de abrir. */
+  private navigateAndDismiss(commands: unknown[], toastId: string): void {
+    if (!this.router) {
+      this.toastService.dismiss(toastId);
+      return;
+    }
+    void this.router.navigate(commands).finally(() => this.toastService.dismiss(toastId));
   }
 
   async openCurrentStatisticsModal(): Promise<void> {

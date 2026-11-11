@@ -103,6 +103,40 @@ class MatchServiceOfflineSyncTest {
     }
 
     @Test
+    @DisplayName("cerrar el primer tiempo lleva el reloj a 40:00 si no llegó y lo pausa")
+    void closeFirstHalf_movesClockToHalfDurationAndPauses() {
+        Match match = Match.builder().status(MatchStatus.IN_PROGRESS).clockElapsedSeconds(1500).clockPaused(false).build();
+
+        match.closeFirstHalf();
+
+        assertEquals(Match.HALF_DURATION_SECONDS, match.getClockElapsedSeconds());
+        assertTrue(match.getClockPaused());
+        assertNotNull(match.getClockUpdatedAt());
+    }
+
+    @Test
+    @DisplayName("iniciar el segundo tiempo arranca el reloj en 40:00 si el primero no llegó")
+    void startSecondHalf_movesClockToHalfDurationAndRunsIt() {
+        Match match = Match.builder().status(MatchStatus.HALFTIME).clockElapsedSeconds(1500).clockPaused(true).build();
+
+        match.startSecondHalf();
+
+        assertEquals(Match.HALF_DURATION_SECONDS, match.getClockElapsedSeconds());
+        assertFalse(match.getClockPaused());
+        assertNotNull(match.getClockUpdatedAt());
+    }
+
+    @Test
+    @DisplayName("iniciar el segundo tiempo conserva el reloj si el primero pasó de 40:00")
+    void startSecondHalf_keepsClockPastHalfDuration() {
+        Match match = Match.builder().status(MatchStatus.HALFTIME).clockElapsedSeconds(2580).clockPaused(true).build();
+
+        match.startSecondHalf();
+
+        assertEquals(2580, match.getClockElapsedSeconds());
+    }
+
+    @Test
     @DisplayName("finish usa la hora informada por el cliente")
     void finish_usesClientOccurredAt() {
         Match match = matchWithStatus(MatchStatus.IN_PROGRESS);

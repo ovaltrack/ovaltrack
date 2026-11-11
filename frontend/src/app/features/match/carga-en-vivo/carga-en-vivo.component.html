@@ -4,10 +4,6 @@
     [class.live-capture--neutral]="currentPossession === 'NEUTRAL'"
     [class.live-capture--opponent]="currentPossession === 'OPPONENT'"
     [class.live-capture--paused]="clockPaused">
-    @if (isLoading) {
-    <p class="live-capture__loading" role="status" aria-live="polite">Cargando
-        partido...</p>
-    }
     <header class="live-capture__header">
         <div class="live-capture__brand">
             <img class="live-capture__brand-icon"
