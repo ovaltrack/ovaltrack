@@ -640,10 +640,10 @@
 }
 
 /* Modo Oscuro */
-/* Sin jugador: el rayado es ámbar de advertencia sobre el carril, no naranja y blanco (la regla base usa !important) */
+/* Sin jugador: marcador hueco con borde ámbar y tinte suave (sin franjas, que a 6 px parecen cinta de advertencia); la regla base usa !important */
 :host-context([data-theme="dark"]) .marker.marker-unassigned {
-  background: repeating-linear-gradient(135deg, var(--warning) 0 3px, var(--surface-track) 3px 6px) !important;
-  border: 1px solid var(--warning-border) !important;
+  background: var(--warning-tint) !important;
+  border: 1.5px solid var(--warning) !important;
 }
 
 :host-context([data-theme="dark"]) .marker.marker-selected {

@@ -402,7 +402,7 @@ La línea de tiempo y la tabla de Eventos colorean cada jugada con `resolveEvent
 | `--event-turnover` | turnover | `#d96a0a` | `#e9925a` | Cambio de posesión |
 | `--event-default` | el resto | `#204b22` | `#74c785` | Ataque |
 
-El rayado «sin jugador» es ámbar de advertencia sobre el carril (`--warning` y `--surface-track`), en la línea de tiempo y en la leyenda del KPI; el contador usa `--warning`.
+«Sin jugador» se marca en oscuro con un marcador hueco: borde `--warning` y tinte `--warning-tint`, sin rayado (a 6 px las franjas parecen una cinta de advertencia). Es igual en la línea de tiempo y en la leyenda del KPI; el contador usa `--warning`.
 
 ### 5.7 Zonas
 
