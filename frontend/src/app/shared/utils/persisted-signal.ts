@@ -13,15 +13,25 @@ export interface PersistedSignalOptions<T> {
   storage?: PersistedStorage | null;
 }
 
+export interface PersistedSignal<T> extends WritableSignal<T> {
+  /**
+   * Cambia la clave donde se guarda (p. ej. al abrir otro partido) y carga lo guardado para ella, o el valor
+   * inicial. Con `null` deja de guardar y vuelve al valor inicial, solo en memoria.
+   */
+  useKey(key: string | null): void;
+}
+
 /**
  * Señal cuyo valor sobrevive a recargar la página y a salir y volver a la pantalla (mientras dure la pestaña).
  * Pensada para preferencias de la vista (filtros, pestañas), no para datos: esos van en Dexie o en el backend.
  * Si el almacenamiento no está disponible (modo privado, cuota llena) se comporta como una señal común.
+ * Con `key = null` no guarda nada hasta que se le asigna una con `useKey` (cuando la clave depende de un id
+ * que se conoce después, como el del partido).
  */
-export function persistedSignal<T>(key: string, initial: T, options: PersistedSignalOptions<T> = {}): WritableSignal<T> {
+export function persistedSignal<T>(key: string | null, initial: T, options: PersistedSignalOptions<T> = {}): PersistedSignal<T> {
   const storage = options.storage === undefined ? browserSessionStorage() : options.storage;
-  const storageKey = KEY_PREFIX + key;
-  const state = signal<T>(readValue(storage, storageKey, initial, options.isValid));
+  let storageKey = key === null ? null : KEY_PREFIX + key;
+  const state = signal<T>(readValue(storage, storageKey, initial, options.isValid)) as PersistedSignal<T>;
   const setInMemory = state.set.bind(state);
 
   const set = (value: T): void => {
@@ -30,7 +40,16 @@ export function persistedSignal<T>(key: string, initial: T, options: PersistedSi
   };
   state.set = set;
   state.update = updater => set(updater(state()));
+  state.useKey = nextKey => {
+    storageKey = nextKey === null ? null : KEY_PREFIX + nextKey;
+    setInMemory(readValue(storage, storageKey, initial, options.isValid));
+  };
   return state;
+}
+
+/** Validador para `isValid`: el valor guardado tiene que ser una de las opciones del filtro. */
+export function oneOf<T>(values: readonly T[]): (value: unknown) => value is T {
+  return (value: unknown): value is T => values.includes(value as T);
 }
 
 /** Borra todo lo guardado con `persistedSignal` (al cerrar sesión, para que otro usuario no lo herede). */
@@ -55,11 +74,11 @@ function browserSessionStorage(): PersistedStorage | null {
 
 function readValue<T>(
   storage: PersistedStorage | null,
-  storageKey: string,
+  storageKey: string | null,
   initial: T,
   isValid?: (value: unknown) => value is T,
 ): T {
-  if (!storage) return initial;
+  if (!storage || storageKey === null) return initial;
   try {
     const raw = storage.getItem(storageKey);
     if (raw === null) return initial;
@@ -73,8 +92,8 @@ function readValue<T>(
   }
 }
 
-function writeValue<T>(storage: PersistedStorage | null, storageKey: string, value: T): void {
-  if (!storage) return;
+function writeValue<T>(storage: PersistedStorage | null, storageKey: string | null, value: T): void {
+  if (!storage || storageKey === null) return;
   try {
     storage.setItem(storageKey, JSON.stringify(value));
   } catch {

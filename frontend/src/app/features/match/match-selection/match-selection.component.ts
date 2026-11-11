@@ -28,11 +28,9 @@ import interactionPlugin from '@fullcalendar/interaction';
 import multiMonthPlugin from '@fullcalendar/multimonth';
 import { FullCalendarComponent } from '@fullcalendar/angular';
 import { LoadingGate } from '../../../shared/utils/loading-gate';
-import { persistedSignal } from '../../../shared/utils/persisted-signal';
+import { oneOf, persistedSignal } from '../../../shared/utils/persisted-signal';
 
-const isMatchFilter = (value: unknown): value is MatchFilter => MATCH_FILTERS.includes(value as MatchFilter);
 const isString = (value: unknown): value is string => typeof value === 'string';
-const isBoolean = (value: unknown): value is boolean => typeof value === 'boolean';
 
 /**
  * Pantalla de selección y alta de partidos.
@@ -74,7 +72,7 @@ export class MatchSelectComponent implements OnInit, OnDestroy {
   readonly selectedDivisionId = persistedSignal<string>('match-selection.division', '', { isValid: isString });
   availableOpponents: Opponent[] = [];
   /** Filtro actualmente seleccionado en el control segmentado. */
-  readonly activeFilter = persistedSignal<MatchFilter>('match-selection.filter', 'all', { isValid: isMatchFilter });
+  readonly activeFilter = persistedSignal<MatchFilter>('match-selection.filter', 'all', { isValid: oneOf(MATCH_FILTERS) });
 
   /** Si el panel de alta de partido está abierto. */
   isCreateOpen = false;
@@ -97,7 +95,7 @@ export class MatchSelectComponent implements OnInit, OnDestroy {
   isPickerOpen = false;
   isDayModalOpen = false;
   isYearView = false;
-  readonly isCalendarView = persistedSignal<boolean>('match-selection.cards', false, { isValid: isBoolean });
+  readonly isCalendarView = persistedSignal<boolean>('match-selection.cards', false, { isValid: oneOf([true, false]) });
   pickerYear = new Date().getFullYear();
   readonly monthsShort = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   selectedMonth: string = '';
