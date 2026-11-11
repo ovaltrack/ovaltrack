@@ -159,15 +159,15 @@ Límite conocido: `#858b7e` da 2,80 : 1 sobre el contenedor `--surface-segment`;
 
 ## 2. Tipografía
 
-El sistema utiliza tres familias tipográficas de Google Fonts cargadas globalmente:
+El sistema utiliza tres familias tipográficas, **empaquetadas con la app** (`@fontsource`, subconjunto latin con tildes y ñ, importadas al inicio de `frontend/src/styles.css`; no hay CDN, así que el Service Worker las precachea y funcionan sin conexión):
 
-```html
-<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
-```
+- Hanken Grotesk 600, 700 y 800; Inter 400, 500, 600 y 700; JetBrains Mono 500, 600 y 700 (10 caras woff2, de 14 a 24 KB cada una).
+- Un peso que no se carga (por ejemplo 800 sobre Inter o JetBrains Mono) lo resuelve el navegador con el más cercano (700). No se precargan con `<link rel="preload">`: los archivos llevan hash en el nombre y cambia con cada build.
+- Antes de quitar una cara hay que comprobar que ninguna pantalla la use (los pesos 500 a 800 aparecen en los tres tipos de letra).
 
 | Familia | Pesos | Uso principal |
 |---|---|---|
-| **Hanken Grotesk** (`--font-head`) | 700, 800 | Títulos de página (HUD), encabezados de tarjetas, títulos de modales y logos. |
+| **Hanken Grotesk** (`--font-head`) | 600, 700, 800 | Títulos de página (HUD), encabezados de tarjetas, títulos de modales y logos. |
 | **Inter** (`--font-body`) | 400, 500, 600, 700 | Textos de interfaz, inputs, tablas, botones, descripciones y badges. |
 | **JetBrains Mono** (`--font-mono`) | 500, 600, 700 | Dorsales, emails, contadores, timestamps y datos numéricos/estadísticos. |
 
@@ -697,3 +697,13 @@ Reglas al tocar estilos:
 - Un override oscuro (`:host-context([data-theme="dark"])`) usa tokens, no colores escritos a mano (§5.1). Borrarlo solo si el token vale lo mismo en claro y en oscuro, y ninguna regla de estado (`:hover`, `.active`) o de otra clase del mismo elemento compite por la propiedad.
 - No usar `var(--token, valor)` con tokens definidos en `:root`: el respaldo nunca se aplica.
 - El nombre `.state-box` no es global: existe con estilos distintos en entretiempo, invitación y el shell de post-partido. El estado de pantalla común es `.feedback-state`.
+
+### 10.1 Íconos y Bootstrap generados, fondos fijos y presupuesto
+
+Dos piezas del CSS global (los íconos y la hoja de Bootstrap) **no se editan a mano**: se generan y se commitean, así `./ds up`, `./ds pwa` y el deploy automático no necesitan pasos extra.
+
+- **Íconos (`frontend/src/icons/`):** Bootstrap Icons (`bi bi-*`) y Tabler (`ti ti-*`) se cargan solo con los glifos que usan las plantillas y los `.ts` (115 de unos 8.000: 12,8 KB de fuentes en lugar de 1 MB). Las clases, los códigos y los dibujos son los de las librerías. Se regeneran con `python3 frontend/scripts/icons/build-icon-subset.py` (requiere `fonttools` y `brotli`, y `node_modules` copiado del contenedor con `./ds sync-node`; ver la cabecera del script). Se importan desde `styles.css` con `@import "./icons/icons.css"`.
+- **Bootstrap (`frontend/src/bootstrap/bootstrap-subset.css`):** `angular.json` carga este archivo en lugar de `bootstrap.min.css`. Conserva, sin tocar y en el mismo orden, las reglas sin clases (reboot, `:root`) y las que nombran clases que alguna plantilla o `.ts` menciona; una regla con una clase que nadie usa no puede coincidir con ningún elemento, así que ningún ganador cambia. Se regenera con `docker exec -u "$(id -u):$(id -g)" ovaltrack-frontend node scripts/bootstrap/build-bootstrap-subset.mjs`. Bootstrap aporta estilos a clases usadas por nombre aunque no sea la intención (`.bi`, `.card-title`, `.card-header` y `.card-subtitle` sin `.card`, `.figure`, `.carousel`, `.small`, `.container`): se conservan porque sus nombres aparecen en las plantillas.
+- **Comprobación en el build:** `npm run build` (lo que usan `Dockerfile.pwa` y Vercel) corre `scripts/check-icons.mjs` y `build-bootstrap-subset.mjs --check` y falla, con la lista, si una pantalla usa un ícono o una clase de Bootstrap que el archivo generado no tiene. `ng serve` (`./ds up`) no corre esas comprobaciones: un ícono o una clase faltante se vería sin estilo en desarrollo, así que hay que regenerar antes de commitear.
+- **Fondos fijos:** `body` conserva `background-attachment: fixed` (en iOS el `fixed` ya se comporta como `scroll`: pasarlo a un seudoelemento fijo cambiaría lo que se ve ahí). `.halftime-page` no lo usa: su fondo ocupa justo el viewport.
+- **Presupuesto:** el bundle inicial pesa unos 750 kB contra un presupuesto de 1 MB; ninguna optimización tocó `angular.json` más que la hoja de Bootstrap.

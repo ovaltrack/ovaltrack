@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Selection Roster Component Styles (Sport Pro Salvia & Dark Rugby Tech)
+   Selection Roster Component Styles (Cal y botella & Dark Rugby Tech)
    ========================================================================== */
 
 :host {
@@ -52,7 +52,7 @@
   --r-footer-shadow: 0 -8px 30px rgba(0, 0, 0, 0.45);
 }
 
-/* --- Tokens Modo Claro (Sport Pro Salvia) --- */
+/* --- Tokens Modo Claro (Cal y botella) --- */
 :host-context([data-theme="light"]) {
   --r-bg: transparent;
   background-color: transparent;
