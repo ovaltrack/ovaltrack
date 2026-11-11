@@ -125,6 +125,8 @@ describe('CargaEnVivoComponent', () => {
             warning: () => undefined,
             error: () => undefined,
             clear: () => undefined,
+            info: () => 'toast-id',
+            dismiss: () => undefined,
           },
         },
       ],
@@ -430,6 +432,41 @@ describe('CargaEnVivoComponent', () => {
 
       expect(syncIcon().classList.contains('ti-cloud-off')).toBe(true);
       expect(syncIcon().getAttribute('aria-label')).toBe('Sin conexión, guardando local');
+    });
+  });
+
+  describe('progress toasts', () => {
+    type ToastCalls = { info: unknown[][]; dismiss: string[]; error: unknown[][] };
+
+    /** Reemplaza los métodos del mock de ToastService por unos que registran sus llamadas. */
+    const recordToasts = (infoId: string): ToastCalls => {
+      const calls: ToastCalls = { info: [], dismiss: [], error: [] };
+      const toastService = TestBed.inject(ToastService);
+      toastService.info = (...args: unknown[]) => { calls.info.push(args); return infoId; };
+      toastService.dismiss = (id: string) => { calls.dismiss.push(id); };
+      toastService.error = (...args: unknown[]) => { calls.error.push(args); return 'error-toast'; };
+      return calls;
+    };
+
+    it('should show a toast while going to halftime and dismiss it once the navigation ends', async () => {
+      const calls = recordToasts('halftime-toast');
+      component.period = 1;
+
+      await component.confirmCloseFirstHalf();
+      await new Promise(resolve => setTimeout(resolve));
+
+      expect(calls.info).toEqual([['Pasando al entretiempo…', 'Carga en vivo', 0]]);
+      expect(calls.dismiss).toEqual(['halftime-toast']);
+    });
+
+    it('should replace the finishing toast with the error when the match cannot be finished', async () => {
+      const calls = recordToasts('finish-toast');
+      TestBed.inject(MatchService).finishMatch = () => { throw new Error('offline'); };
+
+      await component.confirmFinishMatch();
+
+      expect(calls.info).toEqual([['Finalizando partido…', 'Carga en vivo', 0]]);
+      expect(calls.error.length).toBe(1);
     });
   });
 });
