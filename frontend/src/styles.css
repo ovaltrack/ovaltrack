@@ -194,6 +194,9 @@
     radial-gradient(ellipse 70% 45% at 50% 0%, rgba(255, 255, 255, 0.05), transparent 70%),
     repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.022) 0 1.5px, transparent 1.5px 54px);
   --veil: rgba(255, 255, 255, 0.05);
+  --surface-track: #111214;
+  --scrim: rgba(0, 0, 0, 0.6);
+  --team-rival: #93b4e0;
   --btn-on-board-fg: #204b22;
   /* Tablero de Inicio: valor propio, para que cambiar --grass o --zone-heat-low no lo arrastre (DESIGN_SYSTEM §9.1) */
   --on-board-accent: #a3e635;
