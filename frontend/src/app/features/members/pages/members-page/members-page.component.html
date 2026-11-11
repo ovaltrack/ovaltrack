@@ -1,9 +1,12 @@
 <div class="layout-container page members-page">
-  <header class="mp-header">
-    <h1 class="mp-title">Miembros</h1>
-    <p class="mp-subtitle">
-      {{ canManageAccounts() ? 'Cuentas del club e invitaciones a jugadores.' : 'Jugadores de tus divisiones e invitaciones.' }}
-    </p>
+  <header class="hud">
+    <div class="hud-text hud-text--fluid">
+      <p class="label-mono hud-label">Comunidad & Staff</p>
+      <h1 class="hud-title">Miembros</h1>
+      <p class="hud-subtitle">
+        {{ canManageAccounts() ? 'Cuentas del club e invitaciones a jugadores.' : 'Jugadores de tus divisiones e invitaciones.' }}
+      </p>
+    </div>
   </header>
 
   @if (canManageAccounts()) {

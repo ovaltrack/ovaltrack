@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Resumen de entretiempo — Sport Pro Salvia (docs/DESIGN_SYSTEM.md)
+   Resumen de entretiempo — Cal y botella / Grafito (docs/DESIGN_SYSTEM.md)
    Pantalla completa exenta de .layout-container (§6.5, §7.3). Solo tokens del
    sistema: [data-theme="dark"] en .halftime-page activa los de styles.css y los
    valores de respaldo son los del modo claro (§1.1).
@@ -31,17 +31,8 @@
   color: var(--text-primary);
   font-family: var(--font-body);
 
-  /* Fondo de cancha salvia (§3.1) */
-  background-color: #e1edde;
-  background-image:
-    radial-gradient(ellipse at 50% 30%, rgba(225, 237, 222, 0.92) 0%, rgba(225, 237, 222, 0.65) 35%, rgba(225, 237, 222, 0.15) 65%, transparent 80%),
-    repeating-linear-gradient(135deg, rgba(55, 75, 60, 0.14) 0px, rgba(55, 75, 60, 0.14) 1.5px, transparent 1.5px, transparent 54px);
-  background-attachment: fixed;
-}
-
-/* Fondo de cancha nocturno: el mismo de `[data-theme="dark"] body` en styles.css */
-.halftime-page[data-theme="dark"] {
-  background-color: var(--bg);
+  /* Fondo cal con líneas a 135° (el mismo de `body` en styles.css) */
+  background-color: var(--bg-canvas);
   background-image: var(--canvas-image);
 }
 

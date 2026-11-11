@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Modal de estadísticas en vivo — Sport Pro Salvia (docs/DESIGN_SYSTEM.md)
+   Modal de estadísticas en vivo — Cal y botella / Grafito (docs/DESIGN_SYSTEM.md)
    Solo tokens del sistema: en modo oscuro los redefine styles.css bajo
    [data-theme="dark"]; los valores de respaldo son los del modo claro (§1.1).
    ========================================================================== */
@@ -261,7 +261,8 @@
   font-size: 14px;
 }
 
-.possession-ratio__vs {
+.possession-ratio__vs,
+.metric__caption {
   font-size: 12px;
   color: var(--text-muted);
 }
@@ -312,11 +313,6 @@
   font-weight: 700;
   font-size: 28px;
   line-height: 1;
-}
-
-.metric__caption {
-  font-size: 12px;
-  color: var(--text-muted);
 }
 
 .rows {

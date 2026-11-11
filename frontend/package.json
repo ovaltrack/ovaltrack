@@ -4,6 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "prebuild": "node scripts/check-icons.mjs && node scripts/bootstrap/build-bootstrap-subset.mjs --check",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"

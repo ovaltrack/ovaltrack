@@ -1,21 +1,6 @@
-/* Contenedor de Miembros con pestañas. Solo tokens de Sport Pro Salvia. */
+/* Contenedor de Miembros con pestañas. Solo tokens del design system (Cal y botella y Grafito). */
 :host {
   display: block;
-}
-
-.mp-header {
-  margin: 28px 0 16px;
-}
-
-.mp-title {
-  margin: 0 0 4px;
-  font: 800 clamp(26px, 4vw, 32px)/1.15 var(--font-head);
-  color: var(--text-primary);
-}
-
-.mp-subtitle {
-  margin: 0;
-  color: var(--text-secondary);
 }
 
 .mp-tabs {

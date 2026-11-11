@@ -8,30 +8,6 @@
   gap: 12px 20px;
 }
 
-.hud-text {
-  min-width: 0;
-}
-
-.hud-label {
-  margin: 0 0 6px;
-}
-
-.hud-title {
-  margin: 0;
-  font-family: var(--font-head);
-  font-weight: 800;
-  font-size: 44px;
-  line-height: 1.05;
-  letter-spacing: -0.03em;
-  color: var(--text-primary);
-}
-
-.hud-subtitle {
-  margin: 6px 0 0;
-  font-size: 15px;
-  color: var(--text-secondary);
-}
-
 .hud-actions {
   flex-wrap: wrap;
   gap: 10px;
@@ -40,10 +16,6 @@
 }
 
 @media (max-width: 700px) {
-  .hud-title {
-    font-size: 32px;
-  }
-
   .hud-actions {
     width: 100%;
   }

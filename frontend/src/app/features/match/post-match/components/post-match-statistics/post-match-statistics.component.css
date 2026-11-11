@@ -1,6 +1,7 @@
 :host { display: block; }
 
-.stats-page { display: flex; flex-direction: column; gap: 20px; }
+.stats-page,
+.stats-layout { display: flex; flex-direction: column; gap: 20px; }
 
 /* ---------- Barra de filtros (mismo estilo de píldora que Eventos) ---------- */
 .stats-toolbar {
@@ -19,7 +20,7 @@
 }
 .filter-pill:hover { background: var(--surface-alt); }
 .filter-pill.active, .filter-pill.active:hover {
-  background: #d6eac0; border-color: var(--btn-primary-bg); color: var(--btn-primary-bg);
+  background: var(--grass-tint-strong); border-color: var(--btn-primary-bg); color: var(--btn-primary-bg);
   box-shadow: inset 0 0 0 1px var(--btn-primary-bg);
 }
 
@@ -32,8 +33,6 @@
 .form-card-title { margin: 0; font: 800 20px var(--font-head); color: var(--text-primary); }
 .form-card-subtitle { margin: 4px 0 0; color: var(--text-secondary); }
 .form-card-body { padding: 24px 28px; display: flex; flex-direction: column; gap: 24px; }
-
-.stats-layout { display: flex; flex-direction: column; gap: 20px; }
 
 /* ---------- Scoreboard ---------- */
 .scoreboard { display: grid; grid-template-columns: 1fr minmax(240px, 2fr) 1fr; align-items: center; gap: 24px; }
@@ -157,7 +156,8 @@
 .compare-row--plain .compare-row__label { text-align: center; }
 .compare-row .zero { color: var(--text-muted); font-weight: 500; }
 
-.breakdown { display: flex; flex-direction: column; gap: 10px; }
+.breakdown,
+.stat-group { display: flex; flex-direction: column; gap: 10px; }
 .breakdown__title {
   margin: 0; padding-bottom: 6px; border-bottom: 2px solid var(--border-sport-subtle);
   font: 800 12px var(--font-head); text-transform: uppercase; letter-spacing: .06em;
@@ -200,7 +200,6 @@
 .player-head__info { flex: 1; min-width: 0; }
 .jersey--lg { min-width: 48px; height: 48px; font-size: 18px; }
 .player-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 22px; }
-.stat-group { display: flex; flex-direction: column; gap: 10px; }
 .stat-group .breakdown__title { display: flex; align-items: center; gap: 8px; }
 .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
 .stat-tile {
@@ -233,7 +232,6 @@
 /* Modo oscuro: filtro activo con el tinte de selección y el acento */
 :host-context([data-theme="dark"]) .filter-pill.active,
 :host-context([data-theme="dark"]) .filter-pill.active:hover {
-  background: var(--grass-tint-strong);
   border-color: var(--grass);
   color: var(--grass);
   box-shadow: inset 0 0 0 1px var(--grass);

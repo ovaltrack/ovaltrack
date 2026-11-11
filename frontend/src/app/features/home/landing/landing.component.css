@@ -197,7 +197,8 @@
   color: var(--text-primary);
 }
 
-.step-desc {
+.step-desc,
+.audience-desc {
   font-size: 14px;
   line-height: 1.5;
   color: var(--text-secondary);
@@ -388,13 +389,6 @@
   color: var(--text-primary);
 }
 
-.audience-desc {
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--text-secondary);
-  margin: 0;
-}
-
 /* ---------- Cierre ---------- */
 .closing {
   display: flex;
@@ -492,7 +486,6 @@
     width: min(100%, 640px);
     margin-inline: auto;
   }
-
 
   .steps {
     grid-template-columns: repeat(2, minmax(0, 1fr));

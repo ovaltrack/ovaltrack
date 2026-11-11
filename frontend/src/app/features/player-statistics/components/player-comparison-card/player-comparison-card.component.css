@@ -13,7 +13,8 @@
 .legend > span { display: inline-flex; align-items: center; gap: 6px; }
 .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 .dot--player { background: var(--btn-primary-bg); }
-.dot--squad { background: var(--navy); opacity: .55; }
+.dot--squad,
+.fill--squad { background: var(--navy); opacity: .55; }
 
 .metric-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .metric {
@@ -45,7 +46,6 @@
 .track { height: 8px; border-radius: var(--radius-pill); background: var(--surface-alt); overflow: hidden; }
 .fill { height: 100%; border-radius: var(--radius-pill); transition: width .3s ease; }
 .fill--player { background: var(--btn-primary-bg); }
-.fill--squad { background: var(--navy); opacity: .55; }
 
 @media (max-width: 560px) {
   .metric { grid-template-columns: minmax(0, 1fr) auto; gap: 10px 12px; }

@@ -84,10 +84,10 @@ Variables en `.env` (ignorado por git): `DB_*`, `OVALTRACK_BOOTSTRAP_ADMIN_EMAIL
 - Notificaciones: **siempre `ToastService`** (`success/error/warning/info`); nunca `window.alert()` ni librerías externas.
 - Rutas principales: `/home`, `/auth/*`, `/club`, `/club/new`, `/divisions`, `/divisions/new`, `/divisions/:id/players|coaches`, `/players/new`, `/members`, `/match-selection`, `/opponent`, `/selection-roster/:id`, `/live-capture/:matchId`, `/live-capture/:matchId/halftime`, `/post-match/:id`, `/post-match/:id/statistics`, `/invitation`, `/admin/ovaltrack`.
 
-## 5. UI / Design System "Sport Pro Salvia"
+## 5. UI / Design System "Cal y botella" (claro) y "Grafito" (oscuro)
 
-Fuente de verdad: `docs/DESIGN_SYSTEM.md` + `frontend/src/styles.css`. Bootstrap 5 y Bootstrap Icons disponibles globalmente.
-- **No inventar colores ni sombras**; usar tokens (`--bg-canvas: #e1edde`, `--btn-primary-bg: #204b22`, `--border-sport`, `--surface`, etc.).
+Fuente de verdad: `docs/DESIGN_SYSTEM.md` + `frontend/src/styles.css`. Bootstrap 5 y Bootstrap Icons disponibles globalmente **como subconjuntos generados y commiteados** (`frontend/src/icons/` y `frontend/src/bootstrap/bootstrap-subset.css`): al usar un ícono o una clase de Bootstrap nuevos hay que regenerarlos y commitear el resultado (comandos en `AGENTS.md`); si no, `npm run build` falla.
+- **No inventar colores ni sombras**; usar tokens (`--bg-canvas: #eef0ea`, `--btn-primary-bg: #204b22`, `--border-sport`, `--surface`, etc.). El verde botella es el único color de marca; el lima (`--brand-signature`) va solo sobre superficies verde botella.
 - **Un solo botón primario sólido verde por pantalla**; el resto `outline`; rojo solo destructivo.
 - Tarjetas/tablas: borde 2px, radio 16–20px, sombra de elevación. Hit-targets táctiles **44–48px**.
 - Pantallas de gestión dentro de `.layout-container.page` (max 1180px; wide 1560px).

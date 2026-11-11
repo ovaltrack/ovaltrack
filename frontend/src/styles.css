@@ -10,32 +10,34 @@
 @import "@fontsource/jetbrains-mono/latin-500.css";
 @import "@fontsource/jetbrains-mono/latin-600.css";
 @import "@fontsource/jetbrains-mono/latin-700.css";
-@import "@tabler/icons-webfont/dist/tabler-icons.min.css";
-@import "bootstrap-icons/font/bootstrap-icons.css";
+@import "./icons/icons.css";
 
 /* ==========================================================================
    Design Tokens (Claro / Base Reutilizable)
    ========================================================================== */
 :root {
-  --bg: #f6f7f1;
+  --bg: #f6f7f3;
   --surface: #ffffff;
-  --surface-alt: #eef1e7;
-  --surface-hover: #f1f3ea;
-  --border: rgba(27, 33, 22, 0.10);
-  --border-strong: rgba(27, 33, 22, 0.22);
+  --surface-alt: #f6f7f3;
+  --surface-hover: #f3f4f0;
+  --surface-track: #f9faf7;        /* carril de la línea de tiempo */
+  --border: #e6e8e2;
+  --border-strong: #858b7e;        /* inputs y controles: 3,50 : 1 sobre blanco */
 
   --text-primary: #1b2116;
   --text-secondary: #4b5540;
-  --text-muted: #7c8571;
+  --text-muted: #646b5b;           /* 5,53 : 1 sobre blanco, 4,69 : 1 sobre el tinte */
 
-  /* Verde "pasto" — reservado a acciones primarias / confirmar / estado activo */
-  --grass: #91da40;
-  --grass-hover: #7fc932;
-  --on-grass: #1d3700;
-  --grass-deep: #3a6410;          /* contraste AA sobre fondos claros */
-  --grass-tint: rgba(145, 218, 64, 0.18);
-  --grass-tint-strong: rgba(145, 218, 64, 0.30);
-  --grass-border: rgba(90, 150, 30, 0.45);
+  /* Verde botella — acción, selección, equipo propio y marca. En claro nunca es lima */
+  --grass: #204b22;
+  --grass-hover: #163618;
+  --on-grass: #ffffff;
+  --grass-deep: #204b22;          /* contraste AA sobre fondos claros */
+  --grass-tint: rgba(32, 75, 34, 0.10);
+  --grass-tint-strong: #e6efe3;
+  --grass-border: rgba(32, 75, 34, 0.40);
+  /* Firma de marca: lima, solo sobre superficies verde botella (tablero, "En vivo", emblemas) */
+  --brand-signature: #a3e635;
 
   /* Azul — rol Admin, foco, enlaces */
   --navy: #16324f;
@@ -50,8 +52,8 @@
 
   /* Semántica */
   --warning: #8a5700;
-  --warning-tint: rgba(253, 176, 34, 0.20);
-  --warning-border: rgba(154, 104, 0, 0.4);
+  --warning-tint: #ffefd3;
+  --warning-border: rgba(138, 87, 0, 0.35);
   /* Calor de la cancha de zonas: escala secuencial ámbar → naranja (nunca blanco, no se confunde con selección/hover) */
   --zone-heat-low: #fdb022;
   --zone-heat-high: #d9480f;
@@ -61,38 +63,48 @@
   --score-pill-bg: #204b22;
   --score-pill-fg: #ffffff;
   --error: #b42318;
-  --error-tint: rgba(240, 68, 56, 0.14);
-  --error-border: rgba(180, 35, 24, 0.35);
-  --success: #2e7d32;
-  --success-tint: rgba(46, 125, 50, 0.12);
+  --error-tint: #fde9e7;
+  --error-border: rgba(180, 35, 24, 0.30);
+  --success: #2a722e;
+  --success-tint: #e6efe6;
+  --success-border: rgba(42, 114, 46, 0.30);
+  /* "Sin jugador": ámbar = falta algo que se puede completar (chip, fila pendiente y marcadores rayados) */
+  --unassigned-border: #b7791f;
+  --unassigned-bg: #fff8ea;
+  --unassigned-stripe: #fff4dc;
 
-  /* Vistas de gestión "Sport Pro Salvia" (DESIGN_SYSTEM.md §1.1) */
-  --bg-canvas: #e1edde;
-  --surface-header-start: #edf5e9;
-  --surface-header-end: #e0ebd8;
-  --surface-toolbar: #eaf3e6;
-  --border-sport: rgba(32, 75, 34, 0.28);
-  --border-sport-subtle: rgba(32, 75, 34, 0.20);
+  /* Vistas de gestión "Cal y botella" (DESIGN_SYSTEM.md §1.1) */
+  --bg-canvas: #eef0ea;
+  --canvas-image:
+    radial-gradient(ellipse 70% 40% at 50% 0%, rgba(255, 255, 255, 0.7), transparent 70%),
+    repeating-linear-gradient(135deg, rgba(27, 33, 22, 0.045) 0 1.5px, transparent 1.5px 54px);
+  --surface-header-start: #f6f7f3;
+  --surface-header-end: #f6f7f3;
+  --surface-toolbar: #ffffff;
+  --surface-segment: #e4e7df;      /* contenedor del selector de vistas y de los filtros */
+  --border-segment: #dcdfd7;
+  --border-sport: #dcdfd7;
+  --border-sport-subtle: #e6e8e2;
   --btn-primary-bg: #204b22;
   --btn-primary-fg: #ffffff;
   --btn-primary-hover: #163618;
   --btn-outline-bg: #ffffff;
-  --btn-outline-border: rgba(32, 75, 34, 0.25);
-  --btn-outline-fg: #204b22;
-  --shadow-elevation: 0 16px 36px rgba(15, 35, 15, 0.12), 0 4px 12px rgba(15, 35, 15, 0.06);
+  --btn-outline-border: #858b7e;
+  --btn-outline-fg: #1b2116;
+  --shadow-elevation: 0 1px 2px rgba(16, 24, 16, 0.06), 0 12px 32px rgba(16, 24, 16, 0.07);
   --shadow-button: 0 4px 12px rgba(32, 75, 34, 0.20);
   --shadow-button-hover: 0 6px 16px rgba(32, 75, 34, 0.28);
-  /* Rival: en claro sigue al azul de marca; en oscuro es un azul propio (el rol Admin usa --navy) */
-  --team-rival: var(--navy);
+  /* Rival: azul propio en los dos temas (el rol Admin usa --navy) */
+  --team-rival: #3d5a80;
   --on-navy: #ffffff;
-  /* Colores de jugadas (línea de tiempo y tabla de post-partido): en claro, los de siempre */
+  /* Colores de jugadas (línea de tiempo y tabla de post-partido): en claro, los de siempre; el naranja se oscureció para llegar a 4,5 : 1 con texto blanco */
   --event-try: #2e7d32;
   --event-kick: #7c3aed;
   --event-tackle-missed: #2563eb;
   --event-tackle: #16324f;
   --event-penalty: #b42318;
-  --event-set-piece: #d96a0a;
-  --event-turnover: #d96a0a;
+  --event-set-piece: #b8560a;
+  --event-turnover: #b8560a;
   --event-default: #204b22;
   /* Barra de navegación y overlays (menús, diálogos): en claro son la superficie; en oscuro hundida y elevada */
   --surface-sunken: var(--surface);
@@ -107,7 +119,7 @@
   --board-shadow: 0 18px 40px rgba(15, 35, 15, 0.28);
   --on-board: #ffffff;
   --on-board-muted: rgba(255, 255, 255, 0.72);
-  --on-board-accent: #91da40;
+  --on-board-accent: var(--brand-signature);
   --board-chip-ok-bg: rgba(145, 218, 64, 0.30);
   --board-chip-ok-fg: #ffffff;
   --board-chip-warn-bg: #fdb022;
@@ -119,6 +131,7 @@
   --btn-on-board-bg: #ffffff;
   --btn-on-board-fg: var(--btn-primary-bg);
   --btn-on-board-outline: rgba(255, 255, 255, 0.55);
+  --btn-on-board-hover: #eef0ea;
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -193,6 +206,8 @@
   --surface-header-start: #25272b;
   --surface-header-end: #1f2124;
   --surface-toolbar: #17181b;
+  --surface-segment: var(--surface-alt);
+  --border-segment: var(--border);
   --surface-sunken: #0b0c0e;
   --surface-overlay: #282a2e;
   --bg-canvas: var(--bg);
@@ -214,6 +229,7 @@
   --event-turnover: #e9925a;
   --event-default: #74c785;
   --btn-on-board-fg: #204b22;
+  --btn-on-board-hover: #eef5ea;
   /* Tablero de Inicio: el fondo es igual en los dos temas; el acento sobre verde botella es el verde claro del sistema */
   --on-board-accent: #8cc98f;
   --board-chip-ok-bg: rgba(140, 201, 143, 0.3);
@@ -258,6 +274,9 @@
   --success: #5fc57d;
   --success-tint: rgba(95, 197, 125, 0.12);
   --success-border: rgba(95, 197, 125, 0.4);
+  --unassigned-border: var(--warning);
+  --unassigned-bg: var(--warning-tint);
+  --unassigned-stripe: color-mix(in srgb, var(--warning) 38%, var(--surface-track));
 
   --btn-primary-bg: #337838;
   --btn-primary-fg: #ffffff;
@@ -302,9 +321,6 @@ html:has(.pm-shell) {
 }
 
 [data-theme="dark"] body {
-  background-color: var(--bg);
-  background-image: var(--canvas-image);
-  background-attachment: fixed;
   color: var(--text-secondary);
 }
 
@@ -316,17 +332,11 @@ html:has(.pm-shell) {
   color: var(--text-muted) !important;
 }
 
-[data-theme="dark"] .brand-text .title {
-  color: var(--text-primary);
-}
-
 [data-theme="dark"] .brand-text .club {
   color: var(--text-muted);
 }
 
 [data-theme="dark"] .badge-tech {
-  background-color: var(--surface-alt);
-  border-color: var(--border-sport);
   color: var(--grass);
 }
 
@@ -359,16 +369,6 @@ html:has(.pm-shell) {
   color: var(--text-primary);
 }
 
-[data-theme="dark"] .card-header,
-[data-theme="dark"] .form-card-header {
-  border-bottom: 2px solid var(--border-sport);
-}
-
-[data-theme="dark"] .card-title,
-[data-theme="dark"] .form-card-title {
-  color: var(--text-primary);
-}
-
 [data-theme="dark"] .card-subtitle,
 [data-theme="dark"] .form-card-subtitle {
   color: var(--text-muted);
@@ -394,23 +394,42 @@ html:has(.pm-shell) {
   background: var(--surface-hover);
 }
 
-[data-theme="dark"] .form-actions {
-  border-top-color: var(--border);
-}
-
 [data-theme="dark"] .status-tab.active {
-  background: var(--surface);
-  color: var(--text-primary);
   border: 1px solid var(--border-sport);
+  box-shadow: 0 1px 3px rgba(20, 25, 15, 0.08);
 }
 
 [data-theme="dark"] .status-tab.active .status-badge-count {
-  background: var(--surface-alt);
   color: var(--grass);
 }
 
+[data-theme="dark"] .chip.active {
+  border-color: var(--border-strong);
+  box-shadow: 0 1px 2px rgba(20, 25, 15, 0.06);
+}
+
+[data-theme="dark"] .chip:not(.active) .count {
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] .banner-success {
+  border-left-color: var(--grass-deep);
+}
+
+[data-theme="dark"] .banner-success strong {
+  color: var(--grass-deep);
+}
+
+[data-theme="dark"] .status-active {
+  background: var(--grass-tint);
+  color: var(--grass-deep);
+}
+
+[data-theme="dark"] .status-active .dot {
+  background: var(--grass-deep);
+}
+
 [data-theme="dark"] .empty-icon {
-  background: var(--surface-alt);
   color: var(--text-muted);
 }
 
@@ -423,26 +442,10 @@ html:has(.pm-shell) {
 }
 
 body {
-  background-color: #e1edde;
-  background-image: 
-    /* Capa 1: Degradé radial que desvanece suavemente las líneas hacia el centro */
-    radial-gradient(
-      ellipse at 50% 30%,
-      rgba(225, 237, 222, 0.92) 0%,
-      rgba(225, 237, 222, 0.65) 35%,
-      rgba(225, 237, 222, 0.15) 65%,
-      transparent 80%
-    ),
-    /* Capa 2: Líneas diagonales a 135deg con separación (54px) y contraste moderado (14%) */
-    repeating-linear-gradient(
-      135deg,
-      rgba(55, 75, 60, 0.14) 0px,
-      rgba(55, 75, 60, 0.14) 1.5px,
-      transparent 1.5px,
-      transparent 54px
-    );
+  background-color: var(--bg-canvas);
+  background-image: var(--canvas-image);
   background-attachment: fixed;
-  color: #1b2116;
+  color: var(--text-primary);
   font-family: var(--font-body);
   font-size: 16px;
   line-height: 1.5;
@@ -528,12 +531,6 @@ button {
   flex-shrink: 0;
 }
 
-/* Variante fluida: el texto del encabezado se ajusta en vez de empujar la página hacia los costados */
-.hud-brand--fluid {
-  flex: 1 1 320px;
-  min-width: 0;
-}
-
 .badge-tech {
   display: inline-flex;
   align-items: center;
@@ -544,16 +541,16 @@ button {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  background-color: #d6eac0;
-  border: 1px solid rgba(36, 76, 9, 0.25);
-  color: #244c09;
+  background-color: var(--surface-alt);
+  border: 1px solid var(--border-sport);
+  color: var(--text-secondary);
 }
 
 .brand-text .title {
   font-family: var(--font-head);
   font-weight: 800;
   font-size: 2rem;
-  color: #111d0e;
+  color: var(--text-primary);
   line-height: 1.15;
   margin: 0;
   letter-spacing: -0.015em;
@@ -562,7 +559,7 @@ button {
 .brand-text .club {
   font-size: 14px;
   font-weight: 500;
-  color: #3b4e33;
+  color: var(--text-secondary);
   margin: 2px 0 0 0;
 }
 
@@ -570,6 +567,43 @@ button {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+/* Encabezado único de las pantallas de gestión: rótulo mono, título Hanken 800 y subtítulo */
+.hud-text {
+  min-width: 0;
+}
+
+/* Variante fluida: el texto se ajusta en vez de empujar las acciones hacia los costados */
+.hud-text--fluid {
+  flex: 1 1 320px;
+}
+
+.hud-text .hud-label {
+  margin: 0 0 6px;
+}
+
+.hud-text .hud-title {
+  margin: 0;
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 44px;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.hud-text .hud-subtitle {
+  margin: 6px 0 0;
+  font-size: 15px;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 700px) {
+  .hud-text .hud-title {
+    font-size: 32px;
+  }
 }
 
 /* ==========================================================================
@@ -597,35 +631,35 @@ button {
 
 .btn-invite,
 .btn-primary-rugby {
-  background-color: #204b22;
-  color: #ffffff;
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
   font-size: 14px;
   font-weight: 700;
-  border: 1px solid #204b22;
-  box-shadow: 0 4px 12px rgba(32, 75, 34, 0.20);
+  border: 1px solid var(--btn-primary-bg);
+  box-shadow: var(--shadow-button);
 }
 
 .btn-invite:hover,
 .btn-primary-rugby:hover {
-  background-color: #163618;
-  border-color: #163618;
-  color: #ffffff;
-  box-shadow: 0 6px 16px rgba(32, 75, 34, 0.28);
+  background-color: var(--btn-primary-hover);
+  border-color: var(--btn-primary-hover);
+  color: var(--btn-primary-fg);
+  box-shadow: var(--shadow-button-hover);
   transform: translateY(-1px);
 }
 
 .btn-outline {
-  background-color: #ffffff;
-  border: 1px solid rgba(32, 75, 34, 0.25);
-  color: #204b22;
+  background-color: var(--btn-outline-bg);
+  border: 1px solid var(--btn-outline-border);
+  color: var(--btn-outline-fg);
   font-weight: 600;
-  box-shadow: 0 2px 6px rgba(20, 45, 20, 0.04);
+  box-shadow: 0 2px 6px rgba(16, 24, 16, 0.04);
 }
 
 .btn-outline:hover {
-  background-color: #f2f7ef;
-  border-color: #204b22;
-  color: #142e15;
+  background-color: var(--surface-hover);
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
   transform: translateY(-1px);
 }
 
@@ -639,7 +673,7 @@ button {
 }
 
 .btn-on-board:hover {
-  background-color: #eef5ea;
+  background-color: var(--btn-on-board-hover);
   color: var(--btn-on-board-fg);
   transform: translateY(-1px);
 }
@@ -668,7 +702,7 @@ button {
   min-width: 0;
 }
 
-/* Rótulo mono en mayúsculas (no es .eyebrow: esa es la píldora navy global) */
+/* Rótulo mono en mayúsculas */
 .label-mono {
   font-family: var(--font-mono);
   font-weight: 700;
@@ -739,7 +773,7 @@ button {
 .card-header,
 .form-card-header {
   background: linear-gradient(180deg, var(--surface-header-start) 0%, var(--surface-header-end) 100%);
-  border-bottom: 2px solid rgba(32, 75, 34, 0.20);
+  border-bottom: 2px solid var(--border-sport-subtle);
   padding: 24px 32px 20px;
   margin: 0;
 }
@@ -749,13 +783,13 @@ button {
   font-family: var(--font-head);
   font-weight: 800;
   font-size: 20px;
-  color: #111d0e;
+  color: var(--text-primary);
   margin: 0 0 4px;
 }
 
 .card-subtitle,
 .form-card-subtitle {
-  color: #4a6042;
+  color: var(--text-secondary);
   font-size: 13.5px;
   margin: 0;
   line-height: 1.4;
@@ -786,7 +820,7 @@ button {
 .form-label {
   font-size: 13px;
   font-weight: 700;
-  color: #204b22;
+  color: var(--text-primary);
   margin-bottom: 7px;
   letter-spacing: 0.01em;
 }
@@ -794,10 +828,10 @@ button {
 .form-control {
   width: 100%;
   height: 46px;
-  background: #ffffff;
-  border: 1px solid rgba(32, 75, 34, 0.22);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
   border-radius: 10px;
-  color: #111d0e;
+  color: var(--text-primary);
   padding: 0 14px;
   font-size: 14.5px;
   outline: none;
@@ -805,13 +839,13 @@ button {
 }
 
 .form-control::placeholder {
-  color: #7a8c74;
+  color: var(--text-muted);
 }
 
 .form-control:focus {
-  border-color: #204b22;
+  border-color: var(--btn-primary-bg);
   box-shadow: 0 0 0 3px rgba(32, 75, 34, 0.15);
-  background: #fafdf9;
+  background: var(--surface);
 }
 
 .form-control.is-invalid {
@@ -836,7 +870,7 @@ button {
   gap: 12px;
   margin-top: 28px;
   padding-top: 20px;
-  border-top: 1px solid rgba(32, 75, 34, 0.10);
+  border-top: 1px solid var(--border);
 }
 
 /* ==========================================================================
@@ -848,8 +882,8 @@ button {
   flex-wrap: wrap;
   align-items: center;
   margin: 18px 0 16px;
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
+  background: var(--surface-segment);
+  border: 1px solid var(--border-segment);
   border-radius: var(--radius-pill);
   padding: 6px;
 }
@@ -875,9 +909,9 @@ button {
 
 .chip.active {
   background: var(--surface);
-  border-color: var(--border-strong);
+  border-color: var(--border-segment);
   color: var(--text-primary);
-  box-shadow: 0 1px 2px rgba(20, 25, 15, 0.06);
+  box-shadow: 0 1px 3px rgba(16, 24, 16, 0.14);
 }
 
 .chip .dot {
@@ -889,7 +923,7 @@ button {
 .chip .count {
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 .chip.active .count {
@@ -898,8 +932,8 @@ button {
 
 .status-segment {
   display: inline-flex;
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
+  background: var(--surface-segment);
+  border: 1px solid var(--border-segment);
   border-radius: var(--radius-pill);
   padding: 4px;
   gap: 3px;
@@ -928,7 +962,7 @@ button {
 .status-tab.active {
   background: var(--surface);
   color: var(--text-primary);
-  box-shadow: 0 1px 3px rgba(20, 25, 15, 0.08);
+  box-shadow: 0 1px 3px rgba(16, 24, 16, 0.14), 0 0 0 1px var(--border-segment);
 }
 
 .status-badge-count {
@@ -972,11 +1006,11 @@ button {
 }
 
 .banner-success {
-  border-left-color: var(--grass-deep);
+  border-left-color: var(--success);
 }
 
 .banner-success strong {
-  color: var(--grass-deep);
+  color: var(--success);
 }
 
 .banner-error {
@@ -1039,12 +1073,12 @@ button {
 }
 
 .status-active {
-  background: var(--grass-tint);
-  color: var(--grass-deep);
+  background: var(--success-tint);
+  color: var(--success);
 }
 
 .status-active .dot {
-  background: var(--grass-deep);
+  background: var(--success);
 }
 
 .status-inactive {
@@ -1054,17 +1088,6 @@ button {
 
 .status-inactive .dot {
   background: var(--player);
-}
-
-.eyebrow {
-  display: inline-flex;
-  background: var(--navy-tint);
-  border: 1px solid var(--navy-border);
-  color: var(--navy);
-  font-size: 12px;
-  font-weight: 700;
-  padding: 5px 12px;
-  border-radius: var(--radius-pill);
 }
 
 /* ==========================================================================
@@ -1233,7 +1256,7 @@ button {
   box-shadow: inset 0 0 0 1px var(--btn-outline-border);
   cursor: help;
 }
-.rule-help:hover, .rule-help:focus-visible { background-color: #d6eac0; }
+.rule-help:hover, .rule-help:focus-visible { background-color: var(--surface-hover); box-shadow: inset 0 0 0 1px var(--text-secondary); }
 .rule-help::after {
   content: attr(data-tip);
   position: absolute;
@@ -1245,7 +1268,7 @@ button {
   padding: 8px 10px;
   border-radius: var(--radius-md);
   background: var(--text-primary);
-  color: #fff;
+  color: var(--surface);
   font: 500 12px/1.35 var(--font-body);
   text-align: left;
   opacity: 0;

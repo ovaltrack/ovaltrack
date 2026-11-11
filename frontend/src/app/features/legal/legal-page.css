@@ -1,4 +1,4 @@
-/* Páginas legales públicas (términos y privacidad). Solo tokens de Sport Pro Salvia. */
+/* Páginas legales públicas (términos y privacidad). Solo tokens del design system (Cal y botella y Grafito). */
 :host {
   display: block;
 }
@@ -90,7 +90,8 @@
   color: var(--grass-deep);
 }
 
-.legal-footer a {
+.legal-footer a,
+.legal-body a {
   color: var(--grass-deep);
   font-weight: 600;
 }
@@ -176,11 +177,6 @@
 
 .legal-body strong {
   color: var(--text-primary);
-}
-
-.legal-body a {
-  color: var(--grass-deep);
-  font-weight: 600;
 }
 
 .legal-statutory {

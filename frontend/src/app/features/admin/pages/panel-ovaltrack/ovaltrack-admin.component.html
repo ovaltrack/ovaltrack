@@ -1,11 +1,9 @@
 <main class="layout-container page adm">
   <header class="hud adm-hud">
-    <div class="hud-brand hud-brand--fluid">
-      <span class="badge-tech"><i class="bi bi-shield-lock" aria-hidden="true"></i> Panel de plataforma</span>
-      <div class="brand-text">
-        <h1 class="title">Administración de cuentas y clubes</h1>
-        <p class="club">Revisá solicitudes de registro, activá cuentas y aprobá clubes con su administrador.</p>
-      </div>
+    <div class="hud-text hud-text--fluid">
+      <p class="label-mono hud-label">Panel de plataforma</p>
+      <h1 class="hud-title">Administración de cuentas y clubes</h1>
+      <p class="hud-subtitle">Revisá solicitudes de registro, activá cuentas y aprobá clubes con su administrador.</p>
     </div>
     <div class="hud-actions">
       <button type="button" class="btn btn-outline adm-refresh" [disabled]="store.loading()" (click)="store.loadAll()">

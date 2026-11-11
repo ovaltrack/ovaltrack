@@ -13,12 +13,8 @@
   margin-bottom: 28px;
 }
 
-.eyebrow {
+.label-mono {
   margin: 0 0 8px;
-  color: #287c68;
-  font-size: 0.75rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
 }
 
 h1 {

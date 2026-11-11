@@ -17,7 +17,6 @@
 	--ot-live-scale: 1;
 	--ot-size-headline-md: calc(24px * var(--ot-live-scale));
 	--ot-size-body-lg: calc(18px * var(--ot-live-scale));
-	--ot-size-body-md: calc(16px * var(--ot-live-scale));
 	--ot-size-label-caps: calc(12px * var(--ot-live-scale));
 	--ot-size-data-mono: calc(14px * var(--ot-live-scale));
 	--ot-touch-target-min: calc(44px * var(--ot-live-scale));
@@ -25,7 +24,6 @@
 	--ot-margin-screen: calc(24px * var(--ot-live-scale));
 	--ot-stack-compact: calc(8px * var(--ot-live-scale));
 	--ot-stack-default: calc(16px * var(--ot-live-scale));
-	--ot-radius-default: calc(0.25rem * var(--ot-live-scale));
 	--ot-radius-lg: calc(0.5rem * var(--ot-live-scale));
 
 	/* Design Guide v1 Colors — Marca */
@@ -87,16 +85,21 @@
 }
 
 .live-capture[data-theme="light"] {
-	--bg: #F6F7F9;
+	/* Cal y botella: neutros del sistema claro; la posesión conserva su color de fondo */
+	--bg: #eef0ea;
 	--bg-own: #a3fd80;
 	--bg-neutral: #55aaff;
 	--bg-away: rgb(255, 148, 141);
 	--surface: #FFFFFF;
-	--surface-alt: #EEF1F4;
+	--surface-alt: #f6f7f3;
 	--surface-alt-chip: #EEF1F4;
-	--text: #16191C;
-	--text-2: #000000;
-	--border: #949393;
+	--text: #1b2116;
+	--text-2: #1b2116;
+	--border: #dcdfd7;
+	--ctl-border: #858b7e;
+	--navy-100: #eef0ea;
+	--hud-well: #f6f7f3;
+	--hud-well-shadow: inset 0 1px 3px rgba(16, 24, 16, 0.08);
 }
 
 .live-capture__header,
@@ -333,7 +336,9 @@
 
 @media (prefers-reduced-motion: reduce) {
 	.live-capture--paused .live-capture__body,
-	.live-capture--paused .event-catalog {
+	.live-capture--paused .event-catalog,
+	.live-capture[data-theme="light"].live-capture--paused .live-capture__body,
+	.live-capture[data-theme="light"].live-capture--paused .event-catalog {
 		animation: none;
 	}
 }
@@ -956,46 +961,101 @@
 
 /* Modo Claro para Confirmación */
 .live-capture[data-theme="light"] .confirm-dialog {
-	background: #edf5f0;
-	border: 1px solid #bad8c7;
-	box-shadow: 0 20px 45px rgba(18, 50, 30, 0.22);
+	background: var(--surface);
+	border: 1px solid var(--border-sport);
+	box-shadow: 0 20px 45px rgba(16, 24, 16, 0.22);
 }
 
 .live-capture[data-theme="light"] .confirm-backdrop {
-	background: rgba(18, 38, 26, 0.55);
+	background: rgba(16, 24, 16, 0.55);
 }
 
 .live-capture[data-theme="light"] .confirm-title {
-	color: #0f2c1b;
+	color: var(--text-primary);
 }
 
 .live-capture[data-theme="light"] .confirm-text {
-	color: #2b563b;
+	color: var(--text-secondary);
 }
 
 .live-capture[data-theme="light"] .confirm-icon {
-	background: rgba(30, 122, 70, 0.15);
-	color: #1e7a46;
+	background: var(--success-tint);
+	color: var(--success);
 }
 
 .live-capture[data-theme="light"] .confirm-actions .btn-secondary {
-	background: #cfe8d6;
-	color: #124024;
-	border-color: #a4ceb3;
+	background: var(--surface);
+	color: var(--text-primary);
+	border-color: var(--ctl-border);
 }
 
 .live-capture[data-theme="light"] .confirm-actions .btn-secondary:hover {
-	background: #bcdfc6;
-	color: #0c2b18;
+	background: var(--surface-hover);
+	color: var(--text-primary);
 }
 
 .live-capture[data-theme="light"] .confirm-actions .btn-primary {
-	background: #1b7a43;
-	border-color: #166534;
+	background: var(--btn-primary-bg);
+	border-color: var(--btn-primary-bg);
 }
 
 .live-capture[data-theme="light"] .confirm-actions .btn-primary:hover {
-	background: #156537;
+	background: var(--btn-primary-hover);
+}
+
+/* Cal y botella: botón del reloj, botones de jugada y barra de posesión (solo claro) */
+.live-capture[data-theme="light"] .live-capture__clock .icon-btn {
+	background: var(--btn-primary-bg);
+	border-color: var(--btn-primary-bg);
+	color: var(--btn-primary-fg);
+}
+
+.live-capture[data-theme="light"] .event-chip {
+	border: 1px solid rgba(0, 0, 0, 0.08);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 4px 10px rgba(16, 24, 16, 0.14);
+}
+
+.live-capture[data-theme="light"] .possession-bar__btn--own.is-active {
+	background: var(--btn-primary-bg);
+	border-color: var(--btn-primary-bg);
+}
+
+.live-capture[data-theme="light"] .possession-bar__btn--own.is-active .ti-check {
+	color: var(--brand-signature);
+}
+
+.live-capture[data-theme="light"] .possession-bar__btn--opponent:not(.is-active) {
+	background: var(--surface);
+	border-color: var(--ctl-border);
+	color: var(--team-rival);
+}
+
+.live-capture[data-theme="light"] .live-capture__clock .icon-btn:hover {
+	background: var(--btn-primary-hover);
+	border-color: var(--btn-primary-hover);
+	color: var(--btn-primary-fg);
+}
+
+.live-capture[data-theme="light"] .possession-bar__btn--opponent:not(.is-active):hover {
+	background: var(--surface-hover);
+	border-color: var(--text-secondary);
+}
+
+/* Pausa: el fondo respira entre el color de la posesión y el cal liso (en oscuro no cambia) */
+.live-capture[data-theme="light"].live-capture--paused .live-capture__body,
+.live-capture[data-theme="light"].live-capture--paused .event-catalog {
+	animation: live-capture-pause-pulse-light 3s ease-in-out infinite;
+}
+
+@keyframes live-capture-pause-pulse-light {
+	0%,
+	100% {
+		background-color: var(--paused-bg);
+	}
+
+	50% {
+		background-color: var(--bg);
+	}
 }
 
 /* ───────── Modo oscuro: HUD grafito (la posesión conserva su color de fondo) ───────── */

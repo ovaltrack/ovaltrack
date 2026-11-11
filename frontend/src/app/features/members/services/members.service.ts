@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, forkJoin, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '@environments/environment';
-import { BackendUserResponse, ClubInfo, Member, UserRole } from '../types/members.types';
+import { BackendUserResponse, Member, UserRole } from '../types/members.types';
 
 @Injectable({
   providedIn: 'root'
@@ -49,9 +49,5 @@ export class MembersService {
       return of([]);
     }
     return forkJoin(updates.map(u => this.updateUserRole(u.userId, u.newRole)));
-  }
-
-  getMyClub(): Observable<ClubInfo> {
-    return this.http.get<ClubInfo>(`${this.baseUrl}/club/my-club`);
   }
 }

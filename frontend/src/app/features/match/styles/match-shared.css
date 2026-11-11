@@ -18,7 +18,7 @@
 /* Tarjeta de Partido Elevada (Estilo Mi Club) */
 .match-card-shell {
   background: #ffffff;
-  border: 2px solid rgba(32, 75, 34, 0.26);
+  border: 2px solid var(--border-sport);
   border-radius: 18px;
   box-shadow: 0 10px 28px rgba(15, 35, 15, 0.10), 0 3px 8px rgba(15, 35, 15, 0.05);
   overflow: hidden;
@@ -30,7 +30,7 @@
 
 .match-card-shell:hover {
   transform: translateY(-2px);
-  border-color: rgba(32, 75, 34, 0.42);
+  border-color: var(--grass-border);
   box-shadow: 0 16px 36px rgba(15, 35, 15, 0.14), 0 4px 12px rgba(15, 35, 15, 0.08);
 }
 
@@ -38,7 +38,7 @@
   font-family: var(--font-head);
   font-weight: 800;
   font-size: 19px;
-  color: #111d0e;
+  color: var(--text-primary);
   margin: 0;
   line-height: 1.25;
 }
@@ -60,7 +60,7 @@
   width: 100%;
   max-width: 480px;
   background: #ffffff;
-  border: 2px solid rgba(32, 75, 34, 0.28);
+  border: 2px solid var(--border-sport);
   border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 24px 60px rgba(15, 35, 15, 0.22);
@@ -80,8 +80,8 @@
 }
 
 .modal-header-salvia {
-  background: linear-gradient(180deg, #edf5e9 0%, #e0ebd8 100%);
-  border-bottom: 2px solid rgba(32, 75, 34, 0.20);
+  background: linear-gradient(180deg, var(--surface-header-start) 0%, var(--surface-header-end) 100%);
+  border-bottom: 2px solid var(--border-sport);
   padding: 20px 24px;
 }
 
@@ -89,7 +89,7 @@
   font-family: var(--font-head);
   font-weight: 800;
   font-size: 20px;
-  color: #111d0e;
+  color: var(--text-primary);
   margin: 0 0 2px;
 }
 
@@ -101,11 +101,11 @@
   width: 100%;
   height: 44px;
   background: #f8faf6;
-  border: 2px solid rgba(32, 75, 34, 0.22);
+  border: 2px solid var(--border-strong);
   border-radius: 10px;
   padding: 0 14px;
   font-size: 14px;
-  color: #111d0e;
+  color: var(--text-primary);
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
@@ -113,7 +113,7 @@
 .custom-input:focus {
   border-color: #204b22;
   background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(32, 75, 34, 0.15);
+  box-shadow: 0 0 0 3px rgba(16, 24, 16, 0.15);
 }
 
 .modal-actions {
@@ -122,7 +122,7 @@
   gap: 10px;
   margin-top: 24px;
   padding-top: 16px;
-  border-top: 1px solid rgba(32, 75, 34, 0.10);
+  border-top: 1px solid var(--border-sport-subtle);
 }
 
 /* Responsive */
@@ -142,7 +142,6 @@
 
 :host-context([data-theme="dark"]) .match-card-shell {
   background: var(--surface);
-  border-color: var(--border);
   box-shadow: var(--shadow-elevation);
 }
 
@@ -151,39 +150,24 @@
   box-shadow: var(--shadow-elevation-hover);
 }
 
-:host-context([data-theme="dark"]) .match-opponent-name {
-  color: var(--text-primary);
-}
-
 :host-context([data-theme="dark"]) .match-modal {
   background: var(--surface-overlay);
-  border-color: var(--border-sport);
   box-shadow: var(--shadow-overlay);
 }
 
 :host-context([data-theme="dark"]) .modal-header-salvia {
   background: var(--surface-header-start);
-  border-bottom-color: var(--border-sport);
-}
-
-:host-context([data-theme="dark"]) .modal-title {
-  color: var(--text-primary);
 }
 
 :host-context([data-theme="dark"]) .custom-input {
   background: var(--surface-alt);
   border-color: var(--border-strong);
-  color: var(--text-primary);
 }
 
 :host-context([data-theme="dark"]) .custom-input:focus {
   border-color: var(--grass);
   background: var(--surface-hover);
   box-shadow: var(--focus-ring);
-}
-
-:host-context([data-theme="dark"]) .modal-actions {
-  border-top-color: var(--border);
 }
 
 /* ===== Celular: acciones del encabezado en grilla (la principal ocupa todo el ancho) ===== */
