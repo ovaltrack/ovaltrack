@@ -92,24 +92,24 @@
 
 /* Modo Oscuro */
 :host-context([data-theme="dark"]) .strip-progress-track {
-  background: rgba(163, 230, 53, 0.15);
+  background: var(--grass-tint);
 }
 
 :host-context([data-theme="dark"]) .strip-filter-btn {
-  color: #a3e635;
+  color: var(--grass);
 }
 
 :host-context([data-theme="dark"]) .strip-filter-btn:hover {
-  background: rgba(163, 230, 53, 0.15);
+  background: var(--grass-tint);
 }
 
 :host-context([data-theme="dark"]) .strip-filter-btn.active {
   background: rgba(245, 158, 11, 0.2);
-  color: #fbbf24;
+  color: var(--warning);
 }
 
 :host-context([data-theme="dark"]) .legend-text {
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 /* Responsive */

@@ -390,12 +390,12 @@
 :host-context([data-theme="dark"]) .btn-tab-delete {
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(248, 113, 113, 0.3);
-  color: #f87171;
+  color: var(--error);
 }
 
 :host-context([data-theme="dark"]) .btn-tab-delete:hover:not(:disabled) {
   background: #dc2626;
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 .tab-pill-group {
@@ -438,8 +438,8 @@
 
 :host-context([data-theme="dark"]) .panel-tab-btn.active {
   background: rgba(163, 230, 53, 0.18);
-  border-color: #a3e635;
-  color: #a3e635;
+  border-color: var(--grass);
+  color: var(--grass);
 }
 
 .panel-tab-btn:disabled {
@@ -937,16 +937,16 @@
 
 :host-context([data-theme="dark"]) .panel-tab-bar {
   background: rgba(255, 255, 255, 0.04);
-  border-bottom-color: rgba(163, 230, 53, 0.15);
+  border-bottom-color: var(--grass-tint);
 }
 
 :host-context([data-theme="dark"]) .inspector-divider {
-  border-top-color: rgba(163, 230, 53, 0.15);
+  border-top-color: var(--grass-tint);
 }
 
 :host-context([data-theme="dark"]) .btn-stepper-square {
   background: var(--surface);
-  border-color: rgba(163, 230, 53, 0.25);
+  border-color: var(--grass-tint-strong);
   color: #e5e7eb;
 }
 
@@ -979,7 +979,7 @@
 }
 
 :host-context([data-theme="dark"]) .qc-period {
-  color: #fbbf24;
+  color: var(--warning);
 }
 
 .empty-panel-msg {
