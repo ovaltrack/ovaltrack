@@ -1,7 +1,7 @@
 # OvalTrack — Sistema de Diseño Oficial (Design System)
 
 > **Estado:** Activo y alineado al 100% con la interfaz del frontend.  
-> **Identidad Visual:** *Sport Pro Salvia & Grafito con verde botella* (Estética deportiva de alto rendimiento, contrastes tácticos y elevación física).
+> **Identidad Visual:** *Cal y botella* (modo claro) y *Grafito con verde botella* (modo oscuro): estética deportiva de alto rendimiento, un solo color de marca (el verde botella) y elevación física.
 
 Este documento es la **fuente de verdad definitiva y obligatoria** para el diseño y desarrollo de todas las vistas del frontend de OvalTrack. Cualquier componente o pantalla nueva debe construirse respetando los tokens, patrones y lineamientos aquí descritos.
 
@@ -9,98 +9,151 @@ Este documento es la **fuente de verdad definitiva y obligatoria** para el dise�
 
 ## 1. Tokens de Color Globales (`:root`) — Diseño Actual Activo
 
-Los tokens oficiales del sistema corresponden a la identidad visual **Sport Pro Salvia** actualmente implementada en el frontend.
+Los tokens oficiales del sistema corresponden a la identidad visual **Cal y botella** (claro) y **Grafito con verde botella** (oscuro, §5), implementadas en el frontend. Los nombres de los tokens son los mismos en los dos temas; solo cambian sus valores.
 
-### 1.1 Paleta Activa (Modo Claro Deportivo — Vistas de Gestión)
+### 1.1 Paleta Activa (Modo Claro «Cal y botella»)
+
+**Principio:** el verde deja de ser ambiente. El fondo es una «cal» casi neutra y el verde botella queda para lo que significa algo: acción, selección, equipo propio y marca. El lima es la firma de marca y **solo se usa sobre superficies verde botella** (tablero de Inicio, píldora «En vivo», emblemas, el check de «Posesión propia»); nunca sobre fondo claro ni gris. El logo es una excepción y no se toca.
 
 ```css
 :root {
-  /* Lienzo y Fondo de Cancha */
-  --bg: #f6f7f1;
-  --bg-canvas: #e1edde;                       /* Fondo base verde salvia deportivo suave (luminoso hacia blanco) */
-  --bg-canvas-pattern: rgba(55, 75, 60, 0.14); /* Líneas tácticas a 135deg */
+  /* Lienzo: cal casi neutra, con un susurro cálido */
+  --bg: #f6f7f3;
+  --bg-canvas: #eef0ea;
+  --canvas-image:                              /* brillo arriba + líneas tácticas a 135° (body y Entretiempo) */
+    radial-gradient(ellipse 70% 40% at 50% 0%, rgba(255, 255, 255, 0.7), transparent 70%),
+    repeating-linear-gradient(135deg, rgba(27, 33, 22, 0.045) 0 1.5px, transparent 1.5px 54px);
 
-  /* Superficies y Tarjetas Elevadas */
-  --surface: #ffffff;                         /* Tarjetas principales, modales y tablas */
-  --surface-alt: #eef1e7;                     /* Fondos secundarios, chips y segmentos */
-  --surface-hover: #f1f3ea;                   /* Estados hover en filas y botones */
-  --surface-header-start: #edf5e9;            /* Degradado superior cabecera tarjeta */
-  --surface-header-end: #e0ebd8;              /* Degradado inferior cabecera tarjeta */
-  --surface-toolbar: #eaf3e6;                 /* Barra de filtros segmentada */
+  /* Superficies */
+  --surface: #ffffff;                         /* Tarjetas, modales, tablas y navbar */
+  --surface-alt: #f6f7f3;                     /* Cabeceras de tabla, inputs deshabilitados, filas anidadas */
+  --surface-hover: #f3f4f0;                   /* Hover de filas y botones */
+  --surface-track: #f9faf7;                   /* Carril de la línea de tiempo */
+  --surface-header-start: #f6f7f3;            /* Cabecera de tarjeta: neutra, sin degradé verde */
+  --surface-header-end: #f6f7f3;
+  --surface-toolbar: #ffffff;                 /* Barras de filtros: tarjeta blanca */
+  --surface-segment: #e4e7df;                 /* Contenedor del selector de vistas y de los filtros */
+  --border-segment: #dcdfd7;
 
-  /* Bordes de Elevación Deportiva */
-  --border: rgba(27, 33, 22, 0.10);          /* Separadores y bordes sutiles */
-  --border-strong: rgba(27, 33, 22, 0.22);   /* Bordes de inputs e interacción */
-  --border-sport: rgba(32, 75, 34, 0.28);    /* Borde firme 2px en tarjetas y modales */
-  --border-sport-subtle: rgba(32, 75, 34, 0.20); /* Separadores internos de tarjetas */
+  /* Bordes */
+  --border: #e6e8e2;                          /* Separadores */
+  --border-strong: #858b7e;                   /* Inputs y controles: 3,50 : 1 sobre blanco */
+  --border-sport: #dcdfd7;                    /* Tarjetas de primer nivel (2px) y bordes de 1px en tarjetas anidadas */
+  --border-sport-subtle: #e6e8e2;             /* Separadores internos y cabeceras */
 
-  /* Textos y Tipografías */
-  --text-primary: #1b2116;                   /* Títulos y textos de alto contraste */
-  --text-secondary: #4b5540;                 /* Subtítulos, descripciones y labels */
-  --text-muted: #7c8571;                     /* Placeholders y contadores */
+  /* Texto */
+  --text-primary: #1b2116;                    /* 16,46 : 1 sobre blanco */
+  --text-secondary: #4b5540;                  /* 7,86 : 1 */
+  --text-muted: #646b5b;                      /* 5,53 : 1 sobre blanco, 4,82 sobre cal, 4,69 sobre el tinte */
 
-  /* Colores de Acento y Acción */
-  --btn-primary-bg: #204b22;                 /* Verde rugby botella (CTA principal) */
-  --btn-primary-fg: #ffffff;                 /* Texto blanco sobre verde botella */
-  --btn-primary-hover: #163618;              /* Hover de acción principal */
-  --btn-outline-bg: #ffffff;                 /* Fondo botón secundario */
-  --btn-outline-border: rgba(32, 75, 34, 0.25);
-  --btn-outline-fg: #204b22;
+  /* Verde botella: acción, selección, equipo propio y marca */
+  --btn-primary-bg: #204b22;                  /* CTA principal; blanco encima 10,04 : 1 */
+  --btn-primary-fg: #ffffff;
+  --btn-primary-hover: #163618;
+  --btn-outline-bg: #ffffff;                  /* Botón secundario: blanco, borde gris, texto oscuro (sin verde) */
+  --btn-outline-border: #858b7e;
+  --btn-outline-fg: #1b2116;
+  --grass: #204b22;                           /* Texto, foco y trazos de acento. En claro NUNCA es lima */
+  --grass-hover: #163618;
+  --on-grass: #ffffff;
+  --grass-deep: #204b22;
+  --grass-tint: rgba(32, 75, 34, 0.10);       /* Fondos suaves de acento */
+  --grass-tint-strong: #e6efe3;               /* Selección activa: módulo del navbar, pestaña, fila; botella encima 8,52 : 1 */
+  --grass-border: rgba(32, 75, 34, 0.40);
+  --brand-signature: #a3e635;                 /* Lima de marca, solo sobre #204b22 o #163618 (6,66 y 8,84 : 1) */
 
-  /* Semántica de Roles y Estados */
-  --navy: #16324f;                           /* Identidad Admin Club / Foco */
+  /* Roles y equipos */
+  --navy: #16324f;                            /* Administrador de club */
   --navy-tint: rgba(22, 50, 79, 0.08);
   --navy-border: rgba(22, 50, 79, 0.30);
-  --blue-mid: #2b6ca3;                       /* Identidad Coach / Analista */
+  --blue-mid: #2b6ca3;                        /* Entrenador / Analista */
   --blue-mid-tint: rgba(43, 108, 163, 0.08);
-  --player: #6b6f5f;                         /* Identidad Jugador / Neutro */
+  --player: #6b6f5f;                          /* Jugador / neutro */
   --player-tint: rgba(20, 25, 15, 0.05);
+  --team-rival: #3d5a80;                      /* Rival (7,06 : 1 sobre blanco); el propio es el verde botella */
 
-  /* Feedback y Alertas */
-  --success: #2e7d32;
-  --success-tint: rgba(46, 125, 50, 0.12);
-  --warning: #8a5700;
-  --warning-tint: rgba(253, 176, 34, 0.20);
-  --error: #b42318;
-  --error-tint: rgba(240, 68, 56, 0.14);
-  --error-border: rgba(180, 35, 24, 0.35);
+  /* Estados: ámbar avisa, rojo alerta, verde confirma. Siempre ícono + texto */
+  --success: #2a722e;                         /* 5,92 : 1 sobre blanco, 5,04 sobre su tinte */
+  --success-tint: #e6efe6;
+  --success-border: rgba(42, 114, 46, 0.30);
+  --warning: #8a5700;                         /* 6,10 : 1 */
+  --warning-tint: #ffefd3;
+  --warning-border: rgba(138, 87, 0, 0.35);
+  --error: #b42318;                           /* 6,57 : 1 */
+  --error-tint: #fde9e7;
+  --error-border: rgba(180, 35, 24, 0.30);
+
+  /* «Sin jugador»: chip dashed, fila pendiente con barra y marcadores rayados a 135° */
+  --unassigned-border: #b7791f;
+  --unassigned-bg: #fff8ea;
+  --unassigned-stripe: #fff4dc;
 
   /* Calor de la cancha de zonas (post-partido): escala secuencial ámbar → naranja */
   --zone-heat-low: #fdb022;
   --zone-heat-high: #d9480f;
+  --zone-heat-mix: 62%;
 
-  /* Píldora de marcador del encabezado de análisis post-partido: un solo estilo en Eventos, Zonas y Estadísticas */
+  /* Píldora de marcador del encabezado de análisis post-partido (Eventos, Zonas y Estadísticas) */
   --score-pill-bg: #204b22;
   --score-pill-fg: #ffffff;
 
-  /* Geometría y Sombras */
+  /* Geometría y sombras */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
   --radius-xl: 20px;
   --radius-pill: 999px;
-  --shadow-elevation: 0 16px 36px rgba(15, 35, 15, 0.12), 0 4px 12px rgba(15, 35, 15, 0.06);
+  --shadow-elevation: 0 1px 2px rgba(16, 24, 16, 0.06), 0 12px 32px rgba(16, 24, 16, 0.07);
   --shadow-button: 0 4px 12px rgba(32, 75, 34, 0.20);
   --shadow-button-hover: 0 6px 16px rgba(32, 75, 34, 0.28);
 
-  /* Compartidos con el modo oscuro (§5.1): en claro valen lo de siempre */
+  /* Compartidos con el modo oscuro (§5.1) */
   --surface-sunken: var(--surface);
   --surface-overlay: var(--surface);
   --shadow-navbar: 0 4px 14px rgba(20, 45, 20, 0.08);
-  --team-rival: var(--navy);          /* rival en Estadísticas; en oscuro es un azul propio */
-  --on-navy: #ffffff;                 /* texto sobre --navy */
-  --zone-heat-mix: 62%;               /* cuánto del calor se mezcla sobre la cancha */
+  --on-navy: #ffffff;                         /* texto sobre --navy */
+
   /* Colores de jugadas (línea de tiempo y tabla de post-partido), §5.6 */
   --event-try: #2e7d32;
   --event-kick: #7c3aed;
   --event-tackle-missed: #2563eb;
   --event-tackle: #16324f;
   --event-penalty: #b42318;
-  --event-set-piece: #d96a0a;
-  --event-turnover: #d96a0a;
+  --event-set-piece: #b8560a;                 /* oscurecido para llegar a 4,80 : 1 con texto blanco */
+  --event-turnover: #b8560a;
   --event-default: #204b22;
 }
 ```
+
+### 1.2 Reglas de uso del color (claro)
+
+- **Un solo primario sólido verde botella por pantalla.** El resto es `.btn-outline` (blanco, borde `--border-strong`, texto `--text-primary`). El rojo es solo para error y borrar.
+- **Lima solo sobre botella.** `--brand-signature` va únicamente sobre `#204b22`/`#163618`. Sobre blanco o cal da 1,51 y 1,31 : 1 y está prohibido. `--grass` en claro es botella, no lima.
+- **El verde de estado nunca va en un botón.** `.status-active` y `.banner-success` son estado: usan `--success*`, no el verde de marca.
+- **Ámbar** = falta algo que se puede completar; **rojo** = algo falló, se rechaza o se pierde; **verde** = confirma. Siempre ícono + texto, nunca solo color.
+- **El estado solo aparece cuando no es el normal** (p. ej. «Inactivo» en Miembros; «Activo» no lleva rótulo).
+- **JetBrains Mono solo para números, tiempos, marcadores, códigos y rótulos `.label-mono`.** Las frases van en Inter.
+
+### 1.3 Contrastes del claro (WCAG 2.x, calculados)
+
+Mínimos: 4,5 : 1 para texto y 3 : 1 para bordes de controles.
+
+| Par | Ratio |
+|---|---|
+| Primario `#1b2116` sobre blanco / cal `#eef0ea` / `#f6f7f3` / tinte `#e6efe3` | 16,46 / 14,33 / 15,30 / 13,97 |
+| Secundario `#4b5540` sobre las mismas | 7,86 / 6,84 / 7,30 / 6,67 |
+| Atenuado `#646b5b` sobre las mismas (antes `#7c8571`: 3,85 sobre blanco) | 5,53 / 4,82 / 5,14 / 4,69 |
+| Botella `#204b22` sobre el tinte `#e6efe3` | 8,52 |
+| Blanco sobre botella `#204b22` / `#163618` | 10,04 / 13,33 |
+| Lima `#a3e635` sobre `#204b22` / `#163618` | 6,66 / 8,84 |
+| Éxito `#2a722e` sobre blanco / su tinte `#e6efe6` | 5,92 / 5,04 |
+| Advertencia `#8a5700` sobre `#ffefd3` / `#fff8ea` | 5,38 / 5,77 |
+| Error `#b42318` sobre `#fde9e7` | 5,63 |
+| Rival `#3d5a80` sobre blanco / cal | 7,06 / 6,15 |
+| Borde fuerte `#858b7e` sobre blanco / `#f6f7f3` / cal | 3,50 / 3,26 / 3,05 |
+| Naranja de jugadas `#b8560a`: blanco encima / sobre el carril | 4,80 / 4,58 |
+
+Límite conocido: `#858b7e` da 2,80 : 1 sobre el contenedor `--surface-segment`; los controles de ese contenedor se distinguen por texto y fondo, no por borde (el activo es blanco con sombra).
 
 ---
 
@@ -122,101 +175,100 @@ El sistema utiliza tres familias tipográficas de Google Fonts cargadas globalme
 
 ## 3. Componentes Base Globales
 
-### 3.1 Fondo de Cancha Salvia Deportivo
-El fondo global de las pantallas de gestión aplica un lienzo verde salvia suave y luminoso `#e1edde` con líneas tácticas diagonales sutiles:
+### 3.1 Fondo de Cancha «Cal»
+El fondo global de las pantallas de gestión es una cal casi neutra (`--bg-canvas`, `#eef0ea`) con un brillo suave arriba y líneas tácticas diagonales muy tenues, definidas en `--canvas-image` (el modo oscuro y Entretiempo usan el mismo token):
 
 ```css
 body {
-  background-color: #e1edde;
-  background-image: 
-    radial-gradient(ellipse at 50% 30%, rgba(225, 237, 222, 0.92) 0%, rgba(225, 237, 222, 0.65) 35%, rgba(225, 237, 222, 0.15) 65%, transparent 80%),
-    repeating-linear-gradient(135deg, rgba(55, 75, 60, 0.14) 0px, rgba(55, 75, 60, 0.14) 1.5px, transparent 1.5px, transparent 54px);
+  background-color: var(--bg-canvas);
+  background-image: var(--canvas-image);
   background-attachment: fixed;
-  color: #1b2116;
+  color: var(--text-primary);
   font-family: var(--font-body);
 }
 ```
 
-### 3.2 Page Header (HUD Integrado)
-Cabecera estática superior (sin efecto glassmorphism flotante ni fondos oscuros pesados) que unifica el título y la acción principal:
+### 3.2 Page Header (HUD integrado, encabezado único)
+Todas las pantallas de gestión usan el mismo encabezado, promovido del HUD de Inicio: rótulo mono, título Hanken 800 y subtítulo, con las acciones a la derecha. **No hay píldoras de rótulo** en estos encabezados.
 
 ```html
 <header class="hud">
-  <div class="hud-brand">
-    <div class="badge-tech">
-      <span>Categorías & Planteles</span>
-    </div>
-    <div class="brand-text">
-      <h1 class="title">Divisiones & Planteles</h1>
-      <p class="club">Administra las categorías competitivas y planteles activos</p>
-    </div>
+  <div class="hud-text">
+    <p class="label-mono hud-label">Perfil Institucional</p>
+    <h1 class="hud-title">Configuración del Club</h1>
+    <p class="hud-subtitle">Información general y parámetros de la institución</p>
   </div>
 
   <div class="hud-actions">
-    <button type="button" class="btn btn-invite">+ Nueva División</button>
+    <button type="button" class="btn btn-invite">Guardar</button>
   </div>
 </header>
 ```
 
-- `.badge-tech`: Píldora en fondo `#d6eac0`, borde `1px solid rgba(36, 76, 9, 0.25)` y texto `#244c09`.
-- `.title`: Tipografía `Hanken Grotesk` 800, tamaño `2rem` (32px), color `#111d0e`.
-- `.club`: Tamaño `14px`, peso 500, color `#3b4e33`.
+- `.label-mono`: JetBrains Mono 700, 12px, mayúsculas, tracking `.12em`, color `--text-secondary`.
+- `.hud-title`: Hanken Grotesk 800, 44px (32px en ≤ 700px), interlineado 1,05, tracking `-.03em`, color `--text-primary`.
+- `.hud-subtitle`: 15px, color `--text-secondary`.
+- `.hud-text--fluid`: el texto se ajusta (`flex: 1 1 320px`) en vez de empujar las acciones.
+- Usan este patrón: Inicio (`HomeHudComponent`), alta de división, jugadores y entrenadores de división, alta de jugador, Club, Partidos, Rivales, armado de plantel, Admin OvalTrack, Estadísticas del jugador y de división, Miembros (un solo encabezado, sin doble título) y Consulta interna. Post-partido tiene su propio HUD con el marcador, pero también usa el rótulo mono.
+- **Excepción:** la lista de Divisiones conserva su encabezado anterior (`.hud-brand` + `.badge-tech` + `.brand-text`). `.badge-tech` sigue existiendo como clase neutra (fondo `--surface-alt`, borde `--border-sport`, texto `--text-secondary`) para Divisiones, Entretiempo, el modo edición de Club, el alias de Rivales y el selector de registro; no se usa en encabezados nuevos.
 
 ### 3.3 Botones
 
 ```css
-/* Botón de Acción Principal (CTA Rugby) */
+/* Botón de Acción Principal (CTA Rugby): uno por pantalla */
 .btn-invite, .btn-primary-rugby {
   height: 44px;
   padding: 0 20px;
   border-radius: 10px;
-  background-color: #204b22;
-  color: #ffffff;
+  background-color: var(--btn-primary-bg);   /* #204b22 */
+  color: var(--btn-primary-fg);
   font-weight: 700;
-  border: 1px solid #204b22;
-  box-shadow: 0 4px 12px rgba(32, 75, 34, 0.20);
+  border: 1px solid var(--btn-primary-bg);
+  box-shadow: var(--shadow-button);
   transition: all 0.15s ease;
 }
 .btn-invite:hover {
-  background-color: #163618;
+  background-color: var(--btn-primary-hover);
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(32, 75, 34, 0.28);
+  box-shadow: var(--shadow-button-hover);
 }
 
-/* Botón Secundario / Outline Deportivo */
+/* Botón Secundario / Outline: blanco, borde gris, texto oscuro (sin verde) */
 .btn-outline {
   height: 44px;
   padding: 0 20px;
   border-radius: 10px;
-  background-color: #ffffff;
-  border: 1px solid rgba(32, 75, 34, 0.25);
-  color: #204b22;
+  background-color: var(--btn-outline-bg);
+  border: 1px solid var(--btn-outline-border);
+  color: var(--btn-outline-fg);
   font-weight: 600;
-  box-shadow: 0 2px 6px rgba(20, 45, 20, 0.04);
+  box-shadow: 0 2px 6px rgba(16, 24, 16, 0.04);
 }
 .btn-outline:hover {
-  background-color: #f2f7ef;
-  border-color: #204b22;
-  color: #142e15;
+  background-color: var(--surface-hover);
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
   transform: translateY(-1px);
 }
 ```
 
+**Selector de vistas y filtros** (`.status-segment`, `.status-tab`, `.filters`, `.chip`): contenedor `--surface-segment` con borde `--border-segment`; el activo es **blanco con sombra** (`0 1px 3px rgba(16,24,16,.14)`) y anillo de 1px. El conteo usa `--text-secondary` para llegar a 4,5 : 1 sobre el contenedor.
+
 ### 3.4 Tarjetas Elevadas de Formulario y Contenido (`.form-card`, `.match-card-shell`, etc.)
-Estructura en dos capas con cabecera en degradé suave y cuerpo blanco puro con bordes de 2px:
+Estructura en dos capas con cabecera neutra y cuerpo blanco puro, con bordes de 2px y una sombra de elevación suave. Las tarjetas anidadas llevan borde de 1px `--border-sport` y una sombra mínima (`0 1px 2px rgba(16,24,16,.05)`):
 
 ```css
 .form-card {
-  background: #ffffff;
-  border: 2px solid rgba(32, 75, 34, 0.28);
+  background: var(--surface);
+  border: 2px solid var(--border-sport);      /* #dcdfd7 */
   border-radius: 20px;
-  box-shadow: 0 16px 36px rgba(15, 35, 15, 0.12), 0 4px 12px rgba(15, 35, 15, 0.06);
+  box-shadow: var(--shadow-elevation);
   overflow: hidden;
 }
 
 .form-card-header {
-  background: linear-gradient(180deg, #edf5e9 0%, #e0ebd8 100%);
-  border-bottom: 2px solid rgba(32, 75, 34, 0.20);
+  background: linear-gradient(180deg, var(--surface-header-start) 0%, var(--surface-header-end) 100%); /* neutra */
+  border-bottom: 2px solid var(--border-sport-subtle);
   padding: 24px 32px 20px;
 }
 
@@ -224,28 +276,29 @@ Estructura en dos capas con cabecera en degradé suave y cuerpo blanco puro con 
   font-family: var(--font-head);
   font-weight: 800;
   font-size: 20px;
-  color: #111d0e;
+  color: var(--text-primary);
 }
 ```
 
 ### 3.5 Controles de Formulario (`.form-control`)
-Inputs y selects con altura táctil accesible (46px), bordes salvia y foco verde bosque:
+Inputs y selects con altura táctil accesible (46px), borde de control `--border-strong` (3,50 : 1) y foco en verde botella:
 
 ```css
 .form-control {
   width: 100%;
   height: 46px;
-  background: #ffffff;
-  border: 1px solid rgba(32, 75, 34, 0.22);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
   border-radius: 10px;
-  color: #111d0e;
+  color: var(--text-primary);
   padding: 0 14px;
   font-size: 14.5px;
 }
+.form-control::placeholder { color: var(--text-muted); }
 .form-control:focus {
-  border-color: #204b22;
+  border-color: var(--btn-primary-bg);
   box-shadow: 0 0 0 3px rgba(32, 75, 34, 0.15);
-  background: #fafdf9;
+  background: var(--surface);
 }
 ```
 
@@ -257,7 +310,7 @@ Inputs y selects con altura táctil accesible (46px), bordes salvia y foco verde
 Barra superior **sólida, blanca (`--surface`), sin efecto vidrio**, de ancho completo (no usa `.layout-container`): el logo y el avatar no cambian de lugar entre pantallas. El margen lateral es `clamp(var(--layout-pad), 3vw, 56px)`. `position: sticky`, `z-index: 1030`, alto `var(--navbar-h)`.
 
 - **Estructura:** logo (lleva a `/home`; reemplaza a "Volver al inicio"), nombre del club debajo del logo (solo > 1120px y fuera de post-partido), módulos, y a la derecha partido en vivo, sincronización y avatar.
-- **Módulos por rol** (catálogo único `core/navigation/navigation-modules.ts`; un módulo sin `route` no se muestra): Admin de club → Inicio, Partidos, Divisiones, Club, Miembros · Entrenador/Analista → Inicio, Partidos, Divisiones (Reportes cuando exista su ruta) · Jugador → Inicio, Estadísticas (Partidos cuando exista su ruta) · Admin OvalTrack → Inicio, Administración. La pantalla actual se resalta en verde claro (`--grass-tint-strong`, `aria-current="page"`).
+- **Módulos por rol** (catálogo único `core/navigation/navigation-modules.ts`; un módulo sin `route` no se muestra): Admin de club → Inicio, Partidos, Divisiones, Club, Miembros · Entrenador/Analista → Inicio, Partidos, Divisiones (Reportes cuando exista su ruta) · Jugador → Inicio, Estadísticas (Partidos cuando exista su ruta) · Admin OvalTrack → Inicio, Administración. La pantalla actual se resalta con el tinte de selección (`--grass-tint-strong`, `#e6efe3`, con texto botella; `aria-current="page"`).
 - **Estados, solo cuando hacen falta:** *Partido en vivo* (`LiveMatchSource`, lee Dexie; solo el partido que captura este dispositivo, división + marcador, lleva a `/live-capture/:id` o a `/halftime`; el jugador no lo ve). *Sincronización* (`SyncStatusSource` → `LocalSyncStatusSource`; icono + texto o contador; desaparece si todo está sincronizado). Cuenta en Dexie, con `liveQuery`, los cambios sin enviar (eventos pendientes + transiciones de partido; los rechazados por el servidor no cuentan), combina la conexión (`ConnectivityService`) y "Sincronizar ahora" reutiliza `SyncManagerService.synchronizeAll()` sin cambiar el orden de envío.
 - **Menú de usuario** (`UserMenuComponent`): avatar con iniciales y color del rol; identidad (nombre, correo, rol, club); estado de sincronización con "Sincronizar ahora"; apariencia claro/oscuro; "Cerrar sesión" al final, separado y en rojo. Cerrar sesión siempre abre un modal bloqueante (`LogoutConfirmDialogComponent`, `<dialog>` nativo), porque sin conexión no se puede volver a entrar. Sin cambios pendientes es una confirmación simple («Cancelar» / «Cerrar sesión») que recuerda que hace falta conexión para volver. Con cambios sin enviar: sin conexión no se puede volver a iniciar sesión, así que la acción principal es «Seguir conectado» y «Cerrar sesión igual» queda en rojo secundario; con conexión, la principal es «Sincronizar y cerrar sesión» (cierra solo si se envió todo) junto a «Cancelar» y «Cerrar sin enviar». En celular el menú es una hoja inferior.
 - **Modo por ruta** (`data.navbar` en `app.routes.ts`, resuelto por `NavbarModeService`): `default`, `compact` (post-partido, 56px) y `hidden` (captura en vivo y entretiempo, sin navbar para evitar toques accidentales).
@@ -289,7 +342,7 @@ Barra superior **sólida, blanca (`--surface`), sin efecto vidrio**, de ancho co
 ### 4.3 Mi Club (`/club`)
 - **Modo Lectura por Defecto:**
   - Hero card con logo del club, nombre en grande, ciudad, dirección y fecha de fundación.
-  - Tarjetas de información organizadas en grid (2px borders, headers en degradé salvia).
+  - Tarjetas de información organizadas en grid (2px borders, cabeceras neutras `--surface-header-*`).
   - Botón de activación: `✏️ Editar información`.
 - **Modo Edición Condicional:**
   - Clona un borrador independiente (`clubDraft`) sin mutar el estado global hasta guardar.
@@ -298,14 +351,15 @@ Barra superior **sólida, blanca (`--surface`), sin efecto vidrio**, de ancho co
   - Sincronización instantánea con el `UserContextService` y la barra de navegación global al guardar.
 
 ### 4.4 Listados y Tablas de Planteles (`/divisions/:id/players`, `/divisions/:id/coaches`, `/members`)
-- **Cabeceras de Tabla Salvia:** Fondo `#edf5e9`, borde `2px solid rgba(32, 75, 34, 0.20)`, títulos en uppercase y tracking deportivo.
-- **Filas Elevadas:** Fondo blanco `#ffffff`, hover `#f1f3ea`, borde inferior sutil.
-- **Avatares de Iniciales:** Círculos de 40px con borde de rol específico (Navy para Admin, Blue para Coach, Salvia para Jugador).
+- **Cabeceras de tabla:** fondo `--surface-alt`, borde inferior `--border-sport`, títulos `.label-mono` (mono, mayúsculas, tracking deportivo).
+- **Filas:** fondo blanco, hover `--surface-hover`, borde inferior sutil `--border`.
+- **Miembros (`/members`, pestaña Cuentas):** una sola tarjeta con tabla MIEMBRO · ROL · ACCIONES y pie «Mostrando X de N» (N es el total del club). El estado se muestra **solo si la cuenta no está activa** («Inactivo» junto al nombre; «Activo» no lleva rótulo). El administrador protegido se ve como texto con ícono de escudo en lugar del selector de rol; la descripción del permiso va como `title` del rol (no hay indicador de lápiz). En celular la tabla se apila en dos renglones.
+- **Avatares de Iniciales:** Círculos de 40px con borde de rol específico (Navy para Admin, Blue para Coach, gris neutro para Jugador).
 - **Selector de Rol Personalizado:** Popover dropdown a medida (no `<select>` nativo del navegador).
 - **Barra de Guardado en Lote (`.batch-bar`):** Flotante en la parte inferior cuando existen cambios sin persistir (`is-dirty`).
 
 ### 4.5 Fixture y Selección de Partidos (`/match-selection`)
-- **Toolbar de Filtros:** Contenedor en `#eaf3e6` con pestañas segmentadas redondeadas (Todos, Por Jugar, En Curso, Finalizados, Cancelados).
+- **Toolbar de Filtros:** Tarjeta blanca (`--surface-toolbar`) con un selector segmentado (`--surface-segment`) de pestañas redondeadas (Todos, Por Jugar, En Curso, Finalizados, Cancelados).
 - **Tarjetas de Partidos (`.match-card-shell`):**
   - Badge de estado con indicador luminoso pulsante para partidos `in_progress`.
   - Sección central con tipografía destacada de rival `"VS CLUB_OPONENTE"`.
@@ -322,14 +376,15 @@ Barra superior **sólida, blanca (`--surface`), sin efecto vidrio**, de ancho co
 
 ## 5. Modo oscuro: Grafito con verde botella
 
-El modo oscuro es la segunda cara de la misma identidad, no un tema aparte: **grafito neutro con luz desde arriba**, el verde de marca como señal y color solo donde significa algo. El modo claro (*Sport Salvia*) no cambia. Lo elige el `ThemeService` (clave `ovaltrack_theme`, oscuro por defecto) y se aplica con `data-theme="dark"` en `<html>`.
+El modo oscuro es la segunda cara de la misma identidad, no un tema aparte: **grafito neutro con luz desde arriba**, el verde de marca como señal y color solo donde significa algo. El modo claro (*Cal y botella*, §1) tiene sus propios valores para los mismos nombres de token. Lo elige el `ThemeService` (clave `ovaltrack_theme`, oscuro por defecto) y se aplica con `data-theme="dark"` en `<html>`.
 
 ### 5.1 Cómo se resuelve
 
 - **Todo vive en tokens.** Los valores están en el bloque `[data-theme="dark"]` de `frontend/src/styles.css`. Un componente nunca escribe un color oscuro a mano: usa `var(--token)`. Los pocos literales que quedan en reglas oscuras son deliberados (sombra de la hoja inferior, halo del marcador seleccionado, verde de marca de la mini cancha y de la pelota, colores locales de la cancha nocturna).
-- **Token solo oscuro:** se define únicamente en `[data-theme="dark"]` y se usa solo en reglas oscuras (`--canvas-image`, `--veil`, `--surface-track`, `--scrim`, `--team-rival`, `--focus-ring`, `--shadow-overlay`, `--shadow-elevation-hover`, `--error-solid`, `--success-border`).
-- **Token compartido:** si lo usa una regla que aplica en los dos temas, se define también en `:root` con el valor que ya producía el claro (`--surface-sunken`, `--surface-overlay`, `--shadow-navbar`, `--team-rival`, `--on-navy`, `--zone-heat-mix`, `--event-*`). Así el claro no cambia.
+- **Token solo oscuro:** se define únicamente en `[data-theme="dark"]` y se usa solo en reglas oscuras (`--veil`, `--scrim`, `--focus-ring`, `--shadow-overlay`, `--shadow-elevation-hover`, `--error-solid`).
+- **Token compartido:** si lo usa una regla que aplica en los dos temas, se define también en `:root` con su valor claro (`--surface-sunken`, `--surface-overlay`, `--shadow-navbar`, `--team-rival`, `--on-navy`, `--zone-heat-mix`, `--event-*`, `--canvas-image`, `--surface-track`, `--surface-segment`, `--border-segment`, `--success-border`, `--brand-signature`, `--unassigned-*`, `--btn-on-board-hover`).
 - Los nombres de los tokens existentes no cambian: solo cambian sus valores en oscuro.
+- **Antes de cambiar el claro de una regla que no tiene override oscuro,** fijá primero el valor oscuro de hoy (un override o un token propio); si no, el cambio también mueve el oscuro.
 
 ### 5.2 Neutros y profundidad
 
@@ -384,27 +439,29 @@ Reglas de uso:
 
 ### 5.5 Captura en vivo
 
-- **Cabecera (HUD), en los dos temas:** sin logo. A la izquierda «‹ Partidos» y «Estadísticas»; al centro el marcador (puntaje propio en `--score-own`: `--grass-deep` en claro y `--grass` en oscuro; rival en `--team-rival`), el reloj en un carril (`--hud-well`) con el botón de pausa y el período en píldora; a la derecha «Finalizar partido», «Deshacer» y tres íconos cuadrados de 44 px: tema, historial y sincronización (caja con `--success-tint` o `--warning-tint` según el estado). Botones con radio 10 px y borde `--ctl-border` (`--border` local en claro, `--border-strong` en oscuro), en Inter y JetBrains Mono. Hasta 1279 px el marcador baja a una segunda fila.
-- **Oscuro:** cabecera y pie hundidos (`--hud-bg` = `--surface-sunken`), reloj en carril (`--hud-well` = `--surface-track`) con sombra interior, hover en `--surface-hover`, foco en `--grass` y diálogos sobre `--surface-overlay` con `--scrim` detrás. `.live-capture[data-theme="dark"]` ya no define neutros propios: hereda los del sistema. Los `--hud-*` valen en claro lo de siempre.
-- **La posesión conserva su color de fondo** en los dos temas: `--bg-own` verde, `--bg-away` rojo, `--bg-neutral` azul. La barra dice «Posesión propia» y «Posesión rival», con un check en la activa y radio 10 px; en oscuro, «Propia» activa va en `--btn-primary-bg` y «Rival» inactivo en `--team-rival`.
-- **Botones de jugadas:** radio 12 px, borde `rgba(255,255,255,.16)` y sombra para recortarse sobre el fondo de posesión, en Inter. El relleno sigue saliendo de `eventVariant()` (rotación por posición, igual en claro y oscuro: en el catálogo actual cada jugada de Puntuación tiene su color). Tarjeta amarilla y roja llevan un chip con el color de la tarjeta (por `event.code`).
+- **Cabecera (HUD), en los dos temas:** sin logo. A la izquierda «‹ Partidos» y «Estadísticas»; al centro el marcador (puntaje propio en `--score-own`: `--grass-deep` en claro y `--grass` en oscuro; rival en `--team-rival`), el reloj en un carril (`--hud-well`) con el botón de pausa y el período en píldora; a la derecha «Finalizar partido», «Deshacer» y tres íconos cuadrados de 44 px: tema, historial y sincronización (caja con `--success-tint` o `--warning-tint` según el estado). Botones con radio 10 px y borde `--ctl-border` (`#858b7e` en claro, `--border-strong` en oscuro), en Inter y JetBrains Mono. Hasta 1279 px el marcador baja a una segunda fila.
+- **Oscuro:** cabecera y pie hundidos (`--hud-bg` = `--surface-sunken`), reloj en carril (`--hud-well` = `--surface-track`) con sombra interior, hover en `--surface-hover`, foco en `--grass` y diálogos sobre `--surface-overlay` con `--scrim` detrás. `.live-capture[data-theme="dark"]` ya no define neutros propios: hereda los del sistema.
+- **Claro (solo color):** `.live-capture[data-theme="light"]` define sus neutros locales en cal (`--bg` `#eef0ea`, `--surface-alt` `#f6f7f3`, texto `#1b2116`, `--border` `#dcdfd7`); cabecera y pie blancos; reloj en pozo (`--hud-well` `#f6f7f3`, sombra interior `0 1px 3px rgba(16,24,16,.08)`) con el botón de pausa en `--btn-primary-bg`; hover neutro (`--navy-100` `#eef0ea`); `--score-own` es `--grass-deep` (`#204b22`). «Posesión propia» activa va en `--btn-primary-bg` con el check en `--brand-signature` y «Posesión rival» inactiva en blanco con borde `#858b7e` y texto `--team-rival`. El diálogo de confirmación usa tokens (superficie, `--border-sport`, tintes de éxito, botón botella).
+- **La posesión conserva su color de fondo** en los dos temas, también en claro (verde, azul y rojo saturados detrás de los botones): `--bg-own` verde, `--bg-away` rojo, `--bg-neutral` azul. La barra dice «Posesión propia» y «Posesión rival», con un check en la activa y radio 10 px; en oscuro, «Propia» activa va en `--btn-primary-bg` y «Rival» inactivo en `--team-rival`.
+- **Botones de jugadas:** radio 12 px, en Inter; en oscuro borde `rgba(255,255,255,.16)` y sombra para recortarse sobre el fondo de posesión, y en claro borde `rgba(0,0,0,.08)` con sombra `inset 0 1px 0 rgba(255,255,255,.18), 0 4px 10px rgba(16,24,16,.14)`. El relleno sigue saliendo de `eventVariant()` (rotación por posición, igual en claro y oscuro: en el catálogo actual cada jugada de Puntuación tiene su color). Esos rellenos (`#57AD16`, `#C6403A`, `#F5821F`, `#7952B3`) conservan los colores de siempre; el verde y el naranja dan menos de 4,5 : 1 con texto blanco. Tarjeta amarilla y roja llevan un chip con el color de la tarjeta (por `event.code`).
 - **Rótulos de categoría:** JetBrains Mono en mayúsculas, sin indicador de color.
+- **Pausa:** el fondo «respira» entre el color de la posesión y el cal liso. En claro lo hace la animación `live-capture-pause-pulse-light`; en oscuro el pulso original no mezcla (ver §5.9).
 - La pantalla sigue a pantalla completa, sin navbar (§6, regla 5).
 
 ### 5.6 Jugadas por categoría (post-partido)
 
-La línea de tiempo y la tabla de Eventos colorean cada jugada con `resolveEventColor()` (`post-match/utils/match-review.utils.ts`), que devuelve un token `--event-*` según el nombre del evento. En claro cada token vale el color de siempre; en oscuro toma la variante clara de su categoría, legible sobre el carril (≥ 7 : 1).
+La línea de tiempo y la tabla de Eventos colorean cada jugada con `resolveEventColor()` (`post-match/utils/match-review.utils.ts`), que devuelve un token `--event-*` según el nombre del evento. En claro cada token vale el color de siempre (salvo el naranja, oscurecido a `#b8560a` para llegar a 4,80 : 1 con texto blanco y 4,58 : 1 sobre el carril); en oscuro toma la variante clara de su categoría, legible sobre el carril (≥ 7 : 1).
 
 | Token | Reglas de nombre | Claro | Oscuro | Categoría |
 |---|---|---|---|---|
 | `--event-try`, `--event-kick` | try; drop, conversión | `#2e7d32`, `#7c3aed` | `#e2b54a` | Puntuación |
 | `--event-tackle`, `--event-tackle-missed` | tackle; tackle fallado | `#16324f`, `#2563eb` | `#72c6d1` | Defensa |
 | `--event-penalty` | penal, infracción, tarjetas | `#b42318` | `#a7adbb` | Neutro / disciplina |
-| `--event-set-piece` | line, scrum | `#d96a0a` | `#79a6ec` | Juego fijo |
-| `--event-turnover` | turnover | `#d96a0a` | `#e9925a` | Cambio de posesión |
+| `--event-set-piece` | line, scrum | `#b8560a` | `#79a6ec` | Juego fijo |
+| `--event-turnover` | turnover | `#b8560a` | `#e9925a` | Cambio de posesión |
 | `--event-default` | el resto | `#204b22` | `#74c785` | Ataque |
 
-«Sin jugador» conserva el rayado del claro (45°, franjas de 2 px) pero en ámbar sobre ámbar apagado (`--warning` y `--warning` al 38 % sobre `--surface-track`), con borde `--warning-border`: sin el contraste de cinta de advertencia que tenían el naranja y el blanco. Es igual en la línea de tiempo y en la leyenda del KPI; el contador usa `--warning`.
+«Sin jugador» usa en claro los tokens `--unassigned-*`: chip con borde `1px dashed #b7791f` sobre `#fff8ea` y texto `--warning`; fila pendiente con fondo `#fff8ea` y barra izquierda de 3 px `#b7791f`; marcadores rayados a 135° (`#b7791f` y `#fff4dc`, franjas de 3 px). En oscuro el rayado va en ámbar sobre ámbar apagado (`--warning` y `--warning` al 38 % sobre `--surface-track`), con borde `--warning-border`: sin el contraste de cinta de advertencia que tenían el naranja y el blanco. Es igual en la línea de tiempo y en la leyenda del KPI; el contador usa `--warning`.
 
 ### 5.7 Zonas
 
@@ -441,7 +498,7 @@ Mínimos: 4,5 : 1 para texto y 3 : 1 para bordes de controles.
 ### 5.9 Límites conocidos
 
 - `--border-strong` (`#7a7e86`) también lo usan divisores y marcas finas de la línea de tiempo y de las estadísticas: se ven más claros que en el diseño anterior.
-- El pulso de pausa de Captura en vivo usa `color-mix(..., --bg)` sin `var()` y no mezcla; arreglarlo cambiaría el claro.
+- El pulso de pausa original de Captura en vivo usa `color-mix(..., --bg)` sin `var()` y no mezcla; el claro tiene su propia animación y en oscuro sigue sin pulsar (arreglarlo cambiaría el oscuro).
 - Los colores de jugadas dependen del nombre del evento (no de su categoría del catálogo): «Kick-off», «Maul» y «Quick play» caen en `--event-default` (Ataque), y Tackle completado y fallado comparten color en oscuro (se distinguen por carril). Pasar a `groupName` cambiaría el claro.
 - Fuera de alcance por ser funciones nuevas: tarjetas con degradé y borde superior iluminado, el chip «Sin asignar» con borde punteado y el rayado «sin jugador», la tarjeta de detalle de zona, botones sobre el tablero e íconos en los avisos.
 
@@ -458,7 +515,7 @@ Mínimos: 4,5 : 1 para texto y 3 : 1 para bordes de controles.
 
 1. **Nunca inventar colores ni sombras:** Usar estrictamente los tokens definidos en este sistema.
 2. **Respetar la jerarquía visual de botones:**
-   - Verde Rugby / Botella (`#204b22` o `--btn-invite`): Únicamente para la acción principal más importante de la pantalla.
+   - Verde Rugby / Botella (`#204b22` o `--btn-invite`): Únicamente para la acción principal más importante de la pantalla (uno por pantalla; sobre el tablero de Inicio el primario es blanco).
    - Outline Blanco Deportivo (`.btn-outline`): Para acciones secundarias, filtros o cancelar.
    - Rojo destructivo (tokens `--error`, `--error-tint` y `--error-border`): Reservado para eliminar o cerrar sesión.
 3. **Mantener la consistencia de elevación:** Toda tarjeta, tabla o contenedor de datos debe tener borde de `2px` con radio redondeado (`16px` o `20px`) y sombra de elevación profunda.
@@ -466,6 +523,11 @@ Mínimos: 4,5 : 1 para texto y 3 : 1 para bordes de controles.
 5. **No alterar ni forzar contenedores en Carga en Vivo ni Entretiempo:** Dichas pantallas (`/live-capture/:matchId` y `/live-capture/:matchId/halftime`) son instrumentos tácticos especializados para tablet en tiempo real; deben mantenerse a pantalla completa y están exentas de `.layout-container`.
 6. **Tema único:** Carga en Vivo y Entretiempo leen y cambian el mismo `ThemeService` que el navbar y el menú de usuario. Su botón de tema cambia el modo claro/oscuro de toda la app, y la elección se conserva (clave `ovaltrack_theme`).
 7. **Uso obligatorio de `.layout-container.page`:** Toda nueva pantalla o flujo de gestión debe construirse dentro de `.layout-container.page` para garantizar alineación pixel-perfect con la Navbar.
+8. **El lima solo sobre verde botella:** `--brand-signature` va únicamente sobre `#204b22` o `#163618` (tablero de Inicio, «En vivo», emblemas, check de «Posesión propia»). Nunca sobre fondo claro ni gris; en claro `--grass` es botella (§1.2).
+9. **El estado solo aparece cuando no es el normal:** una cuenta activa no lleva rótulo «Activo»; sí lo lleva la inactiva, siempre con ícono + texto. El verde de estado (`--success*`) no va en botones.
+10. **JetBrains Mono solo para números, tiempos, marcadores, códigos y rótulos `.label-mono`.** Las frases van en Inter (por ejemplo «Sin partido programado»).
+11. **Encabezado único en las pantallas de gestión:** `.hud` + `.hud-text` (rótulo `.label-mono`, título Hanken 800 y subtítulo), sin píldoras de rótulo ni `.eyebrow` (§3.2).
+12. **Cambiar el claro sin mover el oscuro:** si una regla clara usa un literal y no tiene override oscuro, fijá primero el valor oscuro de hoy antes de tocar el claro (§5.1).
 
 ---
 
@@ -552,9 +614,9 @@ La pantalla de post-partido está estructurada como una estación de trabajo de 
 ### 8.2 Componentes de la Estación de Trabajo
 1. **Encabezado común (`PostMatchHeaderComponent` dentro de `PostMatchShellComponent`):**
    - Compartido por Eventos (`/post-match/:id`), Zonas (`/zones`) y Estadísticas (`/statistics`), que son rutas hijas del shell.
-   - Etiqueta fija `ANÁLISIS POST-PARTIDO` (volver al inicio se hace desde el logo de la barra), píldora de marcador con `--score-pill-bg` / `--score-pill-fg` (mono tabular) y línea inferior siempre `Hora de inicio HH:MM:SS`.
+   - Rótulo mono fijo `ANÁLISIS • POST-PARTIDO` (`.label-mono`, sin píldora; volver al inicio se hace desde el logo de la barra), píldora de marcador con `--score-pill-bg` / `--score-pill-fg` (mono tabular) y línea inferior siempre `Hora de inicio HH:MM:SS`.
    - Burbuja flotante animada `.score-delta-badge` (`+5`), con `scoreDeltaPop` y temporizador de 3 segundos (solo cuando Eventos la informa).
-   - Selector de vistas en la misma fila del título: `routerLink` + `routerLinkActive` (`aria-current="page"`), contenedor gris claro y vista activa **blanca elevada** (en oscuro, `--surface-overlay` con `--text-primary`; el verde queda para filtros). Entre 960px y 1279px comparte fila con el partido (si no entra, baja a su propia fila); con < 960px baja a su propia fila con tres partes iguales.
+   - Selector de vistas en la misma fila del título: `routerLink` + `routerLinkActive` (`aria-current="page"`), contenedor `--surface-segment` y vista activa **blanca elevada** (en oscuro, `--surface-overlay` con `--text-primary`; el verde queda para filtros). Entre 960px y 1279px comparte fila con el partido (si no entra, baja a su propia fila); con < 960px baja a su propia fila con tres partes iguales.
    - El encabezado no tiene acciones propias de una vista: el selector queda siempre pegado al borde derecho. Lo que es de una vista vive en la barra de esa vista (p. ej. «Agregar evento», en la barra de Eventos).
 2. **Tira Condensada de KPIs (`PostMatchKpiStripComponent`):**
    - Altura de 44px con 3 secciones: total de eventos, conteo de jugadas sin jugador con botón `"Ver pendientes ›"` y porcentaje de carga con barra de progreso verde.
@@ -568,7 +630,7 @@ La pantalla de post-partido está estructurada como una estación de trabajo de 
 4. **Tabla Cronológica (`PostMatchTableComponent`):**
    - Columnas (`--table-cols`): `PERÍODO` (56px) | `JUEGO` (64px) | `VIDEO` (64px) | `JUGADA` (1fr) | `JUGADOR` (1.1fr) | `ZONA` (40px) | `NOTA` (1.5fr) | `ACCIÓN` (72px).
    - **Zona (solo lectura):** solo la etiqueta mono (C4) en `--text-secondary`, sin mini mapa (el mini mapa queda en el inspector); tooltip y `aria-label` con el nombre completo («Centro · Campo rival»). Sin zona: «—» gris, sin ámbar (son muchos). La zona se edita solo en Zonas.
-   - Selector inline `[ Sin asignar ▾ ]`: chip con borde discontinuo ámbar (`#d97706`), fondo crema (`#fffdf0`) y desplegable nativo sin solapamiento de virtual scroll.
+   - Selector inline `[ Sin asignar ▾ ]`: chip con borde discontinuo ámbar (`--unassigned-border`, `#b7791f`), fondo crema (`--unassigned-bg`, `#fff8ea`), texto `--warning` y desplegable nativo sin solapamiento de virtual scroll.
 5. **Inspector Dual y Formulario Reactivo (`PostMatchPanelComponent`):**
    - **Desktop:** Columna lateral fija de 320px con solapas `[Ver]` y `[Editar]`.
    - **Eliminar:** mismo estilo que el de la fila seleccionada de la tabla (ícono con borde rojo claro, lleno al pasar el cursor), en el borde derecho de la barra `[Ver | Editar]` y en los dos modos; 28px visibles y 44px tocables, con tooltip y `aria-label` «Eliminar evento» y la confirmación de siempre. El pie de Editar solo dice «Los cambios se guardan automáticamente».
@@ -584,7 +646,7 @@ La pantalla de post-partido está estructurada como una estación de trabajo de 
 
 ## 9. Inicio · Pizarra de juego (`/home`)
 
-Reglas propias del Inicio con sesión (la landing pública no cambia). Se suman a las anteriores; el lienzo (`.layout-container.page`, fondo salvia global) no cambia.
+Reglas propias del Inicio con sesión (la landing pública no cambia). Se suman a las anteriores; el lienzo (`.layout-container.page`, fondo cal global) no cambia.
 
 1. **Tablero oscuro verde botella, uno por pantalla.** Degradé de 135° entre `--board-bg-start` y `--board-bg-end`, radio 24px (20px en ≤ 700px) y `--board-shadow`. Contiene el próximo partido, el día de partido, el partido en curso o el onboarding.
 2. **Sobre el tablero, el primario es blanco** (`.btn-on-board`); su secundario es `.btn-on-board-outline`. Nunca hay otro primario sólido en la pantalla.
@@ -600,7 +662,7 @@ El fondo y los rótulos del tablero son iguales en claro y oscuro. Sus tokens ti
 | `--board-line` / `--board-line-strong` | `rgba(255,255,255,.10)` / `rgba(255,255,255,.22)` |
 | `--board-shadow` | `0 18px 40px rgba(15,35,15,.28)` |
 | `--on-board` / `--on-board-muted` | `#ffffff` / `rgba(255,255,255,.72)` |
-| `--on-board-accent` | `#91da40` (claro, 5,89 : 1 sobre `#204b22`) / `#8cc98f` (oscuro, 5,20 : 1) |
+| `--on-board-accent` | `var(--brand-signature)` = `#a3e635` (claro, 6,66 : 1 sobre `#204b22`) / `#8cc98f` (oscuro, 5,20 : 1) |
 | `--board-chip-ok-bg/fg` | `rgba(145,218,64,.30)` (claro) / `rgba(140,201,143,.30)` (oscuro) / `#ffffff` |
 | `--board-chip-warn-bg/fg` | `#fdb022` / `#3d2600` |
 | `--board-chip-neutral-bg/fg` | `rgba(255,255,255,.12)` / `#ffffff` |
@@ -615,8 +677,8 @@ El fondo y los rótulos del tablero son iguales en claro y oscuro. Sus tokens ti
 - La barra de análisis usa `--success` (≥ 90 %), `--warning` (≥ 60 %) y `--error`, con el porcentaje escrito.
 
 ### 9.3 Tipografía
-- h1: Hanken 800, 44/32px, tracking −.03em. Título del tablero: Hanken 800, 52/36px. Título de tarjeta: Hanken 800, 20px.
-- Rótulo (`.label-mono`): Mono 700, 12px, mayúsculas, tracking .12em. No usar `.eyebrow`, que es la píldora navy global.
+- h1 (`.hud-title`, global desde §3.2): Hanken 800, 44/32px, tracking −.03em. Título del tablero: Hanken 800, 52/36px. Título de tarjeta: Hanken 800, 20px.
+- Rótulo (`.label-mono`): Mono 700, 12px, mayúsculas, tracking .12em. Los encabezados no llevan píldoras: `.eyebrow` ya no existe.
 - Marcador: Mono 700, 104/72px tabular. Cuenta regresiva: Mono 52/36px en cajas de 84/64px. Hora de inicio: Mono 60px. KPIs: Mono 34–44px.
 
 ---
@@ -625,7 +687,7 @@ El fondo y los rótulos del tablero son iguales en claro y oscuro. Sus tokens ti
 
 Cada estilo vive en el nivel más chico que lo cubre; si lo usan más pantallas, sube un nivel:
 
-1. **Global (`frontend/src/styles.css`):** tokens, base, layout y las clases que usan varias features (`.hud`, `.hud-brand`, `.hud-brand--fluid`, botones, `.form-card*`, `.filters`/`.chip`, `.status-badge`, `.empty-state`, `.feedback-state`, etc.). El modo oscuro de estas clases se resuelve con los tokens de `[data-theme="dark"]` (§5); no se repite el valor en un override.
+1. **Global (`frontend/src/styles.css`):** tokens, base, layout y las clases que usan varias features (`.hud`, `.hud-text`, `.hud-brand` y `.hud-brand--fluid` (solo Divisiones), botones, `.form-card*`, `.filters`/`.chip`, `.status-badge`, `.empty-state`, `.feedback-state`, etc.). El modo oscuro de estas clases se resuelve con los tokens de `[data-theme="dark"]` (§5); no se repite el valor en un override.
 2. **CSS compartido de feature (`features/<dominio>/styles/*.css`):** lo que repiten varias pantallas de una misma feature. Se incluye con `styleUrls` antes del CSS del componente (por ejemplo `['../styles/kpi-strip.css', './x.component.css']`), así conserva el encapsulado de Angular. Hoy: `admin/styles/admin-panel.css`, `auth/styles/register-form.css`, `match/post-match/styles/{kpi-strip,filter-pills}.css`, `match/styles/{match-stats,match-shared}.css`, `division/styles/{division-lists,division-forms}.css`, `home/views/styles/home-views.css`.
 3. **CSS del componente (`*.component.css`):** solo lo específico de esa pantalla.
 

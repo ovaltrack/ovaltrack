@@ -49,9 +49,9 @@
   - Prefer Angular Signals (`signal()`, `computed()`) for synchronous UI/component state and service context.
   - Use RxJS pipelines (`switchMap`, `takeUntilDestroyed`) for asynchronous HTTP streams. Avoid manual nested `.subscribe()` calls.
   - Global user state is managed via `UserContextService` (`src/app/core/services/user-context.service.ts`), exposing reactive signals (`userContext`, `currentClub`, `currentRole`, `activeDivisions`, `hasClub`).
-- **UI & Design System (*Sport Pro Salvia*)**:
+- **UI & Design System (*Cal y botella* light, *Grafito* dark)**:
   - Reference `docs/DESIGN_SYSTEM.md` and `src/styles.css` as the single source of truth for UI design.
-  - Use predefined design tokens (`--bg-canvas: #e1edde`, `--btn-primary-bg: #204b22`, `--border-sport`, elevated cards, 2px borders, minimum hit-targets of 44–48px). Do NOT invent arbitrary colors or ad-hoc styles.
+  - Use predefined design tokens (`--bg-canvas: #eef0ea`, `--btn-primary-bg: #204b22`, `--border-sport`, elevated cards, 2px borders, minimum hit-targets of 44–48px). Do NOT invent arbitrary colors or ad-hoc styles.
   - Bootstrap 5 and Bootstrap Icons are available globally.
 - **UI Feedback & Toasts**:
   - Always use `ToastService` (`src/app/core/services/toast.service.ts`) for notifications and feedback (`toastService.success()`, `toastService.error()`, `toastService.warning()`, `toastService.info()`).

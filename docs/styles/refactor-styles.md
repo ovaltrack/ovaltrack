@@ -54,6 +54,7 @@ Globales nuevos: `.feedback-state` (+ `--error`; estado de carga/error de Zonas,
 9. **Reglas globales dentro de `@media`.** Borrar una regla de componente "igual a `.btn` global" no basta si un global con `@media` la pisa: en celular `.btn-invite { padding: 0 16px }` (`@media (max-width: 760px)`) le ganó al botón del pie del modal de alta post-partido. Antes de borrar, buscar la clase en los `@media` de `styles.css`.
 10. **Override oscuro que hace de fondo base.** Si la regla base de `.x` solo existe dentro de un `@media`, el override `:host-context([data-theme="dark"]) .x` puede ser lo único que le da fondo fuera de ese `@media` (pasó con `.sheet-wrapper`). Borrarlo lo deja transparente en otros anchos.
 11. **Captura en vivo y entretiempo** son pantalla completa (DESIGN_SYSTEM §6.5): se compartió CSS, no se tocaron sus contenedores.
+12. **Cambiar el claro puede mover el oscuro.** Una regla clara con un literal (verde salvia, ámbar, etc.) y **sin** override oscuro en el mismo selector y propiedad pinta lo mismo en los dos temas: pasarla a token o neutro cambia el oscuro. Antes de tocarla, fijá el valor oscuro de hoy (un override `:host-context([data-theme="dark"])` o un token con valor oscuro propio) y recién después cambiá el claro. Los tokens de `:root` que el oscuro redefine no tienen este problema. Se comprueba con la equivalencia por selector de §5 resolviendo `var()` contra el mapa de tokens oscuro. Es el inverso de la trampa 2.
 
 ## 5. Cómo se verificó (herramientas efímeras, no versionadas)
 
