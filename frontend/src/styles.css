@@ -69,6 +69,10 @@
   --success: #2a722e;
   --success-tint: #e6efe6;
   --success-border: rgba(42, 114, 46, 0.30);
+  /* "Sin jugador": ámbar = falta algo que se puede completar (chip, fila pendiente y marcadores rayados) */
+  --unassigned-border: #b7791f;
+  --unassigned-bg: #fff8ea;
+  --unassigned-stripe: #fff4dc;
 
   /* Vistas de gestión "Sport Pro Salvia" (DESIGN_SYSTEM.md §1.1) */
   --bg-canvas: #eef0ea;
@@ -271,6 +275,9 @@
   --success: #5fc57d;
   --success-tint: rgba(95, 197, 125, 0.12);
   --success-border: rgba(95, 197, 125, 0.4);
+  --unassigned-border: var(--warning);
+  --unassigned-bg: var(--warning-tint);
+  --unassigned-stripe: color-mix(in srgb, var(--warning) 38%, var(--surface-track));
 
   --btn-primary-bg: #337838;
   --btn-primary-fg: #ffffff;

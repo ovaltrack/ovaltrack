@@ -36,8 +36,8 @@
 }
 
 .strip-filter-btn.active {
-  background: #fef3c7;
-  color: #78350f;
+  background: var(--warning-tint);
+  color: var(--warning);
 }
 
 /* Barra de Progreso Mini */
@@ -75,13 +75,11 @@
 
 .legend-unassigned {
   background: repeating-linear-gradient(
-    45deg,
-    #f59e0b,
-    #f59e0b 2px,
-    #ffffff 2px,
-    #ffffff 4px
+    135deg,
+    var(--unassigned-border) 0 3px,
+    var(--unassigned-stripe) 3px 6px
   );
-  border: 1px solid #d97706;
+  border: 1px solid var(--unassigned-border);
 }
 
 .legend-text {

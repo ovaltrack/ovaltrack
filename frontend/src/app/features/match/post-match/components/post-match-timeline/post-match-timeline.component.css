@@ -86,9 +86,9 @@
 }
 
 .filter-pill-btn.unassigned-pill.active {
-  background: #fef3c7;
-  border-color: #b45309;
-  color: #78350f;
+  background: var(--warning-tint);
+  border-color: var(--warning-border);
+  color: var(--warning);
 }
 
 /*
@@ -457,9 +457,12 @@
   bottom: 0;
   width: 2px;
   background: var(--btn-primary-bg);
-  box-shadow: 0 0 8px rgba(32, 75, 34, 0.5);
+  box-shadow: 0 0 8px rgba(16, 24, 16, 0.5);
   z-index: 2;
   transition: left 0.15s ease-out;
+}
+:host-context([data-theme="dark"]) .selected-event-indicator-line {
+  box-shadow: 0 0 8px rgba(32, 75, 34, 0.5);
 }
 
 .selected-indicator-pin {
@@ -617,13 +620,11 @@
 .marker.marker-unassigned {
   z-index: 2;
   background: repeating-linear-gradient(
-    45deg,
-    #f59e0b,
-    #f59e0b 2px,
-    #ffffff 2px,
-    #ffffff 4px
+    135deg,
+    var(--unassigned-border) 0 3px,
+    var(--unassigned-stripe) 3px 6px
   ) !important;
-  border: 1px solid #d97706 !important;
+  border: 1px solid var(--unassigned-border) !important;
 }
 
 .marker.marker-selected {
