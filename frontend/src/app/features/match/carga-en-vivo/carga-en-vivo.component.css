@@ -44,13 +44,7 @@
 	--purple-900: #7952B3;
 	--purple-100: #e5d3ff;
 
-	/* Banderitas de categoría (en oscuro, la variante clara) y chips de tarjeta */
-	--flag-score: #8a6408;
-	--flag-attack: #2e7a3c;
-	--flag-set-piece: #3a6bb5;
-	--flag-turnover: #a8521a;
-	--flag-neutral: #626979;
-	--flag-defense: #1f7380;
+	/* Chips de tarjeta */
 	--card-yellow: #e9b54f;
 	--card-red: #f07a72;
 
@@ -90,12 +84,6 @@
 	--hud-well-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
 	--ctl-border: var(--border-strong);
 	--score-own: var(--grass);
-	--flag-score: var(--event-try);
-	--flag-attack: var(--event-default);
-	--flag-set-piece: var(--event-set-piece);
-	--flag-turnover: var(--event-turnover);
-	--flag-neutral: var(--event-penalty);
-	--flag-defense: var(--event-tackle);
 }
 
 .live-capture[data-theme="light"] {
@@ -432,20 +420,9 @@
 	flex: 1 0 auto;
 	display: flex;
 	flex-direction: column;
-	/* Color de la banderita según la categoría (por defecto, neutro) */
-	--flag: var(--flag-neutral);
 }
 
-.event-catalog__category[data-group="Puntuación" i] { --flag: var(--flag-score); }
-.event-catalog__category[data-group="Ataque" i] { --flag: var(--flag-attack); }
-.event-catalog__category[data-group="Juego Fijo" i] { --flag: var(--flag-set-piece); }
-.event-catalog__category[data-group="Cambio de Posesión" i] { --flag: var(--flag-turnover); }
-.event-catalog__category[data-group="Defensa" i] { --flag: var(--flag-defense); }
-
 .event-catalog__label {
-	display: flex;
-	align-items: center;
-	gap: calc(8px * var(--ot-live-scale));
 	font-family: var(--font-mono);
 	font-weight: 600;
 	font-size: var(--ot-size-label-caps);
@@ -457,14 +434,6 @@
 
 .event-catalog__label--disabled {
 	color: var(--text-muted);
-}
-
-.event-catalog__flag {
-	flex: none;
-	width: calc(10px * var(--ot-live-scale));
-	height: calc(10px * var(--ot-live-scale));
-	border-radius: 2px;
-	background: var(--flag);
 }
 
 .event-catalog__grid {

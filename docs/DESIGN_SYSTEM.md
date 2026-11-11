@@ -388,7 +388,7 @@ Reglas de uso:
 - **Oscuro:** cabecera y pie hundidos (`--hud-bg` = `--surface-sunken`), reloj en carril (`--hud-well` = `--surface-track`) con sombra interior, hover en `--surface-hover`, foco en `--grass` y diálogos sobre `--surface-overlay` con `--scrim` detrás. `.live-capture[data-theme="dark"]` ya no define neutros propios: hereda los del sistema. Los `--hud-*` valen en claro lo de siempre.
 - **La posesión conserva su color de fondo** en los dos temas: `--bg-own` verde, `--bg-away` rojo, `--bg-neutral` azul. La barra dice «Posesión propia» y «Posesión rival», con un check en la activa y radio 10 px; en oscuro, «Propia» activa va en `--btn-primary-bg` y «Rival» inactivo en `--team-rival`.
 - **Botones de jugadas:** radio 12 px, borde `rgba(255,255,255,.16)` y sombra para recortarse sobre el fondo de posesión, en Inter. El relleno sigue saliendo de `eventVariant()` (rotación por posición, igual en claro y oscuro: en el catálogo actual cada jugada de Puntuación tiene su color). Tarjeta amarilla y roja llevan un chip con el color de la tarjeta (por `event.code`).
-- **Rótulos de categoría:** JetBrains Mono en mayúsculas con una banderita del color de la categoría (`[attr.data-group]` y selectores de atributo como `[data-group="Juego Fijo" i]`; en oscuro, la variante clara `--event-*`). Un grupo desconocido usa el neutro.
+- **Rótulos de categoría:** JetBrains Mono en mayúsculas, sin indicador de color.
 - La pantalla sigue a pantalla completa, sin navbar (§6, regla 5).
 
 ### 5.6 Jugadas por categoría (post-partido)

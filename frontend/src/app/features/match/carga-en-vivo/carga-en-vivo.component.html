@@ -106,10 +106,10 @@
             aria-label="Catálogo de eventos">
 
             @for (category of categories; track category.name) {
-            <div class="event-catalog__category" [attr.data-group]="category.name">
+            <div class="event-catalog__category">
                 <p
                     class="event-catalog__label"
-                    [class.event-catalog__label--disabled]="!isStarted"><span class="event-catalog__flag" aria-hidden="true"></span>{{
+                    [class.event-catalog__label--disabled]="!isStarted">{{
                     category.name }}</p>
 
                 <div class="event-catalog__grid">
