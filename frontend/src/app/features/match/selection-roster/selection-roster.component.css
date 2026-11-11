@@ -15,10 +15,8 @@
   --r-surface-header-start: #162238;
   --r-surface-header-end: #162238;
   --r-border: #1f2e47;
-  --r-border-strong: #2a3c5a;
   
   --r-text-title: #ffffff;
-  --r-text-body: #cbd5e1;
   --r-text-muted: #94a3b8;
   
   --r-accent: #a3e635;
@@ -62,10 +60,8 @@
   --r-surface-header-start: var(--surface-header-start);
   --r-surface-header-end: var(--surface-header-end);
   --r-border: var(--border-sport);
-  --r-border-strong: var(--border-strong);
   
   --r-text-title: var(--text-primary);
-  --r-text-body: var(--text-secondary);
   --r-text-muted: var(--text-muted);
   
   --r-accent: #204b22;

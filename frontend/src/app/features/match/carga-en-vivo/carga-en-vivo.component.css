@@ -17,7 +17,6 @@
 	--ot-live-scale: 1;
 	--ot-size-headline-md: calc(24px * var(--ot-live-scale));
 	--ot-size-body-lg: calc(18px * var(--ot-live-scale));
-	--ot-size-body-md: calc(16px * var(--ot-live-scale));
 	--ot-size-label-caps: calc(12px * var(--ot-live-scale));
 	--ot-size-data-mono: calc(14px * var(--ot-live-scale));
 	--ot-touch-target-min: calc(44px * var(--ot-live-scale));
@@ -25,7 +24,6 @@
 	--ot-margin-screen: calc(24px * var(--ot-live-scale));
 	--ot-stack-compact: calc(8px * var(--ot-live-scale));
 	--ot-stack-default: calc(16px * var(--ot-live-scale));
-	--ot-radius-default: calc(0.25rem * var(--ot-live-scale));
 	--ot-radius-lg: calc(0.5rem * var(--ot-live-scale));
 
 	/* Design Guide v1 Colors — Marca */

@@ -297,27 +297,19 @@
    ========================================================================== */
 :host-context([data-theme="dark"]) .table-card {
   background: var(--surface);
-  border-color: var(--border);
   box-shadow: var(--shadow-elevation);
 }
 
 :host-context([data-theme="dark"]) .card-header {
   background: var(--surface-header-start);
-  border-bottom-color: var(--border-sport);
-}
-
-:host-context([data-theme="dark"]) .card-title {
-  color: var(--text-primary);
 }
 
 :host-context([data-theme="dark"]) .history-card {
   background: var(--surface);
-  border-top-color: var(--border);
 }
 
 :host-context([data-theme="dark"]) .history-header {
   background: var(--surface-header-start);
-  border-bottom-color: var(--border-sport);
 }
 
 :host-context([data-theme="dark"]) .data-table th {
@@ -335,16 +327,7 @@
   background-color: var(--surface-hover);
 }
 
-:host-context([data-theme="dark"]) .jersey-number {
-  border-color: var(--border-sport);
-}
-
-:host-context([data-theme="dark"]) .player-name {
-  color: var(--text-primary);
-}
-
 :host-context([data-theme="dark"]) .position-badge {
-  border-color: var(--border-sport);
   color: var(--text-secondary);
 }
 
@@ -360,7 +343,6 @@
 :host-context([data-theme="dark"]) .form-control {
   background: var(--surface-alt);
   border-color: var(--border-strong);
-  color: var(--text-primary);
 }
 
 :host-context([data-theme="dark"]) .form-control:focus {

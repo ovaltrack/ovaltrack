@@ -151,39 +151,24 @@
   box-shadow: var(--shadow-elevation-hover);
 }
 
-:host-context([data-theme="dark"]) .match-opponent-name {
-  color: var(--text-primary);
-}
-
 :host-context([data-theme="dark"]) .match-modal {
   background: var(--surface-overlay);
-  border-color: var(--border-sport);
   box-shadow: var(--shadow-overlay);
 }
 
 :host-context([data-theme="dark"]) .modal-header-salvia {
   background: var(--surface-header-start);
-  border-bottom-color: var(--border-sport);
-}
-
-:host-context([data-theme="dark"]) .modal-title {
-  color: var(--text-primary);
 }
 
 :host-context([data-theme="dark"]) .custom-input {
   background: var(--surface-alt);
   border-color: var(--border-strong);
-  color: var(--text-primary);
 }
 
 :host-context([data-theme="dark"]) .custom-input:focus {
   border-color: var(--grass);
   background: var(--surface-hover);
   box-shadow: var(--focus-ring);
-}
-
-:host-context([data-theme="dark"]) .modal-actions {
-  border-top-color: var(--border);
 }
 
 /* ===== Celular: acciones del encabezado en grilla (la principal ocupa todo el ancho) ===== */

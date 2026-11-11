@@ -995,14 +995,9 @@
 :host-context([data-theme="dark"]) .queue-card-item.selected {
   background: var(--warning-tint);
   border-color: var(--warning);
-  box-shadow: 0 0 0 1px var(--warning);
 }
 
 :host-context([data-theme="dark"]) .queue-card-item.selected .qc-name {
-  color: var(--warning);
-}
-
-:host-context([data-theme="dark"]) .qc-period {
   color: var(--warning);
 }
 

@@ -356,9 +356,6 @@
 /* ==========================================================================
    Modo Oscuro (Dark Rugby Tech)
    ========================================================================== */
-:host-context([data-theme="dark"]) .club-photo-card {
-  border-color: var(--border);
-}
 
 :host-context([data-theme="dark"]) .club-logo-large span {
   background: var(--surface-alt);
@@ -367,24 +364,8 @@
   box-shadow: var(--shadow-elevation);
 }
 
-:host-context([data-theme="dark"]) .club-name-display {
-  color: var(--text-primary);
-}
-
 :host-context([data-theme="dark"]) .club-city-display {
   color: var(--text-muted);
-}
-
-:host-context([data-theme="dark"]) .config-main {
-  border-color: var(--border);
-}
-
-:host-context([data-theme="dark"]) .card-header-flex {
-  border-bottom-color: var(--border);
-}
-
-:host-context([data-theme="dark"]) .section-title-main {
-  color: var(--text-primary);
 }
 
 :host-context([data-theme="dark"]) .section-subtitle {
@@ -394,12 +375,6 @@
 :host-context([data-theme="dark"]) .badge-mode-edit {
   background: var(--surface-alt);
   border-color: var(--border-sport);
-  color: var(--grass);
-}
-
-:host-context([data-theme="dark"]) .section-title {
-  color: var(--text-primary);
-  border-bottom-color: var(--border);
 }
 
 :host-context([data-theme="dark"]) .data-item {
@@ -416,20 +391,12 @@
   color: var(--text-muted);
 }
 
-:host-context([data-theme="dark"]) .data-value {
-  color: var(--text-primary);
-}
-
 :host-context([data-theme="dark"]) .data-link {
   color: var(--grass);
 }
 
 :host-context([data-theme="dark"]) .data-link:hover {
   color: var(--grass-hover);
-}
-
-:host-context([data-theme="dark"]) .data-empty {
-  color: var(--text-muted);
 }
 
 :host-context([data-theme="dark"]) .form-label {
@@ -452,6 +419,3 @@
   box-shadow: var(--focus-ring);
 }
 
-:host-context([data-theme="dark"]) .form-actions-footer {
-  border-top-color: var(--border);
-}

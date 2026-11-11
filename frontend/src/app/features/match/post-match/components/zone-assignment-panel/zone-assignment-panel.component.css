@@ -364,7 +364,5 @@
 }
 
 :host-context([data-theme="dark"]) .zone-badge {
-  background: var(--grass-tint-strong);
   border-color: var(--grass);
-  color: var(--grass);
 }

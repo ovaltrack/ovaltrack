@@ -224,10 +224,6 @@
   box-shadow: var(--shadow-elevation-hover);
 }
 
-:host-context([data-theme="dark"]) .division-badge-icon {
-  border-color: var(--border-sport);
-}
-
 :host-context([data-theme="dark"]) .division-meta,
 :host-context([data-theme="dark"]) .meta-gender {
   color: var(--text-muted);

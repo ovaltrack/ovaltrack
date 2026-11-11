@@ -37,12 +37,6 @@
   background-attachment: fixed;
 }
 
-/* Fondo de cancha nocturno: el mismo de `[data-theme="dark"] body` en styles.css */
-.halftime-page[data-theme="dark"] {
-  background-color: var(--bg);
-  background-image: var(--canvas-image);
-}
-
 /* ---------- Tipografía numérica (§2) ---------- */
 
 .value--empty { color: var(--text-muted); font-weight: 500; }

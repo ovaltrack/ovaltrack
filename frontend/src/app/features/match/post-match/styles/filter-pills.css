@@ -26,7 +26,6 @@
 }
 
 :host-context([data-theme="dark"]) .filter-pill-btn.active {
-  background-color: var(--grass-tint-strong);
   border-color: var(--grass);
   color: var(--grass);
   box-shadow: inset 0 0 0 1px var(--grass);

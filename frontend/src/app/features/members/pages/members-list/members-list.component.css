@@ -669,20 +669,8 @@
   color: var(--grass);
 }
 
-:host-context([data-theme="dark"]) .avatar {
-  border-color: var(--border-sport);
-}
-
-:host-context([data-theme="dark"]) .id-name {
-  color: var(--text-primary);
-}
-
 :host-context([data-theme="dark"]) .id-email {
   color: var(--text-muted);
-}
-
-:host-context([data-theme="dark"]) .jersey {
-  border-color: var(--border-sport);
 }
 
 :host-context([data-theme="dark"]) .role-btn {
@@ -708,7 +696,6 @@
 :host-context([data-theme="dark"]) .role-menu,
 :host-context([data-theme="dark"]) .actions-menu {
   background: var(--surface-overlay);
-  border-color: var(--border-sport);
   box-shadow: var(--shadow-overlay);
 }
 

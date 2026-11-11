@@ -452,7 +452,6 @@
    Modo Oscuro (Dark Rugby Tech)
    ========================================================================== */
 :host-context([data-theme="dark"]) .filter-toolbar {
-  border-color: var(--border);
   box-shadow: none;
 }
 
@@ -483,10 +482,6 @@
   border-color: var(--error-border);
 }
 
-:host-context([data-theme="dark"]) .vs-label {
-  border-color: var(--border-sport);
-}
-
 :host-context([data-theme="dark"]) .match-date-badge {
   color: var(--text-muted);
 }
@@ -498,14 +493,8 @@
   box-shadow: none;
 }
 
-:host-context([data-theme="dark"]) .match-card-action {
-  border-top-color: var(--border);
-}
-
 :host-context([data-theme="dark"]) .status-not_started {
-  background: var(--surface-alt);
   color: var(--text-muted);
-  border-color: var(--border-sport);
 }
 
 :host-context([data-theme="dark"]) .status-finished {

@@ -202,7 +202,6 @@
 
 :host-context([data-theme="dark"]) .view-switch {
   background: var(--bg);
-  border-color: var(--border-sport);
 }
 
 :host-context([data-theme="dark"]) .view-option {
