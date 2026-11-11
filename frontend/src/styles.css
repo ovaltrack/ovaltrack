@@ -315,6 +315,11 @@ html:has(.pm-shell) {
 /* ==========================================================================
    Modo Oscuro: Componentes Globales Compartidos (SOLID)
    ========================================================================== */
+/* Bootstrap fija .text-muted con !important en gris oscuro: sobre grafito casi no se ve */
+[data-theme="dark"] .text-muted {
+  color: var(--text-muted) !important;
+}
+
 [data-theme="dark"] .brand-text .title {
   color: var(--text-primary);
 }

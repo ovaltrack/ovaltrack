@@ -533,3 +533,13 @@
   background-color: var(--warning-tint);
   border-color: var(--warning);
 }
+
+/* Modo oscuro: texto secundario del sistema en las notas y el rival (antes gris oscuro fijo y gris tenue) */
+:host-context([data-theme="dark"]) .note-text-preview,
+:host-context([data-theme="dark"]) .player-rival {
+  color: var(--text-secondary);
+}
+
+:host-context([data-theme="dark"]) .note-icon-filled {
+  color: var(--grass);
+}
