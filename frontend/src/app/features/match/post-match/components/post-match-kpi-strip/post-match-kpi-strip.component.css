@@ -91,6 +91,20 @@
 }
 
 /* Modo Oscuro */
+/* «Sin jugador»: ámbar de advertencia; el rayado avisa sin gritar (ámbar sobre el carril hundido) */
+:host-context([data-theme="dark"]) .text-amber {
+  color: var(--warning);
+}
+
+:host-context([data-theme="dark"]) .strip-accent-bar.is-warning {
+  background: var(--warning);
+}
+
+:host-context([data-theme="dark"]) .legend-unassigned {
+  background: repeating-linear-gradient(135deg, var(--warning) 0 3px, var(--surface-track) 3px 6px);
+  border-color: var(--warning-border);
+}
+
 :host-context([data-theme="dark"]) .strip-progress-track {
   background: var(--grass-tint);
 }

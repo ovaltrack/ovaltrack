@@ -640,6 +640,12 @@
 }
 
 /* Modo Oscuro */
+/* Sin jugador: el rayado es ámbar de advertencia sobre el carril, no naranja y blanco (la regla base usa !important) */
+:host-context([data-theme="dark"]) .marker.marker-unassigned {
+  background: repeating-linear-gradient(135deg, var(--warning) 0 3px, var(--surface-track) 3px 6px) !important;
+  border: 1px solid var(--warning-border) !important;
+}
+
 :host-context([data-theme="dark"]) .marker.marker-selected {
   box-shadow: 0 0 0 1px #151d14, 0 0 0 3px var(--grass), 0 2px 8px rgba(0, 0, 0, 0.5);
 }
