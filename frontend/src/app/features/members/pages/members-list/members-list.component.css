@@ -596,9 +596,9 @@
    Modo Oscuro (Dark Rugby Tech)
    ========================================================================== */
 :host-context([data-theme="dark"]) .hud-search input {
-  background: #162238;
-  border-color: #2a3c5a;
-  color: #ffffff;
+  background: var(--surface-alt);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
 }
 
 :host-context([data-theme="dark"]) .hud-search input::placeholder {
@@ -606,83 +606,83 @@
 }
 
 :host-context([data-theme="dark"]) .hud-search input:focus {
-  border-color: #a3e635;
+  border-color: var(--grass);
   box-shadow: 0 0 0 3px rgba(163, 230, 53, 0.2);
 }
 
 :host-context([data-theme="dark"]) .filter-toolbar {
-  border-color: #1f2e47;
+  border-color: var(--border);
   box-shadow: none;
 }
 
 :host-context([data-theme="dark"]) .filter-toolbar .status-segment {
-  background: #162238;
-  border-color: #2a3c5a;
+  background: var(--surface-alt);
+  border-color: var(--border-sport);
 }
 
 :host-context([data-theme="dark"]) .filter-toolbar .status-tab {
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 :host-context([data-theme="dark"]) .filter-toolbar .status-tab:hover {
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 :host-context([data-theme="dark"]) .filter-toolbar .status-tab.active {
-  background: #131c2e;
-  color: #ffffff;
+  background: var(--surface);
+  color: var(--text-primary);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 :host-context([data-theme="dark"]) .filter-toolbar .status-badge-count {
-  background: #1c2b44;
-  color: #94a3b8;
+  background: var(--surface-hover);
+  color: var(--text-muted);
 }
 
 :host-context([data-theme="dark"]) .filter-toolbar .status-tab.active .status-badge-count {
-  background: #162238;
-  color: #a3e635;
+  background: var(--surface-alt);
+  color: var(--grass);
 }
 
 :host-context([data-theme="dark"]) .filter-toolbar .filters {
-  background: #162238;
-  border-color: #2a3c5a;
+  background: var(--surface-alt);
+  border-color: var(--border-sport);
 }
 
 :host-context([data-theme="dark"]) .filter-toolbar .chip {
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 :host-context([data-theme="dark"]) .filter-toolbar .chip:hover {
-  color: #ffffff;
-  background: #1c2b44;
+  color: var(--text-primary);
+  background: var(--surface-hover);
 }
 
 :host-context([data-theme="dark"]) .filter-toolbar .chip.active {
-  background: #131c2e;
-  border-color: #2a3c5a;
-  color: #ffffff;
+  background: var(--surface);
+  border-color: var(--border-sport);
+  color: var(--text-primary);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 :host-context([data-theme="dark"]) .filter-toolbar .chip.active .count {
-  color: #a3e635;
+  color: var(--grass);
 }
 
 :host-context([data-theme="dark"]) .member-row {
-  background: #131c2e;
-  border-color: #1f2e47;
+  background: var(--surface);
+  border-color: var(--border);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 :host-context([data-theme="dark"]) .member-row:hover {
-  background: #131c2e;
-  border-color: #2a3c5a;
+  background: var(--surface);
+  border-color: var(--border-sport);
   box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
 }
 
 :host-context([data-theme="dark"]) .member-row.is-dirty {
-  border-left-color: #a3e635;
+  border-left-color: var(--grass);
 }
 
 :host-context([data-theme="dark"]) .member-row.is-inactive {
@@ -690,93 +690,93 @@
 }
 
 :host-context([data-theme="dark"]) .member-row.is-inactive:hover {
-  background: #131c2e;
+  background: var(--surface);
 }
 
 :host-context([data-theme="dark"]) .avatar {
-  border-color: #2a3c5a;
+  border-color: var(--border-sport);
 }
 
 :host-context([data-theme="dark"]) .id-name {
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 :host-context([data-theme="dark"]) .id-email {
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 :host-context([data-theme="dark"]) .jersey {
-  border-color: #2a3c5a;
+  border-color: var(--border-sport);
 }
 
 :host-context([data-theme="dark"]) .perm-icon {
-  border-color: #2a3c5a;
+  border-color: var(--border-sport);
 }
 
 :host-context([data-theme="dark"]) .perm-icon:hover,
 :host-context([data-theme="dark"]) .perm-icon:focus-visible {
-  border-color: #a3e635;
+  border-color: var(--grass);
 }
 
 :host-context([data-theme="dark"]) .perm-tooltip {
-  background: #162238;
-  border-color: #2a3c5a;
+  background: var(--surface-alt);
+  border-color: var(--border-sport);
 }
 
 :host-context([data-theme="dark"]) .perm-tooltip::after {
-  border-color: #162238 transparent transparent transparent;
+  border-color: var(--surface-alt) transparent transparent transparent;
 }
 
 :host-context([data-theme="dark"]) .tooltip-title {
-  color: #a3e635;
+  color: var(--grass);
 }
 
 :host-context([data-theme="dark"]) .role-btn {
-  background: #162238;
-  border-color: #2a3c5a;
-  color: #ffffff;
+  background: var(--surface-alt);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
 }
 
 :host-context([data-theme="dark"]) .role-btn:hover:not(:disabled) {
-  background: #1c2b44;
-  border-color: #a3e635;
+  background: var(--surface-hover);
+  border-color: var(--grass);
 }
 
 :host-context([data-theme="dark"]) .role-btn[aria-expanded="true"] {
-  border-color: #a3e635;
+  border-color: var(--grass);
   box-shadow: 0 0 0 2px rgba(163, 230, 53, 0.2);
 }
 
 :host-context([data-theme="dark"]) .role-btn svg {
-  color: #a3e635;
+  color: var(--grass);
 }
 
 :host-context([data-theme="dark"]) .role-menu,
 :host-context([data-theme="dark"]) .actions-menu {
-  background: #162238;
-  border-color: #2a3c5a;
+  background: var(--surface-alt);
+  border-color: var(--border-sport);
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
 }
 
 :host-context([data-theme="dark"]) .role-opt,
 :host-context([data-theme="dark"]) .action-opt {
-  color: #cbd5e1;
+  color: var(--text-secondary);
 }
 
 :host-context([data-theme="dark"]) .role-opt:hover:not(:disabled):not(.is-disabled),
 :host-context([data-theme="dark"]) .action-opt:hover {
-  background: #1c2b44;
-  color: #ffffff;
+  background: var(--surface-hover);
+  color: var(--text-primary);
 }
 
 :host-context([data-theme="dark"]) .menu-btn {
-  background: #162238;
-  border-color: #2a3c5a;
-  color: #cbd5e1;
+  background: var(--surface-alt);
+  border-color: var(--border-strong);
+  color: var(--text-secondary);
 }
 
 :host-context([data-theme="dark"]) .menu-btn:hover {
-  background: #1c2b44;
-  border-color: #a3e635;
-  color: #ffffff;
+  background: var(--surface-hover);
+  border-color: var(--grass);
+  color: var(--text-primary);
 }

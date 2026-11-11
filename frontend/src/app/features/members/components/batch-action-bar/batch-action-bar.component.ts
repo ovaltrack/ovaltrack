@@ -118,18 +118,18 @@ import { CommonModule } from '@angular/common';
     }
 
     :host-context([data-theme="dark"]) .batch-bar {
-      background: #162238;
-      border: 1px solid #2a3c5a;
+      background: var(--surface-alt);
+      border: 1px solid var(--border-sport);
       box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
     }
 
     :host-context([data-theme="dark"]) .btn-save {
-      background: #a3e635;
-      color: #0b111e;
+      background: var(--btn-primary-bg);
+      color: var(--btn-primary-fg);
     }
 
     :host-context([data-theme="dark"]) .btn-save:hover:not(:disabled) {
-      background: #bef264;
+      background: var(--btn-primary-hover);
     }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush
