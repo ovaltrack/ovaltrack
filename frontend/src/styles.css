@@ -1269,7 +1269,7 @@ button {
   padding: 8px 10px;
   border-radius: var(--radius-md);
   background: var(--text-primary);
-  color: #fff;
+  color: var(--surface);
   font: 500 12px/1.35 var(--font-body);
   text-align: left;
   opacity: 0;
