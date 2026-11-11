@@ -315,7 +315,7 @@ Barra superior **sólida, blanca (`--surface`), sin efecto vidrio**, de ancho co
 
 ### 4.6 Captura en Vivo (`/live-capture/:matchId`)
 - **Entorno Especializado de Cancha:** Interfaz de alto contraste, táctil (hit-target mínimo de 48px), optimizada para tablets en tiempo real.
-- **Marcador e Instrumentos:** Cronómetro de partido y marcador en `Space Grotesk` / `JetBrains Mono`.
+- **Marcador e Instrumentos:** Cronómetro, marcador y rótulos en `JetBrains Mono`; el resto de la pantalla en `Inter`, como el sistema de diseño.
 - **Aislamiento:** No incluye la barra de navegación estándar para maximizar el área de control e impedir clics accidentales durante el juego.
 
 ---
@@ -386,8 +386,9 @@ Reglas de uso:
 
 - **Cabecera (HUD), en los dos temas:** sin logo. A la izquierda «‹ Partidos» y «Estadísticas»; al centro el marcador (puntaje propio en `--score-own`: `--grass-deep` en claro y `--grass` en oscuro; rival en `--team-rival`), el reloj en un carril (`--hud-well`) con el botón de pausa y el período en píldora; a la derecha «Finalizar partido», «Deshacer» y tres íconos cuadrados de 44 px: tema, historial y sincronización (caja con `--success-tint` o `--warning-tint` según el estado). Botones con radio 10 px y borde `--ctl-border` (`--border` local en claro, `--border-strong` en oscuro), en Inter y JetBrains Mono. Hasta 1279 px el marcador baja a una segunda fila.
 - **Oscuro:** cabecera y pie hundidos (`--hud-bg` = `--surface-sunken`), reloj en carril (`--hud-well` = `--surface-track`) con sombra interior, hover en `--surface-hover`, foco en `--grass` y diálogos sobre `--surface-overlay` con `--scrim` detrás. `.live-capture[data-theme="dark"]` ya no define neutros propios: hereda los del sistema. Los `--hud-*` valen en claro lo de siempre.
-- **La posesión conserva su color de fondo** en los dos temas: `--bg-own` verde, `--bg-away` rojo, `--bg-neutral` azul. «Propia» activa va en `--btn-primary-bg` con texto blanco; «Rival» inactivo, en `--team-rival`.
-- **Los botones de jugadas no cambian.** Su color sale de una rotación por posición (`eventVariant()`), no de la categoría ni del catálogo, y es el mismo en claro y oscuro. Pintarlos por categoría sería una función nueva.
+- **La posesión conserva su color de fondo** en los dos temas: `--bg-own` verde, `--bg-away` rojo, `--bg-neutral` azul. La barra dice «Posesión propia» y «Posesión rival», con un check en la activa y radio 10 px; en oscuro, «Propia» activa va en `--btn-primary-bg` y «Rival» inactivo en `--team-rival`.
+- **Botones de jugadas:** radio 12 px, borde `rgba(255,255,255,.16)` y sombra para recortarse sobre el fondo de posesión, en Inter. El relleno sigue saliendo de `eventVariant()` (rotación por posición, igual en claro y oscuro: en el catálogo actual cada jugada de Puntuación tiene su color). Tarjeta amarilla y roja llevan un chip con el color de la tarjeta (por `event.code`).
+- **Rótulos de categoría:** JetBrains Mono en mayúsculas con una banderita del color de la categoría (`[attr.data-group]` y selectores de atributo como `[data-group="Juego Fijo" i]`; en oscuro, la variante clara `--event-*`). Un grupo desconocido usa el neutro.
 - La pantalla sigue a pantalla completa, sin navbar (§6, regla 5).
 
 ### 5.6 Jugadas por categoría (post-partido)
