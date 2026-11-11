@@ -208,8 +208,8 @@
 }
 
 :host-context([data-theme="dark"]) .view-option.active {
-  background: var(--grass-tint-strong);
-  color: var(--grass);
+  background: var(--surface-overlay);
+  color: var(--text-primary);
 }
 
 /* Tablet vertical y celular: el selector baja a su fila, a ancho completo y en partes iguales.
