@@ -97,10 +97,10 @@
   --board-shadow: 0 18px 40px rgba(15, 35, 15, 0.28);
   --on-board: #ffffff;
   --on-board-muted: rgba(255, 255, 255, 0.72);
-  --on-board-accent: var(--grass);
-  --board-chip-ok-bg: var(--grass-tint-strong);
+  --on-board-accent: #91da40;
+  --board-chip-ok-bg: rgba(145, 218, 64, 0.30);
   --board-chip-ok-fg: #ffffff;
-  --board-chip-warn-bg: var(--zone-heat-low);
+  --board-chip-warn-bg: #fdb022;
   --board-chip-warn-fg: #3d2600;
   --board-chip-neutral-bg: rgba(255, 255, 255, 0.12);
   --board-chip-neutral-fg: #ffffff;
@@ -183,6 +183,9 @@
   --surface-toolbar: #131c2e;
   --bg-canvas: var(--bg);
   --btn-on-board-fg: #204b22;
+  /* Tablero de Inicio: valor propio, para que cambiar --grass o --zone-heat-low no lo arrastre (DESIGN_SYSTEM §9.1) */
+  --on-board-accent: #a3e635;
+  --board-chip-ok-bg: rgba(163, 230, 53, 0.25);
 
   --border: #1f2e47;
   --border-strong: #2a3c5a;

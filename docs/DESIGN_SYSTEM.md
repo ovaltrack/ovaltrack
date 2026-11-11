@@ -464,7 +464,7 @@ Reglas propias del Inicio con sesión (la landing pública no cambia). Se suman 
 4. **Pestañas `.tabs-underline`** (división activa, serie del gráfico): subrayado en la activa, 44px de alto, scroll interno en celular.
 
 ### 9.1 Tokens nuevos (`:root`)
-Valores iguales en claro y oscuro: el tablero conserva sus colores en los dos temas.
+El tablero conserva el fondo y los rótulos en los dos temas; el acento y el chip «ok» tienen valor propio por tema (no siguen a `--grass`) y se unifican al definir el modo oscuro.
 
 | Token | Valor |
 |---|---|
@@ -472,9 +472,9 @@ Valores iguales en claro y oscuro: el tablero conserva sus colores en los dos te
 | `--board-line` / `--board-line-strong` | `rgba(255,255,255,.10)` / `rgba(255,255,255,.22)` |
 | `--board-shadow` | `0 18px 40px rgba(15,35,15,.28)` |
 | `--on-board` / `--on-board-muted` | `#ffffff` / `rgba(255,255,255,.72)` |
-| `--on-board-accent` | `var(--grass)` |
-| `--board-chip-ok-bg/fg` | `var(--grass-tint-strong)` / `#ffffff` |
-| `--board-chip-warn-bg/fg` | `var(--zone-heat-low)` / `#3d2600` |
+| `--on-board-accent` | `#91da40` (claro) / `#a3e635` (oscuro): valor propio, no sigue a `--grass` |
+| `--board-chip-ok-bg/fg` | `rgba(145,218,64,.30)` (claro) / `rgba(163,230,53,.25)` (oscuro) / `#ffffff` |
+| `--board-chip-warn-bg/fg` | `#fdb022` / `#3d2600` |
 | `--board-chip-neutral-bg/fg` | `rgba(255,255,255,.12)` / `#ffffff` |
 | `--board-digit-bg/border` | `rgba(255,255,255,.08)` / `rgba(255,255,255,.22)` |
 | `--btn-on-board-bg/fg` | `#ffffff` / `var(--btn-primary-bg)` |
