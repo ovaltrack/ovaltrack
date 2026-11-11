@@ -51,6 +51,8 @@
 	--hud-bg: var(--surface);
 	--hud-well: var(--surface-alt);
 	--hud-well-shadow: none;
+	--ctl-border: var(--border);
+	--score-own: var(--grass-deep);
 
 	/* Tipografías */
 	--font-manrope: 'Manrope', system-ui, sans-serif;
@@ -80,6 +82,8 @@
 	--hud-bg: var(--surface-sunken);
 	--hud-well: var(--surface-track);
 	--hud-well-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
+	--ctl-border: var(--border-strong);
+	--score-own: var(--grass);
 }
 
 .live-capture[data-theme="light"] {
@@ -110,33 +114,24 @@
 	align-items: center;
 	position: relative;
 	gap: var(--ot-stack-default);
-	padding: var(--ot-stack-default) var(--ot-margin-screen);
+	padding: calc(12px * var(--ot-live-scale)) var(--ot-margin-screen);
 	background: var(--hud-bg);
 	border-bottom: 1px solid var(--border);
 }
 
-.live-capture__brand {
+.live-capture__nav {
 	grid-column: 1;
 	grid-row: 1;
 	display: flex;
 	align-items: center;
 	gap: var(--ot-stack-compact);
-	flex: 0 1 auto;
 	min-width: 0;
-}
-
-.live-capture__brand-icon {
-	display: block;
-	width: calc(180px * var(--ot-live-scale));
-	height: calc(60px * var(--ot-live-scale));
-	flex: 0 0 auto;
-	object-fit: contain;
 }
 
 .live-capture__scoreboard {
 	display: flex;
 	align-items: center;
-	gap: calc(22px * var(--ot-live-scale));
+	gap: var(--ot-stack-default);
 	flex-wrap: nowrap;
 	min-width: 0;
 	grid-column: 2;
@@ -145,40 +140,69 @@
 }
 
 .live-capture__score {
-	font-family: var(--font-manrope);
-	font-weight: 700;
+	font-family: var(--font-body);
+	font-weight: 800;
 	font-size: var(--ot-size-headline-md);
 	min-width: 0;
-	overflow-wrap: anywhere;
+	white-space: nowrap;
 	text-align: center;
 	color: var(--text);
 }
 
 .live-capture__score-value {
-	font-family: var(--font-space-grotesk);
-	color: var(--text);
-	font-weight: 700;
+	margin-inline: calc(6px * var(--ot-live-scale));
 	font-variant-numeric: tabular-nums;
 }
 
+.live-capture__score-own {
+	color: var(--score-own);
+}
+
+.live-capture__score-sep {
+	margin-inline: calc(6px * var(--ot-live-scale));
+	color: var(--text-muted);
+	font-weight: 600;
+}
+
+.live-capture__score-rival {
+	color: var(--team-rival);
+}
+
+/* Reloj en un carril hundido, con el botón de pausa adentro */
 .live-capture__clock {
 	display: flex;
 	align-items: center;
-	gap: var(--ot-stack-compact);
+	gap: calc(12px * var(--ot-live-scale));
 	background: var(--hud-well);
 	box-shadow: var(--hud-well-shadow);
 	border: 1px solid var(--border);
-	border-radius: var(--ot-radius-default);
-	padding: 6px 14px;
+	border-radius: calc(12px * var(--ot-live-scale));
+	padding: calc(4px * var(--ot-live-scale)) calc(4px * var(--ot-live-scale)) calc(4px * var(--ot-live-scale)) calc(16px * var(--ot-live-scale));
 }
 
 .live-capture__clock-time {
-	font-family: var(--font-space-grotesk);
-	font-weight: 700;
-	font-size: calc(26px * var(--ot-live-scale));
-	letter-spacing: -0.02em;
+	font-family: var(--font-mono);
+	font-weight: 600;
+	font-size: calc(28px * var(--ot-live-scale));
+	letter-spacing: 0.02em;
 	color: var(--navy-text);
 	font-variant-numeric: tabular-nums;
+}
+
+.live-capture__period {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: calc(44px * var(--ot-live-scale));
+	height: calc(36px * var(--ot-live-scale));
+	padding: 0 calc(12px * var(--ot-live-scale));
+	border-radius: 999px;
+	background: var(--surface-alt);
+	color: var(--text);
+	font-family: var(--font-body);
+	font-weight: 700;
+	font-size: var(--ot-size-data-mono);
+	white-space: nowrap;
 }
 
 .live-capture__actions {
@@ -188,37 +212,49 @@
 	display: flex;
 	align-items: center;
 	gap: var(--ot-stack-compact);
-	flex: 0 1 auto;
 	min-width: 0;
 }
 
+/* Estado de sincronización: caja cuadrada con el tinte del estado */
 .live-capture__sync {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: none;
+	width: var(--ot-touch-target-min);
+	height: var(--ot-touch-target-min);
+	border-radius: calc(10px * var(--ot-live-scale));
 	font-size: calc(18px * var(--ot-live-scale));
 }
 
 .live-capture__sync--ok {
-	color: var(--green-500);
+	color: var(--success);
+	background: var(--success-tint);
 }
 
 .live-capture__sync--off {
-	color: var(--orange-500);
+	color: var(--warning);
+	background: var(--warning-tint);
 }
 
 .icon-btn {
-	width: calc(40px * var(--ot-live-scale));
-	height: calc(40px * var(--ot-live-scale));
-	min-width: var(--ot-touch-target-min);
-	min-height: var(--ot-touch-target-min);
+	flex: none;
+	width: var(--ot-touch-target-min);
+	height: var(--ot-touch-target-min);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background: var(--surface-alt);
-	border: 1px solid var(--border);
-	border-radius: var(--ot-radius-lg);
+	background: transparent;
+	border: 1px solid var(--ctl-border);
+	border-radius: calc(10px * var(--ot-live-scale));
 	color: var(--navy-text);
+	font-size: calc(18px * var(--ot-live-scale));
 	cursor: pointer;
-	font-weight: 600;
-	transition: all 0.2s ease;
+	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.live-capture__clock .icon-btn {
+	background: var(--surface-alt);
 }
 
 .icon-btn:hover {
@@ -228,16 +264,25 @@
 }
 
 .btn--outline {
+	display: inline-flex;
+	align-items: center;
+	gap: calc(8px * var(--ot-live-scale));
 	background: transparent;
-	border: 1px solid var(--navy-100);
+	border: 1px solid var(--ctl-border);
 	color: var(--navy-text);
-	font-family: var(--font-manrope);
+	font-family: var(--font-body);
 	font-weight: 600;
-	padding: calc(8px * var(--ot-live-scale)) calc(16px * var(--ot-live-scale));
+	font-size: calc(14px * var(--ot-live-scale));
+	white-space: nowrap;
+	padding: 0 calc(16px * var(--ot-live-scale));
 	min-height: var(--ot-touch-target-min);
 	cursor: pointer;
-	border-radius: var(--ot-radius-lg);
-	transition: all 0.2s ease;
+	border-radius: calc(10px * var(--ot-live-scale));
+	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.btn--outline .ti {
+	font-size: calc(16px * var(--ot-live-scale));
 }
 
 .btn--outline:hover {
@@ -622,16 +667,11 @@
 }
 
 /* Tablet y escritorio angosto: el marcador pasa a una segunda fila del encabezado */
-@media (min-width: 769px) and (max-width: 1439px) {
+@media (min-width: 769px) and (max-width: 1279px) {
 	.live-capture__header {
 		grid-template-columns: auto minmax(0, 1fr);
-		row-gap: calc(6px * var(--ot-live-scale));
+		row-gap: calc(8px * var(--ot-live-scale));
 		padding-block: calc(10px * var(--ot-live-scale));
-	}
-
-	.live-capture__brand-icon {
-		width: calc(140px * var(--ot-live-scale));
-		height: calc(48px * var(--ot-live-scale));
 	}
 
 	.live-capture__actions {
@@ -690,15 +730,10 @@
 		align-items: center;
 	}
 
-	.live-capture__brand {
+	.live-capture__nav {
 		justify-content: flex-start;
 		grid-column: 1;
 		grid-row: 1;
-	}
-
-	.live-capture__brand-icon {
-		width: 160px;
-		height: 58px;
 	}
 
 	.live-capture__scoreboard {
@@ -943,9 +978,10 @@
 }
 
 /* ───────── Modo oscuro: HUD grafito (la posesión conserva su color de fondo) ───────── */
-.live-capture[data-theme="dark"] .icon-btn,
-.live-capture[data-theme="dark"] .btn--outline {
-	border-color: var(--border-strong);
+/* Foco visible sobre grafito en los controles de la cabecera (el azul marino de la regla base no se ve) */
+.live-capture[data-theme="dark"] .icon-btn:focus-visible,
+.live-capture[data-theme="dark"] .btn--outline:focus-visible {
+	outline-color: var(--grass);
 }
 
 .live-capture[data-theme="dark"] .icon-btn:hover,
