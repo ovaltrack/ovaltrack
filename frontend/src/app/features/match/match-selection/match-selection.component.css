@@ -447,25 +447,25 @@
    Modo Oscuro (Dark Rugby Tech)
    ========================================================================== */
 :host-context([data-theme="dark"]) .filter-toolbar {
-  border-color: #1f2e47;
+  border-color: var(--border);
   box-shadow: none;
 }
 
 :host-context([data-theme="dark"]) .status-tab {
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 :host-context([data-theme="dark"]) .status-tab:hover {
-  color: #ffffff;
+  color: var(--text-primary);
   background: rgba(255, 255, 255, 0.05);
 }
 
 :host-context([data-theme="dark"]) .status-tab.active {
   /* Mismo activo que los filtros del post-partido en oscuro: se distingue a simple vista */
   background: rgba(163, 230, 53, 0.18);
-  color: #a3e635;
-  box-shadow: inset 0 0 0 1px #a3e635;
-  border: 1px solid #a3e635;
+  color: var(--grass);
+  box-shadow: inset 0 0 0 1px var(--grass);
+  border: 1px solid var(--grass);
 }
 
 :host-context([data-theme="dark"]) .btn-delete-match {
@@ -479,44 +479,44 @@
 }
 
 :host-context([data-theme="dark"]) .vs-label {
-  border-color: #2a3c5a;
+  border-color: var(--border-sport);
 }
 
 :host-context([data-theme="dark"]) .match-date-badge {
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 :host-context([data-theme="dark"]) .match-score-badge {
-  background: #162238;
-  color: #a3e635;
-  border: 1px solid #2a3c5a;
+  background: var(--surface-alt);
+  color: var(--grass);
+  border: 1px solid var(--border-sport);
   box-shadow: none;
 }
 
 :host-context([data-theme="dark"]) .match-card-action {
-  border-top-color: #1f2e47;
+  border-top-color: var(--border);
 }
 
 :host-context([data-theme="dark"]) .status-not_started {
-  background: #162238;
-  color: #94a3b8;
-  border-color: #2a3c5a;
+  background: var(--surface-alt);
+  color: var(--text-muted);
+  border-color: var(--border-sport);
 }
 
 :host-context([data-theme="dark"]) .status-finished {
-  background: rgba(163, 230, 53, 0.15);
-  color: #a3e635;
+  background: var(--success-tint);
+  color: var(--grass);
   border-color: rgba(163, 230, 53, 0.3);
 }
 
 :host-context([data-theme="dark"]) .status-cancelled {
-  background: #162238;
+  background: var(--surface-alt);
   color: #64748b;
-  border-color: #1f2e47;
+  border-color: var(--border);
 }
 
 :host-context([data-theme="dark"]) .modal-subtitle {
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .calendar-modal-content .match-card-header {

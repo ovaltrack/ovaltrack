@@ -500,7 +500,7 @@
 }
 
 :host-context([data-theme="dark"]) .slot-number {
-  background: rgba(163, 230, 53, 0.15);
+  background: var(--grass-tint);
 }
 
 .slot-position {
