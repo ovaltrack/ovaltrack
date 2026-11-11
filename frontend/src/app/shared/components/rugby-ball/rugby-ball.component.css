@@ -24,7 +24,7 @@
 
 /* Pelota blanca (tipo Gilbert) con contorno marcado para no perderse sobre la tarjeta blanca */
 .ball {
-  --ball-ink: var(--btn-primary-bg, #204b22);
+  --ball-ink: var(--btn-primary-bg);
 }
 
 /* En oscuro el primario es lima y no contrasta sobre blanco: se mantiene el verde de la paleta */

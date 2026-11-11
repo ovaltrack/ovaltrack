@@ -9,7 +9,7 @@
   gap: 8px;
   height: 36px;
   padding: 0 12px;
-  border-radius: var(--radius-pill, 999px);
+  border-radius: var(--radius-pill);
   background: var(--score-pill-bg);
   color: var(--score-pill-fg);
   font-family: var(--font-body);

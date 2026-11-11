@@ -10,7 +10,7 @@
   height: 36px;
   padding: 0 12px;
   border: 1px solid var(--warning-border);
-  border-radius: var(--radius-pill, 999px);
+  border-radius: var(--radius-pill);
   background: var(--warning-tint);
   color: var(--warning);
   font-family: var(--font-body);

@@ -1,4 +1,3 @@
-
 :host {
   display: block;
   height: 100%;
@@ -6,8 +5,8 @@
 }
 
 .table-card {
-  background: var(--surface, #ffffff);
-  border: 2px solid var(--border-sport, rgba(32, 75, 34, 0.28));
+  background: var(--surface);
+  border: 2px solid var(--border-sport);
   border-radius: 14px;
   padding: 0;
   overflow: hidden;
@@ -49,7 +48,7 @@
   overflow-x: auto;
   border: none;
   border-radius: 0;
-  background: var(--surface, #ffffff);
+  background: var(--surface);
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -70,16 +69,16 @@
 .table-grid-header {
   display: grid;
   grid-template-columns: var(--table-cols);
-  background: var(--surface-alt, #eef1e7);
+  background: var(--surface-alt);
   padding: 0 calc(0.85rem + 8px) 0 0.85rem;
   height: 32px;
   align-items: center;
-  border-bottom: 2px solid var(--border-sport, rgba(32, 75, 34, 0.28));
+  border-bottom: 2px solid var(--border-sport);
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--text-secondary, #3b4e33);
+  color: var(--text-secondary);
   box-sizing: border-box;
   flex: none;
 }
@@ -89,7 +88,7 @@
   height: 100%;
   width: 100%;
   scrollbar-width: thin;
-  scrollbar-color: var(--border-sport, rgba(32, 75, 34, 0.28)) transparent;
+  scrollbar-color: var(--border-sport) transparent;
 }
 
 .table-virtual-viewport::-webkit-scrollbar {
@@ -101,12 +100,12 @@
 }
 
 .table-virtual-viewport::-webkit-scrollbar-thumb {
-  background: var(--border-sport, rgba(32, 75, 34, 0.28));
+  background: var(--border-sport);
   border-radius: 4px;
 }
 
 .table-virtual-viewport::-webkit-scrollbar-thumb:hover {
-  background: var(--btn-primary-bg, #204b22);
+  background: var(--btn-primary-bg);
 }
 
 .table-grid-row {
@@ -116,14 +115,14 @@
   padding: 0 0.85rem;
   height: 34px;
   box-sizing: border-box;
-  border-bottom: 1px solid var(--border, rgba(27, 33, 22, 0.10));
+  border-bottom: 1px solid var(--border);
   cursor: pointer;
   transition: background-color 0.12s ease;
   font-size: 0.82rem;
 }
 
 .table-grid-row:hover {
-  background-color: var(--surface-hover, #f1f3ea);
+  background-color: var(--surface-hover);
 }
 
 .table-grid-row.unassigned-row {
@@ -149,33 +148,33 @@
 .period-text {
   font-size: 0.8rem;
   font-weight: 700;
-  color: var(--text-secondary, #3b4e33);
+  color: var(--text-secondary);
   letter-spacing: 0.04em;
 }
 
 .time-mono, .video-mono {
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--text-primary, #111d0e);
+  color: var(--text-primary);
 }
 
 .video-mono {
-  color: var(--text-secondary, #3b4e33);
+  color: var(--text-secondary);
 }
 
 .event-chip {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  background: var(--surface-alt, #eef1e7);
-  border: 1px solid var(--border, rgba(27, 33, 22, 0.10));
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
   border-radius: 9999px;
   padding: 1px 8px;
   height: 22px;
   font-weight: 600;
   font-size: 0.78rem;
-  color: var(--text-primary, #111d0e);
+  color: var(--text-primary);
   box-sizing: border-box;
 }
 
@@ -196,7 +195,7 @@
 .player-assigned {
   font-size: 0.82rem;
   font-weight: 500;
-  color: var(--text-primary, #111d0e);
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -206,7 +205,7 @@
   font-size: 0.8rem;
   font-style: italic;
   font-weight: 500;
-  color: var(--text-muted, #7a8c74);
+  color: var(--text-muted);
 }
 
 .player-unassigned-wrapper {
@@ -249,20 +248,6 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23fbbf24' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
 }
 
-.btn-row-select {
-  background: transparent;
-  border: none;
-  color: var(--text-muted, #7a8c74);
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-}
-
-.btn-row-select:hover {
-  background: var(--surface-alt, #eef1e7);
-  color: var(--text-primary, #111d0e);
-}
-
 /* Compacto: entra completo (mensaje + botón) en la tabla baja de 1366×768, sin scrollear */
 .table-empty-state {
   padding: 16px;
@@ -275,7 +260,7 @@
 
 .empty-msg-icon {
   font-size: 0.95rem;
-  color: var(--text-muted, #7a8c74);
+  color: var(--text-muted);
   margin-right: 6px;
 }
 
@@ -283,16 +268,16 @@
   margin: 0;
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--text-secondary, #3b4e33);
+  color: var(--text-secondary);
 }
 
 /* Outline: la acción primaria de la vista sigue siendo «Agregar evento» */
 .btn-clear-empty {
   height: 44px;
   padding: 0 20px;
-  background: var(--btn-outline-bg, #ffffff);
-  color: var(--btn-outline-fg, #204b22);
-  border: 1px solid var(--btn-outline-border, rgba(32, 75, 34, 0.25));
+  background: var(--btn-outline-bg);
+  color: var(--btn-outline-fg);
+  border: 1px solid var(--btn-outline-border);
   border-radius: 10px;
   font-size: 0.85rem;
   font-weight: 600;
@@ -300,8 +285,8 @@
 }
 
 .btn-clear-empty:hover {
-  background: var(--surface-hover, #f1f3ea);
-  border-color: var(--btn-primary-bg, #204b22);
+  background: var(--surface-hover);
+  border-color: var(--btn-primary-bg);
 }
 
 .col-note {
@@ -318,15 +303,15 @@
 }
 
 .zone-label {
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--text-secondary, #3b4e33);
+  color: var(--text-secondary);
 }
 
 /* Sin zona: «—» gris, sin ámbar (son muchos y haría ruido) */
 .zone-none {
-  color: var(--text-muted, #7a8c74);
+  color: var(--text-muted);
   font-weight: 700;
 }
 
@@ -388,14 +373,14 @@
 
 .btn-edit {
   border: 1px solid rgba(32, 75, 34, 0.32);
-  color: var(--btn-primary-bg, #204b22);
+  color: var(--btn-primary-bg);
   background: #ffffff;
 }
 
 .btn-edit:hover {
-  background: var(--btn-primary-bg, #204b22);
+  background: var(--btn-primary-bg);
   color: #ffffff;
-  border-color: var(--btn-primary-bg, #204b22);
+  border-color: var(--btn-primary-bg);
 }
 
 .btn-delete {
@@ -446,7 +431,7 @@
 }
 
 .match-modal {
-  background: var(--surface, #ffffff);
+  background: var(--surface);
   border-radius: 12px;
   width: 100%;
   max-width: 550px;
@@ -455,7 +440,7 @@
 }
 
 .modal-header-salvia {
-  background-color: var(--btn-primary-bg, #204b22);
+  background-color: var(--btn-primary-bg);
   color: white;
   padding: 18px 24px;
 }
@@ -482,35 +467,6 @@
   gap: 12px;
   margin-top: 24px;
 }
-
-/* ===== Columna de Notas ===== */
-.col-note {
-  /* Asegura que la columna tenga un ancho definido en tu grid (ej. flex: 1 o width específico) */
-  min-width: 150px; 
-  display: flex;
-  align-items: center;
-}
-
-
-/* Contenedor del adelanto de la nota */
-.note-preview-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  max-width: 100%;
-  padding: 2px 6px;
-  border-radius: 4px;
-  transition: background-color 0.2s ease;
-}
-
-.note-preview-wrapper:hover {
-  background-color: rgba(29, 59, 32, 0.08);
-}
-
-
-/* Texto truncado con ellipsis (...) */
-
 
 /* 1. Definición exacta de las columnas de la tabla */
 .table-grid-header,

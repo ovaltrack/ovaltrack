@@ -10,8 +10,14 @@
 @import "@fontsource/jetbrains-mono/latin-500.css";
 @import "@fontsource/jetbrains-mono/latin-600.css";
 @import "@fontsource/jetbrains-mono/latin-700.css";
+@import "@fontsource/manrope/latin-400.css";
+@import "@fontsource/manrope/latin-600.css";
+@import "@fontsource/manrope/latin-700.css";
+@import "@fontsource/manrope/latin-800.css";
+@import "@fontsource/space-grotesk/latin-500.css";
+@import "@fontsource/space-grotesk/latin-600.css";
+@import "@fontsource/space-grotesk/latin-700.css";
 @import "@tabler/icons-webfont/dist/tabler-icons.min.css";
-@import './styles/ovaltrack-tokens.css';
 @import "bootstrap-icons/font/bootstrap-icons.css";
 
 /* ==========================================================================
@@ -115,6 +121,7 @@
   --font-mono: 'JetBrains Mono', monospace;
 
   --hit: 48px; /* Hit target táctil accesible */
+  --ot-radius-md: 0.375rem; /* Radio de la captura en vivo (carga-en-vivo) */
 
   /* ==========================================================================
      Tokens de Layout Canónico OvalTrack
@@ -126,11 +133,6 @@
 
   /* Tokens de Eventos y Línea de Tiempo */
   --lane-h: 32px;
-  --event-try: #15803d;
-  --event-penalty: #b91c1c;
-  --event-tackle: #1e3a8a;
-  --event-setpiece: #c2410c;
-  --event-neutral: #475569;
 }
 
 @media (pointer: coarse) {
@@ -321,15 +323,8 @@ html:has(.pm-shell) {
   color: #ffffff;
 }
 
-[data-theme="dark"] .form-card {
-  background: #131c2e;
-  border-color: #2a3c5a;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45), 0 4px 12px rgba(0, 0, 0, 0.25);
-}
-
 [data-theme="dark"] .card-header,
 [data-theme="dark"] .form-card-header {
-  background: #162238;
   border-bottom: 2px solid #2a3c5a;
 }
 
@@ -367,22 +362,6 @@ html:has(.pm-shell) {
   border-top-color: #1f2e47;
 }
 
-[data-theme="dark"] .filters {
-  background: #162238;
-  border-color: #1f2e47;
-}
-
-[data-theme="dark"] .chip.active {
-  background: #131c2e;
-  border-color: #2a3c5a;
-  color: #ffffff;
-}
-
-[data-theme="dark"] .status-segment {
-  background: #162238;
-  border-color: #1f2e47;
-}
-
 [data-theme="dark"] .status-tab.active {
   background: #131c2e;
   color: #ffffff;
@@ -392,11 +371,6 @@ html:has(.pm-shell) {
 [data-theme="dark"] .status-tab.active .status-badge-count {
   background: #162238;
   color: #a3e635;
-}
-
-[data-theme="dark"] .empty-state {
-  background: #131c2e;
-  border-color: #1f2e47;
 }
 
 [data-theme="dark"] .empty-icon {
@@ -410,14 +384,6 @@ html:has(.pm-shell) {
 
 [data-theme="dark"] .empty-copy {
   color: #94a3b8;
-}
-
-[data-theme="dark"] .status-pill,
-[data-theme="dark"] .position-badge,
-[data-theme="dark"] .tag {
-  background: #162238;
-  border-color: #2a3c5a;
-  color: #cbd5e1;
 }
 
 body {
@@ -446,7 +412,6 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
-
 
 button,
 input,
@@ -519,16 +484,18 @@ button {
   flex-wrap: wrap;
 }
 
-.hud::before {
-  display: none;
-}
-
 .hud-brand {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 6px;
   flex-shrink: 0;
+}
+
+/* Variante fluida: el texto del encabezado se ajusta en vez de empujar la página hacia los costados */
+.hud-brand--fluid {
+  flex: 1 1 320px;
+  min-width: 0;
 }
 
 .badge-tech {
@@ -547,7 +514,7 @@ button {
 }
 
 .brand-text .title {
-  font-family: var(--font-head, 'Hanken Grotesk', sans-serif);
+  font-family: var(--font-head);
   font-weight: 800;
   font-size: 2rem;
   color: #111d0e;
@@ -716,14 +683,6 @@ button {
   color: var(--text-primary);
 }
 
-
-
-.btn-logout {
-  background: var(--error-tint);
-  border: 1px solid var(--error-border);
-  color: var(--error);
-}
-
 /* ==========================================================================
    Formularios y Controles Globales (Cards Elevadas con Identidad Deportiva)
    ========================================================================== */
@@ -733,17 +692,17 @@ button {
 }
 
 .form-card {
-  background: #ffffff;
-  border: 2px solid rgba(32, 75, 34, 0.28);
+  background: var(--surface);
+  border: 2px solid var(--border-sport);
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 16px 36px rgba(15, 35, 15, 0.12), 0 4px 12px rgba(15, 35, 15, 0.06);
+  box-shadow: var(--shadow-elevation);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .card-header,
 .form-card-header {
-  background: linear-gradient(180deg, #edf5e9 0%, #e0ebd8 100%);
+  background: linear-gradient(180deg, var(--surface-header-start) 0%, var(--surface-header-end) 100%);
   border-bottom: 2px solid rgba(32, 75, 34, 0.20);
   padding: 24px 32px 20px;
   margin: 0;
@@ -751,7 +710,7 @@ button {
 
 .card-title,
 .form-card-title {
-  font-family: var(--font-head, 'Hanken Grotesk', sans-serif);
+  font-family: var(--font-head);
   font-weight: 800;
   font-size: 20px;
   color: #111d0e;
@@ -820,7 +779,7 @@ button {
 }
 
 .form-control.is-invalid {
-  border-color: var(--error, #dc2626);
+  border-color: var(--error);
   background: #fffafa;
 }
 
@@ -843,8 +802,6 @@ button {
   padding-top: 20px;
   border-top: 1px solid rgba(32, 75, 34, 0.10);
 }
-
-
 
 /* ==========================================================================
    Filtros, Tabs y Chips
@@ -955,12 +912,6 @@ button {
 /* ==========================================================================
    Banners de Feedback
    ========================================================================== */
-.banner-region {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 16px;
-}
 
 .banner {
   display: flex;
@@ -1069,19 +1020,6 @@ button {
   background: var(--player);
 }
 
-.status-pill {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
-  padding: 6px 14px;
-  font-size: 12.5px;
-  font-weight: 700;
-  color: var(--text-secondary);
-}
-
 .eyebrow {
   display: inline-flex;
   background: var(--navy-tint);
@@ -1091,29 +1029,6 @@ button {
   font-weight: 700;
   padding: 5px 12px;
   border-radius: var(--radius-pill);
-}
-
-.position-badge {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-
-.tag {
-  background: var(--surface-alt);
-  color: var(--text-secondary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 2px 8px;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
 /* ==========================================================================
@@ -1212,6 +1127,37 @@ button {
 }
 
 /* ==========================================================================
+   Estado de pantalla (cargando / error) de las vistas de análisis: Zonas, Estadísticas y Estadísticas de jugador
+   ========================================================================== */
+.feedback-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 64px 24px;
+  text-align: center;
+  color: var(--text-secondary);
+  background: var(--surface);
+  border: 2px solid var(--border-sport);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-elevation);
+}
+
+.feedback-state--error {
+  color: var(--error);
+  border-color: var(--error-border);
+}
+
+.feedback-state i {
+  font-size: 2rem;
+}
+
+.feedback-state p {
+  margin: 0;
+}
+
+/* ==========================================================================
    Responsive Breakpoints Generales
    ========================================================================== */
 @media (max-width: 820px) {
@@ -1245,10 +1191,10 @@ button {
   border: 12px solid transparent;
   border-radius: 50%;
   box-sizing: content-box;
-  background: var(--btn-outline-bg, #fff) padding-box;
-  color: var(--btn-outline-fg, #204b22);
-  font: 700 12px/20px var(--font-mono, monospace);
-  box-shadow: inset 0 0 0 1px var(--btn-outline-border, rgba(32, 75, 34, 0.25));
+  background: var(--btn-outline-bg) padding-box;
+  color: var(--btn-outline-fg);
+  font: 700 12px/20px var(--font-mono);
+  box-shadow: inset 0 0 0 1px var(--btn-outline-border);
   cursor: help;
 }
 .rule-help:hover, .rule-help:focus-visible { background-color: #d6eac0; }
@@ -1261,10 +1207,10 @@ button {
   width: max-content;
   max-width: 220px;
   padding: 8px 10px;
-  border-radius: var(--radius-md, 10px);
-  background: var(--text-primary, #111d0e);
+  border-radius: var(--radius-md);
+  background: var(--text-primary);
   color: #fff;
-  font: 500 12px/1.35 var(--font-body, Inter, sans-serif);
+  font: 500 12px/1.35 var(--font-body);
   text-align: left;
   opacity: 0;
   pointer-events: none;

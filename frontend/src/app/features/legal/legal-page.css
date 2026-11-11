@@ -18,7 +18,7 @@
 /* ---------- Índice ---------- */
 .legal-toc {
   position: sticky;
-  top: calc(var(--navbar-h, 64px) + 16px);
+  top: calc(var(--navbar-h) + 16px);
   padding: 20px;
   background: var(--surface);
   border: 2px solid var(--border-sport-subtle);
@@ -146,7 +146,7 @@
 }
 
 .legal-body section {
-  scroll-margin-top: calc(var(--navbar-h, 64px) + 16px);
+  scroll-margin-top: calc(var(--navbar-h) + 16px);
 }
 
 .legal-body h2 {

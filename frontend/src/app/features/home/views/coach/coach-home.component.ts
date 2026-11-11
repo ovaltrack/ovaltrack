@@ -21,7 +21,7 @@ const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
   imports: [RouterLink, HomeHudComponent, HomeBoardComponent, HomeTileComponent, ResultPillComponent],
   providers: [CoachHomeStore, CoachHomeDataService, { provide: OfflineMatchReader, useClass: DexieOfflineMatchReader }],
   templateUrl: './coach-home.component.html',
-  styleUrl: './coach-home.component.css',
+  styleUrls: ['../styles/home-views.css', './coach-home.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CoachHomeComponent {

@@ -1,0 +1,89 @@
+/* Tira de KPIs de post-partido: reglas comunes a Eventos (post-match-kpi-strip) y Zonas (zone-kpi-strip).
+   Cada componente la incluye con styleUrls antes de su propio CSS; lo específico de cada uno vive en el suyo. */
+:host {
+  display: block;
+  width: 100%;
+}
+
+.kpi-strip-card {
+  background: var(--surface);
+  border: 2px solid var(--border-sport);
+  border-radius: 12px;
+  padding: 8px 18px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+.kpi-strip-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.strip-value {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.strip-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.strip-accent-bar {
+  width: 2.5px;
+  height: 22px;
+  background: var(--border);
+  border-radius: 2px;
+  flex: none;
+}
+
+.strip-divider {
+  width: 1px;
+  height: 22px;
+  background: var(--border);
+  flex: none;
+}
+
+.kpi-progress-item {
+  flex: 1;
+}
+
+.strip-progress-track {
+  width: 110px;
+  max-width: 140px;
+  height: 8px;
+  background: rgba(32, 75, 34, 0.12);
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+  flex: 1;
+}
+
+.strip-progress-fill {
+  height: 100%;
+  background: var(--btn-primary-bg);
+  border-radius: 9999px;
+  transition: width 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .kpi-strip-card {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 10px 14px;
+  }
+
+  .strip-progress-track {
+    width: 80px;
+  }
+}

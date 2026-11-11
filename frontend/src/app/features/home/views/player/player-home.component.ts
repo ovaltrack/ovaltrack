@@ -14,7 +14,7 @@ import { PlayerHomeStore } from './player-home.store';
   imports: [HomeHudComponent, HomeBoardComponent, HomeTileComponent, ResultPillComponent],
   providers: [PlayerHomeStore, PlayerHomeDataService],
   templateUrl: './player-home.component.html',
-  styleUrl: './player-home.component.css',
+  styleUrls: ['../styles/home-views.css', './player-home.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PlayerHomeComponent {

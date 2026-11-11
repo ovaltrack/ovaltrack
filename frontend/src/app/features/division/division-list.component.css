@@ -41,7 +41,7 @@
   border-radius: 12px;
   background: #eaf3e6;
   border: 1.5px solid rgba(32, 75, 34, 0.22);
-  color: #204b22;
+  color: var(--btn-primary-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -73,11 +73,11 @@
   font-family: var(--font-mono);
   font-weight: 700;
   font-size: 12px;
-  background: #edf5e9;
+  background: var(--surface-header-start);
   border: 1px solid rgba(32, 75, 34, 0.20);
   padding: 2px 8px;
   border-radius: 6px;
-  color: #204b22;
+  color: var(--btn-primary-bg);
 }
 
 .meta-dot {
@@ -120,13 +120,8 @@
 }
 
 .status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
   padding: 6px 12px;
   border-radius: var(--radius-pill);
-  font-size: 12px;
-  font-weight: 700;
 }
 
 .status-active {
@@ -186,11 +181,6 @@
 /* ==========================================================================
    Modo Oscuro (Dark Rugby Tech)
    ========================================================================== */
-:host-context([data-theme="dark"]) .division-card {
-  background: #131c2e;
-  border-color: #1f2e47;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
-}
 
 :host-context([data-theme="dark"]) .division-card:hover {
   background: #131c2e;
@@ -201,11 +191,6 @@
 :host-context([data-theme="dark"]) .division-badge-icon {
   background: #162238;
   border-color: #2a3c5a;
-  color: #a3e635;
-}
-
-:host-context([data-theme="dark"]) .division-name {
-  color: #ffffff;
 }
 
 :host-context([data-theme="dark"]) .division-meta {
@@ -213,9 +198,7 @@
 }
 
 :host-context([data-theme="dark"]) .meta-tag {
-  background: #162238;
   border-color: #2a3c5a;
-  color: #a3e635;
 }
 
 :host-context([data-theme="dark"]) .meta-gender {
@@ -234,23 +217,3 @@
   color: #ffffff;
 }
 
-:host-context([data-theme="dark"]) .status-active {
-  background: rgba(163, 230, 53, 0.15);
-  color: #a3e635;
-  border-color: rgba(163, 230, 53, 0.3);
-}
-
-:host-context([data-theme="dark"]) .status-active .dot {
-  background: #a3e635;
-  box-shadow: 0 0 6px #a3e635;
-}
-
-:host-context([data-theme="dark"]) .status-inactive {
-  background: #162238;
-  color: #64748b;
-  border-color: #1f2e47;
-}
-
-:host-context([data-theme="dark"]) .status-inactive .dot {
-  background: #64748b;
-}

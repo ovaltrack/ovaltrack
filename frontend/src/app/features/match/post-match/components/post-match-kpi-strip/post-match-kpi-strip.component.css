@@ -1,71 +1,17 @@
-:host {
-  display: block;
-  width: 100%;
-}
-
-.kpi-strip-card {
-  background: var(--surface, #ffffff);
-  border: 2px solid var(--border-sport, rgba(32, 75, 34, 0.28));
-  border-radius: 12px;
-  padding: 8px 18px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-  min-height: 44px;
-  box-sizing: border-box;
-}
-
-.kpi-strip-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  white-space: nowrap;
-}
-
-.strip-value {
-  font-family: var(--font-head, 'Hanken Grotesk', sans-serif);
-  font-weight: 800;
-  font-size: 1.25rem;
-  color: var(--text-primary, #111d0e);
-  line-height: 1;
-}
-
-.strip-label {
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text-secondary, #4b5540);
-}
-
 .text-amber {
   color: #b45309;
 }
 
-/* Separadores */
-.strip-accent-bar {
-  width: 2.5px;
-  height: 22px;
-  background: var(--border, rgba(27, 33, 22, 0.15));
-  border-radius: 2px;
-  flex: none;
-}
-
+/* Barra de acento: variante de advertencia */
 .strip-accent-bar.is-warning {
   background: #b45309;
-}
-
-.strip-divider {
-  width: 1px;
-  height: 22px;
-  background: var(--border, rgba(27, 33, 22, 0.15));
-  flex: none;
 }
 
 /* Enlace / Botón para alternar "Ver pendientes" */
 .strip-filter-btn {
   background: transparent;
   border: none;
-  color: var(--btn-primary-bg, #204b22);
+  color: var(--btn-primary-bg);
   font-size: 0.8rem;
   font-weight: 700;
   display: inline-flex;
@@ -85,7 +31,7 @@
 }
 
 .strip-filter-btn:hover {
-  background: var(--surface-hover, #f1f3ea);
+  background: var(--surface-hover);
   text-decoration: underline;
 }
 
@@ -96,28 +42,9 @@
 
 /* Barra de Progreso Mini */
 .kpi-progress-item {
-  flex: 1;
   display: flex;
   align-items: center;
   gap: 12px;
-}
-
-.strip-progress-track {
-  width: 110px;
-  max-width: 140px;
-  height: 8px;
-  background: rgba(32, 75, 34, 0.12);
-  border-radius: 9999px;
-  overflow: hidden;
-  position: relative;
-  flex: 1;
-}
-
-.strip-progress-fill {
-  height: 100%;
-  background: var(--btn-primary-bg, #204b22);
-  border-radius: 9999px;
-  transition: width 0.3s ease;
 }
 
 /* Leyenda Visual Compacta */
@@ -160,16 +87,12 @@
 .legend-text {
   font-size: 0.76rem;
   font-weight: 600;
-  color: var(--text-secondary, #4b5540);
+  color: var(--text-secondary);
 }
 
 /* Modo Oscuro */
 :host-context([data-theme="dark"]) .strip-progress-track {
   background: rgba(163, 230, 53, 0.15);
-}
-
-:host-context([data-theme="dark"]) .strip-progress-fill {
-  background: #a3e635;
 }
 
 :host-context([data-theme="dark"]) .strip-filter-btn {
@@ -197,14 +120,3 @@
   }
 }
 
-@media (max-width: 768px) {
-  .kpi-strip-card {
-    flex-wrap: wrap;
-    gap: 12px;
-    padding: 10px 14px;
-  }
-
-  .strip-progress-track {
-    width: 80px;
-  }
-}

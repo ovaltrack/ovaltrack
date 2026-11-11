@@ -11,7 +11,7 @@ import { ToastService } from 'src/app/core/services/toast.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './division-form.component.html',
-  styleUrl: './division-form.component.css'
+  styleUrls: ['./styles/division-forms.css', './division-form.component.css']
 })
 export class DivisionFormComponent implements OnInit {
   private readonly fb = inject(FormBuilder);

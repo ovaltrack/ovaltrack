@@ -1,10 +1,6 @@
 /* ==========================================================================
    Division Player Form Component Styles
    ========================================================================== */
-.form-select {
-  cursor: pointer;
-  appearance: auto;
-}
 
 @media (max-width: 760px) {
   .app {
@@ -13,14 +9,6 @@
   .form-row {
     flex-direction: column;
     gap: 0;
-  }
-  .form-actions {
-    flex-direction: column-reverse;
-    gap: 8px;
-  }
-  .form-actions button,
-  .form-actions a {
-    width: 100%;
   }
 }
 

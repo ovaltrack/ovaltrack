@@ -16,11 +16,6 @@
   padding: 0;
 }
 
-.adm-hud .hud-brand {
-  flex: 1 1 320px;
-  min-width: 0;
-}
-
 .adm-hud p {
   margin: 0;
 }

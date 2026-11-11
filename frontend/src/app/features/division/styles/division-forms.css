@@ -1,0 +1,23 @@
+/* Estilos comunes de los formularios de división y de alta de jugador a una división (select nativo y acciones en celular).
+   Cada componente la incluye con styleUrls antes de su propio CSS. */
+.form-select {
+  cursor: pointer;
+  appearance: auto;
+}
+
+@media (max-width: 760px) {
+  .form-actions {
+      flex-direction: column-reverse;
+      gap: 8px;
+    }
+
+  .form-actions button,
+    .form-actions a {
+      width: 100%;
+    }
+
+  .form-actions button,
+    .form-actions a {
+      width: 100%;
+    }
+}

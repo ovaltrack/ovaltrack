@@ -14,7 +14,7 @@ import { ToastService } from 'src/app/core/services/toast.service';
   standalone: true,
   imports: [CommonModule, RouterLink],
   templateUrl: './division-list.component.html',
-  styleUrl: './division-list.component.css'
+  styleUrls: ['./styles/division-lists.css', './division-list.component.css']
 })
 export class DivisionListComponent implements OnInit {
   private readonly divisionService = inject(DivisionService);

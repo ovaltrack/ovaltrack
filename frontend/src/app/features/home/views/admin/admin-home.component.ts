@@ -17,7 +17,7 @@ import { AdminHomeStore } from './admin-home.store';
   imports: [RouterLink, HomeHudComponent, HomeBoardComponent, HomeTileComponent, ResultPillComponent],
   providers: [AdminHomeStore, AdminHomeDataService, { provide: OfflineMatchReader, useClass: DexieOfflineMatchReader }],
   templateUrl: './admin-home.component.html',
-  styleUrl: './admin-home.component.css',
+  styleUrls: ['../styles/home-views.css', './admin-home.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AdminHomeComponent {

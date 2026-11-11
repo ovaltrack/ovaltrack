@@ -11,15 +11,15 @@
 }
 
 .halftime-page {
-  --own: var(--btn-primary-bg, #204b22);
-  --opp: var(--navy, #16324f);
-  --card-border: var(--border-sport, rgba(32, 75, 34, 0.28));
-  --card-border-subtle: var(--border-sport-subtle, rgba(32, 75, 34, 0.20));
-  --card-shadow: var(--shadow-elevation, 0 16px 36px rgba(15, 35, 15, 0.12), 0 4px 12px rgba(15, 35, 15, 0.06));
-  --header-start: var(--surface-header-start, #edf5e9);
-  --header-end: var(--surface-header-end, #e0ebd8);
-  --toolbar: var(--surface-toolbar, #eaf3e6);
-  --positive: var(--grass-deep, #3a6410);
+  --own: var(--btn-primary-bg);
+  --opp: var(--navy);
+  --card-border: var(--border-sport);
+  --card-border-subtle: var(--border-sport-subtle);
+  --card-shadow: var(--shadow-elevation);
+  --header-start: var(--surface-header-start);
+  --header-end: var(--surface-header-end);
+  --toolbar: var(--surface-toolbar);
+  --positive: var(--grass-deep);
 
   width: 100%;
   height: 100vh;
@@ -28,7 +28,7 @@
   gap: 14px;
   padding: 14px 22px;
   overflow: hidden;
-  color: var(--text-primary, #111d0e);
+  color: var(--text-primary);
   font-family: var(--font-body);
 
   /* Fondo de cancha salvia (§3.1) */
@@ -48,15 +48,8 @@
 }
 
 /* ---------- Tipografía numérica (§2) ---------- */
-.value {
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
 
-.value--own { color: var(--own); }
-.value--opp { color: var(--opp); }
-.value--empty { color: var(--text-muted, #7a8c74); font-weight: 500; }
+.value--empty { color: var(--text-muted); font-weight: 500; }
 
 /* ==========================================================================
    1. HUD integrado (§3.2)
@@ -88,7 +81,7 @@
   font-family: var(--font-head);
   font-weight: 800;
   font-size: 26px;
-  color: var(--text-primary, #111d0e);
+  color: var(--text-primary);
   white-space: nowrap;
 }
 
@@ -99,7 +92,7 @@
   font-size: 14px;
   font-weight: 700;
   text-transform: uppercase;
-  color: var(--text-muted, #7a8c74);
+  color: var(--text-muted);
 }
 
 .hud-bar__actions {
@@ -109,37 +102,24 @@
   gap: 10px;
 }
 
-.offline-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  border-radius: var(--radius-pill, 999px);
-  background: var(--error-tint, rgba(240, 68, 56, 0.14));
-  border: 1px solid var(--error-border, rgba(180, 35, 24, 0.35));
-  color: var(--error, #b42318);
-  font-size: 12px;
-  font-weight: 700;
-}
-
 /* Botón de icono outline con hit target táctil de 48px (§3.3, §4.6) */
 .icon-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--hit, 48px);
-  height: var(--hit, 48px);
-  background: var(--btn-outline-bg, #ffffff);
-  border: 1px solid var(--btn-outline-border, rgba(32, 75, 34, 0.25));
-  border-radius: var(--radius-md, 10px);
-  color: var(--btn-outline-fg, #204b22);
+  width: var(--hit);
+  height: var(--hit);
+  background: var(--btn-outline-bg);
+  border: 1px solid var(--btn-outline-border);
+  border-radius: var(--radius-md);
+  color: var(--btn-outline-fg);
   font-size: 1.25rem;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .icon-button:hover {
-  background: var(--surface-hover, #f1f3ea);
+  background: var(--surface-hover);
   transform: translateY(-1px);
 }
 
@@ -150,7 +130,7 @@
   padding: 4px;
   background: var(--toolbar);
   border: 1px solid var(--card-border-subtle);
-  border-radius: var(--radius-md, 10px);
+  border-radius: var(--radius-md);
 }
 
 .segment {
@@ -160,9 +140,9 @@
   min-height: 44px;
   padding: 0 14px;
   border: 1px solid transparent;
-  border-radius: var(--radius-sm, 6px);
+  border-radius: var(--radius-sm);
   background: transparent;
-  color: var(--text-secondary, #3b4e33);
+  color: var(--text-secondary);
   font-family: var(--font-body);
   font-size: 14px;
   font-weight: 600;
@@ -171,11 +151,11 @@
 }
 
 .segment:hover {
-  color: var(--text-primary, #111d0e);
+  color: var(--text-primary);
 }
 
 .segment--active {
-  background: var(--surface, #ffffff);
+  background: var(--surface);
   border-color: var(--card-border-subtle);
   color: var(--own);
   font-weight: 700;
@@ -185,7 +165,7 @@
 .segment__count {
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--text-muted, #7a8c74);
+  color: var(--text-muted);
 }
 
 /* ==========================================================================
@@ -221,9 +201,9 @@
 
 /* Tarjeta elevada (§3.4, §6.3): borde de 2px, radio de 20px y sombra profunda */
 .sport-card {
-  background: var(--surface, #ffffff);
+  background: var(--surface);
   border: 2px solid var(--card-border);
-  border-radius: var(--radius-xl, 20px);
+  border-radius: var(--radius-xl);
   box-shadow: var(--card-shadow);
 }
 
@@ -254,7 +234,7 @@
   font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--text-secondary, #3b4e33);
+  color: var(--text-secondary);
 }
 
 .scoreboard__score {
@@ -287,29 +267,14 @@
 
 .period-chip {
   padding: 4px 12px;
-  border-radius: var(--radius-pill, 999px);
-  background: var(--surface-alt, #eef1e7);
-  border: 1px solid var(--border, rgba(27, 33, 22, 0.10));
-  color: var(--text-secondary, #3b4e33);
+  border-radius: var(--radius-pill);
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
   font-size: 12px;
   font-weight: 700;
   white-space: nowrap;
 }
-
-.possession-bar {
-  display: flex;
-  height: 12px;
-  overflow: hidden;
-  border-radius: var(--radius-pill, 999px);
-  background: var(--surface-alt, #eef1e7);
-}
-
-.possession-bar__fill {
-  transition: width 0.4s ease;
-}
-
-.possession-bar__fill--own { background: var(--own); }
-.possession-bar__fill--opp { background: var(--opp); }
 
 .score-tiles {
   display: flex;
@@ -325,15 +290,15 @@
   gap: 2px;
   min-width: 96px;
   padding: 8px 14px;
-  background: var(--surface-alt, #eef1e7);
-  border: 1px solid var(--border, rgba(27, 33, 22, 0.10));
-  border-radius: var(--radius-md, 10px);
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
 }
 
 .score-tile__label {
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-secondary, #3b4e33);
+  color: var(--text-secondary);
 }
 
 .pair {
@@ -341,10 +306,6 @@
   align-items: center;
   gap: 4px;
   font-size: 18px;
-}
-
-.pair__dot {
-  color: var(--text-muted, #7a8c74);
 }
 
 /* ---------- Tarjetas de indicadores y grupos ---------- */
@@ -380,7 +341,7 @@
   font-family: var(--font-head);
   font-weight: 800;
   font-size: 16px;
-  color: var(--text-primary, #111d0e);
+  color: var(--text-primary);
 }
 
 .metric-card__title i {
@@ -402,40 +363,7 @@
 
 .metric-card__caption {
   font-size: 12.5px;
-  color: var(--text-muted, #7a8c74);
-}
-
-.status-chip {
-  padding: 3px 10px;
-  border-radius: var(--radius-pill, 999px);
-  border: 1px solid transparent;
-  font-size: 11.5px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.status-chip--success {
-  color: var(--positive);
-  background: var(--grass-tint, rgba(145, 218, 64, 0.18));
-  border-color: var(--grass-border, rgba(90, 150, 30, 0.45));
-}
-
-.status-chip--warning {
-  color: var(--warning, #8a5700);
-  background: var(--warning-tint, rgba(253, 176, 34, 0.20));
-  border-color: var(--warning-border, rgba(154, 104, 0, 0.4));
-}
-
-.status-chip--danger {
-  color: var(--error, #b42318);
-  background: var(--error-tint, rgba(240, 68, 56, 0.14));
-  border-color: var(--error-border, rgba(180, 35, 24, 0.35));
-}
-
-.status-chip--neutral {
-  color: var(--text-secondary, #3b4e33);
-  background: var(--surface-alt, #eef1e7);
-  border-color: var(--border, rgba(27, 33, 22, 0.10));
+  color: var(--text-muted);
 }
 
 .rows {
@@ -456,19 +384,9 @@
   font-size: 16px;
 }
 
-.stat-row__label {
-  font-weight: 600;
-  color: var(--text-secondary, #3b4e33);
-}
-
 .stat-row--sub {
   padding-left: 14px;
   font-size: 13.5px;
-}
-
-.stat-row--sub .stat-row__label {
-  font-weight: 500;
-  color: var(--text-muted, #7a8c74);
 }
 
 .stat-row--sub .pair {
@@ -504,13 +422,13 @@
   font-family: var(--font-head);
   font-weight: 800;
   font-size: 20px;
-  color: var(--text-primary, #111d0e);
+  color: var(--text-primary);
 }
 
 .players-card__subtitle {
   margin: 0;
   font-size: 13.5px;
-  color: var(--text-secondary, #3b4e33);
+  color: var(--text-secondary);
 }
 
 .table-scroll {
@@ -531,7 +449,7 @@
   padding: 12px 14px;
   background: var(--header-start);
   border-bottom: 2px solid var(--card-border-subtle);
-  color: var(--text-secondary, #3b4e33);
+  color: var(--text-secondary);
   font-size: 12px;
   font-weight: 700;
   text-align: left;
@@ -542,13 +460,13 @@
 
 .players-table tbody td {
   padding: 10px 14px;
-  background: var(--surface, #ffffff);
-  border-bottom: 1px solid var(--border, rgba(27, 33, 22, 0.10));
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
   vertical-align: middle;
 }
 
 .players-table tbody tr:hover td {
-  background: var(--surface-hover, #f1f3ea);
+  background: var(--surface-hover);
 }
 
 .players-table .col-num {
@@ -570,49 +488,49 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: var(--surface-alt, #eef1e7);
+  background: var(--surface-alt);
   border: 2px solid var(--card-border-subtle);
   font-family: var(--font-mono);
   font-weight: 700;
   font-size: 14px;
-  color: var(--text-primary, #111d0e);
+  color: var(--text-primary);
 }
 
 .player-name {
   display: block;
   font-weight: 700;
-  color: var(--text-primary, #111d0e);
+  color: var(--text-primary);
 }
 
 .player-position {
   display: block;
   font-size: 12px;
-  color: var(--text-muted, #7a8c74);
+  color: var(--text-muted);
 }
 
 .role-chip {
   display: inline-flex;
   padding: 3px 10px;
-  border-radius: var(--radius-pill, 999px);
-  background: var(--grass-tint, rgba(145, 218, 64, 0.18));
-  border: 1px solid var(--grass-border, rgba(90, 150, 30, 0.45));
+  border-radius: var(--radius-pill);
+  background: var(--grass-tint);
+  border: 1px solid var(--grass-border);
   color: var(--positive);
   font-size: 12px;
   font-weight: 700;
 }
 
 .role-chip--sub {
-  background: var(--player-tint, rgba(20, 25, 15, 0.05));
-  border-color: var(--border-strong, rgba(27, 33, 22, 0.22));
-  color: var(--player, #6b6f5f);
+  background: var(--player-tint);
+  border-color: var(--border-strong);
+  color: var(--player);
 }
 
 .points-chip {
   display: inline-flex;
   padding: 3px 10px;
-  border-radius: var(--radius-pill, 999px);
+  border-radius: var(--radius-pill);
   background: var(--own);
-  color: var(--btn-primary-fg, #ffffff);
+  color: var(--btn-primary-fg);
   font-family: var(--font-mono);
   font-size: 12.5px;
   font-weight: 700;
@@ -626,7 +544,7 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  color: var(--text-secondary, #3b4e33);
+  color: var(--text-secondary);
   text-align: center;
 }
 
@@ -636,7 +554,7 @@
 
 .state-box i {
   font-size: 2rem;
-  color: var(--text-muted, #7a8c74);
+  color: var(--text-muted);
 }
 
 .spinner {
@@ -653,7 +571,7 @@
   height: 16px;
   border-width: 2px;
   border-color: rgba(255, 255, 255, 0.35);
-  border-top-color: var(--btn-primary-fg, #ffffff);
+  border-top-color: var(--btn-primary-fg);
 }
 
 @keyframes spin {
@@ -673,7 +591,7 @@
 
 /* Hit target táctil de 48px en la pantalla de cancha (§4.6) */
 .action-button {
-  height: var(--hit, 48px);
+  height: var(--hit);
   font-size: 15px;
 }
 
@@ -703,9 +621,9 @@
   width: 100%;
   max-width: 460px;
   overflow: hidden;
-  background: var(--surface, #ffffff);
+  background: var(--surface);
   border: 2px solid var(--card-border);
-  border-radius: var(--radius-xl, 20px);
+  border-radius: var(--radius-xl);
   box-shadow: var(--card-shadow);
 }
 
@@ -724,8 +642,8 @@
   justify-content: center;
   width: 40px;
   height: 40px;
-  border-radius: var(--radius-md, 10px);
-  background: var(--surface, #ffffff);
+  border-radius: var(--radius-md);
+  background: var(--surface);
   border: 1px solid var(--card-border-subtle);
   color: var(--own);
   font-size: 1.3rem;
@@ -736,7 +654,7 @@
   font-family: var(--font-head);
   font-weight: 800;
   font-size: 20px;
-  color: var(--text-primary, #111d0e);
+  color: var(--text-primary);
 }
 
 .confirmation-modal__body {
@@ -747,7 +665,7 @@
   margin: 0 0 20px;
   font-size: 14.5px;
   line-height: 1.5;
-  color: var(--text-secondary, #3b4e33);
+  color: var(--text-secondary);
 }
 
 .confirmation-modal__actions {
