@@ -321,9 +321,6 @@ html:has(.pm-shell) {
 }
 
 [data-theme="dark"] body {
-  background-color: var(--bg);
-  background-image: var(--canvas-image);
-  background-attachment: fixed;
   color: var(--text-secondary);
 }
 
@@ -335,17 +332,11 @@ html:has(.pm-shell) {
   color: var(--text-muted) !important;
 }
 
-[data-theme="dark"] .brand-text .title {
-  color: var(--text-primary);
-}
-
 [data-theme="dark"] .brand-text .club {
   color: var(--text-muted);
 }
 
 [data-theme="dark"] .badge-tech {
-  background-color: var(--surface-alt);
-  border-color: var(--border-sport);
   color: var(--grass);
 }
 
@@ -378,16 +369,6 @@ html:has(.pm-shell) {
   color: var(--text-primary);
 }
 
-[data-theme="dark"] .card-header,
-[data-theme="dark"] .form-card-header {
-  border-bottom: 2px solid var(--border-sport);
-}
-
-[data-theme="dark"] .card-title,
-[data-theme="dark"] .form-card-title {
-  color: var(--text-primary);
-}
-
 [data-theme="dark"] .card-subtitle,
 [data-theme="dark"] .form-card-subtitle {
   color: var(--text-muted);
@@ -413,19 +394,12 @@ html:has(.pm-shell) {
   background: var(--surface-hover);
 }
 
-[data-theme="dark"] .form-actions {
-  border-top-color: var(--border);
-}
-
 [data-theme="dark"] .status-tab.active {
-  background: var(--surface);
-  color: var(--text-primary);
   border: 1px solid var(--border-sport);
   box-shadow: 0 1px 3px rgba(20, 25, 15, 0.08);
 }
 
 [data-theme="dark"] .status-tab.active .status-badge-count {
-  background: var(--surface-alt);
   color: var(--grass);
 }
 
@@ -456,7 +430,6 @@ html:has(.pm-shell) {
 }
 
 [data-theme="dark"] .empty-icon {
-  background: var(--surface-alt);
   color: var(--text-muted);
 }
 
