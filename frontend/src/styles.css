@@ -119,6 +119,7 @@
   --btn-on-board-bg: #ffffff;
   --btn-on-board-fg: var(--btn-primary-bg);
   --btn-on-board-outline: rgba(255, 255, 255, 0.55);
+  --btn-on-board-hover: #eef5ea;
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -639,7 +640,7 @@ button {
 }
 
 .btn-on-board:hover {
-  background-color: #eef5ea;
+  background-color: var(--btn-on-board-hover);
   color: var(--btn-on-board-fg);
   transform: translateY(-1px);
 }
@@ -1234,6 +1235,7 @@ button {
   cursor: help;
 }
 .rule-help:hover, .rule-help:focus-visible { background-color: #d6eac0; }
+[data-theme="dark"] .rule-help:hover, [data-theme="dark"] .rule-help:focus-visible { background-color: #d6eac0; }
 .rule-help::after {
   content: attr(data-tip);
   position: absolute;

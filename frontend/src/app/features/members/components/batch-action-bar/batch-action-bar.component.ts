@@ -61,7 +61,7 @@ import { CommonModule } from '@angular/common';
     }
 
     .batch-text span {
-      color: var(--grass, #68bb2b);
+      color: #ffffff;
       font-family: var(--font-mono, monospace);
     }
 
@@ -115,6 +115,10 @@ import { CommonModule } from '@angular/common';
     .btn-save:disabled {
       opacity: 0.6;
       cursor: not-allowed;
+    }
+
+    :host-context([data-theme="dark"]) .batch-text span {
+      color: var(--grass, #68bb2b);
     }
 
     :host-context([data-theme="dark"]) .batch-bar {
