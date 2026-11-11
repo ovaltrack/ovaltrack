@@ -208,7 +208,7 @@
 }
 
 :host-context([data-theme="dark"]) .view-option.active {
-  background: rgba(163, 230, 53, 0.18);
+  background: var(--grass-tint-strong);
   color: var(--grass);
 }
 

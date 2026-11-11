@@ -136,13 +136,13 @@
 }
 
 :host-context([data-theme="dark"]) .table-grid-row.unassigned-row {
-  background-color: rgba(245, 158, 11, 0.08);
-  box-shadow: inset 3px 0 0 #f59e0b;
+  background-color: var(--warning-tint);
+  box-shadow: inset 3px 0 0 var(--warning);
 }
 
 :host-context([data-theme="dark"]) .table-grid-row.selected-row {
-  background-color: rgba(163, 230, 53, 0.12) !important;
-  box-shadow: inset 4px 0 0 #f59e0b !important;
+  background-color: var(--grass-tint) !important;
+  box-shadow: inset 4px 0 0 var(--warning) !important;
 }
 
 .period-text {
@@ -242,9 +242,9 @@
 }
 
 :host-context([data-theme="dark"]) .unassigned-inline-select {
-  background-color: rgba(245, 158, 11, 0.12);
+  background-color: var(--warning-tint);
   color: var(--warning);
-  border-color: rgba(245, 158, 11, 0.5);
+  border-color: var(--warning-border);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23fbbf24' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
 }
 
@@ -396,24 +396,24 @@
 }
 
 :host-context([data-theme="dark"]) .btn-edit {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(163, 230, 53, 0.3);
+  background: var(--veil);
+  border-color: var(--grass-border);
   color: var(--grass);
 }
 
 :host-context([data-theme="dark"]) .btn-edit:hover {
   background: var(--success);
-  color: #111d0e;
+  color: var(--on-grass);
 }
 
 :host-context([data-theme="dark"]) .btn-delete {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(248, 113, 113, 0.3);
+  background: var(--veil);
+  border-color: var(--error-border);
   color: var(--error);
 }
 
 :host-context([data-theme="dark"]) .btn-delete:hover {
-  background: #dc2626;
+  background: var(--error-solid);
   color: var(--text-primary);
 }
 

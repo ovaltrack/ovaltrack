@@ -104,7 +104,7 @@
 }
 
 :host-context([data-theme="dark"]) .strip-filter-btn.active {
-  background: rgba(245, 158, 11, 0.2);
+  background: var(--warning-tint);
   color: var(--warning);
 }
 
