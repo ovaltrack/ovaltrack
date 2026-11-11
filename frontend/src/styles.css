@@ -98,15 +98,15 @@
   /* Rival: azul propio en los dos temas (el rol Admin usa --navy) */
   --team-rival: #3d5a80;
   --on-navy: #ffffff;
-  /* Colores de jugadas (línea de tiempo y tabla de post-partido): en claro, los de siempre */
-  --event-try: #2e7d32;
-  --event-kick: #7c3aed;
-  --event-tackle-missed: #2563eb;
-  --event-tackle: #16324f;
-  --event-penalty: #b42318;
-  --event-set-piece: #d96a0a;
-  --event-turnover: #d96a0a;
-  --event-default: #204b22;
+  /* Colores de jugadas (línea de tiempo y tabla de post-partido): un relleno por categoría, con texto blanco ≥ 5,3 : 1 */
+  --event-try: #8a6408;
+  --event-kick: #8a6408;
+  --event-tackle-missed: #1f7380;
+  --event-tackle: #1f7380;
+  --event-penalty: #626979;
+  --event-set-piece: #3a6bb5;
+  --event-turnover: #a8521a;
+  --event-default: #2e7a3c;
   /* Barra de navegación y overlays (menús, diálogos): en claro son la superficie; en oscuro hundida y elevada */
   --surface-sunken: var(--surface);
   --surface-overlay: var(--surface);
