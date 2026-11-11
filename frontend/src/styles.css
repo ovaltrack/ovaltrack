@@ -88,8 +88,9 @@
   --shadow-elevation: 0 16px 36px rgba(15, 35, 15, 0.12), 0 4px 12px rgba(15, 35, 15, 0.06);
   --shadow-button: 0 4px 12px rgba(32, 75, 34, 0.20);
   --shadow-button-hover: 0 6px 16px rgba(32, 75, 34, 0.28);
-  /* Barra de navegación: en claro es la superficie; en oscuro queda hundida */
+  /* Barra de navegación y overlays (menús, diálogos): en claro son la superficie; en oscuro hundida y elevada */
   --surface-sunken: var(--surface);
+  --surface-overlay: var(--surface);
   --shadow-navbar: 0 4px 14px rgba(20, 45, 20, 0.08);
 
   /* Inicio · Pizarra de juego (DESIGN_SYSTEM.md §9): el tablero conserva sus colores en claro y oscuro */
