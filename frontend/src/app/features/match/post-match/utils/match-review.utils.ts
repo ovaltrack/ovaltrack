@@ -6,23 +6,21 @@ export const RUGBY_FULL_TIME_MIN = 80;
 export const EMPTY_TIME_PLACEHOLDER = '--:--:--';
 
 /**
- * Resuelve el color de acento deportivo para una categoría o tipo de evento de rugby.
+ * Resuelve el color de acento deportivo de un evento según su nombre. Devuelve un token (`var(--event-*)`):
+ * en claro cada uno vale el color de siempre y en oscuro toma el de su categoría (ver styles.css).
  */
 export function resolveEventColor(name: string): string {
   const lower = name.toLowerCase();
-  if (lower.includes('try')) return '#2e7d32'; // Verde
-  if (lower.includes('tackle fallado')) return '#2563eb'; // Azul medio (Punto 12)
-  if (lower.includes('tackle')) return '#16324f'; // Azul marino oscuro
+  if (lower.includes('try')) return 'var(--event-try)';
+  if (lower.includes('tackle fallado')) return 'var(--event-tackle-missed)';
+  if (lower.includes('tackle')) return 'var(--event-tackle)';
   if (lower.includes('penal') || lower.includes('infracción') || lower.includes('amarilla') || lower.includes('roja')) {
-    return '#b42318'; // Rojo deportivo
+    return 'var(--event-penalty)';
   }
-  if (lower.includes('line') || lower.includes('scrum') || lower.includes('turnover')) {
-    return '#d96a0a'; // Naranja óxido
-  }
-  if (lower.includes('drop') || lower.includes('conversión')) {
-    return '#7c3aed'; // Púrpura
-  }
-  return '#204b22'; // Salvia primario default
+  if (lower.includes('line') || lower.includes('scrum')) return 'var(--event-set-piece)';
+  if (lower.includes('turnover')) return 'var(--event-turnover)';
+  if (lower.includes('drop') || lower.includes('conversión')) return 'var(--event-kick)';
+  return 'var(--event-default)';
 }
 
 /**
