@@ -52,7 +52,11 @@
 - **UI & Design System (*Cal y botella* light, *Grafito* dark)**:
   - Reference `docs/DESIGN_SYSTEM.md` and `src/styles.css` as the single source of truth for UI design.
   - Use predefined design tokens (`--bg-canvas: #eef0ea`, `--btn-primary-bg: #204b22`, `--border-sport`, elevated cards, 2px borders, minimum hit-targets of 44–48px). Do NOT invent arbitrary colors or ad-hoc styles.
-  - Bootstrap 5 and Bootstrap Icons are available globally.
+  - Bootstrap 5 and Bootstrap Icons are available globally, **but only as generated subsets** (they are committed; `./ds up` and the automatic deploy need no extra step):
+    - **Icons** (`bi bi-*`, `ti ti-*`): only the icons used in `src/**/*.html` and `*.ts` exist in `frontend/src/icons/`. After adding or removing an icon, regenerate and commit `frontend/src/icons/`: `python3 frontend/scripts/icons/build-icon-subset.py` (needs `fonttools` and `brotli`, and `node_modules` copied from the container with `./ds sync-node`; see the script header).
+    - **Bootstrap classes** (`btn`, `d-flex`, `form-control`, `mb-3`...): `angular.json` loads `frontend/src/bootstrap/bootstrap-subset.css`, which keeps only the rules for classes that some template or `.ts` mentions. After using a new Bootstrap class, regenerate and commit it: `docker exec -u "$(id -u):$(id -g)" ovaltrack-frontend node scripts/bootstrap/build-bootstrap-subset.mjs`.
+    - If you forget, `npm run build` (used by `Dockerfile.pwa` and Vercel) fails and names what is missing. `./ds up` (`ng serve`) does not run those checks, so a missing icon or class shows up unstyled in development: regenerate before committing.
+    - Never edit `src/icons/*` or `src/bootstrap/bootstrap-subset.css` by hand.
 - **UI Feedback & Toasts**:
   - Always use `ToastService` (`src/app/core/services/toast.service.ts`) for notifications and feedback (`toastService.success()`, `toastService.error()`, `toastService.warning()`, `toastService.info()`).
   - Toasts are rendered globally by `<app-toast-container />`. Do NOT use `window.alert()` or install external UI notification libraries.

@@ -86,7 +86,7 @@ Variables en `.env` (ignorado por git): `DB_*`, `OVALTRACK_BOOTSTRAP_ADMIN_EMAIL
 
 ## 5. UI / Design System "Cal y botella" (claro) y "Grafito" (oscuro)
 
-Fuente de verdad: `docs/DESIGN_SYSTEM.md` + `frontend/src/styles.css`. Bootstrap 5 y Bootstrap Icons disponibles globalmente.
+Fuente de verdad: `docs/DESIGN_SYSTEM.md` + `frontend/src/styles.css`. Bootstrap 5 y Bootstrap Icons disponibles globalmente **como subconjuntos generados y commiteados** (`frontend/src/icons/` y `frontend/src/bootstrap/bootstrap-subset.css`): al usar un ícono o una clase de Bootstrap nuevos hay que regenerarlos y commitear el resultado (comandos en `AGENTS.md`); si no, `npm run build` falla.
 - **No inventar colores ni sombras**; usar tokens (`--bg-canvas: #eef0ea`, `--btn-primary-bg: #204b22`, `--border-sport`, `--surface`, etc.). El verde botella es el único color de marca; el lima (`--brand-signature`) va solo sobre superficies verde botella.
 - **Un solo botón primario sólido verde por pantalla**; el resto `outline`; rojo solo destructivo.
 - Tarjetas/tablas: borde 2px, radio 16–20px, sombra de elevación. Hit-targets táctiles **44–48px**.
