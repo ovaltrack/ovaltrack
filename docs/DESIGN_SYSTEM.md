@@ -489,3 +489,20 @@ Valores iguales en claro y oscuro: el tablero conserva sus colores en los dos te
 - h1: Hanken 800, 44/32px, tracking −.03em. Título del tablero: Hanken 800, 52/36px. Título de tarjeta: Hanken 800, 20px.
 - Rótulo (`.label-mono`): Mono 700, 12px, mayúsculas, tracking .12em. No usar `.eyebrow`, que es la píldora navy global.
 - Marcador: Mono 700, 104/72px tabular. Cuenta regresiva: Mono 52/36px en cajas de 84/64px. Hora de inicio: Mono 60px. KPIs: Mono 34–44px.
+
+---
+
+## 10. Organización de los estilos
+
+Cada estilo vive en el nivel más chico que lo cubre; si lo usan más pantallas, sube un nivel:
+
+1. **Global (`frontend/src/styles.css`):** tokens, base, layout y las clases que usan varias features (`.hud`, `.hud-brand`, `.hud-brand--fluid`, botones, `.form-card*`, `.filters`/`.chip`, `.status-badge`, `.empty-state`, `.feedback-state`, etc.). El modo oscuro de estas clases se resuelve con los tokens de `[data-theme="dark"]`; no se repite el valor en un override.
+2. **CSS compartido de feature (`features/<dominio>/styles/*.css`):** lo que repiten varias pantallas de una misma feature. Se incluye con `styleUrls` antes del CSS del componente (por ejemplo `['../styles/kpi-strip.css', './x.component.css']`), así conserva el encapsulado de Angular. Hoy: `admin/styles/admin-panel.css`, `auth/styles/register-form.css`, `match/post-match/styles/{kpi-strip,filter-pills}.css`, `match/styles/{match-stats,match-shared}.css`, `division/styles/{division-lists,division-forms}.css`, `home/views/styles/home-views.css`.
+3. **CSS del componente (`*.component.css`):** solo lo específico de esa pantalla.
+
+Reglas al tocar estilos:
+- Los `@keyframes` se declaran en el mismo archivo que la regla que los usa (Angular renombra los keyframes por hoja de estilos).
+- Un CSS compartido no debe alcanzar a un componente que no lo necesita: antes de incluirlo, comprobar que ninguna regla pueda matchear elementos de su plantilla.
+- Reemplazar un literal por un token y borrar el override oscuro solo si el token vale lo mismo en claro y en oscuro, y ninguna regla de estado (`:hover`, `.active`) o de otra clase del mismo elemento compite por la propiedad.
+- No usar `var(--token, valor)` con tokens definidos en `:root`: el respaldo nunca se aplica.
+- El nombre `.state-box` no es global: existe con estilos distintos en entretiempo, invitación y el shell de post-partido. El estado de pantalla común es `.feedback-state`.
