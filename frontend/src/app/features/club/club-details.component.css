@@ -357,75 +357,75 @@
    Modo Oscuro (Dark Rugby Tech)
    ========================================================================== */
 :host-context([data-theme="dark"]) .club-photo-card {
-  border-color: #1f2e47;
+  border-color: var(--border);
 }
 
 :host-context([data-theme="dark"]) .club-logo-large span {
-  background: #162238;
-  border-color: #2a3c5a;
-  color: #a3e635;
+  background: var(--surface-alt);
+  border-color: var(--border-sport);
+  color: var(--grass);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
 :host-context([data-theme="dark"]) .club-name-display {
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 :host-context([data-theme="dark"]) .club-city-display {
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 :host-context([data-theme="dark"]) .config-main {
-  border-color: #1f2e47;
+  border-color: var(--border);
 }
 
 :host-context([data-theme="dark"]) .card-header-flex {
-  border-bottom-color: #1f2e47;
+  border-bottom-color: var(--border);
 }
 
 :host-context([data-theme="dark"]) .section-title-main {
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 :host-context([data-theme="dark"]) .section-subtitle {
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 :host-context([data-theme="dark"]) .badge-mode-edit {
-  background: #162238;
-  border-color: #2a3c5a;
-  color: #a3e635;
+  background: var(--surface-alt);
+  border-color: var(--border-sport);
+  color: var(--grass);
 }
 
 :host-context([data-theme="dark"]) .section-title {
-  color: #ffffff;
-  border-bottom-color: #1f2e47;
+  color: var(--text-primary);
+  border-bottom-color: var(--border);
 }
 
 :host-context([data-theme="dark"]) .data-item {
-  background: #162238;
-  border-color: #1f2e47;
+  background: var(--surface-alt);
+  border-color: var(--border);
 }
 
 :host-context([data-theme="dark"]) .data-item:hover {
-  background: #1c2b44;
-  border-color: #2a3c5a;
+  background: var(--surface-hover);
+  border-color: var(--border-sport);
 }
 
 :host-context([data-theme="dark"]) .data-label {
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 :host-context([data-theme="dark"]) .data-value {
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 :host-context([data-theme="dark"]) .data-link {
-  color: #a3e635;
+  color: var(--grass);
 }
 
 :host-context([data-theme="dark"]) .data-link:hover {
-  color: #bef264;
+  color: var(--grass-hover);
 }
 
 :host-context([data-theme="dark"]) .data-empty {
@@ -433,13 +433,13 @@
 }
 
 :host-context([data-theme="dark"]) .form-label {
-  color: #cbd5e1;
+  color: var(--text-secondary);
 }
 
 :host-context([data-theme="dark"]) .custom-input {
-  background: #162238;
-  border-color: #2a3c5a;
-  color: #ffffff;
+  background: var(--surface-alt);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
 }
 
 :host-context([data-theme="dark"]) .custom-input::placeholder {
@@ -447,11 +447,11 @@
 }
 
 :host-context([data-theme="dark"]) .custom-input:focus {
-  border-color: #a3e635;
-  background: #1c2b44;
+  border-color: var(--grass);
+  background: var(--surface-hover);
   box-shadow: 0 0 0 3px rgba(163, 230, 53, 0.2);
 }
 
 :host-context([data-theme="dark"]) .form-actions-footer {
-  border-top-color: #1f2e47;
+  border-top-color: var(--border);
 }
