@@ -22,6 +22,12 @@
 --   * Claves reservadas en attributes: playerNumber.
 --   * Turnovers: 'Turnover ganado' (forzado, se acredita a quien lo gana) y 'Error de manejo' (no forzado, se carga a quien lo pierde).
 --     Un turnover se registra una sola vez; los resultados de Maul/Scrum/Line-out ya cambian la posesión por sí solos.
+-- Ajustes post piloto (v3.1): se quitó ENTRY_22; Kick H errado ya no conserva la posesión; Amarilla sin opciones en vivo (motivo en post);
+--   Patada en juego 'Directa afuera' y '50/22' lanzan el line-out; Penal / Infracción con más motivos en el post;
+--   penales de Scrum y Line-out lanzan Penal / Infracción con preset (scrum_illegal / lineout_foul);
+--   Scrum y Line-out quedan con 4 opciones (Ganado, Perdido, Penal a favor, Penal en contra);
+--   eventos legacy ...119 (Error de manejo) y ...121 (Otro cambio de posesión) migrados a TURNOVER_WON con el equipo invertido
+--   (antes se acreditaban a quien perdía la pelota, ahora a quien la gana).
 -- Pendientes: Cambio sin campos (cambia la lista de jugadores en cancha); elegir el evento siguiente tras un penal.
 
 INSERT INTO event_types
@@ -199,8 +205,7 @@ VALUES
         "phase": "live",
         "required": true,
         "effects": [
-          "scoring",
-          "possession"
+          "scoring"
         ],
         "trueLabel": "Convertido",
         "falseLabel": "Errado"
@@ -439,25 +444,6 @@ VALUES
     CURRENT_TIMESTAMP
 ),
 (
-    '550e8400-e29b-41d4-a716-446655440127',
-    'ENTRY_22',
-    'Ingreso a 22m rival',
-    'Ataque',
-    'ATTACK',
-    false,
-    0,
-    false,
-    true,
-    true,
-    NULL,
-    'ATTACKING',
-    'KEEP',
-    $$[]$$::jsonb,
-    $$[]$$::jsonb,
-    $$["intermediate"]$$::jsonb,
-    CURRENT_TIMESTAMP
-),
-(
     '550e8400-e29b-41d4-a716-446655440110',
     'KICK_IN_PLAY',
     'Patada en juego',
@@ -519,12 +505,22 @@ VALUES
           {
             "value": "out_in_full",
             "label": "Directa afuera",
-            "possession": "OTHER"
+            "possession": "OTHER",
+            "followUps": [
+              {
+                "code": "LINEOUT"
+              }
+            ]
           },
           {
             "value": "50/22",
             "label": "50/22",
-            "possession": "KEEP"
+            "possession": "KEEP",
+            "followUps": [
+              {
+                "code": "LINEOUT"
+              }
+            ]
           }
         ]
       }
@@ -606,23 +602,13 @@ VALUES
         "options": [
           {
             "value": "won_clean",
-            "label": "Ganó propio limpio",
+            "label": "Ganado",
             "possession": "KEEP"
           },
           {
             "value": "lost_own",
-            "label": "Perdió su introducción",
+            "label": "Perdido",
             "possession": "OTHER"
-          },
-          {
-            "value": "stolen",
-            "label": "Robó introducción rival",
-            "possession": "OTHER"
-          },
-          {
-            "value": "reset",
-            "label": "Reset / Re-scrum",
-            "possession": "KEEP"
           },
           {
             "value": "penalty_for",
@@ -631,7 +617,10 @@ VALUES
             "followUps": [
               {
                 "code": "PENALTY_CONCEDED",
-                "team": "OTHER"
+                "team": "OTHER",
+                "preset": {
+                  "penaltyType": "scrum_illegal"
+                }
               }
             ]
           },
@@ -642,7 +631,10 @@ VALUES
             "followUps": [
               {
                 "code": "PENALTY_CONCEDED",
-                "team": "SAME"
+                "team": "SAME",
+                "preset": {
+                  "penaltyType": "scrum_illegal"
+                }
               }
             ]
           }
@@ -677,22 +669,12 @@ VALUES
         "options": [
           {
             "value": "won_clean",
-            "label": "Ganado limpio",
-            "possession": "KEEP"
-          },
-          {
-            "value": "won_dirty",
-            "label": "Ganado sucio",
+            "label": "Ganado",
             "possession": "KEEP"
           },
           {
             "value": "lost",
-            "label": "Perdido (Parabrisas/Errado)",
-            "possession": "OTHER"
-          },
-          {
-            "value": "stolen",
-            "label": "Robado al rival",
+            "label": "Perdido",
             "possession": "OTHER"
           },
           {
@@ -701,12 +683,10 @@ VALUES
             "possession": "KEEP",
             "followUps": [
               {
-                "code": "PENALTY_KICK"
-              },
-              {
-                "code": "KICK_TO_TOUCH",
+                "code": "PENALTY_CONCEDED",
+                "team": "OTHER",
                 "preset": {
-                  "kind": "penalty_touch"
+                  "penaltyType": "lineout_foul"
                 }
               }
             ]
@@ -717,12 +697,10 @@ VALUES
             "possession": "OTHER",
             "followUps": [
               {
-                "code": "PENALTY_KICK"
-              },
-              {
-                "code": "KICK_TO_TOUCH",
+                "code": "PENALTY_CONCEDED",
+                "team": "SAME",
                 "preset": {
-                  "kind": "penalty_touch"
+                  "penaltyType": "lineout_foul"
                 }
               }
             ]
@@ -1147,6 +1125,46 @@ VALUES
           {
             "value": "maul_illegal",
             "label": "Derrumbe / infracción en Maul"
+          },
+          {
+            "value": "hands_in_ruck",
+            "label": "Manos en el ruck / juega la pelota en el suelo"
+          },
+          {
+            "value": "dangerous_tackle",
+            "label": "Tackle peligroso (sin brazos / en el aire)"
+          },
+          {
+            "value": "late_tackle",
+            "label": "Tackle tardío"
+          },
+          {
+            "value": "obstruction",
+            "label": "Obstrucción"
+          },
+          {
+            "value": "deliberate_knock_on",
+            "label": "Knock-on intencional"
+          },
+          {
+            "value": "not_ten_meters",
+            "label": "No retrocede los 10 m"
+          },
+          {
+            "value": "foul_play",
+            "label": "Juego sucio / peligroso"
+          },
+          {
+            "value": "dissent",
+            "label": "Protesta / Falta de respeto"
+          },
+          {
+            "value": "time_wasting",
+            "label": "Demora de juego"
+          },
+          {
+            "value": "other",
+            "label": "Otro"
           }
         ]
       }
@@ -1174,8 +1192,8 @@ VALUES
         "key": "reason",
         "label": "Motivo",
         "type": "select",
-        "phase": "live",
-        "required": true,
+        "phase": "post",
+        "required": false,
         "options": [
           {
             "value": "high_tackle",
@@ -1229,7 +1247,7 @@ VALUES
         "key": "reason",
         "label": "Motivo",
         "type": "select",
-        "phase": "live",
+        "phase": "post",
         "required": true,
         "options": [
           {
