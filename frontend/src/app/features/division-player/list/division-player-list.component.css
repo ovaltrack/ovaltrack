@@ -293,39 +293,39 @@
    Modo Oscuro (Dark Rugby Tech)
    ========================================================================== */
 :host-context([data-theme="dark"]) .table-card {
-  background: #131c2e;
-  border-color: #1f2e47;
+  background: var(--surface);
+  border-color: var(--border);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
 }
 
 :host-context([data-theme="dark"]) .card-header {
-  background: #162238;
-  border-bottom-color: #2a3c5a;
+  background: var(--surface-header-start);
+  border-bottom-color: var(--border-sport);
 }
 
 :host-context([data-theme="dark"]) .card-title {
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 :host-context([data-theme="dark"]) .history-card {
-  background: #131c2e;
-  border-top-color: #1f2e47;
+  background: var(--surface);
+  border-top-color: var(--border);
 }
 
 :host-context([data-theme="dark"]) .history-header {
-  background: #162238;
-  border-bottom-color: #2a3c5a;
+  background: var(--surface-header-start);
+  border-bottom-color: var(--border-sport);
 }
 
 :host-context([data-theme="dark"]) .data-table th {
-  background: #162238;
-  color: #94a3b8;
-  border-bottom-color: #2a3c5a;
+  background: var(--surface-header-start);
+  color: var(--text-muted);
+  border-bottom-color: var(--border-sport);
 }
 
 :host-context([data-theme="dark"]) .data-table td {
-  border-bottom-color: #1f2e47;
-  color: #ffffff;
+  border-bottom-color: var(--border);
+  color: var(--text-primary);
 }
 
 :host-context([data-theme="dark"]) .data-table tbody tr:hover {
@@ -333,21 +333,21 @@
 }
 
 :host-context([data-theme="dark"]) .jersey-number {
-  border-color: #2a3c5a;
+  border-color: var(--border-sport);
 }
 
 :host-context([data-theme="dark"]) .player-name {
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 :host-context([data-theme="dark"]) .position-badge {
-  border-color: #2a3c5a;
-  color: #cbd5e1;
+  border-color: var(--border-sport);
+  color: var(--text-secondary);
 }
 
 :host-context([data-theme="dark"]) .status-active .status-dot {
-  background: #a3e635;
-  box-shadow: 0 0 6px #a3e635;
+  background: var(--success);
+  box-shadow: 0 0 6px var(--grass);
 }
 
 :host-context([data-theme="dark"]) .status-inactive .status-dot {
@@ -355,51 +355,51 @@
 }
 
 :host-context([data-theme="dark"]) .form-control {
-  background: #162238;
-  border-color: #2a3c5a;
-  color: #ffffff;
+  background: var(--surface-alt);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
 }
 
 :host-context([data-theme="dark"]) .form-control:focus {
-  border-color: #a3e635;
-  background: #1c2b44;
+  border-color: var(--grass);
+  background: var(--surface-hover);
   box-shadow: 0 0 0 3px rgba(163, 230, 53, 0.2);
 }
 
 :host-context([data-theme="dark"]) .btn-primary {
-  background-color: #a3e635;
-  color: #0b111e;
-  border-color: #a3e635;
-  box-shadow: 0 2px 8px rgba(163, 230, 53, 0.25);
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
+  border-color: var(--btn-primary-bg);
+  box-shadow: 0 2px 8px var(--grass-tint-strong);
 }
 
 :host-context([data-theme="dark"]) .btn-primary:hover {
-  background-color: #bef264;
-  border-color: #bef264;
-  color: #0b111e;
+  background-color: var(--btn-primary-hover);
+  border-color: var(--btn-primary-hover);
+  color: var(--btn-primary-fg);
   box-shadow: 0 4px 12px rgba(163, 230, 53, 0.35);
 }
 
 :host-context([data-theme="dark"]) .btn-secondary,
 :host-context([data-theme="dark"]) .btn-outline {
-  background-color: #131c2e;
-  border-color: #2a3c5a;
-  color: #cbd5e1;
+  background-color: var(--btn-outline-bg);
+  border-color: var(--border-strong);
+  color: var(--btn-outline-fg);
 }
 
 :host-context([data-theme="dark"]) .btn-secondary:hover,
 :host-context([data-theme="dark"]) .btn-outline:hover {
-  background-color: #1c2b44;
-  border-color: #3b82f6;
-  color: #ffffff;
+  background-color: var(--surface-hover);
+  border-color: var(--navy);
+  color: var(--text-primary);
 }
 
 :host-context([data-theme="dark"]) .empty-state h2 {
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 :host-context([data-theme="dark"]) .empty-state p {
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 /* Espaciado para iconos dentro de los botones */
 .btn i {
