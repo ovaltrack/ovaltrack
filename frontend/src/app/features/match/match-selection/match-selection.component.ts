@@ -1,4 +1,4 @@
-import { Component, EventEmitter, OnInit, Output, ViewChild, inject } from '@angular/core';
+import { Component, EventEmitter, OnDestroy, OnInit, Output, ViewChild, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -27,6 +27,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import multiMonthPlugin from '@fullcalendar/multimonth';
 import { FullCalendarComponent } from '@fullcalendar/angular';
+import { LoadingGate } from '../../../shared/utils/loading-gate';
 
 /**
  * Pantalla de selección y alta de partidos.
@@ -48,7 +49,7 @@ import { FullCalendarComponent } from '@fullcalendar/angular';
   templateUrl: './match-selection.component.html',
   styleUrl: './match-selection.component.css',
 })
-export class MatchSelectComponent implements OnInit {
+export class MatchSelectComponent implements OnInit, OnDestroy {
   private readonly matchService = inject(MatchService);
   private readonly rosterService = inject(RosterService);
   private readonly router = inject(Router);
@@ -77,6 +78,11 @@ export class MatchSelectComponent implements OnInit {
 
   matchToRemove: Match | null = null;
   eliminatingMatchId: string | null = null;
+
+  /** Partido que se está abriendo (validación de nómina + navegación); bloquea abrir otro mientras tanto. */
+  readonly openingMatchId = signal<string | null>(null);
+  /** El indicador aparece solo si la apertura tarda (ver LoadingGate), sin parpadeos en una conexión rápida. */
+  readonly openingGate = new LoadingGate();
   mostrarModalConfirmacion = false;
 
   selectedMatchForModal: Match | null = null;
@@ -186,6 +192,10 @@ export class MatchSelectComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadUserDivisions();
+  }
+
+  ngOnDestroy(): void {
+    this.openingGate.dispose();
   }
   
   get visibleMatches(): Match[] {
@@ -299,7 +309,13 @@ export class MatchSelectComponent implements OnInit {
 
   /** Navega a la captura en vivo solo si el partido tiene titulares completos. */
   startMatch(matchId: string): void {
+    if (!this.beginOpening(matchId)) return;
     this.navigateToLiveCaptureIfRosterIsValid(matchId);
+  }
+
+  /** Si se muestra el indicador de "abriendo" para este partido. */
+  isShowingOpening(matchId: string): boolean {
+    return this.openingGate.showIndicator() && this.openingMatchId() === matchId;
   }
 
   onSelectMatch(match: Match) {
@@ -316,14 +332,14 @@ export class MatchSelectComponent implements OnInit {
   }
 
   openMatch(match: Match): void {
-    if (match.status === 'cancelled') return;
+    if (match.status === 'cancelled' || !this.beginOpening(match.id)) return;
 
     if (match.status === 'not_started' || match.status === 'empty_roster') {
-      void this.router.navigate(['/selection-roster', match.id]);
+      this.navigateAndFinishOpening(['/selection-roster', match.id]);
     } else if (match.status === 'halftime') {
-      void this.router.navigate(['/live-capture/', match.id, 'halftime'])
+      this.navigateAndFinishOpening(['/live-capture/', match.id, 'halftime']);
     } else if (match.status === 'finished'){
-      void this.router.navigate(['/post-match', match.id])
+      this.navigateAndFinishOpening(['/post-match', match.id]);
     } else{
       this.navigateToLiveCaptureIfRosterIsValid(match.id);
     }
@@ -333,16 +349,37 @@ export class MatchSelectComponent implements OnInit {
     this.rosterService.getSavedRoster(matchId).subscribe({
       next: roster => {
         if (this.hasValidRoster(roster?.startingPlayers.map(player => player.playerId))) {
-          void this.router.navigate(['/live-capture', matchId]);
+          this.navigateAndFinishOpening(['/live-capture', matchId]);
           return;
         }
 
         this.toastService.show('error', 'Debes completar los 15 titulares antes de capturar el partido.', 'Alineación incompleta');
+        void this.finishOpening();
       },
       error: () => {
         this.toastService.show('error', 'No se pudo validar la alineación del partido.', 'Error de validación');
+        void this.finishOpening();
       },
     });
+  }
+
+  /** Marca el partido como "abriéndose"; devuelve false si ya se está abriendo uno (evita navegaciones dobles). */
+  private beginOpening(matchId: string): boolean {
+    if (this.openingMatchId() !== null) return false;
+    this.openingMatchId.set(matchId);
+    this.openingGate.start();
+    return true;
+  }
+
+  /** `navigate` resuelve después de los guards y de descargar la pantalla destino, haya navegado o no. */
+  private navigateAndFinishOpening(commands: unknown[]): void {
+    void this.router.navigate(commands).finally(() => this.finishOpening());
+  }
+
+  private async finishOpening(): Promise<void> {
+    await this.openingGate.finish();
+    this.openingMatchId.set(null);
+    this.closeMatchModal();
   }
 
   private hasValidRoster(startingPlayers: string[] | undefined): boolean {
