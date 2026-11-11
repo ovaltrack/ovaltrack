@@ -42,9 +42,7 @@
 /* Fondo de cancha nocturno: el mismo de `[data-theme="dark"] body` en styles.css */
 .halftime-page[data-theme="dark"] {
   background-color: var(--bg);
-  background-image:
-    radial-gradient(ellipse at 50% 30%, rgba(11, 17, 30, 1) 0%, rgba(11, 17, 30, 0.95) 25%, rgba(11, 17, 30, 0.60) 50%, rgba(11, 17, 30, 0.15) 72%, transparent 85%),
-    repeating-linear-gradient(135deg, rgba(148, 163, 184, 0.12) 0px, rgba(148, 163, 184, 0.12) 1.5px, transparent 2px, transparent 54px);
+  background-image: var(--canvas-image);
 }
 
 /* ---------- Tipografía numérica (§2) ---------- */
