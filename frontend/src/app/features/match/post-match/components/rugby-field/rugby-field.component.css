@@ -3,9 +3,9 @@
   /* Contenedor de consulta: el alto de la cancha se limita también por el ancho disponible */
   container-type: inline-size;
   /* Verdes del pasto derivados del verde de marca, sin introducir colores nuevos */
-  --pitch-a: color-mix(in srgb, var(--btn-primary-bg, #204b22) 58%, #a8d5a2);
-  --pitch-b: color-mix(in srgb, var(--btn-primary-bg, #204b22) 66%, #a8d5a2);
-  --pitch-ingoal: color-mix(in srgb, var(--btn-primary-bg, #204b22) 82%, #a8d5a2);
+  --pitch-a: color-mix(in srgb, var(--btn-primary-bg) 58%, #a8d5a2);
+  --pitch-b: color-mix(in srgb, var(--btn-primary-bg) 66%, #a8d5a2);
+  --pitch-ingoal: color-mix(in srgb, var(--btn-primary-bg) 82%, #a8d5a2);
   --pitch-line: #ffffff;
   --row-axis-w: 56px;
 }
@@ -43,14 +43,14 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  color: var(--btn-primary-bg, #204b22);
+  color: var(--btn-primary-bg);
 }
 
 .attack-dir svg { flex-shrink: 0; }
 
 .reading {
   min-height: 20px;
-  color: var(--text-secondary, #3b4e33);
+  color: var(--text-secondary);
   font-weight: 600;
 }
 
@@ -79,9 +79,9 @@
 }
 
 /* Solo en pantallas angostas: la letra reemplaza al nombre */
-.row-axis-letter { display: none; font-family: var(--font-mono, monospace); font-size: 12px; font-weight: 700; color: var(--text-primary, #111d0e); }
-.row-axis-name { font-size: 12px; font-weight: 700; color: var(--text-primary, #111d0e); }
-.row-axis-range { font-family: var(--font-mono, monospace); font-size: 10px; color: var(--text-secondary, #3b4e33); }
+.row-axis-letter { display: none; font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--text-primary); }
+.row-axis-name { font-size: 12px; font-weight: 700; color: var(--text-primary); }
+.row-axis-range { font-family: var(--font-mono); font-size: 10px; color: var(--text-secondary); }
 
 .pitch {
   position: relative;
@@ -89,8 +89,8 @@
   width: var(--pitch-w);
   height: var(--pitch-h);
   border-radius: 14px;
-  border: 2px solid var(--border-sport, rgba(32, 75, 34, 0.28));
-  box-shadow: var(--shadow-elevation, 0 16px 36px rgba(15, 35, 15, 0.12));
+  border: 2px solid var(--border-sport);
+  box-shadow: var(--shadow-elevation);
   overflow: hidden;
 }
 
@@ -144,7 +144,7 @@
   align-items: center;
   justify-content: center;
   writing-mode: vertical-rl;
-  font-family: var(--font-head, 'Hanken Grotesk', sans-serif);
+  font-family: var(--font-head);
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.28em;
@@ -205,12 +205,12 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 6px;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--text-secondary, #3b4e33);
+  color: var(--text-secondary);
 }
 
-.heat-legend-title { font-family: var(--font-body, Inter, sans-serif); font-size: 13px; font-weight: 700; }
+.heat-legend-title { font-family: var(--font-body); font-size: 13px; font-weight: 700; }
 .heat-legend-steps { display: flex; flex-wrap: wrap; gap: 6px 14px; }
 .heat-legend-step { display: inline-flex; align-items: center; gap: 5px; }
 
@@ -218,12 +218,12 @@
   width: 18px;
   height: 12px;
   border-radius: 3px;
-  border: 1px solid var(--border-sport-subtle, rgba(32, 75, 34, 0.20));
+  border: 1px solid var(--border-sport-subtle);
   background: color-mix(in srgb, color-mix(in srgb, var(--zone-heat-high) calc(var(--heat, 0) * 100%), var(--zone-heat-low)) 62%, var(--pitch-a));
 }
 
 /* "0" sin el verde del césped: la leyenda no sugiere que cero sea un color de calor */
-.heat-swatch.is-empty { background: var(--surface-alt, #eef1e7); }
+.heat-swatch.is-empty { background: var(--surface-alt); }
 
 .field-cell.is-readonly { cursor: default; }
 
@@ -236,7 +236,7 @@
 }
 
 .field-cell.is-selected {
-  box-shadow: inset 0 0 0 3px #ffffff, inset 0 0 0 7px var(--btn-primary-bg, #204b22);
+  box-shadow: inset 0 0 0 3px #ffffff, inset 0 0 0 7px var(--btn-primary-bg);
   z-index: 1;
 }
 
@@ -245,8 +245,8 @@
   margin: 4px;
   padding: 2px 5px;
   border-radius: 6px;
-  background: color-mix(in srgb, var(--text-primary, #111d0e) 78%, transparent);
-  font-family: var(--font-mono, monospace);
+  background: color-mix(in srgb, var(--text-primary) 78%, transparent);
+  font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 700;
   line-height: 1;
@@ -267,10 +267,10 @@
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  background: var(--surface, #ffffff);
-  border: 2px solid var(--btn-primary-bg, #204b22);
-  color: var(--btn-primary-bg, #204b22);
-  font-family: var(--font-mono, monospace);
+  background: var(--surface);
+  border: 2px solid var(--btn-primary-bg);
+  color: var(--btn-primary-bg);
+  font-family: var(--font-mono);
   font-size: 12.5px;
   font-weight: 700;
   pointer-events: none;
@@ -303,10 +303,10 @@
 
 .col-axis-number {
   text-align: center;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-size: 13px;
   font-weight: 700;
-  color: var(--text-primary, #111d0e);
+  color: var(--text-primary);
 }
 
 /* Espacio angosto (tablet vertical, móvil): la leyenda baja debajo de la cancha */

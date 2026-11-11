@@ -21,9 +21,9 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  height: var(--navbar-h, 64px);
+  height: var(--navbar-h);
   /* Margen lateral proporcional al ancho: ~56px en 1920, ~43px en 1440, ~31px en 1024; el piso es --layout-pad (16px en celular) */
-  padding: 0 clamp(var(--layout-pad, 24px), 3vw, 56px);
+  padding: 0 clamp(var(--layout-pad), 3vw, 56px);
   background: var(--surface);
   border-bottom: 2px solid var(--border-sport);
   box-shadow: 0 4px 14px rgba(20, 45, 20, 0.08);
@@ -32,7 +32,7 @@
 
 /* Sin sesión (inicio, login y registro): barra plana con una línea fina, sin sombra */
 .navbar-global.public-nav {
-  border-bottom: 1px solid var(--border-sport-subtle, var(--border));
+  border-bottom: 1px solid var(--border-sport-subtle);
   box-shadow: none;
 }
 
@@ -89,9 +89,9 @@
   height: 44px;
   padding: 0;
   border: 0;
-  border-radius: var(--radius-md, 10px);
+  border-radius: var(--radius-md);
   background: transparent;
-  color: var(--btn-outline-fg, #204b22);
+  color: var(--btn-outline-fg);
   font-size: 17px;
   transition: background-color 0.15s ease;
 }
@@ -100,7 +100,7 @@
   padding: 0 12px;
   border-color: transparent;
   background: transparent;
-  color: var(--btn-outline-fg, #204b22);
+  color: var(--btn-outline-fg);
   font-weight: 600;
 }
 
@@ -108,13 +108,13 @@
 .navbar-link:hover {
   border-color: transparent;
   background: var(--surface-hover);
-  color: var(--btn-outline-fg, #142e15);
+  color: var(--btn-outline-fg);
 }
 
 .theme-toggle:focus-visible,
 .navbar-link:focus-visible,
 .navbar-cta:focus-visible {
-  outline: 2px solid var(--btn-outline-fg, #204b22);
+  outline: 2px solid var(--btn-outline-fg);
   outline-offset: 2px;
 }
 

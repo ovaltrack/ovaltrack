@@ -7,12 +7,6 @@
   max-width: 100%;
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 20px;
-}
-
 .s4 {
   grid-column: span 4;
 }
@@ -21,18 +15,6 @@
   height: 220px;
   margin-bottom: 20px;
   border-radius: 24px;
-}
-
-.board-error {
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.board-error p {
-  margin: 0;
 }
 
 .debt {
@@ -140,38 +122,6 @@
   flex-direction: column;
 }
 
-.pending-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.pending-item:last-child {
-  border-bottom: 0;
-}
-
-.pending-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  font-size: 14px;
-}
-
-.pending-text span {
-  color: var(--text-secondary);
-}
-
-.pending-btn {
-  flex-shrink: 0;
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-}
-
 .record {
   display: flex;
   gap: 28px;
@@ -223,10 +173,6 @@
   .hud-tabs .tabs-underline > button {
     flex: 1 0 auto;
     text-align: center;
-  }
-
-  .grid {
-    gap: 14px;
   }
 
   .s4,

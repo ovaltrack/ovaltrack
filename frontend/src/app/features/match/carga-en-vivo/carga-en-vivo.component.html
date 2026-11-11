@@ -1,5 +1,5 @@
 <section class="live-capture" aria-label="Captura en vivo del partido"
-    [attr.data-theme]="theme"
+    [attr.data-theme]="theme()"
     [class.live-capture--own]="currentPossession === 'OWN'"
     [class.live-capture--neutral]="currentPossession === 'NEUTRAL'"
     [class.live-capture--opponent]="currentPossession === 'OPPONENT'"
@@ -7,7 +7,7 @@
     <header class="live-capture__header">
         <div class="live-capture__brand">
             <img class="live-capture__brand-icon"
-                [src]="theme === 'light' ? 'assets/brand/OvalTrack-fondo-claro.png' : 'assets/brand/OvalTrack-fondo-oscuro.png'"
+                [src]="theme() === 'light' ? 'assets/brand/OvalTrack-fondo-claro.png' : 'assets/brand/OvalTrack-fondo-oscuro.png'"
                 alt="OvalTrack">
             <button
                 type="button"
@@ -72,8 +72,8 @@
             </button>
             <button type="button" class="icon-btn"
                 (click)="toggleTheme()"
-                [attr.aria-label]="theme === 'light' ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'">
-                <i [class]="theme === 'light' ? 'ti ti-moon' : 'ti ti-sun'"
+                [attr.aria-label]="theme() === 'light' ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'">
+                <i [class]="theme() === 'light' ? 'ti ti-moon' : 'ti ti-sun'"
                     aria-hidden="true"></i>
             </button>
             <button type="button" class="icon-btn"
@@ -459,7 +459,7 @@
         [awayTeam]="awayTeam"
         [isLoading]="isCalculatingStats"
         [isOffline]="isOfflineMode"
-        [theme]="theme"
+        [theme]="theme()"
         [gameClock]="gameClock"
         [clockPaused]="clockPaused"
         (toggleClock)="toggleClock()"

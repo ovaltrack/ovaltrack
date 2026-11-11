@@ -1,0 +1,57 @@
+/* Estilos comunes de las vistas de Inicio por rol (administrador, entrenador y jugador): grilla del tablero, estado de error
+   y lista de pendientes. Cada vista la incluye con styleUrls antes de su propio CSS. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.board-error {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.board-error p {
+  margin: 0;
+}
+
+.inbox-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.inbox-item:last-child {
+  border-bottom: 0;
+}
+
+.inbox-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: 14px;
+}
+
+.inbox-text span {
+  color: var(--text-secondary);
+}
+
+.inbox-btn {
+  flex-shrink: 0;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+@media (max-width: 700px) {
+  .grid {
+      gap: 14px;
+    }
+}

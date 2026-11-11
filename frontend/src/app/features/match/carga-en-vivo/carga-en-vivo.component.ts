@@ -24,6 +24,7 @@ import { buildInitialLineup, currentLineup, Lineup } from './lineup';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { ToastService } from 'src/app/core/services/toast.service';
+import { ThemeService } from 'src/app/core/services/theme.service';
 import { SyncStatusSource } from 'src/app/core/navigation/sync-status.source';
 import { readSyncErrorMessage } from 'src/app/core/synchronization/sync-errors';
 
@@ -109,11 +110,14 @@ export class CargaEnVivoComponent implements OnInit, OnDestroy {
   private readonly matchService = inject(MatchService);
   private readonly statisticCalculationService = inject(StatisticCalculationService);
   private readonly toastService = inject(ToastService);
+  private readonly themeService = inject(ThemeService);
   private readonly route = inject(ActivatedRoute, { optional: true });
   private readonly router = inject(Router, { optional: true });
 
   /** Estado real de sincronización (pendientes en Dexie + conexión), el mismo que muestra la barra de navegación. */
   readonly syncStatus = inject(SyncStatusSource).status;
+  /** Tema global de la app: lo comparten el navbar, el menú de usuario y esta pantalla. */
+  readonly theme = this.themeService.theme;
   readonly syncLabel = computed(() => {
     const { state, pendingCount } = this.syncStatus();
     switch (state) {
@@ -186,7 +190,6 @@ export class CargaEnVivoComponent implements OnInit, OnDestroy {
   categories: EventCategoryGroup[] = [];
   history: HistoryItem[] = [];
   isLoading = true;
-  theme: 'light' | 'dark' = 'light';
   private events: LocalMatchEvent[] = [];
   private readonly eventVariantRotation: EventVariant[] = ['success', 'danger', 'warning', 'primary'];
   private readonly eventVariants = new Map<string, EventVariant>();
@@ -195,15 +198,6 @@ export class CargaEnVivoComponent implements OnInit, OnDestroy {
 
   /** Inicializa la pantalla, carga el partido y restaura su estado guardado. */
   ngOnInit(): void {
-    // Cargar tema guardado o detectar preferencia del sistema
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
-    if (savedTheme) {
-      this.theme = savedTheme;
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      this.theme = 'dark';
-    }
-    this.applyTheme(this.theme);
-
     const matchId = this.route?.snapshot.paramMap.get('matchId');
     if (!matchId) {
       this.showError('No se indicó un partido válido.');
@@ -298,16 +292,9 @@ export class CargaEnVivoComponent implements OnInit, OnDestroy {
     this.historyVisible = !this.historyVisible;
   }
 
-  /** Cambia el tema visual y lo conserva para futuras visitas. */
+  /** Cambia el tema de toda la app (mismo selector que el menú de usuario). */
   toggleTheme(): void {
-    this.theme = this.theme === 'light' ? 'dark' : 'light';
-    this.applyTheme(this.theme);
-    localStorage.setItem('theme', this.theme);
-  }
-
-  /** Aplica el tema seleccionado al elemento raíz del documento. */
-  private applyTheme(theme: 'light' | 'dark'): void {
-    document.documentElement.setAttribute('data-theme', theme);
+    this.themeService.toggleTheme();
   }
 
   /**

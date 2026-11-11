@@ -47,7 +47,7 @@ import { LoadingGate } from '../../../shared/utils/loading-gate';
   standalone: true,
   imports: [CommonModule, FormsModule, ModalComponent, FullCalendarModule],
   templateUrl: './match-selection.component.html',
-  styleUrl: './match-selection.component.css',
+  styleUrls: ['../styles/match-shared.css', './match-selection.component.css'],
 })
 export class MatchSelectComponent implements OnInit, OnDestroy {
   private readonly matchService = inject(MatchService);

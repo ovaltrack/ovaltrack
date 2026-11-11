@@ -10,10 +10,10 @@
   gap: 14px;
   padding: 56px 24px;
   text-align: center;
-  color: var(--text-secondary, #3b4e33);
-  background: var(--surface, #ffffff);
-  border: 2px solid var(--border-sport, rgba(32, 75, 34, 0.28));
-  border-radius: var(--radius-xl, 20px);
+  color: var(--text-secondary);
+  background: var(--surface);
+  border: 2px solid var(--border-sport);
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-elevation);
 }
 

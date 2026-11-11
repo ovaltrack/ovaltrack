@@ -1,0 +1,82 @@
+/* Piezas comunes del resumen de entretiempo (halftime-summary) y de las estadísticas en vivo (current-stats-modal):
+   valores, chip sin conexión, barra de posesión, chips de estado y etiquetas de fila.
+   Cada componente la incluye con styleUrls antes de su propio CSS. */
+.value {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.value--own { color: var(--own); }
+
+.value--opp { color: var(--opp); }
+
+.offline-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--error-tint);
+  border: 1px solid var(--error-border);
+  color: var(--error);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.possession-bar {
+  display: flex;
+  height: 12px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--surface-alt);
+}
+
+.possession-bar__fill {
+  transition: width 0.4s ease;
+}
+
+.possession-bar__fill--own { background: var(--own); }
+
+.possession-bar__fill--opp { background: var(--opp); }
+
+.pair__dot {
+  color: var(--text-muted);
+}
+
+.status-chip {
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status-chip--success {
+  color: var(--positive);
+  background: var(--grass-tint);
+  border-color: var(--grass-border);
+}
+
+.status-chip--warning {
+  color: var(--warning);
+  background: var(--warning-tint);
+  border-color: var(--warning-border);
+}
+
+.status-chip--neutral {
+  color: var(--text-secondary);
+  background: var(--surface-alt);
+  border-color: var(--border);
+}
+
+.stat-row__label {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.stat-row--sub .stat-row__label {
+  font-weight: 500;
+  color: var(--text-muted);
+}

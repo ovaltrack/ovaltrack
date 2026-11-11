@@ -23,16 +23,16 @@
   flex: 0 0 auto;
   min-height: 44px;
   padding: 0 14px;
-  border-radius: var(--radius-md, 10px);
+  border-radius: var(--radius-md);
   border: 1px solid currentColor;
-  background: var(--surface, #ffffff);
-  color: var(--btn-outline-fg, #204b22);
+  background: var(--surface);
+  color: var(--btn-outline-fg);
   font-weight: 700;
   font-size: 13.5px;
   cursor: pointer;
 }
 
-.toast-action:hover { background: var(--surface-hover, #f1f3ea); }
+.toast-action:hover { background: var(--surface-hover); }
 
 @keyframes toast-drop {
   from {

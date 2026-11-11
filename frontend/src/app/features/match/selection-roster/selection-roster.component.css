@@ -55,8 +55,7 @@
 }
 
 /* --- Tokens Modo Claro (Sport Pro Salvia) --- */
-:host-context([data-theme="light"]),
-:host-context(.light-theme) {
+:host-context([data-theme="light"]) {
   --r-bg: transparent;
   background-color: transparent;
   --r-surface: #ffffff;
@@ -130,7 +129,7 @@
   background-color: var(--r-btn-outline-bg);
   border: 1px solid var(--r-btn-outline-border);
   color: var(--r-btn-outline-fg);
-  font-family: var(--font-head, sans-serif);
+  font-family: var(--font-head);
   font-weight: 700;
   font-size: 13.5px;
   display: inline-flex;
@@ -145,7 +144,6 @@
   background-color: var(--r-pool-item-hover-bg);
   border-color: var(--r-accent);
   color: var(--r-accent);
-  transform: translateY(-1px);
 }
 
 .btn-invite {
@@ -155,7 +153,7 @@
   background-color: var(--r-accent);
   border: 1px solid var(--r-accent);
   color: var(--r-accent-fg);
-  font-family: var(--font-head, sans-serif);
+  font-family: var(--font-head);
   font-weight: 700;
   font-size: 14px;
   display: inline-flex;
@@ -197,7 +195,6 @@
 }
 
 .status-segment {
-  display: inline-flex;
   gap: 8px;
   flex-wrap: wrap;
 }
@@ -208,14 +205,9 @@
   border-radius: 999px;
   background: var(--r-tab-inactive-bg);
   border: 1px solid transparent;
-  font-family: var(--font-head, sans-serif);
-  font-weight: 700;
+  font-family: var(--font-head);
   font-size: 13.5px;
   color: var(--r-tab-inactive-text);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  display: inline-flex;
-  align-items: center;
   gap: 8px;
 }
 
@@ -231,8 +223,7 @@
 }
 
 .status-badge-count {
-  font-family: var(--font-mono, monospace);
-  font-size: 11.5px;
+  font-family: var(--font-mono);
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 999px;
@@ -261,19 +252,14 @@
 }
 
 .status-badge {
-  display: inline-flex;
-  align-items: center;
   gap: 7px;
   padding: 5px 12px;
   border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
 }
 
 .status-badge .dot {
   width: 7px;
   height: 7px;
-  border-radius: 50%;
 }
 
 .status-active {
@@ -309,9 +295,7 @@
 .form-card {
   background: var(--r-surface);
   border: 2px solid var(--r-border);
-  border-radius: 20px;
   box-shadow: 0 16px 36px rgba(15, 35, 15, 0.08), 0 4px 12px rgba(15, 35, 15, 0.04);
-  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -328,8 +312,7 @@
 }
 
 .form-card-title {
-  font-family: var(--font-head, sans-serif);
-  font-weight: 800;
+  font-family: var(--font-head);
   font-size: 19px;
   color: var(--r-text-title);
   margin: 0 0 2px;
@@ -338,7 +321,6 @@
 .form-card-subtitle {
   font-size: 13px;
   color: var(--r-text-muted);
-  margin: 0;
 }
 
 .slot-mode-badge {
@@ -437,7 +419,7 @@
   min-height: 28px;
   border: 1px solid transparent;
   outline: none;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-weight: 800;
   font-size: 13.5px;
   color: var(--r-accent);
@@ -473,13 +455,13 @@
 }
 
 .slot-number--duplicate {
-  border-color: var(--error, #b42318);
-  color: var(--error, #b42318);
+  border-color: var(--error);
+  color: var(--error);
   background: #ffffff;
 }
 
 .slot-number--duplicate:focus {
-  border-color: var(--error, #b42318);
+  border-color: var(--error);
 }
 
 .slot-number-error {
@@ -489,9 +471,9 @@
   z-index: 2;
   width: max-content;
   max-width: 150px;
-  color: var(--error, #b42318);
+  color: var(--error);
   background: #ffffff;
-  border: 1px solid var(--error-border, rgba(180, 35, 24, 0.35));
+  border: 1px solid var(--error-border);
   border-radius: 4px;
   padding: 3px 5px;
   font-size: 10px;
@@ -581,7 +563,7 @@
 }
 
 .player-fullname {
-  font-family: var(--font-head, sans-serif);
+  font-family: var(--font-head);
   font-weight: 700;
   font-size: 13.5px;
   color: var(--r-text-title);
@@ -681,7 +663,7 @@
   background: var(--r-avatar-bg);
   border: 1px solid var(--r-avatar-border);
   color: var(--r-avatar-fg);
-  font-family: var(--font-head, sans-serif);
+  font-family: var(--font-head);
   font-weight: 800;
   font-size: 13px;
   display: flex;
@@ -698,7 +680,7 @@
 }
 
 .player-pool-name {
-  font-family: var(--font-head, sans-serif);
+  font-family: var(--font-head);
   font-weight: 700;
   font-size: 14px;
   color: var(--r-text-title);

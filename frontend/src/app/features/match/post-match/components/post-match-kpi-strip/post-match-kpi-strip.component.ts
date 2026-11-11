@@ -7,7 +7,7 @@ import { MatchReviewStore } from '../../store/match-review.store';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './post-match-kpi-strip.component.html',
-  styleUrl: './post-match-kpi-strip.component.css'
+  styleUrls: ['../../styles/kpi-strip.css', './post-match-kpi-strip.component.css']
 })
 export class PostMatchKpiStripComponent {
   readonly store = inject(MatchReviewStore);

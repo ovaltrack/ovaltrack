@@ -10,7 +10,7 @@ import { ToastService } from 'src/app/core/services/toast.service';
     standalone: true,
     imports: [CommonModule, FormsModule],
     templateUrl: './opponent-manager.component.html',
-    styleUrl: '../match-selection/match-selection.component.css' // Reutilizamos los estilos del modal
+    styleUrl: '../styles/match-shared.css'
 })
 export class OpponentManagerComponent implements OnInit {
     private readonly opponentService = inject(OpponentService);

@@ -20,7 +20,7 @@ import { ToastService } from 'src/app/core/services/toast.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink, ModalComponent],
   templateUrl: './division-coach-list.component.html',
-  styleUrl: './division-coach-list.component.css'
+  styleUrls: ['../division/styles/division-lists.css', './division-coach-list.component.css']
 })
 export class DivisionCoachListComponent implements OnInit {
   private readonly fb = inject(FormBuilder);

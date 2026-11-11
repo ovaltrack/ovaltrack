@@ -13,7 +13,7 @@ import { ToastService } from 'src/app/core/services/toast.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './division-player-form.component.html',
-  styleUrl: './division-player-form.component.css'
+  styleUrls: ['../../division/styles/division-forms.css', './division-player-form.component.css']
 })
 export class DivisionPlayerFormComponent implements OnInit {
   private readonly fb = inject(FormBuilder);

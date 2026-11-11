@@ -99,14 +99,14 @@ describe('PostMatchZonesComponent', () => {
       http.expectOne(zonesUrl).flush({ message: 'Acceso denegado' }, { status: 403, statusText: 'Forbidden' });
       fixture.detectChanges();
 
-      expect(query('.state-box--error')?.textContent).toContain('Acceso denegado');
+      expect(query('.feedback-state--error')?.textContent).toContain('Acceso denegado');
       expect(query('app-rugby-field')).toBeNull();
     });
 
     it('sin id de partido no consulta al backend', () => {
       create(null);
 
-      expect(query('.state-box--error')?.textContent).toContain('No se indicó el partido');
+      expect(query('.feedback-state--error')?.textContent).toContain('No se indicó el partido');
       http.expectNone(zonesUrl);
     });
 
@@ -116,7 +116,7 @@ describe('PostMatchZonesComponent', () => {
       http.expectOne(zonesUrl).flush({ message: 'Acceso denegado' }, { status: 403, statusText: 'Forbidden' });
       fixture.detectChanges();
 
-      query<HTMLButtonElement>('.state-box--error .btn-outline')?.click();
+      query<HTMLButtonElement>('.feedback-state--error .btn-outline')?.click();
 
       expect(navigate).toHaveBeenCalledWith(['/post-match', 'match-1']);
     });

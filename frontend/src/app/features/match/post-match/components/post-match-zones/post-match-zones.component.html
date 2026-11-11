@@ -5,7 +5,7 @@
       <app-rugby-ball-loader data-testid="zones-loading" message="Cargando zonas del partido..." />
     }
   } @else if (errorMessage()) {
-    <div class="state-box state-box--error" role="alert">
+    <div class="feedback-state feedback-state--error" role="alert">
       <i class="bi bi-exclamation-triangle"></i>
       <p>{{ errorMessage() }}</p>
       <button type="button" class="btn-outline" (click)="goBack()">Volver al análisis</button>

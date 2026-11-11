@@ -6,7 +6,7 @@
 
 /* Mismos colores de césped que la cancha de Zonas; la zona marcada usa el calor alto del sistema */
 .mini-map {
-  --pitch-base: var(--btn-primary-bg, #204b22);
+  --pitch-base: var(--btn-primary-bg);
   --pitch: color-mix(in srgb, var(--pitch-base) 66%, #a8d5a2);
   --pitch-ingoal: color-mix(in srgb, var(--pitch-base) 82%, #a8d5a2);
   width: 38px;
@@ -34,5 +34,5 @@
 }
 
 .cell.active {
-  fill: var(--zone-heat-high, #d9480f);
+  fill: var(--zone-heat-high);
 }

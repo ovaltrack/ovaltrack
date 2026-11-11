@@ -19,7 +19,7 @@ import { ToastService } from 'src/app/core/services/toast.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink, PaginationComponent, ModalComponent],
   templateUrl: './division-player-list.component.html',
-  styleUrl: './division-player-list.component.css'
+  styleUrls: ['../../division/styles/division-lists.css', './division-player-list.component.css']
 })
 export class DivisionPlayerListComponent implements OnInit {
   private readonly divisionService = inject(DivisionService);

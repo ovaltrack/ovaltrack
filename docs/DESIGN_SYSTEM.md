@@ -332,10 +332,11 @@ Cuando decidas abordar y definir el **Modo Oscuro** para estas vistas en una eta
 2. **Respetar la jerarquía visual de botones:**
    - Verde Rugby / Botella (`#204b22` o `--btn-invite`): Únicamente para la acción principal más importante de la pantalla.
    - Outline Blanco Deportivo (`.btn-outline`): Para acciones secundarias, filtros o cancelar.
-   - Rojo destructivo (`.btn-logout`, `.btn-delete`): Reservado para eliminar o cerrar sesión.
+   - Rojo destructivo (tokens `--error`, `--error-tint` y `--error-border`): Reservado para eliminar o cerrar sesión.
 3. **Mantener la consistencia de elevación:** Toda tarjeta, tabla o contenedor de datos debe tener borde de `2px` con radio redondeado (`16px` o `20px`) y sombra de elevación profunda.
 4. **Las acciones de una vista viven en la barra de esa vista:** el encabezado común solo contiene lo que vale para todas las vistas (volver, etiqueta, título, marcador, hora y selector de vistas), para que quede en las mismas coordenadas en todas.
 5. **No alterar ni forzar contenedores en Carga en Vivo ni Entretiempo:** Dichas pantallas (`/live-capture/:matchId` y `/live-capture/:matchId/halftime`) son instrumentos tácticos especializados para tablet en tiempo real; deben mantenerse a pantalla completa y están exentas de `.layout-container`.
+6. **Tema único:** Carga en Vivo y Entretiempo leen y cambian el mismo `ThemeService` que el navbar y el menú de usuario. Su botón de tema cambia el modo claro/oscuro de toda la app, y la elección se conserva (clave `ovaltrack_theme`).
 6. **Uso obligatorio de `.layout-container.page`:** Toda nueva pantalla o flujo de gestión debe construirse dentro de `.layout-container.page` para garantizar alineación pixel-perfect con la Navbar.
 
 ---
@@ -423,7 +424,7 @@ La pantalla de post-partido está estructurada como una estación de trabajo de 
 ### 8.2 Componentes de la Estación de Trabajo
 1. **Encabezado común (`PostMatchHeaderComponent` dentro de `PostMatchShellComponent`):**
    - Compartido por Eventos (`/post-match/:id`), Zonas (`/zones`) y Estadísticas (`/statistics`), que son rutas hijas del shell.
-   - Botón `.hud-back` (`←`) de 44px, etiqueta fija `ANÁLISIS POST-PARTIDO`, píldora de marcador con `--score-pill-bg` / `--score-pill-fg` (mono tabular) y línea inferior siempre `Hora de inicio HH:MM:SS`.
+   - Etiqueta fija `ANÁLISIS POST-PARTIDO` (volver al inicio se hace desde el logo de la barra), píldora de marcador con `--score-pill-bg` / `--score-pill-fg` (mono tabular) y línea inferior siempre `Hora de inicio HH:MM:SS`.
    - Burbuja flotante animada `.score-delta-badge` (`+5`), con `scoreDeltaPop` y temporizador de 3 segundos (solo cuando Eventos la informa).
    - Selector de vistas en la misma fila del título: `routerLink` + `routerLinkActive` (`aria-current="page"`), contenedor gris claro y vista activa **blanca elevada** (el verde queda para filtros). Entre 960px y 1279px comparte fila con el partido (si no entra, baja a su propia fila); con < 960px baja a su propia fila con tres partes iguales.
    - El encabezado no tiene acciones propias de una vista: el selector queda siempre pegado al borde derecho. Lo que es de una vista vive en la barra de esa vista (p. ej. «Agregar evento», en la barra de Eventos).
@@ -489,3 +490,20 @@ Valores iguales en claro y oscuro: el tablero conserva sus colores en los dos te
 - h1: Hanken 800, 44/32px, tracking −.03em. Título del tablero: Hanken 800, 52/36px. Título de tarjeta: Hanken 800, 20px.
 - Rótulo (`.label-mono`): Mono 700, 12px, mayúsculas, tracking .12em. No usar `.eyebrow`, que es la píldora navy global.
 - Marcador: Mono 700, 104/72px tabular. Cuenta regresiva: Mono 52/36px en cajas de 84/64px. Hora de inicio: Mono 60px. KPIs: Mono 34–44px.
+
+---
+
+## 10. Organización de los estilos
+
+Cada estilo vive en el nivel más chico que lo cubre; si lo usan más pantallas, sube un nivel:
+
+1. **Global (`frontend/src/styles.css`):** tokens, base, layout y las clases que usan varias features (`.hud`, `.hud-brand`, `.hud-brand--fluid`, botones, `.form-card*`, `.filters`/`.chip`, `.status-badge`, `.empty-state`, `.feedback-state`, etc.). El modo oscuro de estas clases se resuelve con los tokens de `[data-theme="dark"]`; no se repite el valor en un override.
+2. **CSS compartido de feature (`features/<dominio>/styles/*.css`):** lo que repiten varias pantallas de una misma feature. Se incluye con `styleUrls` antes del CSS del componente (por ejemplo `['../styles/kpi-strip.css', './x.component.css']`), así conserva el encapsulado de Angular. Hoy: `admin/styles/admin-panel.css`, `auth/styles/register-form.css`, `match/post-match/styles/{kpi-strip,filter-pills}.css`, `match/styles/{match-stats,match-shared}.css`, `division/styles/{division-lists,division-forms}.css`, `home/views/styles/home-views.css`.
+3. **CSS del componente (`*.component.css`):** solo lo específico de esa pantalla.
+
+Reglas al tocar estilos:
+- Los `@keyframes` se declaran en el mismo archivo que la regla que los usa (Angular renombra los keyframes por hoja de estilos).
+- Un CSS compartido no debe alcanzar a un componente que no lo necesita: antes de incluirlo, comprobar que ninguna regla pueda matchear elementos de su plantilla.
+- Reemplazar un literal por un token y borrar el override oscuro solo si el token vale lo mismo en claro y en oscuro, y ninguna regla de estado (`:hover`, `.active`) o de otra clase del mismo elemento compite por la propiedad.
+- No usar `var(--token, valor)` con tokens definidos en `:root`: el respaldo nunca se aplica.
+- El nombre `.state-box` no es global: existe con estilos distintos en entretiempo, invitación y el shell de post-partido. El estado de pantalla común es `.feedback-state`.

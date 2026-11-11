@@ -1,22 +1,10 @@
 /* ==========================================================================
    Division Form Component Styles
    ========================================================================== */
-.form-select {
-  cursor: pointer;
-  appearance: auto;
-}
 
 @media (max-width: 760px) {
   .app {
     padding: 0 16px 130px;
-  }
-  .form-actions {
-    flex-direction: column-reverse;
-    gap: 8px;
-  }
-  .form-actions button,
-  .form-actions a {
-    width: 100%;
   }
 }
 

@@ -5,7 +5,7 @@ import { Component, input } from '@angular/core';
   selector: 'app-zone-kpi-strip',
   standalone: true,
   templateUrl: './zone-kpi-strip.component.html',
-  styleUrl: './zone-kpi-strip.component.css'
+  styleUrls: ['../../styles/kpi-strip.css', './zone-kpi-strip.component.css']
 })
 export class ZoneKpiStripComponent {
   readonly totalEvents = input<number>(0);
