@@ -596,6 +596,43 @@ button {
   gap: 12px;
 }
 
+/* Encabezado único de las pantallas de gestión: rótulo mono, título Hanken 800 y subtítulo */
+.hud-text {
+  min-width: 0;
+}
+
+/* Variante fluida: el texto se ajusta en vez de empujar las acciones hacia los costados */
+.hud-text--fluid {
+  flex: 1 1 320px;
+}
+
+.hud-text .hud-label {
+  margin: 0 0 6px;
+}
+
+.hud-text .hud-title {
+  margin: 0;
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 44px;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.hud-text .hud-subtitle {
+  margin: 6px 0 0;
+  font-size: 15px;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 700px) {
+  .hud-text .hud-title {
+    font-size: 32px;
+  }
+}
+
 /* ==========================================================================
    Botones Globales Calibrados (Identidad Rugby OvalTrack)
    ========================================================================== */

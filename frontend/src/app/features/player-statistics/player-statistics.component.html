@@ -3,10 +3,10 @@
   <header class="hud">
     <div class="hud-brand">
       <span class="avatar" aria-hidden="true">{{ initials() || '–' }}</span>
-      <div class="brand-text">
-        <div class="badge-tech"><span>{{ isOwnView() ? 'Mi desempeño' : 'Estadísticas del jugador' }}</span></div>
-        <h1 class="title">{{ fullName() || (isOwnView() ? 'Mis estadísticas' : 'Jugador') }}</h1>
-        <p class="club">{{ subtitle() }}</p>
+      <div class="hud-text">
+        <p class="label-mono hud-label">{{ isOwnView() ? 'Mi desempeño' : 'Estadísticas del jugador' }}</p>
+        <h1 class="hud-title">{{ fullName() || (isOwnView() ? 'Mis estadísticas' : 'Jugador') }}</h1>
+        <p class="hud-subtitle">{{ subtitle() }}</p>
       </div>
     </div>
 
