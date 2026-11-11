@@ -23,6 +23,8 @@ import java.util.ArrayList;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Match {
 
+    public static final int HALF_DURATION_SECONDS = 40 * 60;
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @EqualsAndHashCode.Include
@@ -99,6 +101,7 @@ public class Match {
 
         this.status = MatchStatus.HALFTIME;
         this.currentPeriod = 1;
+        moveClockToSecondHalf(true);
     }
 
     public void startSecondHalf() {
@@ -106,5 +109,13 @@ public class Match {
 
         this.status = MatchStatus.IN_PROGRESS;
         this.currentPeriod = 2;
+        moveClockToSecondHalf(false);
+    }
+
+    private void moveClockToSecondHalf(boolean paused) {
+        int elapsed = this.clockElapsedSeconds == null ? 0 : this.clockElapsedSeconds;
+        this.clockElapsedSeconds = Math.max(HALF_DURATION_SECONDS, elapsed);
+        this.clockPaused = paused;
+        this.clockUpdatedAt = LocalDateTime.now();
     }
 }
