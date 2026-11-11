@@ -118,6 +118,16 @@ export function matchesStatus(member: Member, filter: StatusFilter): boolean {
   return true;
 }
 
+/** El estado se muestra solo cuando la cuenta no está activa: "Activo" es lo normal y no necesita rótulo. */
+export function showsStatus(member: Pick<Member, 'active'>): boolean {
+  return !member.active;
+}
+
+/** Pie de la tabla: cuántos miembros se ven del total del club. */
+export function membersFooterLabel(shown: number, total: number): string {
+  return `Mostrando ${shown} de ${total}`;
+}
+
 export function getMemberDisplayName(member: Member): string {
   const fullName = `${member.firstName || ''} ${member.lastName || ''}`.trim();
   return fullName || member.email || '';

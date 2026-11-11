@@ -130,223 +130,200 @@
       </p>
     </div>
   } @else {
-    <div class="roster-list">
-      @for (member of filteredMembers(); track member.id) {
-        <div
-          class="member-row"
-          [class.is-dirty]="dirtyMembers().has(member.id)"
-          [class.is-inactive]="!member.active"
-          [class.has-open-menu]="openMenu()?.memberId === member.id"
-          [style.--ring]="ROLE_META[member.role].color"
-        >
-          <!-- Identidad -->
-          <div class="identity">
-            <div class="avatar">
-              {{
-                getMemberInitials(
-                  member.firstName,
-                  member.lastName,
-                  member.email
-                )
-              }}
-            </div>
-            <div class="id-text">
-              <div class="id-name">
-                {{ getMemberDisplayName(member) }}
-              </div>
-              <div class="id-email">
-                {{ member.email }}
-                @if (member.jersey != null) {
-                  <span class="jersey">#{{ member.jersey }}</span>
-                }
-              </div>
-            </div>
-          </div>
-
-          <!-- Selector de Rol y Permiso -->
-          <div class="role-zone">
-            @if (ROLE_META[member.role].perm; as perm) {
-              <div
-                class="perm-icon"
-                tabindex="0"
-                role="img"
-                [style.--icon-tint]="ROLE_META[member.role].tint"
-                [style.--icon-color]="ROLE_META[member.role].color"
-                [attr.aria-label]="ROLE_META[member.role].label"
-              >
-                @if (perm.icon === "shield") {
-                  <svg
-                    width="15"
-                    height="15"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.2"
-                  >
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
-                  </svg>
-                } @else if (perm.icon === "pencil") {
-                  <svg
-                    width="15"
-                    height="15"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.2"
-                  >
-                    <path
-                      d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"
-                    />
-                  </svg>
-                }
-
-                <div class="perm-tooltip" role="tooltip">
-                  <span class="tooltip-title">{{
-                    ROLE_META[member.role].label
-                  }}</span>
-                  <span class="tooltip-desc">
-                    {{
-                      member.isProtected
-                        ? "Rol protegido: solo un Administrador de OvalTrack puede modificar este rol."
-                        : perm.tip
-                    }}
-                  </span>
+    <div class="members-card">
+      <table class="members-table">
+        <thead>
+          <tr>
+            <th scope="col">Miembro</th>
+            <th scope="col">Rol</th>
+            <th scope="col" class="col-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (member of filteredMembers(); track member.id) {
+            <tr
+              class="member-row"
+              [class.is-dirty]="dirtyMembers().has(member.id)"
+              [class.is-inactive]="!member.active"
+              [class.has-open-menu]="openMenu()?.memberId === member.id"
+              [style.--ring]="ROLE_META[member.role].color"
+            >
+              <td class="cell-member">
+              <div class="identity">
+                <div class="avatar">
+                  {{
+                    getMemberInitials(
+                      member.firstName,
+                      member.lastName,
+                      member.email
+                    )
+                  }}
+                </div>
+                <div class="id-text">
+                  <div class="id-name">
+                    {{ getMemberDisplayName(member) }}
+                    @if (showsStatus(member)) {
+                      <span class="status-badge status-inactive">
+                        <span class="dot"></span>
+                        Inactivo
+                      </span>
+                    }
+                  </div>
+                  <div class="id-email">
+                    {{ member.email }}
+                    @if (member.jersey != null) {
+                      <span class="jersey">#{{ member.jersey }}</span>
+                    }
+                  </div>
                 </div>
               </div>
-            }
+              </td>
 
-            <button
-              class="role-btn"
-              type="button"
-              [disabled]="!member.active || member.isProtected"
-              [class.is-locked]="member.isProtected"
-              [ngClass]="ROLE_META[member.role].cssClass"
-              [style.--role-color]="ROLE_META[member.role].color"
-              [style.--role-tint]="ROLE_META[member.role].tint"
-              [title]="
-                member.isProtected
-                  ? 'Rol protegido: solo un administrador de OvalTrack puede modificarlo'
-                  : ''
-              "
-              (click)="
-                member.active && !member.isProtected
-                  ? toggleRoleMenu(member.id, $event)
-                  : null
-              "
-              aria-haspopup="listbox"
-              [attr.aria-expanded]="
-                openMenu()?.type === 'role' &&
-                openMenu()?.memberId === member.id
-              "
-            >
-              <span class="label">
-                <span class="dot"></span>
-                <span class="name">{{ ROLE_META[member.role].label }}</span>
-              </span>
-              @if (member.active && !member.isProtected) {
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.3"
-                >
-                  <path d="M6 9l6 6 6-6" />
-                </svg>
-              }
-            </button>
-
-            @if (
-              member.active &&
-              !member.isProtected &&
-              openMenu()?.type === "role" &&
-              openMenu()?.memberId === member.id
-            ) {
-              <div class="role-menu" role="listbox">
-                @for (role of SELECTABLE_ROLES; track role) {
-                  <button
-                    class="role-opt"
-                    type="button"
-                    [class.is-disabled]="isRoleOptionDisabled(member, role)"
-                    [disabled]="isRoleOptionDisabled(member, role)"
-                    [title]="
-                      isRoleOptionDisabled(member, role)
-                        ? 'El club ya cuenta con un administrador activo. Solo puede haber un administrador por club.'
-                        : ''
-                    "
-                    (click)="
-                      !isRoleOptionDisabled(member, role)
-                        ? selectRole(member.id, role, $event)
-                        : null
-                    "
-                  >
+              <!-- Rol: el administrador protegido se muestra como texto con escudo; el resto, como selector -->
+              <td class="cell-role">
+                <div class="role-zone">
+                  @if (member.isProtected) {
                     <span
-                      class="dot"
-                      [style.background]="ROLE_META[role].color"
-                    ></span>
-                    <span>{{ ROLE_META[role].label }}</span>
-                    @if (isRoleOptionDisabled(member, role)) {
-                      <span class="limit-badge">Límite alcanzado</span>
-                    }
-                  </button>
-                }
-              </div>
-            }
-          </div>
+                      class="role-static"
+                      [style.--role-color]="ROLE_META[member.role].color"
+                      [title]="ROLE_META[member.role].perm?.tip ?? ''"
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.2"
+                        aria-hidden="true"
+                      >
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
+                      </svg>
+                      {{ ROLE_META[member.role].label }}
+                    </span>
+                  } @else {
+                    <button
+                      class="role-btn"
+                      type="button"
+                      [disabled]="!member.active"
+                      [ngClass]="ROLE_META[member.role].cssClass"
+                      [style.--role-color]="ROLE_META[member.role].color"
+                      [style.--role-tint]="ROLE_META[member.role].tint"
+                      [title]="ROLE_META[member.role].perm?.tip ?? ''"
+                      (click)="member.active ? toggleRoleMenu(member.id, $event) : null"
+                      aria-haspopup="listbox"
+                      [attr.aria-expanded]="
+                        openMenu()?.type === 'role' &&
+                        openMenu()?.memberId === member.id
+                      "
+                    >
+                      <span class="label">
+                        <span class="dot"></span>
+                        <span class="name">{{ ROLE_META[member.role].label }}</span>
+                      </span>
+                      @if (member.active) {
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2.3"
+                          aria-hidden="true"
+                        >
+                          <path d="M6 9l6 6 6-6" />
+                        </svg>
+                      }
+                    </button>
+                  }
 
-          <!-- Estado -->
-          <div class="status-cell">
-            <span
-              class="status-badge"
-              [ngClass]="member.active ? 'status-active' : 'status-inactive'"
-            >
-              <span class="dot"></span>
-              {{ member.active ? "Activo" : "Inactivo" }}
-            </span>
-          </div>
+                  @if (
+                    member.active &&
+                    !member.isProtected &&
+                    openMenu()?.type === "role" &&
+                    openMenu()?.memberId === member.id
+                  ) {
+                    <div class="role-menu" role="listbox">
+                      @for (role of SELECTABLE_ROLES; track role) {
+                        <button
+                          class="role-opt"
+                          type="button"
+                          [class.is-disabled]="isRoleOptionDisabled(member, role)"
+                          [disabled]="isRoleOptionDisabled(member, role)"
+                          [title]="
+                            isRoleOptionDisabled(member, role)
+                              ? 'El club ya cuenta con un administrador activo. Solo puede haber un administrador por club.'
+                              : ''
+                          "
+                          (click)="
+                            !isRoleOptionDisabled(member, role)
+                              ? selectRole(member.id, role, $event)
+                              : null
+                          "
+                        >
+                          <span
+                            class="dot"
+                            [style.background]="ROLE_META[role].color"
+                          ></span>
+                          <span>{{ ROLE_META[role].label }}</span>
+                          @if (isRoleOptionDisabled(member, role)) {
+                            <span class="limit-badge">Límite alcanzado</span>
+                          }
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+              </td>
 
-          <!-- Menú de Acciones -->
-          <div class="row-actions">
-            <!-- @if (member.active) { -->
-            <button
-              class="menu-btn"
-              type="button"
-              (click)="toggleActionsMenu(member.id, $event)"
-              aria-haspopup="menu"
-              aria-label="Más acciones"
-            >
-              ⋯
-            </button>
-
-            @if (
-              openMenu()?.type === "actions" &&
-              openMenu()?.memberId === member.id
-            ) {
-              <div class="actions-menu">
-                @if (member.active) {
+              <td class="cell-actions">
+                <div class="row-actions">
+                  <!-- @if (member.active) { -->
                   <button
-                    class="action-opt danger"
+                    class="menu-btn"
                     type="button"
-                    (click)="handleAction(member, 'revoke', $event)"
+                    (click)="toggleActionsMenu(member.id, $event)"
+                    aria-haspopup="menu"
+                    aria-label="Más acciones"
                   >
-                    Revocar acceso
+                    ⋯
                   </button>
-                } @else {
-                  <button
-                    class="action-opt"
-                    type="button"
-                    (click)="handleAction(member, 'activate', $event)"
-                  >
-                    Dar de alta
-                  </button>
-                }
-              </div>
-            }
-            <!-- } -->
-          </div>
-        </div>
-      }
+
+                  @if (
+                    openMenu()?.type === "actions" &&
+                    openMenu()?.memberId === member.id
+                  ) {
+                    <div class="actions-menu">
+                      @if (member.active) {
+                        <button
+                          class="action-opt danger"
+                          type="button"
+                          (click)="handleAction(member, 'revoke', $event)"
+                        >
+                          Revocar acceso
+                        </button>
+                      } @else {
+                        <button
+                          class="action-opt"
+                          type="button"
+                          (click)="handleAction(member, 'activate', $event)"
+                        >
+                          Dar de alta
+                        </button>
+                      }
+                    </div>
+                  }
+                  <!-- } -->
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      <footer class="members-foot">
+        <span>{{ footerLabel() }}</span>
+        <span class="foot-note">El estado aparece solo cuando una cuenta no está activa.</span>
+      </footer>
     </div>
   }
 </div>

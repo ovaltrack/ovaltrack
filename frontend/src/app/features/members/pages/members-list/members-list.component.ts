@@ -23,6 +23,8 @@ import {
   getMemberDisplayName,
   getMemberInitials,
   matchesSearchQuery,
+  membersFooterLabel,
+  showsStatus,
   matchesStatus
 } from '../../types/members.types';
 import { BatchActionBarComponent } from '../../components/batch-action-bar/batch-action-bar.component';
@@ -49,6 +51,7 @@ export class MembersListComponent implements OnInit {
   readonly SELECTABLE_ROLES = SELECTABLE_ROLES;
   readonly getMemberInitials = getMemberInitials;
   readonly getMemberDisplayName = getMemberDisplayName;
+  readonly showsStatus = showsStatus;
 
   readonly statusFilterDefs: Array<{
     key: StatusFilter;
@@ -133,6 +136,7 @@ export class MembersListComponent implements OnInit {
   });
 
   readonly dirtyCount = computed(() => this.dirtyMembers().size);
+  readonly footerLabel = computed(() => membersFooterLabel(this.filteredMembers().length, this.members().length));
   readonly hasDirtyMembers = computed(() => this.dirtyMembers().size > 0);
   readonly hasActiveAdmin = computed(() =>
     this.members().some(m => m.active && m.role === 'ADMIN_CLUB')
