@@ -47,6 +47,11 @@
 	/* Neutros — Modo claro (default en cancha) */
 	--paused-bg: var(--bg);
 
+	/* HUD (cabecera, reloj, pie): en claro son las superficies de siempre; en oscuro quedan hundidos */
+	--hud-bg: var(--surface);
+	--hud-well: var(--surface-alt);
+	--hud-well-shadow: none;
+
 	/* Tipografías */
 	--font-manrope: 'Manrope', system-ui, sans-serif;
 	--font-space-grotesk: 'Space Grotesk', 'Courier New', monospace;
@@ -64,17 +69,17 @@
 
 /* Override: si el elemento tiene data-theme, usa eso directamente sin media query */
 .live-capture[data-theme="dark"] {
-	--bg: #12161B;
+	/* Neutros (--bg, --surface, --surface-alt, --border) heredados de styles.css; la posesión conserva su color */
 	--bg-own: #0d642c;
 	--bg-neutral: #1e3c63;
 	--bg-away: #772c2c;
-	--surface: #1B2027;
-	--surface-alt: #232931;
 	--surface-alt-chip: #EEF1F4;
-	--text: #F2F4F6;
-	--text-2: #e5f1ff;
-	--border: #2E343C;
-	--navy-text: var(--navy-100);
+	--text: var(--text-primary);
+	--text-2: var(--text-primary);
+	--navy-text: var(--text-primary);
+	--hud-bg: var(--surface-sunken);
+	--hud-well: var(--surface-track);
+	--hud-well-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
 }
 
 .live-capture[data-theme="light"] {
@@ -106,7 +111,7 @@
 	position: relative;
 	gap: var(--ot-stack-default);
 	padding: var(--ot-stack-default) var(--ot-margin-screen);
-	background: var(--surface);
+	background: var(--hud-bg);
 	border-bottom: 1px solid var(--border);
 }
 
@@ -160,7 +165,8 @@
 	display: flex;
 	align-items: center;
 	gap: var(--ot-stack-compact);
-	background: var(--surface-alt);
+	background: var(--hud-well);
+	box-shadow: var(--hud-well-shadow);
 	border: 1px solid var(--border);
 	border-radius: var(--ot-radius-default);
 	padding: 6px 14px;
@@ -559,7 +565,7 @@
 	display: flex;
 	gap: var(--ot-stack-compact);
 	padding: var(--ot-stack-default) var(--ot-margin-screen);
-	background: var(--surface);
+	background: var(--hud-bg);
 	border-top: 1px solid var(--border);
 	flex: 0 0 auto;
 }
@@ -934,6 +940,46 @@
 
 .live-capture[data-theme="light"] .confirm-actions .btn-primary:hover {
 	background: #156537;
+}
+
+/* ───────── Modo oscuro: HUD grafito (la posesión conserva su color de fondo) ───────── */
+.live-capture[data-theme="dark"] .icon-btn,
+.live-capture[data-theme="dark"] .btn--outline {
+	border-color: var(--border-strong);
+}
+
+.live-capture[data-theme="dark"] .icon-btn:hover,
+.live-capture[data-theme="dark"] .btn--outline:hover,
+.live-capture[data-theme="dark"] .history__button:hover,
+.live-capture[data-theme="dark"] .possession-bar__btn:not(.is-active):hover,
+.live-capture[data-theme="dark"] .confirm-actions .btn-secondary:hover {
+	background: var(--surface-hover);
+	border-color: var(--text-secondary);
+	color: var(--text-primary);
+}
+
+.live-capture[data-theme="dark"] .possession-bar__btn--own.is-active {
+	background: var(--btn-primary-bg);
+	border-color: var(--btn-primary-bg);
+}
+
+.live-capture[data-theme="dark"] .possession-bar__btn--opponent:not(.is-active) {
+	color: var(--team-rival);
+}
+
+.live-capture[data-theme="dark"] .history__time {
+	color: var(--grass);
+}
+
+.live-capture[data-theme="dark"] .confirm-backdrop,
+.live-capture[data-theme="dark"] .capture-backdrop {
+	background: var(--scrim);
+}
+
+.live-capture[data-theme="dark"] .confirm-dialog,
+.live-capture[data-theme="dark"] .capture {
+	background: var(--surface-overlay);
+	box-shadow: var(--shadow-overlay);
 }
 
 /* ───────── Modal de captura de eventos (pasos) ───────── */
