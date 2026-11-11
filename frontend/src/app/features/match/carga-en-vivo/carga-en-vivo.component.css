@@ -982,6 +982,12 @@
 	box-shadow: var(--shadow-overlay);
 }
 
+/* Ícono de confirmación: --green-600 no existe, así que en oscuro heredaba el color del texto */
+.live-capture[data-theme="dark"] .confirm-icon {
+	background: var(--success-tint);
+	color: var(--success);
+}
+
 /* ───────── Modal de captura de eventos (pasos) ───────── */
 .capture-backdrop {
 	position: fixed;
