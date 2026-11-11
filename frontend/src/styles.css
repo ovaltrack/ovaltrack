@@ -78,6 +78,8 @@
   --surface-header-start: #f6f7f3;
   --surface-header-end: #f6f7f3;
   --surface-toolbar: #ffffff;
+  --surface-segment: #e4e7df;      /* contenedor del selector de vistas y de los filtros */
+  --border-segment: #dcdfd7;
   --border-sport: #dcdfd7;
   --border-sport-subtle: #e6e8e2;
   --btn-primary-bg: #204b22;
@@ -201,6 +203,8 @@
   --surface-header-start: #25272b;
   --surface-header-end: #1f2124;
   --surface-toolbar: #17181b;
+  --surface-segment: var(--surface-alt);
+  --border-segment: var(--border);
   --surface-sunken: #0b0c0e;
   --surface-overlay: #282a2e;
   --bg-canvas: var(--bg);
@@ -411,11 +415,38 @@ html:has(.pm-shell) {
   background: var(--surface);
   color: var(--text-primary);
   border: 1px solid var(--border-sport);
+  box-shadow: 0 1px 3px rgba(20, 25, 15, 0.08);
 }
 
 [data-theme="dark"] .status-tab.active .status-badge-count {
   background: var(--surface-alt);
   color: var(--grass);
+}
+
+[data-theme="dark"] .chip.active {
+  border-color: var(--border-strong);
+  box-shadow: 0 1px 2px rgba(20, 25, 15, 0.06);
+}
+
+[data-theme="dark"] .chip:not(.active) .count {
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] .banner-success {
+  border-left-color: var(--grass-deep);
+}
+
+[data-theme="dark"] .banner-success strong {
+  color: var(--grass-deep);
+}
+
+[data-theme="dark"] .status-active {
+  background: var(--grass-tint);
+  color: var(--grass-deep);
+}
+
+[data-theme="dark"] .status-active .dot {
+  background: var(--grass-deep);
 }
 
 [data-theme="dark"] .empty-icon {
@@ -841,8 +872,8 @@ button {
   flex-wrap: wrap;
   align-items: center;
   margin: 18px 0 16px;
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
+  background: var(--surface-segment);
+  border: 1px solid var(--border-segment);
   border-radius: var(--radius-pill);
   padding: 6px;
 }
@@ -868,9 +899,9 @@ button {
 
 .chip.active {
   background: var(--surface);
-  border-color: var(--border-strong);
+  border-color: var(--border-segment);
   color: var(--text-primary);
-  box-shadow: 0 1px 2px rgba(20, 25, 15, 0.06);
+  box-shadow: 0 1px 3px rgba(16, 24, 16, 0.14);
 }
 
 .chip .dot {
@@ -882,7 +913,7 @@ button {
 .chip .count {
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 .chip.active .count {
@@ -891,8 +922,8 @@ button {
 
 .status-segment {
   display: inline-flex;
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
+  background: var(--surface-segment);
+  border: 1px solid var(--border-segment);
   border-radius: var(--radius-pill);
   padding: 4px;
   gap: 3px;
@@ -921,7 +952,7 @@ button {
 .status-tab.active {
   background: var(--surface);
   color: var(--text-primary);
-  box-shadow: 0 1px 3px rgba(20, 25, 15, 0.08);
+  box-shadow: 0 1px 3px rgba(16, 24, 16, 0.14), 0 0 0 1px var(--border-segment);
 }
 
 .status-badge-count {
@@ -965,11 +996,11 @@ button {
 }
 
 .banner-success {
-  border-left-color: var(--grass-deep);
+  border-left-color: var(--success);
 }
 
 .banner-success strong {
-  color: var(--grass-deep);
+  color: var(--success);
 }
 
 .banner-error {
@@ -1032,12 +1063,12 @@ button {
 }
 
 .status-active {
-  background: var(--grass-tint);
-  color: var(--grass-deep);
+  background: var(--success-tint);
+  color: var(--success);
 }
 
 .status-active .dot {
-  background: var(--grass-deep);
+  background: var(--success);
 }
 
 .status-inactive {
