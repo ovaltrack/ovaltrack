@@ -23,7 +23,7 @@ describe('MembersListComponent (tabla de miembros)', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [MembersListComponent],
-      providers: [{ provide: MembersService, useValue: { getMembers: () => of(MEMBERS), getMyClub: () => of(null) } }]
+      providers: [{ provide: MembersService, useValue: { getMembers: () => of(MEMBERS) } }]
     }).compileComponents();
     fixture = TestBed.createComponent(MembersListComponent);
     fixture.componentInstance.setStatusFilter('ALL');

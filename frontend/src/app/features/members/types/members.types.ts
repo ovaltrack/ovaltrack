@@ -21,7 +21,6 @@ export interface Member {
 }
 
 export interface RolePermissionMeta {
-  icon: 'shield' | 'pencil';
   tip: string;
 }
 
@@ -40,7 +39,6 @@ export const ROLE_META: Record<UserRole, RoleMetadata> = {
     tint: 'var(--navy-tint)',
     cssClass: '',
     perm: {
-      icon: 'shield',
       tip: 'Acceso total: gestión de miembros, roles y configuración del club.'
     }
   },
@@ -50,7 +48,6 @@ export const ROLE_META: Record<UserRole, RoleMetadata> = {
     tint: 'var(--blue-mid-tint)',
     cssClass: '',
     perm: {
-      icon: 'pencil',
       tip: 'Acceso de carga: puede registrar eventos y estadísticas de partido. No accede a la configuración del club.'
     }
   },
@@ -74,7 +71,6 @@ export const ROLE_META: Record<UserRole, RoleMetadata> = {
     tint: 'var(--navy-tint)',
     cssClass: '',
     perm: {
-      icon: 'shield',
       tip: 'Acceso total a la plataforma OvalTrack.'
     }
   }
@@ -140,13 +136,6 @@ export function matchesSearchQuery(member: Member, query: string): boolean {
   const jerseyStr = member.jersey != null ? `#${member.jersey}` : '';
   const textToSearch = `${fullName} ${email} ${jerseyStr}`;
   return textToSearch.includes(query);
-}
-
-export interface ClubInfo {
-  id?: string;
-  name: string;
-  logoUrl?: string;
-  status?: string;
 }
 
 export interface BackendUserResponse {

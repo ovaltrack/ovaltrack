@@ -12,7 +12,6 @@ import { FormsModule } from '@angular/forms';
 import { MembersService } from '../../services/members.service';
 import { ToastService, ToastType } from '../../../../core/services/toast.service';
 import {
-  ClubInfo,
   FilterCategory,
   Member,
   ROLE_META,
@@ -84,15 +83,8 @@ export class MembersListComponent implements OnInit {
   readonly isLoading = signal<boolean>(true);
   readonly isSaving = signal<boolean>(false);
   readonly openMenu = signal<{ type: 'role' | 'actions'; memberId: string } | null>(null);
-  readonly club = signal<ClubInfo | null>(null);
 
   // Computed Signals
-  readonly clubName = computed(() => this.club()?.name || 'Orcas RC');
-  readonly clubCrest = computed(() => {
-    const name = this.clubName().trim();
-    return name ? name.charAt(0).toUpperCase() : 'O';
-  });
-
   readonly statusCounts = computed(() => {
     let active = 0;
     let inactive = 0;
@@ -168,17 +160,6 @@ export class MembersListComponent implements OnInit {
           'Error de conexión',
           'No se pudieron cargar los miembros desde el servidor. Revisa tu conexión.'
         );
-      }
-    });
-
-    this.membersService.getMyClub().subscribe({
-      next: (clubData) => {
-        if (clubData) {
-          this.club.set(clubData);
-        }
-      },
-      error: () => {
-        // En caso de error o si no tiene club asignado, se mantiene el fallback por defecto
       }
     });
   }
