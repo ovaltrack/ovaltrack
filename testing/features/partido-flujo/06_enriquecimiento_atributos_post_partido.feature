@@ -21,7 +21,7 @@ Característica: Enriquecimiento táctico de atributos en post-partido (HU 8.5)
       | Penal / Infracción | penaltyType     | offside        |
       | Tarjeta Amarilla   | reason          | high_tackle    |
       | Tarjeta Amarilla   | durationMinutes | 10             |
-      | Scrum              | scrumResult     | stolen         |
+      | Scrum              | scrumResult     | lost_own       |
       | Acarreo (Carry)    | metersGained    | 8              |
       | Acarreo (Carry)    | defendersBeaten | 2              |
       | Pase / Offload     | passType        | offload        |
