@@ -28,11 +28,9 @@
 }
 
 .form-card {
-  background: var(--surface);
   border: 2px solid var(--border-sport);
   border-radius: 18px;
   box-shadow: 0 16px 36px rgba(17, 29, 14, 0.16);
-  overflow: hidden;
 }
 
 .form-card-header {
@@ -57,7 +55,6 @@
 .form-card-title {
   font-family: var(--font-head);
   color: var(--text-primary);
-  font-weight: 800;
   font-size: 1.15rem;
   margin: 0;
 }

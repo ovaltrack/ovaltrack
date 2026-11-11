@@ -266,16 +266,6 @@
 /* ==========================================================================
    Modo Edición (Form Controls)
    ========================================================================== */
-.form-row {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.col-half {
-  flex: 1;
-  min-width: 0;
-}
 
 .form-group {
   margin-bottom: 16px;
@@ -320,9 +310,6 @@
 
 .field-error {
   color: var(--error);
-  font-size: 12px;
-  font-weight: 600;
-  margin-top: 5px;
   display: block;
 }
 

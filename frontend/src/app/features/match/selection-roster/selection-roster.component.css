@@ -144,7 +144,6 @@
   background-color: var(--r-pool-item-hover-bg);
   border-color: var(--r-accent);
   color: var(--r-accent);
-  transform: translateY(-1px);
 }
 
 .btn-invite {
@@ -196,7 +195,6 @@
 }
 
 .status-segment {
-  display: inline-flex;
   gap: 8px;
   flex-wrap: wrap;
 }
@@ -208,13 +206,8 @@
   background: var(--r-tab-inactive-bg);
   border: 1px solid transparent;
   font-family: var(--font-head);
-  font-weight: 700;
   font-size: 13.5px;
   color: var(--r-tab-inactive-text);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  display: inline-flex;
-  align-items: center;
   gap: 8px;
 }
 
@@ -231,7 +224,6 @@
 
 .status-badge-count {
   font-family: var(--font-mono);
-  font-size: 11.5px;
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 999px;
@@ -260,19 +252,14 @@
 }
 
 .status-badge {
-  display: inline-flex;
-  align-items: center;
   gap: 7px;
   padding: 5px 12px;
   border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
 }
 
 .status-badge .dot {
   width: 7px;
   height: 7px;
-  border-radius: 50%;
 }
 
 .status-active {
@@ -308,9 +295,7 @@
 .form-card {
   background: var(--r-surface);
   border: 2px solid var(--r-border);
-  border-radius: 20px;
   box-shadow: 0 16px 36px rgba(15, 35, 15, 0.08), 0 4px 12px rgba(15, 35, 15, 0.04);
-  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -328,7 +313,6 @@
 
 .form-card-title {
   font-family: var(--font-head);
-  font-weight: 800;
   font-size: 19px;
   color: var(--r-text-title);
   margin: 0 0 2px;
@@ -337,7 +321,6 @@
 .form-card-subtitle {
   font-size: 13px;
   color: var(--r-text-muted);
-  margin: 0;
 }
 
 .slot-mode-badge {

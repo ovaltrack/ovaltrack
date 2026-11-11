@@ -22,13 +22,10 @@
   background: linear-gradient(180deg, #edf5e9 0%, #e0ebd8 100%);
   border-bottom: 2px solid rgba(32, 75, 34, 0.2);
   padding: 20px 28px;
-  margin: 0;
 }
 
 .card-title {
   font-family: var(--font-head);
-  font-weight: 800;
-  font-size: 20px;
   color: #111d0e;
   margin: 0;
 }
@@ -257,7 +254,6 @@
 
 /* Empty State */
 .empty-state {
-  text-align: center;
   padding: 48px 24px;
   color: #4a6042;
 }

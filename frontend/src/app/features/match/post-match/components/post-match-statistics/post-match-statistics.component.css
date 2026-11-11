@@ -24,16 +24,13 @@
 }
 
 /* ---------- Cards ---------- */
-.form-card {
-  background: var(--surface); border: 2px solid var(--border-sport);
-  border-radius: var(--radius-xl); box-shadow: var(--shadow-elevation); overflow: hidden;
-}
+.form-card { border: 2px solid var(--border-sport); }
 .form-card-header {
   background: linear-gradient(180deg, var(--surface-header-start) 0%, var(--surface-header-end) 100%);
   border-bottom: 2px solid var(--border-sport-subtle); padding: 20px 28px 16px;
 }
 .form-card-title { margin: 0; font: 800 20px var(--font-head); color: var(--text-primary); }
-.form-card-subtitle { margin: 4px 0 0; font-size: 13.5px; color: var(--text-secondary); }
+.form-card-subtitle { margin: 4px 0 0; color: var(--text-secondary); }
 .form-card-body { padding: 24px 28px; display: flex; flex-direction: column; gap: 24px; }
 
 .stats-layout { display: flex; flex-direction: column; gap: 20px; }
