@@ -640,10 +640,10 @@
 }
 
 /* Modo Oscuro */
-/* Sin jugador: marcador hueco con borde ámbar y tinte suave (sin franjas, que a 6 px parecen cinta de advertencia); la regla base usa !important */
+/* Sin jugador: el mismo rayado del claro (45°, 2 px), pero en ámbar sobre ámbar apagado: sin el contraste de cinta de advertencia; la regla base usa !important */
 :host-context([data-theme="dark"]) .marker.marker-unassigned {
-  background: var(--warning-tint) !important;
-  border: 1.5px solid var(--warning) !important;
+  background: repeating-linear-gradient(45deg, var(--warning), var(--warning) 2px, color-mix(in srgb, var(--warning) 38%, var(--surface-track)) 2px, color-mix(in srgb, var(--warning) 38%, var(--surface-track)) 4px) !important;
+  border: 1px solid var(--warning-border) !important;
 }
 
 :host-context([data-theme="dark"]) .marker.marker-selected {

@@ -101,8 +101,8 @@
 }
 
 :host-context([data-theme="dark"]) .legend-unassigned {
-  background: var(--warning-tint);
-  border-color: var(--warning);
+  background: repeating-linear-gradient(45deg, var(--warning), var(--warning) 2px, color-mix(in srgb, var(--warning) 38%, var(--surface-track)) 2px, color-mix(in srgb, var(--warning) 38%, var(--surface-track)) 4px);
+  border-color: var(--warning-border);
 }
 
 :host-context([data-theme="dark"]) .strip-progress-track {
