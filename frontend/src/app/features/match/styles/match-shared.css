@@ -4,12 +4,6 @@
   display: block;
 }
 
-/* ===== Encabezado: el texto se ajusta y las acciones bajan de línea sin desbordar ===== */
-.hud-brand {
-  flex: 1 1 320px;
-  min-width: 0;
-}
-
 .hud-actions {
   flex-wrap: wrap;
 }
