@@ -62,6 +62,7 @@
   /* Calor de la cancha de zonas: escala secuencial ámbar → naranja (nunca blanco, no se confunde con selección/hover) */
   --zone-heat-low: #fdb022;
   --zone-heat-high: #d9480f;
+  --zone-heat-mix: 62%; /* cuánto del calor se mezcla sobre la cancha */
 
   /* Píldora de marcador del encabezado de análisis post-partido (igual en las tres vistas) */
   --score-pill-bg: #204b22;
@@ -279,9 +280,10 @@
   --score-pill-bg: #204b22;
   --score-pill-fg: #ffffff;
 
-  /* Calor de Zonas: más eventos, más luz (se mezcla al 62 % sobre la cancha) */
-  --zone-heat-low: #8a6a12;
-  --zone-heat-high: #ffb23f;
+  /* Calor de Zonas: más eventos, más luz. Mezcla casi opaca para que los niveles se separen (≈ #4d4517 → #e08a2a) */
+  --zone-heat-low: #544a16;
+  --zone-heat-high: #fb982c;
+  --zone-heat-mix: 88%;
 }
 
 /* ==========================================================================

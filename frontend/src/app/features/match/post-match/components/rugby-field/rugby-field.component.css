@@ -18,6 +18,13 @@
   --pitch-line: rgba(255, 255, 255, 0.3);
 }
 
+/* En oscuro el conteo es un chip hundido con texto claro: se lee sobre cualquier nivel de calor */
+:host-context([data-theme="dark"]) .cell-count {
+  background: var(--surface-sunken);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
 /* En oscuro el chip I1…D6 va hundido con texto claro (--text-primary ya es claro: no sirve de fondo) */
 :host-context([data-theme="dark"]) .cell-label {
   background: color-mix(in srgb, var(--bg) 72%, transparent);
@@ -209,7 +216,7 @@
 .field-cell.has-events {
   background: color-mix(
     in srgb,
-    color-mix(in srgb, var(--zone-heat-high) calc(var(--heat, 0) * 100%), var(--zone-heat-low)) 62%,
+    color-mix(in srgb, var(--zone-heat-high) calc(var(--heat, 0) * 100%), var(--zone-heat-low)) var(--zone-heat-mix),
     transparent
   );
 }
@@ -233,7 +240,7 @@
   height: 12px;
   border-radius: 3px;
   border: 1px solid var(--border-sport-subtle);
-  background: color-mix(in srgb, color-mix(in srgb, var(--zone-heat-high) calc(var(--heat, 0) * 100%), var(--zone-heat-low)) 62%, var(--pitch-a));
+  background: color-mix(in srgb, color-mix(in srgb, var(--zone-heat-high) calc(var(--heat, 0) * 100%), var(--zone-heat-low)) var(--zone-heat-mix), var(--pitch-a));
 }
 
 /* "0" sin el verde del césped: la leyenda no sugiere que cero sea un color de calor */
