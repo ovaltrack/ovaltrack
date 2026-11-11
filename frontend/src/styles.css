@@ -1226,8 +1226,7 @@ button {
   box-shadow: inset 0 0 0 1px var(--btn-outline-border);
   cursor: help;
 }
-.rule-help:hover, .rule-help:focus-visible { background-color: #d6eac0; }
-[data-theme="dark"] .rule-help:hover, [data-theme="dark"] .rule-help:focus-visible { background-color: #d6eac0; }
+.rule-help:hover, .rule-help:focus-visible { background-color: var(--surface-hover); box-shadow: inset 0 0 0 1px var(--text-secondary); }
 .rule-help::after {
   content: attr(data-tip);
   position: absolute;
