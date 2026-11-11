@@ -88,6 +88,9 @@
   --shadow-elevation: 0 16px 36px rgba(15, 35, 15, 0.12), 0 4px 12px rgba(15, 35, 15, 0.06);
   --shadow-button: 0 4px 12px rgba(32, 75, 34, 0.20);
   --shadow-button-hover: 0 6px 16px rgba(32, 75, 34, 0.28);
+  /* Rival: en claro sigue al azul de marca; en oscuro es un azul propio (el rol Admin usa --navy) */
+  --team-rival: var(--navy);
+  --on-navy: #ffffff;
   /* Barra de navegación y overlays (menús, diálogos): en claro son la superficie; en oscuro hundida y elevada */
   --surface-sunken: var(--surface);
   --surface-overlay: var(--surface);
@@ -197,6 +200,7 @@
   --surface-track: #111214;
   --scrim: rgba(0, 0, 0, 0.6);
   --team-rival: #93b4e0;
+  --on-navy: #0f1012;
   --btn-on-board-fg: #204b22;
 
   --border: #2a2c31;
@@ -218,14 +222,15 @@
   --grass-border: rgba(140, 201, 143, 0.55);
   --focus-ring: 0 0 0 3px rgba(140, 201, 143, 0.28);
 
-  --navy: #6a9df8;
-  --navy-tint: rgba(106, 157, 248, 0.15);
-  --navy-border: rgba(106, 157, 248, 0.3);
+  /* Roles: azules desaturados que se distinguen por luminosidad (Admin más claro que Coach) y del rival */
+  --navy: #a9bfdd;
+  --navy-tint: rgba(169, 191, 221, 0.15);
+  --navy-border: rgba(169, 191, 221, 0.3);
 
   --player: #b3b6bc;
   --player-tint: rgba(179, 182, 188, 0.1);
-  --blue-mid: #60a5fa;
-  --blue-mid-tint: rgba(96, 165, 250, 0.15);
+  --blue-mid: #6fa3d8;
+  --blue-mid-tint: rgba(111, 163, 216, 0.15);
 
   /* Estados: ámbar = falta algo por completar, rojo = algo falló o se pierde, verde de estado ≠ verde de acción */
   --error: #f07a72;
