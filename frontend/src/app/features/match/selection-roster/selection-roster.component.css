@@ -58,47 +58,47 @@
 :host-context([data-theme="light"]) {
   --r-bg: transparent;
   background-color: transparent;
-  --r-surface: #ffffff;
-  --r-surface-header-start: #edf5e9;
-  --r-surface-header-end: #e0ebd8;
-  --r-border: rgba(32, 75, 34, 0.28);
-  --r-border-strong: rgba(32, 75, 34, 0.45);
+  --r-surface: var(--surface);
+  --r-surface-header-start: var(--surface-header-start);
+  --r-surface-header-end: var(--surface-header-end);
+  --r-border: var(--border-sport);
+  --r-border-strong: var(--border-strong);
   
-  --r-text-title: #111d0e;
-  --r-text-body: #3b4e33;
-  --r-text-muted: #6b7a65;
+  --r-text-title: var(--text-primary);
+  --r-text-body: var(--text-secondary);
+  --r-text-muted: var(--text-muted);
   
   --r-accent: #204b22;
   --r-accent-hover: #163618;
   --r-accent-fg: #ffffff;
-  --r-accent-border: rgba(32, 75, 34, 0.3);
+  --r-accent-border: var(--grass-border);
 
-  --r-btn-outline-bg: #ffffff;
-  --r-btn-outline-border: rgba(32, 75, 34, 0.25);
-  --r-btn-outline-fg: #204b22;
+  --r-btn-outline-bg: var(--btn-outline-bg);
+  --r-btn-outline-border: var(--btn-outline-border);
+  --r-btn-outline-fg: var(--btn-outline-fg);
 
-  --r-slot-empty-bg: #f8faf6;
-  --r-slot-empty-border: rgba(32, 75, 34, 0.28);
-  --r-slot-empty-text: #7a8c74;
-  --r-slot-filled-bg: #f2f7ef;
+  --r-slot-empty-bg: var(--surface-alt);
+  --r-slot-empty-border: var(--border-sport);
+  --r-slot-empty-text: var(--text-muted);
+  --r-slot-filled-bg: var(--grass-tint-strong);
   --r-slot-filled-border: #204b22;
   --r-slot-active-glow: 0 0 14px rgba(32, 75, 34, 0.25);
 
-  --r-toolbar-bg: #eaf3e6;
+  --r-toolbar-bg: var(--surface-toolbar);
   --r-tab-inactive-bg: transparent;
-  --r-tab-inactive-text: #4a6042;
-  --r-count-bg: #ffffff;
+  --r-tab-inactive-text: var(--text-secondary);
+  --r-count-bg: var(--surface);
   --r-count-text: #204b22;
 
-  --r-pool-item-bg: #ffffff;
-  --r-pool-item-hover-bg: #f2f7ef;
-  --r-pool-item-assigned-bg: #eef1e7;
+  --r-pool-item-bg: var(--surface);
+  --r-pool-item-hover-bg: var(--surface-hover);
+  --r-pool-item-assigned-bg: var(--surface-alt);
   --r-avatar-bg: #204b22;
   --r-avatar-border: #2a5f2e;
-  --r-avatar-fg: #d6f2c4;
+  --r-avatar-fg: var(--brand-signature);
 
-  --r-footer-bg: #ffffff;
-  --r-footer-shadow: 0 -8px 30px rgba(15, 35, 15, 0.12);
+  --r-footer-bg: var(--surface);
+  --r-footer-shadow: 0 -8px 30px rgba(16, 24, 16, 0.12);
 }
 
 .roster-page {

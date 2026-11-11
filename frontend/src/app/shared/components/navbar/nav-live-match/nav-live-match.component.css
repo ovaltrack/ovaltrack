@@ -34,7 +34,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #4ade80;
+  background: var(--brand-signature);
   animation: live-pulse 1.6s ease-in-out infinite;
 }
 
