@@ -57,7 +57,7 @@ app-zone-territory-grid { margin-bottom: 16px; }
 
 /* ---------- Estados ---------- */
 .btn-outline {
-  height: 44px; padding: 0 20px; border-radius: 10px; background: #fff; cursor: pointer;
+  height: 44px; padding: 0 20px; border-radius: 10px; background: var(--btn-outline-bg); cursor: pointer;
   border: 1px solid var(--btn-outline-border); color: var(--btn-outline-fg); font-weight: 600;
 }
 
