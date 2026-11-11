@@ -190,7 +190,7 @@
 /* Modo Oscuro */
 
 :host-context([data-theme="dark"]) .match-score-pill {
-  border: 1px solid var(--border-sport);
+  border: 1px solid var(--btn-primary-bg);
 }
 
 :host-context([data-theme="dark"]) .score-delta-badge {
