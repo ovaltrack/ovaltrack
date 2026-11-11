@@ -111,16 +111,16 @@
 }
 
 :host-context([data-theme="light"]) .selector-title {
-  color: #111d0e;
+  color: var(--text-primary);
 }
 
 :host-context([data-theme="light"]) .selector-subtitle {
-  color: #4a6042;
+  color: var(--text-secondary);
 }
 
 :host-context([data-theme="light"]) .selector-card {
   background: #ffffff;
-  border: 2px solid rgba(32, 75, 34, 0.28);
+  border: 2px solid var(--border-sport);
   box-shadow: 0 16px 36px rgba(15, 35, 15, 0.08);
 }
 
@@ -130,17 +130,17 @@
 }
 
 :host-context([data-theme="light"]) .card-icon-wrapper {
-  background-color: #edf5e9;
-  border: 1px solid rgba(32, 75, 34, 0.25);
+  background-color: var(--surface-alt);
+  border: 1px solid var(--border-sport);
   color: #204b22;
 }
 
 :host-context([data-theme="light"]) .card-title {
-  color: #111d0e;
+  color: var(--text-primary);
 }
 
 :host-context([data-theme="light"]) .card-desc {
-  color: #4a6042;
+  color: var(--text-secondary);
 }
 
 :host-context([data-theme="light"]) .card-action {
@@ -176,7 +176,7 @@
 
 /* Modo claro */
 :host-context([data-theme="light"]) .return-link-item {
-  color: #4a6042;
+  color: var(--text-secondary);
 }
 
 :host-context([data-theme="light"]) .return-link-item:hover {
