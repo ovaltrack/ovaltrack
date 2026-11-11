@@ -989,3 +989,9 @@
   color: var(--text-muted);
 }
 
+/* Modo oscuro: «sin asignar» en ámbar de advertencia */
+:host-context([data-theme="dark"]) .item-player-control .custom-assign-select.is-unassigned {
+  border-color: var(--warning);
+  background-color: var(--warning-tint);
+  color: var(--warning);
+}

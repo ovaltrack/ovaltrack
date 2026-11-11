@@ -527,3 +527,9 @@
   justify-content: flex-end;
   gap: 8px;
 }
+
+/* Modo oscuro: hover del selector «sin asignar» en ámbar de advertencia */
+:host-context([data-theme="dark"]) .unassigned-inline-select:hover:not(:disabled) {
+  background-color: var(--warning-tint);
+  border-color: var(--warning);
+}

@@ -649,3 +649,10 @@
 :host-context([data-theme="dark"]) .marker.marker-selected {
   box-shadow: 0 0 0 1px #151d14, 0 0 0 3px var(--grass), 0 2px 8px rgba(0, 0, 0, 0.5);
 }
+
+/* Modo oscuro: el filtro «solo sin jugador» activo va en ámbar de advertencia */
+:host-context([data-theme="dark"]) .filter-pill-btn.unassigned-pill.active {
+  background: var(--warning-tint);
+  border-color: var(--warning);
+  color: var(--warning);
+}
