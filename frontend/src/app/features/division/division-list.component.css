@@ -41,7 +41,7 @@
   border-radius: 12px;
   background: #eaf3e6;
   border: 1.5px solid rgba(32, 75, 34, 0.22);
-  color: #204b22;
+  color: var(--btn-primary-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -73,11 +73,11 @@
   font-family: var(--font-mono);
   font-weight: 700;
   font-size: 12px;
-  background: #edf5e9;
+  background: var(--surface-header-start);
   border: 1px solid rgba(32, 75, 34, 0.20);
   padding: 2px 8px;
   border-radius: 6px;
-  color: #204b22;
+  color: var(--btn-primary-bg);
 }
 
 .meta-dot {
@@ -191,7 +191,6 @@
 :host-context([data-theme="dark"]) .division-badge-icon {
   background: #162238;
   border-color: #2a3c5a;
-  color: #a3e635;
 }
 
 :host-context([data-theme="dark"]) .division-meta {
@@ -199,9 +198,7 @@
 }
 
 :host-context([data-theme="dark"]) .meta-tag {
-  background: #162238;
   border-color: #2a3c5a;
-  color: #a3e635;
 }
 
 :host-context([data-theme="dark"]) .meta-gender {

@@ -42,9 +42,9 @@
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background-color: #edf5e9;
+  background-color: var(--surface-header-start);
   border: 1.5px solid rgba(32, 75, 34, 0.24);
-  color: #204b22;
+  color: var(--btn-primary-bg);
   font-family: var(--font-head);
   font-weight: 800;
   font-size: 18px;
@@ -197,9 +197,7 @@
 }
 
 :host-context([data-theme="dark"]) .division-badge-icon {
-  background-color: #162238;
   border-color: #2a3c5a;
-  color: #a3e635;
 }
 
 :host-context([data-theme="dark"]) .division-meta,

@@ -104,9 +104,9 @@
   height: 36px;
   padding: 0 8px;
   border-radius: 10px;
-  background: #edf5e9;
+  background: var(--surface-header-start);
   border: 1.5px solid rgba(32, 75, 34, 0.22);
-  color: #204b22;
+  color: var(--btn-primary-bg);
   font-family: var(--font-mono);
   font-weight: 800;
   font-size: 14px;
@@ -125,7 +125,7 @@
   align-items: center;
   padding: 5px 12px;
   border-radius: 8px;
-  background: #edf5e9;
+  background: var(--surface-header-start);
   border: 1.5px solid rgba(32, 75, 34, 0.2);
   font-size: 12.5px;
   font-weight: 700;
@@ -333,9 +333,7 @@
 }
 
 :host-context([data-theme="dark"]) .jersey-number {
-  background: #162238;
   border-color: #2a3c5a;
-  color: #a3e635;
 }
 
 :host-context([data-theme="dark"]) .player-name {
@@ -343,7 +341,6 @@
 }
 
 :host-context([data-theme="dark"]) .position-badge {
-  background: #162238;
   border-color: #2a3c5a;
   color: #cbd5e1;
 }
