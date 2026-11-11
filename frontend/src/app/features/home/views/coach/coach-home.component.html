@@ -62,15 +62,15 @@
       <app-home-tile class="s4" label="Pendientes" title="Antes del partido" [state]="store.pendingState()" (retry)="store.retry('pending')">
         <ul class="pending">
           @for (item of pending(); track item.kind) {
-            <li class="pending-item">
-              <div class="pending-text">
+            <li class="inbox-item">
+              <div class="inbox-text">
                 <strong>{{ item.text }}</strong>
                 <span>{{ item.detail }}</span>
               </div>
               @if (store.online()) {
-                <a class="btn btn-outline pending-btn" [routerLink]="item.route" [attr.aria-label]="item.actionLabel + ': ' + item.text + ', ' + item.detail">{{ item.actionLabel }}</a>
+                <a class="btn btn-outline inbox-btn" [routerLink]="item.route" [attr.aria-label]="item.actionLabel + ': ' + item.text + ', ' + item.detail">{{ item.actionLabel }}</a>
               } @else {
-                <button type="button" class="btn btn-outline pending-btn" disabled [attr.aria-label]="item.actionLabel + ': ' + item.text + ', requiere conexión'">Requiere conexión</button>
+                <button type="button" class="btn btn-outline inbox-btn" disabled [attr.aria-label]="item.actionLabel + ': ' + item.text + ', requiere conexión'">Requiere conexión</button>
               }
             </li>
           }
