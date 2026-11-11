@@ -161,6 +161,52 @@ import { Member, getMemberDisplayName } from '../../types/members.types';
       opacity: 0.6;
       cursor: not-allowed;
     }
+
+    /* Modo oscuro: tarjeta sobre la superficie elevada */
+    :host-context([data-theme="dark"]) .modal-backdrop {
+      background: var(--scrim);
+    }
+
+    :host-context([data-theme="dark"]) .modal-card {
+      background: var(--surface-overlay);
+      border-color: var(--border-strong);
+      box-shadow: var(--shadow-overlay);
+    }
+
+    :host-context([data-theme="dark"]) .modal-title {
+      color: var(--error);
+    }
+
+    :host-context([data-theme="dark"]) .close-btn:hover {
+      background: var(--surface-hover);
+    }
+
+    :host-context([data-theme="dark"]) .modal-note {
+      background: var(--error-tint);
+      border-left-color: var(--error);
+      color: var(--error);
+    }
+
+    :host-context([data-theme="dark"]) .modal-footer {
+      background: var(--surface-alt);
+    }
+
+    :host-context([data-theme="dark"]) .btn-ghost {
+      border-color: var(--border-strong);
+    }
+
+    :host-context([data-theme="dark"]) .btn-ghost:hover:not(:disabled) {
+      background: var(--surface-hover);
+    }
+
+    :host-context([data-theme="dark"]) .btn-danger {
+      background-color: var(--error-solid);
+    }
+
+    :host-context([data-theme="dark"]) .btn-danger:hover:not(:disabled) {
+      background-color: var(--error);
+      color: var(--bg);
+    }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

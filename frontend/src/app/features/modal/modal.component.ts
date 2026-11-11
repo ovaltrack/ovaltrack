@@ -132,6 +132,57 @@ import { Component, EventEmitter, Input, Output, ChangeDetectionStrategy } from 
       cursor: not-allowed;
       opacity: 0.6;
     }
+
+    /* Modo oscuro: tarjeta sobre la superficie elevada */
+    :host-context([data-theme="dark"]) .modal-backdrop {
+      background: var(--scrim);
+    }
+
+    :host-context([data-theme="dark"]) .modal-card {
+      background: var(--surface-overlay);
+      border-color: var(--border-strong);
+      box-shadow: var(--shadow-overlay);
+    }
+
+    :host-context([data-theme="dark"]) .modal-header {
+      border-bottom-color: var(--border);
+    }
+
+    :host-context([data-theme="dark"]) .modal-footer {
+      background: var(--surface-alt);
+      border-top-color: var(--border);
+    }
+
+    :host-context([data-theme="dark"]) .modal-title {
+      color: var(--error);
+    }
+
+    :host-context([data-theme="dark"]) .close-btn {
+      color: var(--text-muted);
+    }
+
+    :host-context([data-theme="dark"]) .close-btn:hover,
+    :host-context([data-theme="dark"]) .close-btn:focus-visible {
+      background: var(--surface-hover);
+      color: var(--text-primary);
+    }
+
+    :host-context([data-theme="dark"]) .modal-body {
+      color: var(--text-primary);
+    }
+
+    :host-context([data-theme="dark"]) .modal-description {
+      color: var(--text-muted);
+    }
+
+    :host-context([data-theme="dark"]) .btn-ghost {
+      border-color: var(--border-strong);
+      color: var(--text-secondary);
+    }
+
+    :host-context([data-theme="dark"]) .btn-confirm {
+      background: var(--error-solid);
+    }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
