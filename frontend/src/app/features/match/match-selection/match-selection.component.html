@@ -35,9 +35,9 @@
           #divisionSelect
           id="divisionSelect"
           class="form-control custom-input dropdown-division"
-          [value]="selectedDivisionId"
+          [value]="selectedDivisionId()"
           (change)="onDivisionChange(divisionSelect.value)">
-          <option value="" disabled [selected]="!selectedDivisionId">Selecciona una división...</option>
+          <option value="" disabled [selected]="!selectedDivisionId()">Selecciona una división...</option>
           @for (div of userDivisions; track div.id) {
             <option [value]="div.id">{{ div.name }}</option>
           }
@@ -60,8 +60,8 @@
           type="button"
           class="status-tab"
           role="tab"
-          [attr.aria-selected]="activeFilter === filter"
-          [class.active]="activeFilter === filter"
+          [attr.aria-selected]="activeFilter() === filter"
+          [class.active]="activeFilter() === filter"
           (click)="onFilterClick(filter, $event)">
           <span>{{ statusLabels[filter] }}</span>
         </button>
@@ -71,17 +71,17 @@
   </section>
 
   <!-- 1. BOTONES: Solo se muestran si el filtro activo es 'finished' -->
-  @if (activeFilter === 'finished') {
+  @if (activeFilter() === 'finished') {
     <div class="view-toggle-row">
-      <button type="button" class="btn btn-outline" (click)="isCalendarView = !isCalendarView">
-        {{ isCalendarView ? 'Ver Calendario' : 'Ver como Tarjetas' }}
+      <button type="button" class="btn btn-outline" (click)="isCalendarView.set(!isCalendarView())">
+        {{ isCalendarView() ? 'Ver Calendario' : 'Ver como Tarjetas' }}
       </button>
     </div>
   }
 
   <!-- 2. VISTA CALENDARIO: Usamos [hidden] en lugar de @if para no perder el estado del mes -->
   <div class="calendar-wrapper"
-       [hidden]="activeFilter === 'finished' && isCalendarView"
+       [hidden]="activeFilter() === 'finished' && isCalendarView()"
        (click)="onCalendarClick($event)">
        
     <full-calendar #calendar [options]="calendarOptions"></full-calendar>
@@ -283,7 +283,7 @@
 
 
   <!-- 3. VISTA TARJETAS: Solo se muestra si el filtro es 'finished' Y se activó el modo tarjetas -->
-  @if (activeFilter === 'finished' && isCalendarView) {
+  @if (activeFilter() === 'finished' && isCalendarView()) {
     <div class="match-grid">
       @for (match of visibleMatches; track match.id) {
         <article class="match-card-shell">

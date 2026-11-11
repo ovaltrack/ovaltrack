@@ -28,6 +28,11 @@ import interactionPlugin from '@fullcalendar/interaction';
 import multiMonthPlugin from '@fullcalendar/multimonth';
 import { FullCalendarComponent } from '@fullcalendar/angular';
 import { LoadingGate } from '../../../shared/utils/loading-gate';
+import { persistedSignal } from '../../../shared/utils/persisted-signal';
+
+const isMatchFilter = (value: unknown): value is MatchFilter => MATCH_FILTERS.includes(value as MatchFilter);
+const isString = (value: unknown): value is string => typeof value === 'string';
+const isBoolean = (value: unknown): value is boolean => typeof value === 'boolean';
 
 /**
  * Pantalla de selección y alta de partidos.
@@ -65,10 +70,11 @@ export class MatchSelectComponent implements OnInit, OnDestroy {
 
   matches: Match[] = [];
   userDivisions: any[] = [];
-  selectedDivisionId: string = '';
+  /** División elegida; se recuerda en la pestaña (recarga o volver a la pantalla) y se valida al cargar las divisiones. */
+  readonly selectedDivisionId = persistedSignal<string>('match-selection.division', '', { isValid: isString });
   availableOpponents: Opponent[] = [];
   /** Filtro actualmente seleccionado en el control segmentado. */
-  activeFilter: MatchFilter = 'all';
+  readonly activeFilter = persistedSignal<MatchFilter>('match-selection.filter', 'all', { isValid: isMatchFilter });
 
   /** Si el panel de alta de partido está abierto. */
   isCreateOpen = false;
@@ -91,7 +97,7 @@ export class MatchSelectComponent implements OnInit, OnDestroy {
   isPickerOpen = false;
   isDayModalOpen = false;
   isYearView = false;
-  isCalendarView = false;
+  readonly isCalendarView = persistedSignal<boolean>('match-selection.cards', false, { isValid: isBoolean });
   pickerYear = new Date().getFullYear();
   readonly monthsShort = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   selectedMonth: string = '';
@@ -201,21 +207,21 @@ export class MatchSelectComponent implements OnInit, OnDestroy {
   get visibleMatches(): Match[] {
     let activeMatches = this.matches;
 
-    if (this.activeFilter === 'all') {
+    if (this.activeFilter() === 'all') {
       return activeMatches.filter(match => match.status !== 'cancelled');
     }
 
-    if (this.activeFilter === 'in_progress') {
+    if (this.activeFilter() === 'in_progress') {
       return activeMatches.filter(match => match.status === 'in_progress' || match.status === 'halftime');
     }
 
-    return activeMatches.filter(match => match.status === this.activeFilter);
+    return activeMatches.filter(match => match.status === this.activeFilter());
   }
 
   get canCreateMatch(): boolean {
     return this.draft.date.trim().length > 0 
         && this.draft.opponentId.trim().length > 0 
-        && this.selectedDivisionId.length > 0;
+        && this.selectedDivisionId().length > 0;
   }
 
   /** Elige el estado y, si la fila de estados scrollea (pantallas angostas), deja visible la pestaña tocada. */
@@ -228,10 +234,10 @@ export class MatchSelectComponent implements OnInit, OnDestroy {
   }
 
   setFilter(filter: MatchFilter): void {
-    this.activeFilter = filter;
+    this.activeFilter.set(filter);
     
     if (filter !== 'finished') {
-      this.isCalendarView = false;
+      this.isCalendarView.set(false);
     }
     
     this.actualizarEventosCalendario(this.visibleMatches);
@@ -250,7 +256,7 @@ export class MatchSelectComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.matchService.createMatch(this.draft, this.selectedDivisionId).subscribe({
+    this.matchService.createMatch(this.draft, this.selectedDivisionId()).subscribe({
       next: newMatch => {
         this.matches = [newMatch, ...this.matches];
         this.actualizarEventosCalendario(this.visibleMatches);
@@ -449,9 +455,11 @@ export class MatchSelectComponent implements OnInit, OnDestroy {
         this.userDivisions = divisions;
 
         if (this.userDivisions.length > 0) {
-          this.selectedDivisionId = this.userDivisions[0].id;
-          this.loadMatchesForDivision(this.selectedDivisionId);
-          
+          const savedDivision = this.userDivisions.find(division => division.id === this.selectedDivisionId());
+          this.selectedDivisionId.set(savedDivision?.id ?? this.userDivisions[0].id);
+          this.loadMatchesForDivision(this.selectedDivisionId());
+        } else {
+          this.selectedDivisionId.set('');
         }
       });
 
@@ -461,7 +469,7 @@ export class MatchSelectComponent implements OnInit, OnDestroy {
   }
 
   onDivisionChange(divisionId: string) {
-    this.selectedDivisionId = divisionId;
+    this.selectedDivisionId.set(divisionId);
     this.loadMatchesForDivision(divisionId);
   }
 
@@ -704,12 +712,12 @@ export class MatchSelectComponent implements OnInit, OnDestroy {
   }
 
   goToDivisionStatistics() {
-    if (!this.selectedDivisionId) {
+    if (!this.selectedDivisionId()) {
       this.toastService.show('warning', 'Seleccioná una división para ver su reporte.', 'División requerida');
       return;
     }
 
-    this.router.navigate(['/division-statistics', this.selectedDivisionId]);
+    this.router.navigate(['/division-statistics', this.selectedDivisionId()]);
   }
 
   getDetailedStatusLabel(match: Match): string {
