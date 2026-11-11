@@ -198,9 +198,6 @@
   --scrim: rgba(0, 0, 0, 0.6);
   --team-rival: #93b4e0;
   --btn-on-board-fg: #204b22;
-  /* Tablero de Inicio: valor propio, para que cambiar --grass o --zone-heat-low no lo arrastre (DESIGN_SYSTEM §9.1) */
-  --on-board-accent: #a3e635;
-  --board-chip-ok-bg: rgba(163, 230, 53, 0.25);
 
   --border: #2a2c31;
   --border-strong: #7a7e86;
