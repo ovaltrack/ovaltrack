@@ -54,6 +54,17 @@ describe('HomeBoardComponent', () => {
     expect(el().querySelector('[role="timer"]')?.textContent?.replace(/\s/g, '')).toBe('023015');
   });
 
+  it('con un partido en curso el administrador ve un botón blanco para ir al listado, no a la captura', () => {
+    const viewLive: PrimaryAction = { kind: 'view-live-match', label: 'Ver partidos', route: '/match-selection', target: 'board', requiresConnection: true };
+    render({
+      kind: 'club-day', title: 'Hoy en el club', label: 'Hoy · vie 6 nov · 1 partido', nowMinute: 18 * 60,
+      items: [{ id: 'm1', startMinute: 17 * 60, endMinute: 19 * 60, timeLabel: '17:00', title: 'Superior', detail: 'En curso', status: 'live' }]
+    }, viewLive);
+    const button = el().querySelector<HTMLAnchorElement>('a.btn-on-board');
+    expect(button?.textContent?.trim()).toBe('Ver partidos');
+    expect(button?.getAttribute('href')).toBe('/match-selection');
+  });
+
   it('con el partido en otro dispositivo no ofrece capturar', () => {
     render({ kind: 'live-elsewhere', matchId: 'm1', opponent: 'Trelew RC', ownScore: 7, opponentScore: 3, lastDataAt: '14:05' }, null);
     expect(el().querySelectorAll('.btn-on-board').length).toBe(0);
