@@ -83,10 +83,22 @@ Los tokens oficiales del sistema corresponden a la identidad visual **Sport Pro 
   --shadow-button: 0 4px 12px rgba(32, 75, 34, 0.20);
   --shadow-button-hover: 0 6px 16px rgba(32, 75, 34, 0.28);
 
-  /* Compartidos con el modo oscuro (§5.1): en claro valen la superficie y la sombra de siempre */
+  /* Compartidos con el modo oscuro (§5.1): en claro valen lo de siempre */
   --surface-sunken: var(--surface);
   --surface-overlay: var(--surface);
   --shadow-navbar: 0 4px 14px rgba(20, 45, 20, 0.08);
+  --team-rival: var(--navy);          /* rival en Estadísticas; en oscuro es un azul propio */
+  --on-navy: #ffffff;                 /* texto sobre --navy */
+  --zone-heat-mix: 62%;               /* cuánto del calor se mezcla sobre la cancha */
+  /* Colores de jugadas (línea de tiempo y tabla de post-partido), §5.6 */
+  --event-try: #2e7d32;
+  --event-kick: #7c3aed;
+  --event-tackle-missed: #2563eb;
+  --event-tackle: #16324f;
+  --event-penalty: #b42318;
+  --event-set-piece: #d96a0a;
+  --event-turnover: #d96a0a;
+  --event-default: #204b22;
 }
 ```
 
@@ -316,7 +328,7 @@ El modo oscuro es la segunda cara de la misma identidad, no un tema aparte: **gr
 
 - **Todo vive en tokens.** Los valores están en el bloque `[data-theme="dark"]` de `frontend/src/styles.css`. Un componente nunca escribe un color oscuro a mano: usa `var(--token)`. Los pocos literales que quedan en reglas oscuras son deliberados (sombra de la hoja inferior, halo del marcador seleccionado, verde de marca de la mini cancha y de la pelota, colores locales de la cancha nocturna).
 - **Token solo oscuro:** se define únicamente en `[data-theme="dark"]` y se usa solo en reglas oscuras (`--canvas-image`, `--veil`, `--surface-track`, `--scrim`, `--team-rival`, `--focus-ring`, `--shadow-overlay`, `--shadow-elevation-hover`, `--error-solid`, `--success-border`).
-- **Token compartido:** si lo usa una regla que aplica en los dos temas, se define también en `:root` con el valor que ya producía el claro (`--surface-sunken`, `--surface-overlay`, `--shadow-navbar`). Así el claro no cambia.
+- **Token compartido:** si lo usa una regla que aplica en los dos temas, se define también en `:root` con el valor que ya producía el claro (`--surface-sunken`, `--surface-overlay`, `--shadow-navbar`, `--team-rival`, `--on-navy`, `--zone-heat-mix`, `--event-*`). Así el claro no cambia.
 - Los nombres de los tokens existentes no cambian: solo cambian sus valores en oscuro.
 
 ### 5.2 Neutros y profundidad
@@ -350,7 +362,7 @@ Cada nivel es más claro que el anterior: lo que está más cerca del usuario re
 - Selección: `--grass-tint-strong` (`#223f26`) de fondo (filtro activo, fila seleccionada, módulo activo del navbar) y `--grass-border` (`rgba(140,201,143,.55)`). `--grass-tint` (`rgba(140,201,143,.15)`) para fondos suaves.
 - Foco: borde `--grass` más `--focus-ring` (`0 0 0 3px rgba(140,201,143,.28)`).
 - El botón outline es neutro: fondo `--btn-outline-bg`, borde `--btn-outline-border`, texto `--btn-outline-fg` y hover con borde `--text-secondary`; no lleva verde.
-- El tablero de Inicio (§9) es igual en los dos temas: sus tokens tienen valor propio y no siguen a `--grass`.
+- El tablero de Inicio (§9): el fondo es igual en los dos temas; el acento (`--on-board-accent`) es `#91da40` en claro y `#8cc98f` en oscuro, y los tokens del tablero tienen valor propio (no siguen a `--grass`).
 
 ### 5.4 Equipos y estados
 
@@ -368,7 +380,7 @@ Reglas de uso:
 - **Verde de estado ≠ verde de acción ≠ verde de marca.** El de estado nunca va en un botón.
 - **Información** es neutra (`--text-secondary` sobre `--veil`): el azul es del rival.
 - **Siempre ícono + texto:** el color solo no alcanza.
-- **Roles de usuario:** `--navy` pasa a `#6a9df8` (sobre su tinte daba 4,03 : 1); `--blue-mid` `#60a5fa`; `--player` `#b3b6bc`.
+- **Roles de usuario** (azules desaturados, distintos por luminosidad y no solo por tono): Admin `--navy` `#a9bfdd`, Coach `--blue-mid` `#6fa3d8`, Jugador `--player` `#b3b6bc`. El rival no usa `--navy`: usa `--team-rival` (`#93b4e0`), que en claro sigue valiendo `--navy`. El texto sobre un relleno `--navy` usa `--on-navy` (`#0f1012` en oscuro).
 
 ### 5.5 Captura en vivo
 
@@ -377,13 +389,30 @@ Reglas de uso:
 - **Los botones de jugadas no cambian.** Su color sale de una rotación por posición (`eventVariant()`), no de la categoría ni del catálogo, y es el mismo en claro y oscuro. Pintarlos por categoría sería una función nueva.
 - La pantalla sigue a pantalla completa, sin navbar (§6, regla 5).
 
-### 5.6 Zonas
+### 5.6 Jugadas por categoría (post-partido)
+
+La línea de tiempo y la tabla de Eventos colorean cada jugada con `resolveEventColor()` (`post-match/utils/match-review.utils.ts`), que devuelve un token `--event-*` según el nombre del evento. En claro cada token vale el color de siempre; en oscuro toma la variante clara de su categoría, legible sobre el carril (≥ 7 : 1).
+
+| Token | Reglas de nombre | Claro | Oscuro | Categoría |
+|---|---|---|---|---|
+| `--event-try`, `--event-kick` | try; drop, conversión | `#2e7d32`, `#7c3aed` | `#e2b54a` | Puntuación |
+| `--event-tackle`, `--event-tackle-missed` | tackle; tackle fallado | `#16324f`, `#2563eb` | `#72c6d1` | Defensa |
+| `--event-penalty` | penal, infracción, tarjetas | `#b42318` | `#a7adbb` | Neutro / disciplina |
+| `--event-set-piece` | line, scrum | `#d96a0a` | `#79a6ec` | Juego fijo |
+| `--event-turnover` | turnover | `#d96a0a` | `#e9925a` | Cambio de posesión |
+| `--event-default` | el resto | `#204b22` | `#74c785` | Ataque |
+
+El rayado «sin jugador» es ámbar de advertencia sobre el carril (`--warning` y `--surface-track`), en la línea de tiempo y en la leyenda del KPI; el contador usa `--warning`.
+
+### 5.7 Zonas
 
 - **Cancha:** `--pitch-a` `#18241b`, `--pitch-b` `#1c2a20`, `--pitch-ingoal` `#142018` y líneas `rgba(255,255,255,.30)`, definidos en `rugby-field`. El chip de zona (I1…D6) es un chip hundido (`--bg` al 72 %) con `--text-primary`.
-- **Calor:** `--zone-heat-low` `#8a6a12` → `--zone-heat-high` `#ffb23f`. La escala se interpola entre los dos tokens y se mezcla al 62 % sobre la cancha: más eventos, más luz. Es una rampa, no cinco tonos fijos.
+- **Calor:** `--zone-heat-low` `#544a16` → `--zone-heat-high` `#fb982c`, mezclados con `--zone-heat-mix` (62 % en claro, 88 % en oscuro). Los cuatro niveles con color quedan en `#4d4517`, `#7e5c1d`, `#af7324` y `#e08a2a`: más eventos, más luz, y cada escalón se separa 1,48 : 1 o más.
+- **Conteo:** chip hundido (`--surface-sunken`, borde `--border-strong`, texto `--text-primary`), legible sobre cualquier nivel.
+- **Tramos asignados:** en oscuro, fondo `--score-pill-bg` (`#204b22`), borde `--btn-primary-bg` y texto `--text-primary`; no forman una pared brillante ni compiten con el botón primario. La selección usa el acento (`--grass`). Los controles del panel (Lateral, − +, minutos) usan superficies del sistema.
 - Los botones `.btn-outline` locales usan `--btn-outline-bg` para no quedar blancos en oscuro.
 
-### 5.7 Contrastes (WCAG 2.x, calculados)
+### 5.8 Contrastes (WCAG 2.x, calculados)
 
 Mínimos: 4,5 : 1 para texto y 3 : 1 para bordes de controles.
 
@@ -397,19 +426,24 @@ Mínimos: 4,5 : 1 para texto y 3 : 1 para bordes de controles.
 | Blanco sobre `--btn-primary-bg` / hover / `--error-solid` / `#204b22` | 5,41 / 4,74 / 6,05 / 10,04 |
 | `--success` / `--warning` / `--error` sobre superficie | 8,26 / 9,46 / 6,54 |
 | `--team-rival` sobre superficie | 8,32 |
-| `--navy` sobre superficie | 6,59 |
+| `--navy` (Admin) / `--blue-mid` (Coach) sobre superficie y sobre su tinte | 9,45 y 6,95 / 6,68 y 5,25 |
+| `--event-*` (seis categorías) sobre el carril | 7,57 a 9,77 |
+| `--on-navy` sobre `--navy` | 10,14 |
+| `#ededef` sobre un tramo `#204b22`; borde `--btn-primary-bg` sobre superficie | 8,59; 3,28 |
+| `--on-board-accent` `#8cc98f` sobre `#204b22` | 5,20 |
 | `#ededef` sobre el fondo de posesión propia / rival / neutra | 6,24 / 8,24 / 9,54 |
 | `#204b22` como texto sobre superficie | **1,77: prohibido** |
 
 `--text-muted` sobre overlay pasa con 4,5009 : 1, sin margen: no bajar su valor.
 
-### 5.8 Límites conocidos
+### 5.9 Límites conocidos
 
 - `--border-strong` (`#7a7e86`) también lo usan divisores y marcas finas de la línea de tiempo y de las estadísticas: se ven más claros que en el diseño anterior.
 - El pulso de pausa de Captura en vivo usa `color-mix(..., --bg)` sin `var()` y no mezcla; arreglarlo cambiaría el claro.
+- Los colores de jugadas dependen del nombre del evento (no de su categoría del catálogo): «Kick-off», «Maul» y «Quick play» caen en `--event-default` (Ataque), y Tackle completado y fallado comparten color en oscuro (se distinguen por carril). Pasar a `groupName` cambiaría el claro.
 - Fuera de alcance por ser funciones nuevas: tarjetas con degradé y borde superior iluminado, el chip «Sin asignar» con borde punteado y el rayado «sin jugador», la tarjeta de detalle de zona, botones sobre el tablero e íconos en los avisos.
 
-### 5.9 Cómo agregar o cambiar un color oscuro
+### 5.10 Cómo agregar o cambiar un color oscuro
 
 1. Buscá un token que ya tenga ese rol. Si existe, usalo: no hace falta un override oscuro.
 2. Si el rol no existe, creá un token en `[data-theme="dark"]`. Si lo va a usar una regla que también aplica en claro, definilo en `:root` con el valor claro actual.
@@ -518,7 +552,7 @@ La pantalla de post-partido está estructurada como una estación de trabajo de 
    - Compartido por Eventos (`/post-match/:id`), Zonas (`/zones`) y Estadísticas (`/statistics`), que son rutas hijas del shell.
    - Etiqueta fija `ANÁLISIS POST-PARTIDO` (volver al inicio se hace desde el logo de la barra), píldora de marcador con `--score-pill-bg` / `--score-pill-fg` (mono tabular) y línea inferior siempre `Hora de inicio HH:MM:SS`.
    - Burbuja flotante animada `.score-delta-badge` (`+5`), con `scoreDeltaPop` y temporizador de 3 segundos (solo cuando Eventos la informa).
-   - Selector de vistas en la misma fila del título: `routerLink` + `routerLinkActive` (`aria-current="page"`), contenedor gris claro y vista activa **blanca elevada** (el verde queda para filtros). Entre 960px y 1279px comparte fila con el partido (si no entra, baja a su propia fila); con < 960px baja a su propia fila con tres partes iguales.
+   - Selector de vistas en la misma fila del título: `routerLink` + `routerLinkActive` (`aria-current="page"`), contenedor gris claro y vista activa **blanca elevada** (en oscuro, `--surface-overlay` con `--text-primary`; el verde queda para filtros). Entre 960px y 1279px comparte fila con el partido (si no entra, baja a su propia fila); con < 960px baja a su propia fila con tres partes iguales.
    - El encabezado no tiene acciones propias de una vista: el selector queda siempre pegado al borde derecho. Lo que es de una vista vive en la barra de esa vista (p. ej. «Agregar evento», en la barra de Eventos).
 2. **Tira Condensada de KPIs (`PostMatchKpiStripComponent`):**
    - Altura de 44px con 3 secciones: total de eventos, conteo de jugadas sin jugador con botón `"Ver pendientes ›"` y porcentaje de carga con barra de progreso verde.
@@ -556,7 +590,7 @@ Reglas propias del Inicio con sesión (la landing pública no cambia). Se suman 
 4. **Pestañas `.tabs-underline`** (división activa, serie del gráfico): subrayado en la activa, 44px de alto, scroll interno en celular.
 
 ### 9.1 Tokens nuevos (`:root`)
-Valores iguales en claro y oscuro: el tablero conserva sus colores en los dos temas. Los tokens del tablero tienen valor propio y no siguen a `--grass` ni a `--zone-heat-low`, para que cambiar la paleta oscura no los arrastre.
+El fondo y los rótulos del tablero son iguales en claro y oscuro. Sus tokens tienen valor propio y no siguen a `--grass` ni a `--zone-heat-low`, para que cambiar la paleta oscura no los arrastre; solo el acento y el chip «ok» tienen una variante oscura.
 
 | Token | Valor |
 |---|---|
@@ -564,8 +598,8 @@ Valores iguales en claro y oscuro: el tablero conserva sus colores en los dos te
 | `--board-line` / `--board-line-strong` | `rgba(255,255,255,.10)` / `rgba(255,255,255,.22)` |
 | `--board-shadow` | `0 18px 40px rgba(15,35,15,.28)` |
 | `--on-board` / `--on-board-muted` | `#ffffff` / `rgba(255,255,255,.72)` |
-| `--on-board-accent` | `#91da40` (5,89 : 1 sobre `#204b22`) |
-| `--board-chip-ok-bg/fg` | `rgba(145,218,64,.30)` / `#ffffff` |
+| `--on-board-accent` | `#91da40` (claro, 5,89 : 1 sobre `#204b22`) / `#8cc98f` (oscuro, 5,20 : 1) |
+| `--board-chip-ok-bg/fg` | `rgba(145,218,64,.30)` (claro) / `rgba(140,201,143,.30)` (oscuro) / `#ffffff` |
 | `--board-chip-warn-bg/fg` | `#fdb022` / `#3d2600` |
 | `--board-chip-neutral-bg/fg` | `rgba(255,255,255,.12)` / `#ffffff` |
 | `--board-digit-bg/border` | `rgba(255,255,255,.08)` / `rgba(255,255,255,.22)` |
