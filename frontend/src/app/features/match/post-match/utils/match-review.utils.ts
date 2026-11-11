@@ -7,7 +7,7 @@ export const EMPTY_TIME_PLACEHOLDER = '--:--:--';
 
 /**
  * Resuelve el color de acento deportivo de un evento según su nombre. Devuelve un token (`var(--event-*)`):
- * cada tema define un relleno por categoría (ver styles.css).
+ * en claro cada uno vale el color de siempre y en oscuro toma el de su categoría (ver styles.css).
  */
 export function resolveEventColor(name: string): string {
   const lower = name.toLowerCase();
