@@ -244,6 +244,16 @@ describe('MatchSelectionComponent', () => {
       expect(recreate().isCalendarView()).toBeTrue();
     });
 
+    it('should show the restored division in the selector, not the first one', () => {
+      component.userDivisions = [{ id: 'primera', name: 'Primera' }, { id: 'm19', name: 'M19' }];
+      component.selectedDivisionId.set('m19');
+      fixture.detectChanges();
+
+      const select: HTMLSelectElement = fixture.nativeElement.querySelector('#divisionSelect');
+      expect(select.value).toBe('m19');
+      expect(select.selectedOptions[0].textContent?.trim()).toBe('M19');
+    });
+
     it('should ignore a saved filter that no longer exists', () => {
       sessionStorage.setItem('ovaltrack.view.match-selection.filter', JSON.stringify('postponed'));
 
