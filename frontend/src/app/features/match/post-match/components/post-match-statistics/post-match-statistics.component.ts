@@ -22,7 +22,7 @@ import {
   StatLine,
 } from '../../../statistics/presentation/stat-presentation';
 import { PostMatchShellStore } from '../../store/post-match-shell.store';
-import { LoadingGate } from '../../utils/loading-gate';
+import { LoadingGate } from '../../../../../shared/utils/loading-gate';
 import { RugbyBallLoaderComponent } from '../../../../../shared/components/rugby-ball-loader/rugby-ball-loader.component';
 
 export type StatsPeriodFilter = 'ALL' | 1 | 2;
