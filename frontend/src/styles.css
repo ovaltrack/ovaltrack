@@ -736,7 +736,7 @@ button {
   min-width: 0;
 }
 
-/* Rótulo mono en mayúsculas (no es .eyebrow: esa es la píldora navy global) */
+/* Rótulo mono en mayúsculas */
 .label-mono {
   font-family: var(--font-mono);
   font-weight: 700;
@@ -1122,17 +1122,6 @@ button {
 
 .status-inactive .dot {
   background: var(--player);
-}
-
-.eyebrow {
-  display: inline-flex;
-  background: var(--navy-tint);
-  border: 1px solid var(--navy-border);
-  color: var(--navy);
-  font-size: 12px;
-  font-weight: 700;
-  padding: 5px 12px;
-  border-radius: var(--radius-pill);
 }
 
 /* ==========================================================================
