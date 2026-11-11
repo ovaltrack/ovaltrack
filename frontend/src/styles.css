@@ -257,7 +257,7 @@ html:has(.pm-shell) {
 }
 
 [data-theme="dark"] body {
-  background-color: #0b111e;
+  background-color: var(--bg);
   background-image: 
     /* Capa 1: Degradé radial que desvanece suavemente las líneas hacia el centro (difuminado como en modo claro) */
     radial-gradient(
@@ -277,78 +277,78 @@ html:has(.pm-shell) {
       transparent 54px
     );
   background-attachment: fixed;
-  color: #cbd5e1;
+  color: var(--text-secondary);
 }
 
 /* ==========================================================================
    Modo Oscuro: Componentes Globales Compartidos (SOLID)
    ========================================================================== */
 [data-theme="dark"] .brand-text .title {
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 [data-theme="dark"] .brand-text .club {
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 [data-theme="dark"] .badge-tech {
-  background-color: #162238;
-  border-color: #2a3c5a;
-  color: #a3e635;
+  background-color: var(--surface-alt);
+  border-color: var(--border-sport);
+  color: var(--grass);
 }
 
 [data-theme="dark"] .btn-invite,
 [data-theme="dark"] .btn-primary-rugby {
-  background-color: #a3e635;
-  color: #0b111e;
-  border-color: #a3e635;
-  box-shadow: 0 4px 12px rgba(163, 230, 53, 0.25);
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
+  border-color: var(--btn-primary-bg);
+  box-shadow: var(--shadow-button);
 }
 
 [data-theme="dark"] .btn-invite:hover,
 [data-theme="dark"] .btn-primary-rugby:hover {
-  background-color: #bef264;
-  border-color: #bef264;
-  color: #0b111e;
+  background-color: var(--btn-primary-hover);
+  border-color: var(--btn-primary-hover);
+  color: var(--btn-primary-fg);
   box-shadow: 0 6px 16px rgba(163, 230, 53, 0.35);
 }
 
 [data-theme="dark"] .btn-outline {
-  background-color: #131c2e;
-  border-color: #2a3c5a;
-  color: #cbd5e1;
+  background-color: var(--btn-outline-bg);
+  border-color: var(--border-strong);
+  color: var(--btn-outline-fg);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 [data-theme="dark"] .btn-outline:hover {
-  background-color: #1c2b44;
-  border-color: #3b82f6;
-  color: #ffffff;
+  background-color: var(--surface-hover);
+  border-color: var(--navy);
+  color: var(--text-primary);
 }
 
 [data-theme="dark"] .card-header,
 [data-theme="dark"] .form-card-header {
-  border-bottom: 2px solid #2a3c5a;
+  border-bottom: 2px solid var(--border-sport);
 }
 
 [data-theme="dark"] .card-title,
 [data-theme="dark"] .form-card-title {
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 [data-theme="dark"] .card-subtitle,
 [data-theme="dark"] .form-card-subtitle {
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 [data-theme="dark"] .form-label {
-  color: #cbd5e1;
+  color: var(--text-secondary);
 }
 
 [data-theme="dark"] .form-control {
-  background: #162238;
-  border-color: #2a3c5a;
-  color: #ffffff;
+  background: var(--surface-alt);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
 }
 
 [data-theme="dark"] .form-control::placeholder {
@@ -356,37 +356,37 @@ html:has(.pm-shell) {
 }
 
 [data-theme="dark"] .form-control:focus {
-  border-color: #a3e635;
+  border-color: var(--grass);
   box-shadow: 0 0 0 3px rgba(163, 230, 53, 0.2);
-  background: #1c2b44;
+  background: var(--surface-hover);
 }
 
 [data-theme="dark"] .form-actions {
-  border-top-color: #1f2e47;
+  border-top-color: var(--border);
 }
 
 [data-theme="dark"] .status-tab.active {
-  background: #131c2e;
-  color: #ffffff;
-  border: 1px solid #2a3c5a;
+  background: var(--surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-sport);
 }
 
 [data-theme="dark"] .status-tab.active .status-badge-count {
-  background: #162238;
-  color: #a3e635;
+  background: var(--surface-alt);
+  color: var(--grass);
 }
 
 [data-theme="dark"] .empty-icon {
-  background: #162238;
-  color: #94a3b8;
+  background: var(--surface-alt);
+  color: var(--text-muted);
 }
 
 [data-theme="dark"] .empty-title {
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 [data-theme="dark"] .empty-copy {
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 body {
