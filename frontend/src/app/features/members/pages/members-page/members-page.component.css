@@ -3,21 +3,6 @@
   display: block;
 }
 
-.mp-header {
-  margin: 28px 0 16px;
-}
-
-.mp-title {
-  margin: 0 0 4px;
-  font: 800 clamp(26px, 4vw, 32px)/1.15 var(--font-head);
-  color: var(--text-primary);
-}
-
-.mp-subtitle {
-  margin: 0;
-  color: var(--text-secondary);
-}
-
 .mp-tabs {
   display: flex;
   gap: 4px;
