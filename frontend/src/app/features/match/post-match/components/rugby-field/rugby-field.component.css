@@ -10,6 +10,20 @@
   --row-axis-w: 56px;
 }
 
+/* Cancha nocturna: verdes oscuros y líneas tenues; el calor (--zone-heat-*) se mezcla encima */
+:host-context([data-theme="dark"]) {
+  --pitch-a: #18241b;
+  --pitch-b: #1c2a20;
+  --pitch-ingoal: #142018;
+  --pitch-line: rgba(255, 255, 255, 0.3);
+}
+
+/* En oscuro el chip I1…D6 va hundido con texto claro (--text-primary ya es claro: no sirve de fondo) */
+:host-context([data-theme="dark"]) .cell-label {
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  color: var(--text-primary);
+}
+
 /*
  * Cancha compacta alineada a la izquierda: el alto manda (250 px) y el ancho se deriva de la proporción 120:70, o
  * el que entra a lo ancho sin deformarla. La leyenda va al costado; en anchos angostos pasa debajo.
