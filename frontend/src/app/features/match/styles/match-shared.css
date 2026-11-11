@@ -143,12 +143,12 @@
 :host-context([data-theme="dark"]) .match-card-shell {
   background: var(--surface);
   border-color: var(--border);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--shadow-elevation);
 }
 
 :host-context([data-theme="dark"]) .match-card-shell:hover {
   border-color: var(--border-sport);
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--shadow-elevation-hover);
 }
 
 :host-context([data-theme="dark"]) .match-opponent-name {
@@ -156,9 +156,9 @@
 }
 
 :host-context([data-theme="dark"]) .match-modal {
-  background: var(--surface);
+  background: var(--surface-overlay);
   border-color: var(--border-sport);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  box-shadow: var(--shadow-overlay);
 }
 
 :host-context([data-theme="dark"]) .modal-header-salvia {
@@ -179,7 +179,7 @@
 :host-context([data-theme="dark"]) .custom-input:focus {
   border-color: var(--grass);
   background: var(--surface-hover);
-  box-shadow: 0 0 0 3px rgba(163, 230, 53, 0.2);
+  box-shadow: var(--focus-ring);
 }
 
 :host-context([data-theme="dark"]) .modal-actions {

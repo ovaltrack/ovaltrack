@@ -457,25 +457,25 @@
 
 :host-context([data-theme="dark"]) .status-tab:hover {
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--veil);
 }
 
 :host-context([data-theme="dark"]) .status-tab.active {
   /* Mismo activo que los filtros del post-partido en oscuro: se distingue a simple vista */
-  background: rgba(163, 230, 53, 0.18);
+  background: var(--grass-tint-strong);
   color: var(--grass);
   box-shadow: inset 0 0 0 1px var(--grass);
   border: 1px solid var(--grass);
 }
 
 :host-context([data-theme="dark"]) .btn-delete-match {
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 :host-context([data-theme="dark"]) .btn-delete-match:hover {
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.15);
-  border-color: rgba(239, 68, 68, 0.3);
+  color: var(--error);
+  background: var(--error-tint);
+  border-color: var(--error-border);
 }
 
 :host-context([data-theme="dark"]) .vs-label {
@@ -506,12 +506,12 @@
 :host-context([data-theme="dark"]) .status-finished {
   background: var(--success-tint);
   color: var(--grass);
-  border-color: rgba(163, 230, 53, 0.3);
+  border-color: var(--success-border);
 }
 
 :host-context([data-theme="dark"]) .status-cancelled {
   background: var(--surface-alt);
-  color: #64748b;
+  color: var(--text-muted);
   border-color: var(--border);
 }
 
@@ -839,7 +839,7 @@
   --fc-border-color: var(--border);
   --fc-page-bg-color: var(--surface);
   --fc-neutral-bg-color: var(--surface-alt);
-  --fc-today-bg-color: rgba(163, 230, 53, 0.12);
+  --fc-today-bg-color: var(--grass-tint);
 }
 
 :host-context([data-theme="dark"]) .calendar-wrapper ::ng-deep .fc .fc-scrollgrid,
@@ -880,28 +880,28 @@
 }
 
 :host-context([data-theme="dark"]) .calendar-wrapper ::ng-deep .day-status-won .fc-daygrid-day-frame {
-  background-color: rgba(163, 230, 53, 0.2) !important;
-  border-color: rgba(163, 230, 53, 0.5) !important;
+  background-color: var(--success-tint) !important;
+  border-color: var(--success-border) !important;
 }
 
 :host-context([data-theme="dark"]) .calendar-wrapper ::ng-deep .day-status-lost .fc-daygrid-day-frame {
-  background-color: rgba(248, 113, 113, 0.2) !important;
-  border-color: rgba(248, 113, 113, 0.5) !important;
+  background-color: var(--error-tint) !important;
+  border-color: var(--error-border) !important;
 }
 
 :host-context([data-theme="dark"]) .calendar-wrapper ::ng-deep .day-status-tied .fc-daygrid-day-frame {
-  background-color: rgba(96, 165, 250, 0.2) !important;
-  border-color: rgba(96, 165, 250, 0.5) !important;
+  background-color: var(--navy-tint) !important;
+  border-color: var(--navy-border) !important;
 }
 
 :host-context([data-theme="dark"]) .calendar-wrapper ::ng-deep .day-status-live .fc-daygrid-day-frame {
-  background-color: rgba(250, 204, 21, 0.2) !important;
-  border-color: rgba(250, 204, 21, 0.5) !important;
+  background-color: var(--warning-tint) !important;
+  border-color: var(--warning-border) !important;
 }
 
 :host-context([data-theme="dark"]) .calendar-wrapper ::ng-deep .day-status-ready .fc-daygrid-day-frame {
-  background-color: rgba(148, 163, 184, 0.2) !important;
-  border-color: rgba(148, 163, 184, 0.5) !important;
+  background-color: var(--player-tint) !important;
+  border-color: var(--border-strong) !important;
 }
 
 /* --player y --player-tint ya cambian en el tema oscuro (styles.css) */
