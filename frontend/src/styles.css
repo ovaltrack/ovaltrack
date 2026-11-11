@@ -88,6 +88,9 @@
   --shadow-elevation: 0 16px 36px rgba(15, 35, 15, 0.12), 0 4px 12px rgba(15, 35, 15, 0.06);
   --shadow-button: 0 4px 12px rgba(32, 75, 34, 0.20);
   --shadow-button-hover: 0 6px 16px rgba(32, 75, 34, 0.28);
+  /* Barra de navegación: en claro es la superficie; en oscuro queda hundida */
+  --surface-sunken: var(--surface);
+  --shadow-navbar: 0 4px 14px rgba(20, 45, 20, 0.08);
 
   /* Inicio · Pizarra de juego (DESIGN_SYSTEM.md §9): el tablero conserva sus colores en claro y oscuro */
   --board-bg-start: #204b22;
@@ -171,70 +174,90 @@
 }
 
 /* ==========================================================================
-   Design Tokens (Modo Oscuro / Dark Rugby Tech)
+   Design Tokens (Modo Oscuro / Grafito con verde botella)
+   Luz desde arriba: lienzo < superficie < superficie alt < overlay. El verde de marca
+   (#204b22) solo va en el tablero y la píldora del marcador; el acento es --grass.
    ========================================================================== */
 [data-theme="dark"] {
-  --bg: #0b111e;
-  --surface: #131c2e;
-  --surface-alt: #162238;
-  --surface-hover: #1c2b44;
-  --surface-header-start: #162238;
-  --surface-header-end: #162238;
-  --surface-toolbar: #131c2e;
+  --bg: #0f1012;
+  --surface: #17181b;
+  --surface-alt: #1f2124;
+  --surface-hover: #25272b;
+  --surface-header-start: #25272b;
+  --surface-header-end: #1f2124;
+  --surface-toolbar: #17181b;
+  --surface-sunken: #0b0c0e;
+  --surface-overlay: #282a2e;
   --bg-canvas: var(--bg);
+  --canvas-image:
+    radial-gradient(ellipse 70% 45% at 50% 0%, rgba(255, 255, 255, 0.05), transparent 70%),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.022) 0 1.5px, transparent 1.5px 54px);
+  --veil: rgba(255, 255, 255, 0.05);
   --btn-on-board-fg: #204b22;
   /* Tablero de Inicio: valor propio, para que cambiar --grass o --zone-heat-low no lo arrastre (DESIGN_SYSTEM §9.1) */
   --on-board-accent: #a3e635;
   --board-chip-ok-bg: rgba(163, 230, 53, 0.25);
 
-  --border: #1f2e47;
-  --border-strong: #2a3c5a;
-  --border-sport: #2a3c5a;
-  --border-sport-subtle: #1f2e47;
+  --border: #2a2c31;
+  --border-strong: #7a7e86;
+  --border-sport: #2a2c31;
+  --border-sport-subtle: #2a2c31;
 
-  --text-primary: #ffffff;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
+  --text-primary: #ededef;
+  --text-secondary: #b3b6bc;
+  --text-muted: #8d9098;
 
-  --grass: #a3e635;
-  --grass-hover: #bef264;
-  --on-grass: #0b111e;
-  --grass-deep: #a3e635;
-  --grass-tint: rgba(163, 230, 53, 0.15);
-  --grass-tint-strong: rgba(163, 230, 53, 0.25);
-  --grass-border: rgba(163, 230, 53, 0.35);
+  /* Acento verde claro: equipo propio, selección, foco, trazos. Nunca el verde de marca como texto o línea */
+  --grass: #8cc98f;
+  --grass-hover: #a3d6a6;
+  --on-grass: #0f1012;
+  --grass-deep: #8cc98f;
+  --grass-tint: rgba(140, 201, 143, 0.15);
+  --grass-tint-strong: #223f26;
+  --grass-border: rgba(140, 201, 143, 0.55);
+  --focus-ring: 0 0 0 3px rgba(140, 201, 143, 0.28);
 
-  --navy: #3b82f6;
-  --navy-tint: rgba(59, 130, 246, 0.15);
-  --navy-border: rgba(59, 130, 246, 0.3);
+  --navy: #6a9df8;
+  --navy-tint: rgba(106, 157, 248, 0.15);
+  --navy-border: rgba(106, 157, 248, 0.3);
 
-  --player: #94a3b8;
-  --player-tint: rgba(148, 163, 184, 0.1);
+  --player: #b3b6bc;
+  --player-tint: rgba(179, 182, 188, 0.1);
   --blue-mid: #60a5fa;
   --blue-mid-tint: rgba(96, 165, 250, 0.15);
 
-  /* Feedback: mismos tonos que ya usaban en oscuro post-partido (#f87171, #fbbf24); el éxito es el verde de acento */
-  --error: #f87171;
-  --error-tint: rgba(248, 113, 113, 0.15);
-  --error-border: rgba(248, 113, 113, 0.4);
-  --warning: #fbbf24;
-  --warning-tint: rgba(251, 191, 36, 0.15);
-  --warning-border: rgba(251, 191, 36, 0.4);
-  --success: #a3e635;
-  --success-tint: rgba(163, 230, 53, 0.15);
+  /* Estados: ámbar = falta algo por completar, rojo = algo falló o se pierde, verde de estado ≠ verde de acción */
+  --error: #f07a72;
+  --error-tint: rgba(240, 122, 114, 0.12);
+  --error-border: rgba(240, 122, 114, 0.4);
+  --error-solid: #b03838;
+  --warning: #e9b54f;
+  --warning-tint: rgba(233, 181, 79, 0.12);
+  --warning-border: rgba(233, 181, 79, 0.4);
+  --success: #5fc57d;
+  --success-tint: rgba(95, 197, 125, 0.12);
+  --success-border: rgba(95, 197, 125, 0.4);
 
-  --btn-primary-bg: #a3e635;
-  --btn-primary-fg: #0b111e;
-  --btn-primary-hover: #bef264;
-  --btn-outline-bg: #131c2e;
-  --btn-outline-border: #2a3c5a;
-  --btn-outline-fg: #cbd5e1;
+  --btn-primary-bg: #337838;
+  --btn-primary-fg: #ffffff;
+  --btn-primary-hover: #38823d;
+  --btn-outline-bg: #17181b;
+  --btn-outline-border: #7a7e86;
+  --btn-outline-fg: #ededef;
 
-  --shadow-elevation: 0 16px 36px rgba(0, 0, 0, 0.45), 0 4px 12px rgba(0, 0, 0, 0.25);
-  --shadow-button: 0 4px 12px rgba(163, 230, 53, 0.25);
+  --shadow-elevation: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 2px 0 rgba(0, 0, 0, 0.45), 0 22px 44px rgba(0, 0, 0, 0.55);
+  --shadow-elevation-hover: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 2px 0 rgba(0, 0, 0, 0.45), 0 28px 52px rgba(0, 0, 0, 0.6);
+  --shadow-overlay: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 24px 60px rgba(0, 0, 0, 0.6);
+  --shadow-navbar: 0 1px 0 rgba(255, 255, 255, 0.03), 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-button: 0 4px 12px rgba(0, 0, 0, 0.35);
+  --shadow-button-hover: 0 6px 16px rgba(0, 0, 0, 0.45);
 
-  --score-pill-bg: #0b111e;
-  --score-pill-fg: #a3e635;
+  --score-pill-bg: #204b22;
+  --score-pill-fg: #ffffff;
+
+  /* Calor de Zonas: más eventos, más luz (se mezcla al 62 % sobre la cancha) */
+  --zone-heat-low: #8a6a12;
+  --zone-heat-high: #ffb23f;
 }
 
 /* ==========================================================================
@@ -258,24 +281,7 @@ html:has(.pm-shell) {
 
 [data-theme="dark"] body {
   background-color: var(--bg);
-  background-image: 
-    /* Capa 1: Degradé radial que desvanece suavemente las líneas hacia el centro (difuminado como en modo claro) */
-    radial-gradient(
-      ellipse at 50% 30%,
-      rgba(11, 17, 30, 1) 0%,
-      rgba(11, 17, 30, 0.95) 25%,
-      rgba(11, 17, 30, 0.60) 50%,
-      rgba(11, 17, 30, 0.15) 72%,
-      transparent 85%
-    ),
-    /* Capa 2: Líneas diagonales a 135deg con separación (54px), grosor 1.5px y borde suave difuminado */
-    repeating-linear-gradient(
-      135deg,
-      rgba(148, 163, 184, 0.12) 0px,
-      rgba(148, 163, 184, 0.12) 1.5px,
-      transparent 2px,
-      transparent 54px
-    );
+  background-image: var(--canvas-image);
   background-attachment: fixed;
   color: var(--text-secondary);
 }
@@ -310,19 +316,19 @@ html:has(.pm-shell) {
   background-color: var(--btn-primary-hover);
   border-color: var(--btn-primary-hover);
   color: var(--btn-primary-fg);
-  box-shadow: 0 6px 16px rgba(163, 230, 53, 0.35);
+  box-shadow: var(--shadow-button-hover);
 }
 
 [data-theme="dark"] .btn-outline {
   background-color: var(--btn-outline-bg);
   border-color: var(--border-strong);
   color: var(--btn-outline-fg);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-button);
 }
 
 [data-theme="dark"] .btn-outline:hover {
   background-color: var(--surface-hover);
-  border-color: var(--navy);
+  border-color: var(--text-secondary);
   color: var(--text-primary);
 }
 
@@ -352,12 +358,12 @@ html:has(.pm-shell) {
 }
 
 [data-theme="dark"] .form-control::placeholder {
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 [data-theme="dark"] .form-control:focus {
   border-color: var(--grass);
-  box-shadow: 0 0 0 3px rgba(163, 230, 53, 0.2);
+  box-shadow: var(--focus-ring);
   background: var(--surface-hover);
 }
 
