@@ -118,9 +118,9 @@ import { CommonModule } from '@angular/common';
     }
 
     :host-context([data-theme="dark"]) .batch-bar {
-      background: var(--surface-alt);
+      background: var(--surface-overlay);
       border: 1px solid var(--border-sport);
-      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+      box-shadow: var(--shadow-overlay);
     }
 
     :host-context([data-theme="dark"]) .btn-save {

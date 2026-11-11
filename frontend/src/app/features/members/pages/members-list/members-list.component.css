@@ -602,12 +602,12 @@
 }
 
 :host-context([data-theme="dark"]) .hud-search input::placeholder {
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 :host-context([data-theme="dark"]) .hud-search input:focus {
   border-color: var(--grass);
-  box-shadow: 0 0 0 3px rgba(163, 230, 53, 0.2);
+  box-shadow: var(--focus-ring);
 }
 
 :host-context([data-theme="dark"]) .filter-toolbar {
@@ -631,7 +631,7 @@
 :host-context([data-theme="dark"]) .filter-toolbar .status-tab.active {
   background: var(--surface);
   color: var(--text-primary);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-button);
 }
 
 :host-context([data-theme="dark"]) .filter-toolbar .status-badge-count {
@@ -662,7 +662,7 @@
   background: var(--surface);
   border-color: var(--border-sport);
   color: var(--text-primary);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-button);
 }
 
 :host-context([data-theme="dark"]) .filter-toolbar .chip.active .count {
@@ -672,13 +672,13 @@
 :host-context([data-theme="dark"]) .member-row {
   background: var(--surface);
   border-color: var(--border);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-elevation);
 }
 
 :host-context([data-theme="dark"]) .member-row:hover {
   background: var(--surface);
   border-color: var(--border-sport);
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--shadow-elevation-hover);
 }
 
 :host-context([data-theme="dark"]) .member-row.is-dirty {
@@ -686,7 +686,7 @@
 }
 
 :host-context([data-theme="dark"]) .member-row.is-inactive {
-  background: #0f1624;
+  background: var(--bg);
 }
 
 :host-context([data-theme="dark"]) .member-row.is-inactive:hover {
@@ -719,12 +719,12 @@
 }
 
 :host-context([data-theme="dark"]) .perm-tooltip {
-  background: var(--surface-alt);
+  background: var(--surface-overlay);
   border-color: var(--border-sport);
 }
 
 :host-context([data-theme="dark"]) .perm-tooltip::after {
-  border-color: var(--surface-alt) transparent transparent transparent;
+  border-color: var(--surface-overlay) transparent transparent transparent;
 }
 
 :host-context([data-theme="dark"]) .tooltip-title {
@@ -744,7 +744,7 @@
 
 :host-context([data-theme="dark"]) .role-btn[aria-expanded="true"] {
   border-color: var(--grass);
-  box-shadow: 0 0 0 2px rgba(163, 230, 53, 0.2);
+  box-shadow: var(--focus-ring);
 }
 
 :host-context([data-theme="dark"]) .role-btn svg {
@@ -753,9 +753,9 @@
 
 :host-context([data-theme="dark"]) .role-menu,
 :host-context([data-theme="dark"]) .actions-menu {
-  background: var(--surface-alt);
+  background: var(--surface-overlay);
   border-color: var(--border-sport);
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-overlay);
 }
 
 :host-context([data-theme="dark"]) .role-opt,
