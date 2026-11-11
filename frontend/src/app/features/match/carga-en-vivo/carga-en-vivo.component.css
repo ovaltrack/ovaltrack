@@ -44,6 +44,16 @@
 	--purple-900: #7952B3;
 	--purple-100: #e5d3ff;
 
+	/* Banderitas de categoría (en oscuro, la variante clara) y chips de tarjeta */
+	--flag-score: #8a6408;
+	--flag-attack: #2e7a3c;
+	--flag-set-piece: #3a6bb5;
+	--flag-turnover: #a8521a;
+	--flag-neutral: #626979;
+	--flag-defense: #1f7380;
+	--card-yellow: #e9b54f;
+	--card-red: #f07a72;
+
 	/* Neutros — Modo claro (default en cancha) */
 	--paused-bg: var(--bg);
 
@@ -54,14 +64,10 @@
 	--ctl-border: var(--border);
 	--score-own: var(--grass-deep);
 
-	/* Tipografías */
-	--font-manrope: 'Manrope', system-ui, sans-serif;
-	--font-space-grotesk: 'Space Grotesk', 'Courier New', monospace;
-
 	width: 100vw;
 	max-width: 100%;
 	height: 100dvh;
-	font-family: var(--font-manrope);
+	font-family: var(--font-body);
 	background: var(--bg);
 	color: var(--text);
 	border: 0;
@@ -84,6 +90,12 @@
 	--hud-well-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
 	--ctl-border: var(--border-strong);
 	--score-own: var(--grass);
+	--flag-score: var(--event-try);
+	--flag-attack: var(--event-default);
+	--flag-set-piece: var(--event-set-piece);
+	--flag-turnover: var(--event-turnover);
+	--flag-neutral: var(--event-penalty);
+	--flag-defense: var(--event-tackle);
 }
 
 .live-capture[data-theme="light"] {
@@ -420,13 +432,24 @@
 	flex: 1 0 auto;
 	display: flex;
 	flex-direction: column;
+	/* Color de la banderita según la categoría (por defecto, neutro) */
+	--flag: var(--flag-neutral);
 }
 
+.event-catalog__category[data-group="Puntuación" i] { --flag: var(--flag-score); }
+.event-catalog__category[data-group="Ataque" i] { --flag: var(--flag-attack); }
+.event-catalog__category[data-group="Juego Fijo" i] { --flag: var(--flag-set-piece); }
+.event-catalog__category[data-group="Cambio de Posesión" i] { --flag: var(--flag-turnover); }
+.event-catalog__category[data-group="Defensa" i] { --flag: var(--flag-defense); }
+
 .event-catalog__label {
-	font-family: var(--font-manrope);
-	font-weight: 700;
+	display: flex;
+	align-items: center;
+	gap: calc(8px * var(--ot-live-scale));
+	font-family: var(--font-mono);
+	font-weight: 600;
 	font-size: var(--ot-size-label-caps);
-	letter-spacing: 0.05em;
+	letter-spacing: 0.14em;
 	text-transform: uppercase;
 	color: var(--text-2);
 	margin: 0 0 var(--ot-stack-compact);
@@ -434,6 +457,14 @@
 
 .event-catalog__label--disabled {
 	color: var(--text-muted);
+}
+
+.event-catalog__flag {
+	flex: none;
+	width: calc(10px * var(--ot-live-scale));
+	height: calc(10px * var(--ot-live-scale));
+	border-radius: 2px;
+	background: var(--flag);
 }
 
 .event-catalog__grid {
@@ -450,15 +481,18 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	gap: calc(12px * var(--ot-live-scale));
 	text-align: center;
 	padding: calc(12px * var(--ot-live-scale)) calc(10px * var(--ot-live-scale));
 	background: var(--navy-700);
-	border: 2px solid var(--navy-900);
-	border-radius: var(--ot-radius-lg);
-	font-family: var(--font-manrope);
-	font-weight: 1000;
+	/* Borde fino y sombra: el botón se recorta sobre el fondo de posesión */
+	border: 1px solid rgba(255, 255, 255, 0.16);
+	border-radius: calc(12px * var(--ot-live-scale));
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 6px 14px rgba(0, 0, 0, 0.35);
+	font-family: var(--font-body);
+	font-weight: 800;
 	/* Se achica en tablet (por ancho y por alto) para que el catálogo entre sin scroll */
-	font-size: clamp(18px, min(2.2vw, 3.4dvh), calc(30px * var(--ot-live-scale)));
+	font-size: clamp(16px, min(1.8vw, 2.9dvh), calc(26px * var(--ot-live-scale)));
 	color: #FFFFFF;
 	cursor: pointer;
 	min-width: 0;
@@ -517,6 +551,20 @@
 	color: var(--orange-600);
 }
 
+/* Tarjeta amarilla y roja: chip con el color de la tarjeta dentro del botón */
+.event-chip__card {
+	flex: none;
+	width: calc(16px * var(--ot-live-scale));
+	height: calc(22px * var(--ot-live-scale));
+	border-radius: 3px;
+	border: 1px solid rgba(0, 0, 0, 0.25);
+	background: var(--card-yellow);
+}
+
+.event-chip__card--red {
+	background: var(--card-red);
+}
+
 .event-chip:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
@@ -534,7 +582,7 @@
 }
 
 .history__label {
-	font-family: var(--font-manrope);
+	font-family: var(--font-body);
 	font-weight: 700;
 	font-size: var(--ot-size-label-caps);
 	letter-spacing: 0.05em;
@@ -548,7 +596,7 @@
 	color: var(--text-2);
 	font-size: calc(13px * var(--ot-live-scale));
 	line-height: 1.45;
-	font-family: var(--font-manrope);
+	font-family: var(--font-body);
 }
 
 .history__item {
@@ -571,7 +619,7 @@
 }
 
 .history__time {
-	font-family: var(--font-space-grotesk);
+	font-family: var(--font-mono);
 	font-weight: 600;
 	font-size: var(--ot-size-data-mono);
 	color: var(--green-700);
@@ -603,7 +651,7 @@
 	font-size: calc(13px * var(--ot-live-scale));
 	color: var(--text);
 	overflow-wrap: anywhere;
-	font-family: var(--font-manrope);
+	font-family: var(--font-body);
 }
 
 .possession-bar {
@@ -619,12 +667,16 @@
 	flex: 1;
 	min-height: var(--ot-touch-target-min);
 	padding: calc(12px * var(--ot-live-scale)) calc(16px * var(--ot-live-scale));
-	border: 2px solid var(--border);
-	border-radius: var(--ot-radius-lg);
-	font-family: var(--font-manrope);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: calc(8px * var(--ot-live-scale));
+	border: 1px solid var(--ctl-border);
+	border-radius: calc(10px * var(--ot-live-scale));
+	font-family: var(--font-body);
 	font-weight: 700;
-	font-size: calc(14px * var(--ot-live-scale));
-	letter-spacing: 0.04em;
+	font-size: calc(13px * var(--ot-live-scale));
+	letter-spacing: 0.08em;
 	text-transform: uppercase;
 	cursor: pointer;
 	background: var(--surface-alt);
@@ -717,7 +769,7 @@
 
 	.event-chip {
 		padding-block: calc(6px * var(--ot-live-scale));
-		font-size: clamp(18px, min(1.9vw, 2.9dvh), calc(30px * var(--ot-live-scale)));
+		font-size: clamp(15px, min(1.6vw, 2.6dvh), calc(24px * var(--ot-live-scale)));
 		line-height: 1.25;
 	}
 }
@@ -859,7 +911,7 @@
 }
 
 .confirm-title {
-	font-family: var(--font-space-grotesk);
+	font-family: var(--font-mono);
 	font-size: 1.25rem;
 	font-weight: 700;
 	color: var(--text);
@@ -867,7 +919,7 @@
 }
 
 .confirm-text {
-	font-family: var(--font-manrope);
+	font-family: var(--font-body);
 	font-size: 0.9rem;
 	line-height: 1.5;
 	color: var(--text-2);
@@ -884,7 +936,7 @@
 	flex: 1;
 	height: 44px;
 	border-radius: var(--ot-radius-md);
-	font-family: var(--font-manrope);
+	font-family: var(--font-body);
 	font-weight: 700;
 	font-size: 0.9rem;
 	display: inline-flex;
@@ -978,9 +1030,12 @@
 }
 
 /* ───────── Modo oscuro: HUD grafito (la posesión conserva su color de fondo) ───────── */
-/* Foco visible sobre grafito en los controles de la cabecera (el azul marino de la regla base no se ve) */
+/* Foco visible sobre grafito (el azul marino de la regla base no se ve) */
 .live-capture[data-theme="dark"] .icon-btn:focus-visible,
-.live-capture[data-theme="dark"] .btn--outline:focus-visible {
+.live-capture[data-theme="dark"] .btn:focus-visible,
+.live-capture[data-theme="dark"] .event-chip:focus-visible,
+.live-capture[data-theme="dark"] .history__button:focus-visible,
+.live-capture[data-theme="dark"] .possession-bar__btn:focus-visible {
 	outline-color: var(--grass);
 }
 
@@ -1075,14 +1130,14 @@
 .capture__title {
 	flex: 1;
 	margin: 0;
-	font-family: var(--font-manrope);
+	font-family: var(--font-body);
 	font-weight: 800;
 	font-size: 26px;
 	line-height: 1.1;
 }
 
 .capture__step {
-	font-family: var(--font-space-grotesk);
+	font-family: var(--font-mono);
 	font-size: 16px;
 	color: var(--text-2);
 }
@@ -1115,7 +1170,7 @@
 	border: 0;
 	background: var(--surface);
 	color: var(--text);
-	font: 700 15px var(--font-manrope);
+	font: 700 15px var(--font-body);
 	cursor: pointer;
 }
 
@@ -1143,7 +1198,7 @@
 
 .capture__label {
 	margin: 0;
-	font: 700 12px var(--font-manrope);
+	font: 700 12px var(--font-body);
 	letter-spacing: 0.06em;
 	text-transform: uppercase;
 	color: var(--text-2);
@@ -1187,7 +1242,7 @@
 }
 
 .capture__number {
-	font-family: var(--font-space-grotesk);
+	font-family: var(--font-mono);
 	font-weight: 700;
 	font-size: clamp(22px, 3.2vh, 32px);
 	line-height: 1;
@@ -1226,7 +1281,7 @@
 	border-radius: 16px;
 	background: var(--surface-alt);
 	color: var(--text);
-	font: 800 clamp(22px, 4vh, 34px) var(--font-manrope);
+	font: 800 clamp(22px, 4vh, 34px) var(--font-body);
 	cursor: pointer;
 }
 
@@ -1274,7 +1329,7 @@
 .capture__readout {
 	margin: 0;
 	text-align: center;
-	font-family: var(--font-space-grotesk);
+	font-family: var(--font-mono);
 	font-weight: 700;
 	font-size: clamp(56px, 12vh, 110px);
 	line-height: 1;
@@ -1290,7 +1345,7 @@
 .capture__range-scale {
 	display: flex;
 	justify-content: space-between;
-	font-family: var(--font-space-grotesk);
+	font-family: var(--font-mono);
 	color: var(--text-2);
 }
 
@@ -1312,7 +1367,7 @@
 	border-radius: 12px;
 	background: var(--surface);
 	color: var(--text);
-	font: 700 17px var(--font-manrope);
+	font: 700 17px var(--font-body);
 	cursor: pointer;
 }
 
