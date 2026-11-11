@@ -221,6 +221,9 @@
   --event-turnover: #e9925a;
   --event-default: #74c785;
   --btn-on-board-fg: #204b22;
+  /* Tablero de Inicio: el fondo es igual en los dos temas; el acento sobre verde botella es el verde claro del sistema */
+  --on-board-accent: #8cc98f;
+  --board-chip-ok-bg: rgba(140, 201, 143, 0.3);
 
   --border: #2a2c31;
   --border-strong: #7a7e86;
