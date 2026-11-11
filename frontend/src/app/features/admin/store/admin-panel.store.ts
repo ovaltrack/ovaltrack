@@ -16,6 +16,7 @@ import {
   UserClubRegistration,
 } from '../types/ovaltrack-admin.types';
 import { HttpErrorLike, errorMessage, userName } from '../utils/admin-format';
+import { oneOf, persistedSignal } from '../../../shared/utils/persisted-signal';
 
 export const ACCOUNT_FILTER_OPTIONS: FilterOption<AccountFilter>[] = [
   { value: 'all', label: 'Todas' },
@@ -52,8 +53,13 @@ export class AdminPanelStore {
   readonly visibleClubs = signal<Club[]>([]);
 
   /* ---------- Estado de UI ---------- */
-  readonly accountFilter = signal<AccountFilter>('all');
-  readonly clubFilter = signal<ClubFilter>('all');
+  /** Filtros recordados en la pestaña (recarga o volver a la pantalla); se borran al cerrar sesión. */
+  readonly accountFilter = persistedSignal<AccountFilter>('admin.accounts', 'all', {
+    isValid: oneOf(ACCOUNT_FILTER_OPTIONS.map(option => option.value)),
+  });
+  readonly clubFilter = persistedSignal<ClubFilter>('admin.clubs', 'all', {
+    isValid: oneOf(CLUB_FILTER_OPTIONS.map(option => option.value)),
+  });
   readonly accountSearch = signal('');
   readonly clubSearch = signal('');
 
@@ -133,8 +139,6 @@ export class AdminPanelStore {
 
   /* ---------- Carga de datos (GET) ---------- */
   loadAll(): void {
-    this.accountFilter.set('all');
-    this.clubFilter.set('all');
     this.begin();
 
     forkJoin({
@@ -153,10 +157,15 @@ export class AdminPanelStore {
           this.pendingClubs.set(pendingClubs);
           this.selectedAdmin.set(Object.fromEntries(pendingClubs.map((c) => [c.id, c.adminUserId ?? null])));
           this.allAccounts.set(users);
-          this.visibleAccounts.set(users);
           const reviewed = clubs.filter(isReviewed);
           this.allClubs.set(reviewed);
-          this.visibleClubs.set(reviewed);
+          // Con un filtro recordado, la lista visible se vuelve a pedir filtrada (como al elegirlo).
+          const accountFilter = this.accountFilter();
+          if (accountFilter === 'all') this.visibleAccounts.set(users);
+          else this.fetchAccounts(accountFilter);
+          const clubFilter = this.clubFilter();
+          if (clubFilter === 'all') this.visibleClubs.set(reviewed);
+          else this.fetchClubs(clubFilter);
           this.loaded.set(true);
         },
         error: (err: HttpErrorLike) =>
@@ -170,6 +179,10 @@ export class AdminPanelStore {
   setAccountFilter(filter: AccountFilter): void {
     if (this.accountFilter() === filter) return;
     this.accountFilter.set(filter);
+    this.fetchAccounts(filter);
+  }
+
+  private fetchAccounts(filter: AccountFilter): void {
     this.begin();
 
     const active = filter === 'all' ? undefined : filter === 'active';
@@ -192,6 +205,10 @@ export class AdminPanelStore {
   setClubFilter(filter: ClubFilter): void {
     if (this.clubFilter() === filter) return;
     this.clubFilter.set(filter);
+    this.fetchClubs(filter);
+  }
+
+  private fetchClubs(filter: ClubFilter): void {
     this.begin();
 
     const status = filter === 'all' ? undefined : filter === 'active' ? 'ACTIVE' : 'REJECTED';
