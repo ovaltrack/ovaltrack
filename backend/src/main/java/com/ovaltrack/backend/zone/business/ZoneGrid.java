@@ -18,12 +18,12 @@ public final class ZoneGrid {
 
     /** Celda vista desde el otro equipo: la columna se invierte (6 <-> 1) y la fila también (I <-> D). */
     public static ZoneCell mirror(ZoneCell cell) {
-        throw new UnsupportedOperationException("Sin implementar");
+        return new ZoneCell(ROWS + 1 - cell.row(), COLS + 1 - cell.col());
     }
 
     /** Etiqueta de la celda: letra de fila + columna (I1 ... D6). */
     public static String label(ZoneCell cell) {
-        throw new UnsupportedOperationException("Sin implementar");
+        return ZoneCell.rowLetter(cell.row()) + cell.col();
     }
 
     public static boolean isValidCell(int row, int col) {

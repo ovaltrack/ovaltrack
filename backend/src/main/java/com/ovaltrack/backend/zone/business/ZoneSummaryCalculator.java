@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import com.ovaltrack.backend.event.domain.Event;
 import com.ovaltrack.backend.zone.domain.ZoneAssignment;
 import com.ovaltrack.backend.zone.domain.ZoneCell;
+import com.ovaltrack.backend.zone.domain.ZoneQuery;
 import com.ovaltrack.backend.zone.domain.dto.ZoneSummaryDTO;
 import com.ovaltrack.backend.zone.domain.dto.ZoneSummaryDTO.ZoneCellCountDTO;
 
@@ -29,7 +30,7 @@ public class ZoneSummaryCalculator {
         int unzoned = 0;
 
         for (Event event : events) {
-            Optional<ZoneCell> cell = resolver.resolve(event.getPeriod(), event.getMatchTime(), assignments);
+            Optional<ZoneCell> cell = resolver.resolve(ZoneQuery.of(event), assignments);
             if (cell.isPresent()) {
                 counts.merge(cell.get(), 1, Integer::sum);
             } else {
