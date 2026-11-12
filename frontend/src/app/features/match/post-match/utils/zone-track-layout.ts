@@ -1,5 +1,6 @@
 import { ZONE_GRID_COLS, ZONE_HALF_MINUTES, ZoneAssignmentResponse, ZonePeriod } from '../../types/zone.types';
 import { ZONE_COLUMN_NAMES, ZONE_ROW_LETTERS, columnRangeLabel, zoneLabel } from './zone-grid';
+import { RuleEvent, ZoneRulesByType } from './zone-rule';
 import { MinuteRange, ZoneEvent, ZonePeriodFilter, eventsInRange, findGaps, periodRange } from './zone-stats';
 
 /** Largo del eje horizontal de la grilla de territorio: los 80 minutos del partido, con el 2T a continuación del 1T. */
@@ -132,4 +133,19 @@ export function gapsWithEventCount(assignments: ZoneAssignmentResponse[], events
     ...gap,
     eventCount: eventsInRange({ period: gap.period, startMinute: gap.start, endMinute: gap.end }, events).length
   }));
+}
+
+/** Evento de zona fija a dibujar como marca de solo lectura sobre la grilla de territorio. */
+export interface FixedZoneMark {
+  eventId: string;
+  eventTypeName: string;
+  period: ZonePeriod;
+  cell: { row: number; col: number };
+  /** Minuto acumulado con decimales (22:30 -> 22,5); el tiempo añadido queda en el último segundo del tiempo. */
+  minute: number;
+}
+
+/** Eventos cuya zona fija la da la regla del tipo, en orden cronológico y dentro del tiempo elegido. */
+export function fixedZoneMarks(events: RuleEvent[], rules: ZoneRulesByType, filter: ZonePeriodFilter): FixedZoneMark[] {
+  throw new Error('Sin implementar');
 }

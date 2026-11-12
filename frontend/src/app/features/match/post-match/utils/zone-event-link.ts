@@ -1,4 +1,5 @@
 import { MatchTimelineEventResponse } from '../../types/event.types';
+import { ZoneRule } from '../../types/event-type.types';
 import { ZONE_HALF_MINUTES, ZoneAssignmentResponse, ZoneCellRef, ZonePeriod } from '../../types/zone.types';
 import { zoneLabel, zoneName } from './zone-grid';
 import { effectiveMatchTime, periodRange } from './zone-stats';
@@ -37,7 +38,11 @@ function containingSegment(period: ZonePeriod, seconds: number, assignments: Zon
  * Zona de un evento calculada en el cliente con los tramos cargados. Solo para eventos que el servidor no zonificó
  * (los que se acaban de crear en la pantalla): los demás traen su `zone` de `GET /event/match/post-match`.
  */
-export function zoneForEvent(event: Pick<ZoneLinkEvent, 'period' | 'matchTime'>, assignments: ZoneAssignmentResponse[]): ZoneCellRef | null {
+export function zoneForEvent(
+  event: Pick<ZoneLinkEvent, 'period' | 'matchTime'> & Partial<Pick<MatchTimelineEventResponse, 'teamPossession' | 'attributes'>>,
+  assignments: ZoneAssignmentResponse[],
+  rule?: ZoneRule | null
+): ZoneCellRef | null {
   if (!isLocatable({ ...event, zone: null })) return null;
   const segment = containingSegment(event.period as ZonePeriod, effectiveMatchTime(event.period as ZonePeriod, event.matchTime), assignments);
   return segment ? { row: segment.row, col: segment.col } : null;
@@ -78,7 +83,7 @@ function periodEndMinute(link: EventZoneLink): number {
  * Descripción de la zona de un evento para tooltips y lectores de pantalla: la zona con su lateral y franja, el rango
  * del tramo si se conoce (o el hueco, si no tiene zona) y la aclaración del tiempo añadido.
  */
-export function describeEventZone(zone: ZoneCellRef | null, link: EventZoneLink | null): string {
+export function describeEventZone(zone: ZoneCellRef | null, link: EventZoneLink | null, fixedByType = false): string {
   const parts: string[] = [];
   if (zone) {
     parts.push(`${zoneLabel(zone)} · ${zoneName(zone)}`);

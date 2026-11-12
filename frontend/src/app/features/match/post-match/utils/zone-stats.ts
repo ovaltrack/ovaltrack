@@ -56,7 +56,10 @@ export function describeSegment(a: ZoneAssignmentResponse): string {
 
 export type ZonePeriodFilter = 'ALL' | ZonePeriod;
 
-export type ZoneEvent = Pick<MatchTimelineEventResponse, 'id' | 'period' | 'matchTime' | 'zone'>;
+export type ZoneEvent = Pick<MatchTimelineEventResponse, 'id' | 'period' | 'matchTime' | 'zone'> & {
+  /** Su zona sale de la regla del tipo y no de un tramo: ningún cambio de tramos se la quita. */
+  fixedZone?: boolean;
+};
 
 const SECONDS_PER_MINUTE = 60;
 

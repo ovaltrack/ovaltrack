@@ -175,6 +175,18 @@ describe('zone-stats', () => {
         expect(released.map(e => e.id)).toEqual(['b']);
       });
 
+      it('un evento de zona fija no se libera: su zona no depende del tramo', () => {
+        const withFixed = [...events, { id: 'fija', period: 1 as const, matchTime: 20 * 60, zone: { row: 2, col: 6 }, fixedZone: true }];
+
+        const released = eventsReleasedByEdit(
+          { period: 1, startMinute: 10, endMinute: 25 },
+          { period: 1, startMinute: 10, endMinute: 15 },
+          withFixed
+        );
+
+        expect(released.map(e => e.id)).toEqual(['b']);
+      });
+
       it('ampliar el tramo no libera ningún evento', () => {
         expect(eventsReleasedByEdit(
           { period: 1, startMinute: 10, endMinute: 25 },

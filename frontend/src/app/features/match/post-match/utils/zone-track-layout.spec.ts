@@ -2,8 +2,10 @@ import { ZoneAssignmentResponse } from '../../types/zone.types';
 import { ZoneEvent } from './zone-stats';
 import {
   FULL_TRACK, allGaps, blockLabel, blockLayout, isInWindow, trackWindow, countByFranja, gapAtMinute, gapsWithEventCount, isShortBlock,
-  minuteAtOffset, minuteToPercent, suggestNextRange, territoryRows
+  minuteAtOffset, minuteToPercent, suggestNextRange, territoryRows, fixedZoneMarks
 } from './zone-track-layout';
+import { ZoneRule } from '../../types/event-type.types';
+import { RuleEvent, ZoneRulesByType } from './zone-rule';
 
 describe('zone-track-layout', () => {
   const zone = (id: string, period: 1 | 2, startMinute: number, endMinute: number, row = 2, col = 3): ZoneAssignmentResponse =>
@@ -159,6 +161,68 @@ describe('zone-track-layout', () => {
       const events = [ev('x', 1, 5, null), ev('y', 1, 30, null), ev('z', 1, 43, null), ev('w', 2, 70, null), ev('v', 1, 12, { row: 2, col: 3 })];
 
       expect(gapsWithEventCount(assignments, events).map(g => g.eventCount)).toEqual([1, 2, 1]);
+    });
+  });
+
+  describe('gapsWithEventCount con zonas fijas', () => {
+    it('un evento de zona fija dentro de un hueco no cuenta: ya tiene zona', () => {
+      const assignments = [zone('a', 1, 10, 25)];
+      const events = [ev('sin', 1, 5, null), ev('fija', 1, 30, { row: 2, col: 6 })];
+
+      expect(gapsWithEventCount(assignments, events).map(g => g.eventCount)).toEqual([1, 0, 0]);
+    });
+  });
+
+  describe('fixedZoneMarks', () => {
+    const TRY: ZoneRule = { columns: [6], rowFrom: 'zone' };
+    const rules: ZoneRulesByType = new Map<string, ZoneRule | null>([
+      ['try', TRY], ['scrum', { columns: [2, 3, 4, 5] }], ['tackle', null]
+    ]);
+    const rev = (id: string, typeId: string, period: 1 | 2, seconds: number, extra: Partial<RuleEvent> = {}): RuleEvent =>
+      ({ id, eventTypeId: typeId, eventTypeName: typeId, period, matchTime: seconds, teamPossession: 'OWN', attributes: {}, ...extra });
+    const tryAt = (id: string, period: 1 | 2, seconds: number, zoneAttr: string, extra: Partial<RuleEvent> = {}) =>
+      rev(id, 'try', period, seconds, { attributes: { zone: zoneAttr }, ...extra });
+
+    it('marca el try en su celda y su minuto con decimales (22:30 -> 22,5)', () => {
+      const [mark] = fixedZoneMarks([tryAt('a', 1, 22 * 60 + 30, 'right')], rules, 'ALL');
+
+      expect(mark).toEqual({ eventId: 'a', eventTypeName: 'try', period: 1, cell: { row: 3, col: 6 }, minute: 22.5 });
+    });
+
+    it('un try del rival se marca espejado', () => {
+      const [mark] = fixedZoneMarks([tryAt('a', 1, 600, 'left', { teamPossession: 'OPPONENT' })], rules, 'ALL');
+
+      expect(mark.cell).toEqual({ row: 3, col: 1 });
+    });
+
+    it('solo marca los eventos cuya zona sale de la regla: no los tipos sin regla ni los que dependen del tramo', () => {
+      const events = [rev('s', 'scrum', 1, 600), rev('t', 'tackle', 1, 600), rev('u', 'desconocido', 1, 600), tryAt('a', 1, 600, 'left')];
+
+      expect(fixedZoneMarks(events, rules, 'ALL').map(m => m.eventId)).toEqual(['a']);
+    });
+
+    it('un try sin el atributo de lado depende del tramo y no se marca', () => {
+      expect(fixedZoneMarks([rev('a', 'try', 1, 600)], rules, 'ALL')).toEqual([]);
+    });
+
+    it('respeta el filtro de tiempo', () => {
+      const events = [tryAt('a', 1, 600, 'left'), tryAt('b', 2, 3000, 'left')];
+
+      expect(fixedZoneMarks(events, rules, 1).map(m => m.eventId)).toEqual(['a']);
+      expect(fixedZoneMarks(events, rules, 2).map(m => m.eventId)).toEqual(['b']);
+      expect(fixedZoneMarks(events, rules, 'ALL').map(m => m.eventId)).toEqual(['a', 'b']);
+    });
+
+    it('ordena cronológicamente y deja el tiempo añadido en el último segundo del tiempo', () => {
+      const events = [tryAt('late', 1, 43 * 60, 'left'), tryAt('early', 1, 5 * 60, 'left')];
+      const marks = fixedZoneMarks(events, rules, 'ALL');
+
+      expect(marks.map(m => m.eventId)).toEqual(['early', 'late']);
+      expect(marks[1].minute).toBeCloseTo(40 - 1 / 60, 5);
+    });
+
+    it('sin eventos no hay marcas', () => {
+      expect(fixedZoneMarks([], rules, 'ALL')).toEqual([]);
     });
   });
 

@@ -5,7 +5,7 @@ import { DragRange, dragNewRange, minuteAtPosition, resizeRange } from '../../ut
 import { ZONE_COLUMN_NAMES, zoneLabel } from '../../utils/zone-grid';
 import { ZoneEvent, ZonePeriodFilter, eventsInRange } from '../../utils/zone-stats';
 import {
-  BlockLayout, PeriodGap, TRACK_MINUTES, allGaps, blockLabel, blockLayout, countByFranja, gapAtMinute, isInWindow, minuteAtOffset,
+  BlockLayout, FixedZoneMark, PeriodGap, TRACK_MINUTES, allGaps, blockLabel, blockLayout, countByFranja, gapAtMinute, isInWindow, minuteAtOffset,
   minuteToPercent, territoryRows, trackWindow
 } from '../../utils/zone-track-layout';
 
@@ -90,6 +90,8 @@ interface DragState {
 })
 export class ZoneTerritoryGridComponent {
   readonly assignments = input<ZoneAssignmentResponse[]>([]);
+  /** Eventos de zona fija: se dibujan como marcas de solo lectura sobre la fila de su franja, sin ocupar rango. */
+  readonly fixedMarks = input<FixedZoneMark[]>([]);
   /** Eventos ya filtrados por posesión: sus conteos por franja aparecen en cada fila. */
   readonly events = input<ZoneEvent[]>([]);
   /** Todos los eventos del partido: el tooltip del arrastre cuenta los que entran en el rango, sin filtros. */

@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { MatchReviewStore } from './match-review.store';
 import { MatchTimelineEventResponse } from '../../types/event.types';
 import { clearPersistedSignals } from '../../../../shared/utils/persisted-signal';
+import { LiveCaptureEventType, ZoneRule } from '../../types/event-type.types';
 
 describe('MatchReviewStore (HU-8.4)', () => {
   let store: MatchReviewStore;
@@ -89,6 +90,63 @@ describe('MatchReviewStore (HU-8.4)', () => {
 
       expect(store.zonesStatus()).toBe('failed');
       expect(store.allViewModels()[0].zone).toBeUndefined();
+    });
+
+    describe('con la regla de zona del tipo', () => {
+      const typeWithRule = (id: string, name: string, zoneRule: ZoneRule | null): LiveCaptureEventType => ({
+        id, name, groupName: 'General', category: 'ATTACK', isScoring: false, points: 0, requiresPlayer: false, isActive: true,
+        createdAt: '', code: name.toUpperCase(), showInPalette: true, followUpEventTypeId: null, actor: 'ATTACKING',
+        possessionAfter: 'KEEP', followUpChoices: [], templateEventFields: [], zoneRule
+      });
+      const typed = (id: string, typeId: string, name: string, matchTime: number, attributes: Record<string, unknown> = {}): MatchTimelineEventResponse =>
+        ({ id, eventTypeId: typeId, eventTypeName: name, matchTime, period: 1, teamPossession: 'OWN', attributes });
+      const tryType = typeWithRule('t-try', 'Try', { columns: [6], rowFrom: 'zone' });
+      const scrumType = typeWithRule('t-scrum', 'Scrum', { columns: [2, 3, 4, 5] });
+      const tramoEnDefensa = { id: 'z', matchId: 'm', period: 1 as const, startMinute: 20, endMinute: 25, row: 2, col: 5 };
+
+      it('un try recién creado toma la celda de la regla y no la del tramo', () => {
+        store.setEventTypesList([tryType]);
+        store.setEvents([typed('a', 't-try', 'Try', 22 * 60, { zone: 'right' })]);
+        store.setZoneAssignments([tramoEnDefensa]);
+
+        const [vm] = store.allViewModels();
+
+        expect(vm.zone).toEqual({ row: 3, col: 6 });
+        expect(vm.zoneFixed).toBeTrue();
+      });
+
+      it('una zona fija no necesita que los tramos estén cargados', () => {
+        store.setEventTypesList([tryType]);
+        store.setEvents([typed('a', 't-try', 'Try', 22 * 60, { zone: 'left' })]);
+
+        expect(store.allViewModels()[0].zone).toEqual({ row: 1, col: 6 });
+      });
+
+      it('un evento restringido recién creado en una celda prohibida queda sin zona', () => {
+        store.setEventTypesList([scrumType]);
+        store.setEvents([typed('a', 't-scrum', 'Scrum', 22 * 60)]);
+        store.setZoneAssignments([{ ...tramoEnDefensa, col: 6 }]);
+
+        const [vm] = store.allViewModels();
+
+        expect(vm.zone).toBeNull();
+        expect(vm.zoneFixed).toBeFalse();
+      });
+
+      it('un evento restringido en una celda permitida toma la del tramo', () => {
+        store.setEventTypesList([scrumType]);
+        store.setEvents([typed('a', 't-scrum', 'Scrum', 22 * 60)]);
+        store.setZoneAssignments([{ ...tramoEnDefensa, col: 4 }]);
+
+        expect(store.allViewModels()[0].zone).toEqual({ row: 2, col: 4 });
+      });
+
+      it('la zona que informa el servidor manda sobre la derivada', () => {
+        store.setEventTypesList([tryType]);
+        store.setEvents([{ ...typed('a', 't-try', 'Try', 22 * 60, { zone: 'left' }), zone: { row: 3, col: 6 } }]);
+
+        expect(store.allViewModels()[0].zone).toEqual({ row: 3, col: 6 });
+      });
     });
 
     it('resetSession descarta los tramos', () => {
