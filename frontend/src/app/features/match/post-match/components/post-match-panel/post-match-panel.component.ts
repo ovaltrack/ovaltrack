@@ -270,7 +270,7 @@ export class PostMatchPanelComponent implements OnDestroy {
 
   zoneDescription(ev: ReviewEventViewModel, link: EventZoneLink): string {
     const zone: ZoneCellRef | null = ev.zone ?? null;
-    return describeEventZone(zone, link);
+    return describeEventZone(zone, link, ev.zoneFixed === true);
   }
 
   getEnrichedAttributesDisplay(ev: ReviewEventViewModel): { label: string; value: string }[] {

@@ -2,6 +2,7 @@ import { MatchTimelineEventResponse } from '../../types/event.types';
 import { ZoneRule } from '../../types/event-type.types';
 import { ZONE_HALF_MINUTES, ZoneAssignmentResponse, ZoneCellRef, ZonePeriod } from '../../types/zone.types';
 import { zoneLabel, zoneName } from './zone-grid';
+import { placeEventZone } from './zone-rule';
 import { effectiveMatchTime, periodRange } from './zone-stats';
 import { PeriodGap, gapAtMinute } from './zone-track-layout';
 
@@ -35,8 +36,9 @@ function containingSegment(period: ZonePeriod, seconds: number, assignments: Zon
 }
 
 /**
- * Zona de un evento calculada en el cliente con los tramos cargados. Solo para eventos que el servidor no zonificó
- * (los que se acaban de crear en la pantalla): los demás traen su `zone` de `GET /event/match/post-match`.
+ * Zona de un evento calculada en el cliente con los tramos cargados y la regla de su tipo (misma lógica que el backend).
+ * Solo para eventos que el servidor no zonificó (los que se acaban de crear o editar en la pantalla): los demás traen
+ * su `zone` de `GET /event/match/post-match`.
  */
 export function zoneForEvent(
   event: Pick<ZoneLinkEvent, 'period' | 'matchTime'> & Partial<Pick<MatchTimelineEventResponse, 'teamPossession' | 'attributes'>>,
@@ -45,7 +47,7 @@ export function zoneForEvent(
 ): ZoneCellRef | null {
   if (!isLocatable({ ...event, zone: null })) return null;
   const segment = containingSegment(event.period as ZonePeriod, effectiveMatchTime(event.period as ZonePeriod, event.matchTime), assignments);
-  return segment ? { row: segment.row, col: segment.col } : null;
+  return placeEventZone(rule, event.teamPossession, event.attributes, segment ? { row: segment.row, col: segment.col } : null);
 }
 
 /**
@@ -81,13 +83,15 @@ function periodEndMinute(link: EventZoneLink): number {
 
 /**
  * Descripción de la zona de un evento para tooltips y lectores de pantalla: la zona con su lateral y franja, el rango
- * del tramo si se conoce (o el hueco, si no tiene zona) y la aclaración del tiempo añadido.
+ * del tramo si se conoce (o "zona fija por el tipo" si la zona sale de la regla del tipo y no de un tramo; o el hueco,
+ * si no tiene zona) y la aclaración del tiempo añadido.
  */
 export function describeEventZone(zone: ZoneCellRef | null, link: EventZoneLink | null, fixedByType = false): string {
   const parts: string[] = [];
   if (zone) {
     parts.push(`${zoneLabel(zone)} · ${zoneName(zone)}`);
-    if (link?.segment) parts.push(`tramo ${link.segment.startMinute}′–${link.segment.endMinute}′`);
+    if (fixedByType) parts.push('zona fija por el tipo');
+    else if (link?.segment) parts.push(`tramo ${link.segment.startMinute}′–${link.segment.endMinute}′`);
   } else {
     parts.push('Sin zona');
     if (link?.gap) parts.push(`hueco ${link.gap.start}′–${link.gap.end}′`);

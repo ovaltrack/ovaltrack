@@ -176,4 +176,5 @@
 .time-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .time-colon { font: 700 1.1rem var(--font-mono); color: var(--text-secondary); }
 .time-equivalent { margin-top: 4px; font-size: 0.75rem; color: var(--text-secondary); }
+.zone-placement { margin-top: 4px; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); }
 

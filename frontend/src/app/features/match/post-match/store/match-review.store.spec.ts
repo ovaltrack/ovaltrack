@@ -147,6 +147,24 @@ describe('MatchReviewStore (HU-8.4)', () => {
 
         expect(store.allViewModels()[0].zone).toEqual({ row: 3, col: 6 });
       });
+
+      it('al cambiar el lado de un try editado, la zona del servidor se descarta y se deriva de la regla', () => {
+        store.setEventTypesList([tryType]);
+        store.setEvents([{ ...typed('a', 't-try', 'Try', 22 * 60, { zone: 'left' }), zone: { row: 1, col: 6 } }]);
+
+        store.updateEvent('a', { attributes: { zone: 'right' } });
+
+        expect(store.allViewModels()[0].zone).toEqual({ row: 3, col: 6 });
+      });
+
+      it('cambiar la posesión de un tipo sin regla conserva la zona del servidor', () => {
+        store.setEventTypesList([typeWithRule('t-tackle', 'Tackle', null)]);
+        store.setEvents([{ ...typed('a', 't-tackle', 'Tackle', 22 * 60), zone: { row: 2, col: 5 } }]);
+
+        store.updateEvent('a', { teamPossession: 'OPPONENT' });
+
+        expect(store.allViewModels()[0].zone).toEqual({ row: 2, col: 5 });
+      });
     });
 
     it('resetSession descarta los tramos', () => {
