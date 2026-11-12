@@ -10,6 +10,7 @@ import { RosterService } from '../services/roster.service';
 import { LiveCaptureService } from '../services/live-capture.service';
 import { Match, MatchStatus } from '../types/match.types';
 import { buildMatch } from '../../../testing/offline-test-helpers';
+import { clearPersistedSignals } from '../../../shared/utils/persisted-signal';
 
 const divisionMatch = (id: string, status: MatchStatus): Match => buildMatch({ id, divisionId: 'division-1', status });
 
@@ -25,6 +26,8 @@ describe('MatchSelectionComponent', () => {
   let finishNavigation: () => void;
 
   beforeEach(async () => {
+    // Los filtros se guardan en sessionStorage: sin esto, un test le pasaría su filtro al siguiente.
+    clearPersistedSignals();
     divisionPlayersRequests = [];
     availablePlayersRequests = [];
     savedRosterRequests = [];
@@ -222,6 +225,39 @@ describe('MatchSelectionComponent', () => {
 
       expect(component.openingGate.showIndicator()).toBeFalse();
       expect(component.isShowingOpening('played')).toBeFalse();
+    });
+  });
+
+  describe('remembering the filters in the tab', () => {
+    const recreate = (): MatchSelectComponent => TestBed.createComponent(MatchSelectComponent).componentInstance;
+
+    it('should keep the status filter after leaving and coming back to the screen', () => {
+      component.setFilter('finished');
+
+      expect(recreate().activeFilter()).toBe('finished');
+    });
+
+    it('should keep the cards view of the finished matches', () => {
+      component.setFilter('finished');
+      component.isCalendarView.set(true);
+
+      expect(recreate().isCalendarView()).toBeTrue();
+    });
+
+    it('should show the restored division in the selector, not the first one', () => {
+      component.userDivisions = [{ id: 'primera', name: 'Primera' }, { id: 'm19', name: 'M19' }];
+      component.selectedDivisionId.set('m19');
+      fixture.detectChanges();
+
+      const select: HTMLSelectElement = fixture.nativeElement.querySelector('#divisionSelect');
+      expect(select.value).toBe('m19');
+      expect(select.selectedOptions[0].textContent?.trim()).toBe('M19');
+    });
+
+    it('should ignore a saved filter that no longer exists', () => {
+      sessionStorage.setItem('ovaltrack.view.match-selection.filter', JSON.stringify('postponed'));
+
+      expect(recreate().activeFilter()).toBe('all');
     });
   });
 });

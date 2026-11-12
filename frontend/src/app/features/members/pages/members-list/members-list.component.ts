@@ -28,6 +28,7 @@ import {
 } from '../../types/members.types';
 import { BatchActionBarComponent } from '../../components/batch-action-bar/batch-action-bar.component';
 import { DeactivateModalComponent } from '../../components/deactivate-modal/deactivate-modal.component';
+import { oneOf, persistedSignal } from '../../../../shared/utils/persisted-signal';
 
 @Component({
   selector: 'app-members-list',
@@ -78,8 +79,13 @@ export class MembersListComponent implements OnInit {
   readonly initialRoles = signal<Map<string, UserRole>>(new Map());
   readonly dirtyMembers = signal<Set<string>>(new Set());
   readonly searchQuery = signal<string>('');
-  readonly activeFilter = signal<FilterCategory>('ALL');
-  readonly statusFilter = signal<StatusFilter>('ACTIVE');
+  /** Filtros recordados en la pestaña (recarga o volver a la pantalla); se borran al cerrar sesión. */
+  readonly activeFilter = persistedSignal<FilterCategory>('members.category', 'ALL', {
+    isValid: oneOf(this.filterDefs.map(def => def.key)),
+  });
+  readonly statusFilter = persistedSignal<StatusFilter>('members.status', 'ACTIVE', {
+    isValid: oneOf(this.statusFilterDefs.map(def => def.key)),
+  });
   readonly isLoading = signal<boolean>(true);
   readonly isSaving = signal<boolean>(false);
   readonly openMenu = signal<{ type: 'role' | 'actions'; memberId: string } | null>(null);

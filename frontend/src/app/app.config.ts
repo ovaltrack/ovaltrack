@@ -9,6 +9,7 @@ import { initializeLocalDatabases } from './features/local-database/local-databa
 import { DexieLiveMatchSource, LiveMatchSource } from './core/navigation/live-match.source';
 import { LocalSyncStatusSource, SyncStatusSource } from './core/navigation/sync-status.source';
 import { SESSION_CLEANUP } from './core/session/session-cleanup';
+import { clearPersistedSignals } from './shared/utils/persisted-signal';
 import { DashboardSnapshotCache } from './features/home/data/dashboard-snapshot.cache';
 
 export const appConfig: ApplicationConfig = {
@@ -35,6 +36,8 @@ export const appConfig: ApplicationConfig = {
         const snapshots = inject(DashboardSnapshotCache);
         return () => snapshots.clearAll();
       }
-    }
+    },
+    // Filtros y preferencias de vista guardados en sessionStorage: otro usuario en la misma pestaña no los hereda.
+    { provide: SESSION_CLEANUP, multi: true, useValue: () => clearPersistedSignals() }
   ]
 };

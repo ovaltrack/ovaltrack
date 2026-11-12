@@ -21,6 +21,7 @@ import { LocalDatabaseService } from '../../local-database/services/local-databa
 import { HALF_DURATION_SECONDS } from '../types/match.types';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { ThemeService } from '../../../core/services/theme.service';
+import { oneOf, persistedSignal } from '../../../shared/utils/persisted-signal';
 
 @Component({
   selector: 'ot-halftime-summary',
@@ -57,7 +58,10 @@ export class HalftimeSummaryComponent implements OnInit {
   readonly isConfirmingSecondHalf = signal<boolean>(false);
   readonly isStartingSecondHalf = signal<boolean>(false);
 
-  readonly playerFilter = signal<'all' | 'starters' | 'subs' | 'active'>('all');
+  /** Se recuerda por partido en la pestaña: la clave se asigna al conocer el partido (ngOnInit). */
+  readonly playerFilter = persistedSignal<'all' | 'starters' | 'subs' | 'active'>(null, 'all', {
+    isValid: oneOf(['all', 'starters', 'subs', 'active']),
+  });
 
   readonly startersCount = computed(() => this.playerStats().filter(p => p.isStarter).length);
   readonly subsCount = computed(() => this.playerStats().filter(p => !p.isStarter).length);
@@ -101,6 +105,7 @@ export class HalftimeSummaryComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('matchId') || '';
     this.matchId.set(id);
+    if (id) this.playerFilter.useKey(`halftime.${id}.players`);
 
     const handleOnline = () => this.isOffline.set(false);
     const handleOffline = () => this.isOffline.set(true);

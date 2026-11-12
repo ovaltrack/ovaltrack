@@ -13,6 +13,7 @@ import {
   playerName,
   statusDetail,
 } from './player-status';
+import { oneOf, persistedSignal } from '../../../../shared/utils/persisted-signal';
 
 type LoadState = 'loading' | 'ready' | 'error';
 
@@ -37,7 +38,10 @@ export class PlayersInvitationsComponent {
   readonly state = signal<LoadState>('loading');
   readonly players = signal<ClubPlayer[]>([]);
   readonly search = signal('');
-  readonly filter = signal<PlayerFilter>('ALL');
+  /** Filtro recordado en la pestaña (recarga o volver a la pantalla); se borra al cerrar sesión. */
+  readonly filter = persistedSignal<PlayerFilter>('members.players.filter', 'ALL', {
+    isValid: oneOf(this.FILTERS.map(f => f.key)),
+  });
   /** Jugadores con un envío en curso: su botón queda bloqueado para evitar envíos repetidos. */
   readonly sending = signal<ReadonlySet<string>>(new Set());
 
