@@ -33,6 +33,8 @@ Característica: Restricción de zonas de la cancha según el tipo de evento
       | filas    | 2 |
     Y el tipo de evento "Scrum" declara la regla de zona:
       | columnas | 2,3,4,5 |
+    Y el tipo de evento "Kick-off / Salida" declara la regla de zona:
+      | columnas | 1,2,3,4 |
     Y el tipo de evento "Tackle completado" no declara regla de zona
 
   # --- HAPPY PATHS: zona fija ---
@@ -127,6 +129,23 @@ Característica: Restricción de zonas de la cancha según el tipo de evento
       | Tackle completado |
       | Acarreo (Carry)   |
 
+  # Un saque (salida de centro, de 22m o drop-out de ingol) nunca sale del campo rival: solo se restringe la columna.
+  Escenario: Un kick-off propio se acepta en la mitad propia y toma la zona del tramo
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
+    Y que el partido tiene asignada la zona fila 2 columna 4 en el periodo 1 entre el minuto 20 y el minuto 25
+    Cuando el entrenador agrega post-partido el evento "Kick-off / Salida" con atributos "outcome=received_clean" para el equipo propio en el minuto 22 del periodo 1
+    Entonces el sistema responde con código 200
+    Y el evento "Kick-off / Salida" del minuto 22 del periodo 1 pertenece a la zona fila 2 columna 4
+
+  Escenario: El kick-off del rival tras un try nuestro se acepta aunque el tramo esté en el in-goal rival
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
+    Y que el partido tiene asignada la zona fila 2 columna 6 en el periodo 1 entre el minuto 20 y el minuto 25
+    Cuando el entrenador agrega post-partido el evento "Kick-off / Salida" con atributos "outcome=received_clean" para el equipo rival en el minuto 22 del periodo 1
+    Entonces el sistema responde con código 200
+    Y el evento "Kick-off / Salida" del minuto 22 del periodo 1 pertenece a la zona fila 2 columna 6
+
   # --- HAPPY PATHS: lecturas derivadas ---
 
   Escenario: El resumen de zonas del partido refleja la zona fija de los eventos
@@ -206,6 +225,20 @@ Característica: Restricción de zonas de la cancha según el tipo de evento
     Entonces el sistema rechaza la solicitud con código 409
     Cuando el entrenador consulta la línea de eventos del partido cerrado
     Entonces la línea de eventos no contiene eventos "Scrum"
+
+  Escenario: Un kick-off propio en un tramo del campo rival es rechazado
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
+    Y que el partido tiene asignada la zona fila 2 columna 5 en el periodo 1 entre el minuto 20 y el minuto 25
+    Cuando el entrenador agrega post-partido el evento "Kick-off / Salida" con atributos "outcome=received_clean" para el equipo propio en el minuto 22 del periodo 1
+    Entonces el sistema responde con 409 y "Kick-off / Salida (1T 22:00) no puede quedar en C5 (tramo 1T 20'–25'): solo puede ocurrir en las columnas 1 a 4"
+
+  Escenario: Un kick-off del rival en un tramo de nuestro in-goal es rechazado porque desde su lado sería el campo rival
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
+    Y que el partido tiene asignada la zona fila 2 columna 1 en el periodo 1 entre el minuto 20 y el minuto 25
+    Cuando el entrenador agrega post-partido el evento "Kick-off / Salida" con atributos "outcome=received_clean" para el equipo rival en el minuto 22 del periodo 1
+    Entonces el sistema responde con 409 y "Kick-off / Salida (1T 22:00) no puede quedar en C1 (tramo 1T 20'–25'): solo puede ocurrir en las columnas 1 a 4"
 
   # --- SAD PATHS: edición de eventos ---
 
