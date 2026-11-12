@@ -27,8 +27,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class EventZoneRuleValidator {
 
-    private static final int SECONDS_PER_MINUTE = 60;
-
     private final EventZoneResolver resolver;
 
     /** Al crear o editar un tramo: ningún evento activo que caiga en el rango queda en una celda prohibida. */
@@ -62,9 +60,8 @@ public class EventZoneRuleValidator {
     }
 
     private BusinessException rejection(Event event, ZoneAssignment zone) {
-        int seconds = event.getMatchTime();
-        return new BusinessException("%s (%dT %02d:%02d) no puede quedar en %s (tramo %dT %d'–%d'): solo puede ocurrir en %s".formatted(
-                event.getEventType().getName(), event.getPeriod(), seconds / SECONDS_PER_MINUTE, seconds % SECONDS_PER_MINUTE,
+        return new BusinessException("%s (%dT %s) no puede quedar en %s (tramo %dT %d'–%d'): solo puede ocurrir en %s".formatted(
+                event.getEventType().getName(), event.getPeriod(), ZoneGrid.clock(event.getMatchTime()),
                 ZoneGrid.label(new ZoneCell(zone.getRow(), zone.getCol())),
                 zone.getPeriod(), zone.getStartMinute(), zone.getEndMinute(),
                 event.getEventType().getZoneRule().describeAllowed()));

@@ -19,6 +19,7 @@
 --              columns = columnas permitidas (1 = in-goal propio ... 6 = in-goal rival), rows = filas permitidas (1 izquierda, 2 centro, 3 derecha),
 --              rowFrom = clave del atributo (left | center | right) de la que sale la fila. Un eje con un único valor queda fijo;
 --              si no, sale del tramo del partido. Sin zone_rule el tipo no tiene restricción (se carga con los UPDATE de abajo).
+--              closesTramo = true: después del evento el juego se reinicia, así que el tramo que lo contiene termina en su minuto.
 -- Reglas del catálogo:
 --   * Máximo 2 toques por evento en el modal: jugador (si requires_player) + 1 campo 'live'.
 --   * Un solo tipo por acción; el resultado va en un campo, no en tipos duplicados.
@@ -1347,9 +1348,12 @@ VALUES
 );
 
 -- zone_rule: zonas de la cancha donde puede ocurrir cada tipo (ver «zone_rule» en la cabecera del catálogo)
-UPDATE event_types SET zone_rule = '{"columns":[6],"rowFrom":"zone"}'::jsonb WHERE code = 'TRY';
-UPDATE event_types SET zone_rule = '{"columns":[6],"rows":[2]}'::jsonb WHERE code = 'PENALTY_TRY';
-UPDATE event_types SET zone_rule = '{"columns":[2,3,4,5],"rowFrom":"zone"}'::jsonb WHERE code IN ('CONVERSION', 'PENALTY_KICK');
-UPDATE event_types SET zone_rule = '{"columns":[2,3,4,5]}'::jsonb WHERE code IN ('DROP_GOAL', 'SCRUM', 'LINEOUT', 'MAUL', 'RUCK_OFFENSIVE', 'QUICK_PLAY');
+-- closesTramo: después del evento el juego se reinicia (saque o salida de 22), así que el tramo que lo contiene termina en su minuto
+UPDATE event_types SET zone_rule = '{"columns":[6],"rowFrom":"zone","closesTramo":true}'::jsonb WHERE code = 'TRY';
+UPDATE event_types SET zone_rule = '{"columns":[6],"rows":[2],"closesTramo":true}'::jsonb WHERE code = 'PENALTY_TRY';
+UPDATE event_types SET zone_rule = '{"columns":[2,3,4,5],"rowFrom":"zone","closesTramo":true}'::jsonb WHERE code = 'PENALTY_KICK';
+UPDATE event_types SET zone_rule = '{"columns":[2,3,4,5],"closesTramo":true}'::jsonb WHERE code = 'DROP_GOAL';
+UPDATE event_types SET zone_rule = '{"columns":[2,3,4,5],"rowFrom":"zone"}'::jsonb WHERE code = 'CONVERSION';
+UPDATE event_types SET zone_rule = '{"columns":[2,3,4,5]}'::jsonb WHERE code IN ('SCRUM', 'LINEOUT', 'MAUL', 'RUCK_OFFENSIVE', 'QUICK_PLAY');
 -- Kick-off / Salida: de centro (col. 3-4), de 22m (2-3) o drop-out de ingol (1-2); nunca desde el campo rival
 UPDATE event_types SET zone_rule = '{"columns":[1,2,3,4]}'::jsonb WHERE code = 'RESTART_KICK';

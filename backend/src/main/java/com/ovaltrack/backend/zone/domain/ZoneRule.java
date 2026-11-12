@@ -29,7 +29,7 @@ public record ZoneRule(List<Integer> columns, List<Integer> rows, String rowFrom
 
     /** Verdadero si el evento cierra el tramo que lo contiene (Try, Try penal, Kick H, Drop goal). */
     public boolean cutsTramo() {
-        throw new UnsupportedOperationException("Sin implementar");
+        return Boolean.TRUE.equals(closesTramo);
     }
 
     /** Celda final del evento (vista del equipo que lo ejecuta); vacío si falta un eje o la celda no está permitida. */

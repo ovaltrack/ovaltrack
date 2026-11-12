@@ -12,6 +12,7 @@ public final class ZoneGrid {
     public static final int COLS = 6;
     public static final int HALF_MINUTES = 40;
     public static final int PERIODS = 2;
+    public static final int SECONDS_PER_MINUTE = 60;
 
     private ZoneGrid() {
     }
@@ -31,12 +32,12 @@ public final class ZoneGrid {
      * (minuto 40 en el 1T, 80 en el 2T), porque el fin de un tramo es exclusivo. No cambia el matchTime guardado.
      */
     public static int effectiveSeconds(int period, int matchTimeSeconds) {
-        throw new UnsupportedOperationException("Sin implementar");
+        return Math.min(matchTimeSeconds, periodEndMinute(period) * SECONDS_PER_MINUTE - 1);
     }
 
     /** Reloj de partido para los mensajes: minutos acumulados y segundos con dos dígitos (ej. 65:00, 05:30). */
     public static String clock(int matchTimeSeconds) {
-        throw new UnsupportedOperationException("Sin implementar");
+        return "%02d:%02d".formatted(matchTimeSeconds / SECONDS_PER_MINUTE, matchTimeSeconds % SECONDS_PER_MINUTE);
     }
 
     public static boolean isValidCell(int row, int col) {

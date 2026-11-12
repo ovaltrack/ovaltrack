@@ -1,5 +1,6 @@
 package com.ovaltrack.backend.zone.business;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ovaltrack.backend.common.config.exceptions.EntityNotFoundException;
+import com.ovaltrack.backend.event.domain.Event;
 import com.ovaltrack.backend.event.repository.EventRepository;
 import com.ovaltrack.backend.match.business.MatchSecurityValidator;
 import com.ovaltrack.backend.match.business.MatchService;
@@ -50,7 +52,7 @@ public class ZoneAssignmentService {
         Match match = findManageableMatch(matchId, authentication);
         validator.validateMatchEditable(match);
         validator.validate(request, existingAssignments(matchId), null);
-        ruleValidator.validateAssignment(request, eventRepository.findPostMatchEventsByMatchId(matchId));
+        validateAgainstEvents(matchId, request);
 
         ZoneAssignment zone = new ZoneAssignment();
         zone.setMatch(match);
@@ -65,7 +67,7 @@ public class ZoneAssignmentService {
         validator.validateMatchEditable(match);
         ZoneAssignment zone = findZone(matchId, zoneId);
         validator.validate(request, existingAssignments(matchId), zoneId);
-        ruleValidator.validateAssignment(request, eventRepository.findPostMatchEventsByMatchId(matchId));
+        validateAgainstEvents(matchId, request);
 
         ZoneAssignmentMapper.applyTo(zone, request);
 
@@ -78,6 +80,13 @@ public class ZoneAssignmentService {
         validator.validateMatchEditable(match);
 
         zoneAssignmentRepository.delete(findZone(matchId, zoneId));
+    }
+
+    /** Reglas que dependen de los eventos del partido: celdas prohibidas por tipo y cortes por try. */
+    private void validateAgainstEvents(UUID matchId, ZoneAssignmentCreationDTO request) {
+        Collection<Event> events = eventRepository.findPostMatchEventsByMatchId(matchId);
+        ruleValidator.validateAssignment(request, events);
+        cutValidator.validateAssignment(request, events);
     }
 
     private Match findManageableMatch(UUID matchId, Authentication authentication) {

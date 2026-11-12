@@ -17,9 +17,6 @@ import com.ovaltrack.backend.zone.domain.ZoneQuery;
 @Component
 public class EventZoneResolver {
 
-    private static final int SECONDS_PER_MINUTE = 60;
-    private static final int MINUTES_PER_PERIOD = 40;
-
     /**
      * Celda del evento: la del tramo que contiene su minuto, ajustada por la regla de su tipo. La regla se lee desde el
      * equipo que ejecuta el evento, así que para el rival se espeja la celda del tramo, se aplica la regla y se vuelve.
@@ -47,25 +44,17 @@ public class EventZoneResolver {
             return Optional.empty();
         }
 
-        int effectiveSeconds = effectiveSeconds(period, matchTimeSeconds);
+        // El tiempo añadido cuenta como el último segundo del período (el fin del tramo es exclusivo)
+        int effectiveSeconds = ZoneGrid.effectiveSeconds(period, matchTimeSeconds);
 
         return assignments.stream()
                 .filter(zone -> zone.getPeriod().equals(period))
-                .filter(zone -> zone.getStartMinute() * SECONDS_PER_MINUTE <= effectiveSeconds
-                        && effectiveSeconds < zone.getEndMinute() * SECONDS_PER_MINUTE)
+                .filter(zone -> zone.getStartMinute() * ZoneGrid.SECONDS_PER_MINUTE <= effectiveSeconds
+                        && effectiveSeconds < zone.getEndMinute() * ZoneGrid.SECONDS_PER_MINUTE)
                 .findFirst();
     }
 
     private ZoneCell orient(ZoneCell cell, boolean mirrored) {
         return mirrored ? ZoneGrid.mirror(cell) : cell;
-    }
-
-    /**
-     * El tiempo añadido cuenta como el minuto 40 (1T) o el 80 (2T). Como el fin del tramo es exclusivo,
-     * se limita al último segundo del período. Solo afecta a la lectura: el matchTime guardado no cambia.
-     */
-    private int effectiveSeconds(int period, int matchTimeSeconds) {
-        int lastSecondOfPeriod = period * MINUTES_PER_PERIOD * SECONDS_PER_MINUTE - 1;
-        return Math.min(matchTimeSeconds, lastSecondOfPeriod);
     }
 }
