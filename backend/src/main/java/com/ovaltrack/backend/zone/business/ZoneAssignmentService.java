@@ -49,6 +49,7 @@ public class ZoneAssignmentService {
         Match match = findManageableMatch(matchId, authentication);
         validator.validateMatchEditable(match);
         validator.validate(request, existingAssignments(matchId), null);
+        ruleValidator.validateAssignment(request, eventRepository.findPostMatchEventsByMatchId(matchId));
 
         ZoneAssignment zone = new ZoneAssignment();
         zone.setMatch(match);
@@ -63,6 +64,7 @@ public class ZoneAssignmentService {
         validator.validateMatchEditable(match);
         ZoneAssignment zone = findZone(matchId, zoneId);
         validator.validate(request, existingAssignments(matchId), zoneId);
+        ruleValidator.validateAssignment(request, eventRepository.findPostMatchEventsByMatchId(matchId));
 
         ZoneAssignmentMapper.applyTo(zone, request);
 
