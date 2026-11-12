@@ -8,6 +8,7 @@ import { ZoneAssignmentResponse, ZoneCellRef } from '../../../types/zone.types';
 import { MatchZonesStore } from '../../store/match-zones.store';
 import { PostMatchShellStore } from '../../store/post-match-shell.store';
 import { watchCompactLayout } from '../../utils/zone-compact';
+import { fixedZoneMarks } from '../../utils/zone-track-layout';
 import { LoadingGate } from '../../../../../shared/utils/loading-gate';
 import { ZoneDeepLinkTarget, resolveZoneDeepLink } from '../../utils/zone-deep-link';
 import { ZONE_SHORTCUT_HELP, isSaveShortcut, isTypingTarget, shortcutCell } from '../../utils/zone-shortcuts';
@@ -90,6 +91,9 @@ export class PostMatchZonesComponent implements OnInit, OnDestroy {
   /** Eventos según la posesión elegida; el tiempo lo aplican por separado la cancha y la grilla. */
   readonly filteredEvents = computed(() =>
     filterEvents(this.zonesStore.events(), { ...NO_ZONE_EVENT_FILTERS, possession: this.possessionFilter() }));
+
+  /** Eventos de zona fija del tiempo elegido (y de la posesión elegida): la grilla los marca sobre su franja. */
+  readonly fixedMarks = computed(() => fixedZoneMarks(this.filteredEvents(), this.zonesStore.zoneRules(), this.periodFilter()));
 
   // Todo se deriva de los eventos que ya traen su zona: una sola fuente de verdad.
   readonly cellCounts = computed(() => countByCell(this.filteredEvents(), this.periodFilter()));

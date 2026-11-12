@@ -1,5 +1,5 @@
 import {
-  ZoneEvent, NO_ZONE_EVENT_FILTERS, coverageMinutes, effectiveMatchTime, filterEvents, countByCell, describeSegment, eventsInRange, eventsReleasedByEdit,
+  ZoneEvent, NO_ZONE_EVENT_FILTERS, coverageMinutes, effectiveMatchTime, filterEvents, countByCell, describeSegment, eventsInRange, eventsLinkedByRange, eventsReleasedByEdit,
   findGaps, findOverlap, periodRange, sortChronologically, unzonedEvents, zoneCoveragePercent
 } from './zone-stats';
 import { ZoneAssignmentResponse } from '../../types/zone.types';
@@ -246,6 +246,17 @@ describe('zone-stats', () => {
     it('suma los minutos de ambos tiempos sobre los 80 y redondea', () => {
       expect(zoneCoveragePercent([zone('a', 1, 0, 20), zone('b', 2, 40, 60)])).toBe(50);
       expect(zoneCoveragePercent([zone('a', 1, 0, 1)])).toBe(1);
+    });
+  });
+
+  describe('eventsLinkedByRange', () => {
+    const ev = (id: string, minute: number, fixedZone?: boolean): ZoneEvent =>
+      ({ id, period: 1, matchTime: minute * 60, zone: { row: 2, col: 3 }, fixedZone });
+
+    it('cuenta solo los eventos del rango cuya zona depende del tramo', () => {
+      const linked = eventsLinkedByRange({ period: 1, startMinute: 10, endMinute: 25 }, [ev('a', 12), ev('fija', 15, true), ev('fuera', 30)]);
+
+      expect(linked.map(e => e.id)).toEqual(['a']);
     });
   });
 });

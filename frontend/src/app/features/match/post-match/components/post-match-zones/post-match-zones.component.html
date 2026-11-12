@@ -44,6 +44,11 @@
                     Vista relativa a tu equipo: siempre atacás hacia la derecha. En el 2T marcá como si no hubiera cambio de lado.
                     Izquierda y derecha se leen mirando hacia el ataque.
                   </p>
+                  <strong>Zona fija por tipo de evento</strong>
+                  <p data-testid="fixed-zone-note">
+                    Algunas jugadas no dependen del tramo: un Try queda en el in-goal rival, del lado del apoyo, y un Scrum o un
+                    Line-out nunca en el in-goal. Se marcan con ◆ en la grilla y un tramo no puede dejarlas en una zona que su tipo no permite.
+                  </p>
                   <strong>Rango del tramo</strong>
                   <ul data-testid="range-rules">
                     <li>Inicio incluido, fin excluido: 20′–25′ y 25′–30′ no se pisan.</li>
@@ -75,7 +80,7 @@
           </div>
 
           <app-zone-territory-grid
-            [assignments]="zonesStore.assignments()" [events]="filteredEvents()" [allEvents]="zonesStore.events()" [periodFilter]="periodFilter()" [compact]="compact()"
+            [assignments]="zonesStore.assignments()" [events]="filteredEvents()" [fixedMarks]="fixedMarks()" [allEvents]="zonesStore.events()" [periodFilter]="periodFilter()" [compact]="compact()"
             [selectedId]="zonesStore.editingId()" [selectedCol]="selectedCell()?.col ?? null"
             [conflictId]="zonesStore.conflictId()"
             [highlightCell]="highlightedCell()" [previewRange]="zonesStore.formRange()"

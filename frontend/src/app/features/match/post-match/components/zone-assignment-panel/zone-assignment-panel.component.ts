@@ -6,7 +6,8 @@ import { ToastService } from 'src/app/core/services/toast.service';
 import { MatchZonesStore } from '../../store/match-zones.store';
 import { HALFTIME_SPLIT_MESSAGE, deduceZonePeriod, rangeCrossesHalftime, validateZoneForm } from '../../utils/zone-form.utils';
 import { ZONE_COLUMN_NAMES, ZONE_ROW_NAMES, ZONE_ROW_SHORT_NAMES, columnRangeLabel, zoneLabel } from '../../utils/zone-grid';
-import { describeSegment, eventsInRange, eventsReleasedByEdit, findOverlap } from '../../utils/zone-stats';
+import { describeSegment, eventsLinkedByRange, eventsReleasedByEdit, findOverlap } from '../../utils/zone-stats';
+import { findZoneRuleConflict } from '../../utils/zone-rule';
 import { ListOverflow, OverflowMetrics, overflowCapacity, visibleWithOverflow } from '../../utils/list-overflow';
 import { observeHeight } from '../../utils/observe-height';
 import { GapWithEvents, TRACK_MINUTES, gapsWithEventCount, suggestNextRange } from '../../utils/zone-track-layout';
@@ -194,7 +195,15 @@ export class ZoneAssignmentPanelComponent implements OnInit, AfterViewInit {
 
     const range = this.usableRange();
     const clash = range ? findOverlap(range, this.store.assignments(), this.editingId) : null;
-    return clash ? `Choca con el tramo ${describeSegment(clash)}.` : null;
+    return clash ? `Choca con el tramo ${describeSegment(clash)}.` : this.zoneRuleProblem(range);
+  }
+
+  /** Primer evento que la celda elegida dejaría en una zona que su tipo prohíbe; el 409 del backend dice lo mismo. */
+  private zoneRuleProblem(range: UsableRange | null): string | null {
+    const cell = this.selectedCell();
+    return range && cell
+      ? findZoneRuleConflict({ ...range, row: cell.row, col: cell.col }, this.store.events(), this.store.zoneRules())?.message ?? null
+      : null;
   }
 
   /** Motivo por el que no se puede guardar todavía (null = listo). */
@@ -205,14 +214,14 @@ export class ZoneAssignmentPanelComponent implements OnInit, AfterViewInit {
   /** Eventos que quedarían vinculados con el rango actual; null mientras el rango no sea válido. */
   get linkedEventCount(): number | null {
     const range = this.usableRange();
-    return range ? eventsInRange(range, this.store.events()).length : null;
+    return range ? eventsLinkedByRange(range, this.store.zoneEvents()).length : null;
   }
 
   /** Al editar: eventos que hoy tienen zona gracias a este tramo y la perderían con el nuevo rango. */
   get releasedEventCount(): number {
     const original = this.editingId ? this.store.assignments().find(a => a.id === this.editingId) : undefined;
     const range = this.usableRange();
-    return original && range ? eventsReleasedByEdit(original, range, this.store.events()).length : 0;
+    return original && range ? eventsReleasedByEdit(original, range, this.store.zoneEvents()).length : 0;
   }
 
   /** Huecos sin zona de ambos tiempos, con los eventos que hoy caen en cada uno. */
@@ -307,7 +316,7 @@ export class ZoneAssignmentPanelComponent implements OnInit, AfterViewInit {
     const zone = this.editingId ? this.store.assignments().find(a => a.id === this.editingId) : undefined;
     if (!zone || this.store.isSaving()) return;
 
-    const released = eventsInRange(zone, this.store.events()).length;
+    const released = eventsLinkedByRange(zone, this.store.zoneEvents()).length;
     const restore: ZoneAssignmentRequest = {
       row: zone.row, col: zone.col, period: zone.period, startMinute: zone.startMinute, endMinute: zone.endMinute
     };

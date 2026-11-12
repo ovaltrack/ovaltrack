@@ -68,6 +68,11 @@
                     [style.left.%]="block.left + block.width" (pointerdown)="onHandleDown($event, block.assignment, 'end')" (click)="$event.stopPropagation()"></span>
             }
           }
+          <!-- Eventos de zona fija: marca de solo lectura, no es un tramo ni ocupa rango -->
+          @for (mark of row.marks; track mark.eventId) {
+            <span class="fixed-mark" role="img" data-testid="territory-fixed-mark"
+                  [style.left.%]="mark.left" [attr.aria-label]="mark.aria" [attr.title]="mark.aria"></span>
+          }
         </div>
       }
 

@@ -5,6 +5,7 @@ import { EventTypeService } from '../../services/event-type.service';
 import { ZoneService } from '../../services/zone.service';
 import { MatchTimelineEventResponse } from '../../types/event.types';
 import { ZONE_MOTION_MS } from '../utils/zone-motion';
+import { ZoneRulesByType, isFixedZone } from '../utils/zone-rule';
 import { ZoneAssignmentResponse, ZoneAssignmentRequest, ZoneCellRef, ZonePeriod } from '../../types/zone.types';
 
 /**
@@ -21,6 +22,8 @@ export class MatchZonesStore {
   readonly assignments = signal<ZoneAssignmentResponse[]>([]);
   private readonly rawEvents = signal<MatchTimelineEventResponse[]>([]);
   private readonly activeTypeIds = signal<Set<string> | null>(null);
+  /** Regla de zona de cada tipo de evento (catálogo): define qué eventos tienen zona fija y no dependen de un tramo. */
+  readonly zoneRules = signal<ZoneRulesByType>(new Map());
   readonly isLoading = signal<boolean>(false);
   readonly isSaving = signal<boolean>(false);
   /** Tramo que choca con el rango en edición; lo resaltan la lista y la timeline (estado de UI compartido). */
@@ -43,6 +46,12 @@ export class MatchZonesStore {
     return active === null ? raw : raw.filter(event => active.has(event.eventTypeId));
   });
 
+  /** Los mismos eventos, marcados si su zona sale de la regla del tipo (`fixedZone`) y ningún tramo se la da ni se la quita. */
+  readonly zoneEvents = computed(() => {
+    const rules = this.zoneRules();
+    return this.events().map(event => ({ ...event, fixedZone: isFixedZone(rules.get(event.eventTypeId), event.attributes) && !!event.zone }));
+  });
+
   load(matchId: string): Observable<void> {
     this.isLoading.set(true);
     return forkJoin({
@@ -54,6 +63,7 @@ export class MatchZonesStore {
         this.assignments.set(zones.assignments);
         this.rawEvents.set(events);
         this.activeTypeIds.set(types.length > 0 ? new Set(types.map(type => type.id)) : null);
+        this.zoneRules.set(new Map(types.map(type => [type.id, type.zoneRule ?? null])));
       }),
       map(() => undefined),
       finalize(() => this.isLoading.set(false))
@@ -90,6 +100,7 @@ export class MatchZonesStore {
     this.assignments.set([]);
     this.rawEvents.set([]);
     this.activeTypeIds.set(null);
+    this.zoneRules.set(new Map());
   }
 
   private runAndReload(matchId: string, write$: Observable<unknown>): Observable<void> {

@@ -88,6 +88,13 @@
 }
 .block:hover { background: var(--btn-primary-hover); }
 .block-label { font: 700 11px var(--font-mono); letter-spacing: .02em; white-space: nowrap; }
+
+/* Marca ◆ de un evento de zona fija: rombo de solo lectura sobre su franja; el borde navy se lee sobre el bloque verde y sobre el hueco ámbar */
+.fixed-mark {
+  position: absolute; top: 50%; z-index: 2; width: 12px; height: 12px; box-sizing: border-box;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: var(--surface); border: 2px solid var(--navy); border-radius: 2px;
+}
 /* Anillos: el ámbar es "sin zona" en esta pantalla, así que no se usa para resaltar. El orden importa: gana el último. */
 /* Resalte cruzado (hover en la cancha): anillo verde oscuro fino; el resto de los bloques se atenúa */
 .block.is-linked { box-shadow: 0 0 0 1px var(--surface), 0 0 0 3px var(--btn-primary-bg); z-index: 1; }

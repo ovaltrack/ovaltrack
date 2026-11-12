@@ -5,7 +5,7 @@ import { DragRange, dragNewRange, minuteAtPosition, resizeRange } from '../../ut
 import { ZONE_COLUMN_NAMES, zoneLabel } from '../../utils/zone-grid';
 import { ZoneEvent, ZonePeriodFilter, eventsInRange } from '../../utils/zone-stats';
 import {
-  BlockLayout, FixedZoneMark, PeriodGap, TRACK_MINUTES, allGaps, blockLabel, blockLayout, countByFranja, gapAtMinute, isInWindow, minuteAtOffset,
+  BlockLayout, FixedZoneMark, PeriodGap, TRACK_MINUTES, allGaps, blockLabel, blockLayout, countByFranja, describeFixedMark, gapAtMinute, isInWindow, minuteAtOffset,
   minuteToPercent, territoryRows, trackWindow
 } from '../../utils/zone-track-layout';
 
@@ -25,12 +25,20 @@ interface BlockView {
   aria: string;
 }
 
+/** Marca de solo lectura de un evento de zona fija: posición horizontal en % del eje y texto para tooltip y lectores. */
+interface MarkView {
+  eventId: string;
+  left: number;
+  aria: string;
+}
+
 interface RowView {
   col: number;
   name: string;
   range: string;
   count: number;
   blocks: BlockView[];
+  marks: MarkView[];
 }
 
 interface Tick {
@@ -235,10 +243,15 @@ export class ZoneTerritoryGridComponent {
           + (this.pickingPeriod() ? `Tocá para ver el ${assignment.period}T` : 'Tocá para editar')
       }];
     });
+    const marks = this.fixedMarks().flatMap(mark => {
+      const left = minuteToPercent(mark.minute, this.view());
+      return left < 0 || left > 100 ? [] : [{ col: mark.cell.col, eventId: mark.eventId, left, aria: describeFixedMark(mark) }];
+    });
     return territoryRows().map(row => ({
       ...row,
       count: counts.get(row.col) ?? 0,
-      blocks: blocks.filter(block => block.assignment.col === row.col)
+      blocks: blocks.filter(block => block.assignment.col === row.col),
+      marks: marks.filter(mark => mark.col === row.col)
     }));
   });
 

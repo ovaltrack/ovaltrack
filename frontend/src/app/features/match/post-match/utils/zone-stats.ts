@@ -106,10 +106,15 @@ export function eventsInRange<T extends ZoneEvent>(range: RangeLike, events: T[]
   });
 }
 
+/** Eventos del rango cuya zona depende de un tramo: los de zona fija ya tienen la suya por la regla del tipo. */
+export function eventsLinkedByRange<T extends ZoneEvent>(range: RangeLike, events: T[]): T[] {
+  return eventsInRange(range, events.filter(event => !event.fixedZone));
+}
+
 /** Eventos que hoy tienen zona gracias al rango anterior y la perderían con el nuevo. */
 export function eventsReleasedByEdit<T extends ZoneEvent>(previous: RangeLike, next: RangeLike, events: T[]): T[] {
-  const stillLinked = new Set(eventsInRange(next, events).map(event => event.id));
-  return eventsInRange(previous, events).filter(event => !stillLinked.has(event.id));
+  const stillLinked = new Set(eventsLinkedByRange(next, events).map(event => event.id));
+  return eventsLinkedByRange(previous, events).filter(event => !stillLinked.has(event.id));
 }
 
 /** Filtros de eventos: tipo y posesión. 'ALL' no filtra. */

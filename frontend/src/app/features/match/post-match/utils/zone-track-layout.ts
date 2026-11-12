@@ -1,7 +1,7 @@
 import { ZONE_GRID_COLS, ZONE_HALF_MINUTES, ZoneAssignmentResponse, ZonePeriod } from '../../types/zone.types';
 import { ZONE_COLUMN_NAMES, ZONE_ROW_LETTERS, columnRangeLabel, zoneLabel } from './zone-grid';
-import { RuleEvent, ZoneRulesByType } from './zone-rule';
-import { MinuteRange, ZoneEvent, ZonePeriodFilter, eventsInRange, findGaps, periodRange } from './zone-stats';
+import { RuleEvent, ZoneRulesByType, isFixedZone, placeEventZone } from './zone-rule';
+import { MinuteRange, ZoneEvent, ZonePeriodFilter, effectiveMatchTime, eventsInRange, findGaps, periodRange } from './zone-stats';
 
 /** Largo del eje horizontal de la grilla de territorio: los 80 minutos del partido, con el 2T a continuación del 1T. */
 export const TRACK_MINUTES = ZONE_HALF_MINUTES * 2;
@@ -129,9 +129,11 @@ export interface GapWithEvents extends PeriodGap {
 }
 
 export function gapsWithEventCount(assignments: ZoneAssignmentResponse[], events: ZoneEvent[]): GapWithEvents[] {
+  // Un evento que ya tiene zona (la fija su tipo) no queda sin zona por caer en un hueco.
+  const unzoned = events.filter(event => !event.zone);
   return allGaps(assignments).map(gap => ({
     ...gap,
-    eventCount: eventsInRange({ period: gap.period, startMinute: gap.start, endMinute: gap.end }, events).length
+    eventCount: eventsInRange({ period: gap.period, startMinute: gap.start, endMinute: gap.end }, unzoned).length
   }));
 }
 
@@ -145,7 +147,30 @@ export interface FixedZoneMark {
   minute: number;
 }
 
+const SECONDS_PER_MINUTE = 60;
+
+function isZonePeriod(period: number): period is ZonePeriod {
+  return period === 1 || period === 2;
+}
+
 /** Eventos cuya zona fija la da la regla del tipo, en orden cronológico y dentro del tiempo elegido. */
 export function fixedZoneMarks(events: RuleEvent[], rules: ZoneRulesByType, filter: ZonePeriodFilter): FixedZoneMark[] {
-  throw new Error('Sin implementar');
+  return events
+    .filter(event => isZonePeriod(event.period) && (filter === 'ALL' || event.period === filter))
+    .flatMap(event => {
+      const rule = rules.get(event.eventTypeId);
+      const cell = isFixedZone(rule, event.attributes) ? placeEventZone(rule, event.teamPossession, event.attributes, null) : null;
+      const period = event.period as ZonePeriod;
+      return cell
+        ? [{ eventId: event.id, eventTypeName: event.eventTypeName, period, cell, minute: effectiveMatchTime(period, event.matchTime) / SECONDS_PER_MINUTE }]
+        : [];
+    })
+    .sort((a, b) => a.minute - b.minute);
+}
+
+/** Texto de la marca para el tooltip y los lectores de pantalla, ej. "Try 22:30 · D6 · zona fija por el tipo". */
+export function describeFixedMark(mark: FixedZoneMark): string {
+  const seconds = Math.round(mark.minute * SECONDS_PER_MINUTE);
+  const clock = `${String(Math.floor(seconds / SECONDS_PER_MINUTE)).padStart(2, '0')}:${String(seconds % SECONDS_PER_MINUTE).padStart(2, '0')}`;
+  return `${mark.eventTypeName} ${clock} · ${zoneLabel(mark.cell)} · zona fija por el tipo`;
 }

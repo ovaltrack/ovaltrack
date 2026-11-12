@@ -2,7 +2,7 @@ import { ZoneAssignmentResponse } from '../../types/zone.types';
 import { ZoneEvent } from './zone-stats';
 import {
   FULL_TRACK, allGaps, blockLabel, blockLayout, isInWindow, trackWindow, countByFranja, gapAtMinute, gapsWithEventCount, isShortBlock,
-  minuteAtOffset, minuteToPercent, suggestNextRange, territoryRows, fixedZoneMarks
+  minuteAtOffset, minuteToPercent, suggestNextRange, territoryRows, fixedZoneMarks, describeFixedMark
 } from './zone-track-layout';
 import { ZoneRule } from '../../types/event-type.types';
 import { RuleEvent, ZoneRulesByType } from './zone-rule';
@@ -262,6 +262,19 @@ describe('zone-track-layout', () => {
 
     it('si afterMinute cae dentro de un hueco, salta al siguiente hueco que arranca desde ahí', () => {
       expect(suggestNextRange(assignments, 7)).toEqual({ start: 25, end: 30 });
+    });
+  });
+
+  describe('describeFixedMark', () => {
+    const mark = (minute: number) => ({ eventId: 'a', eventTypeName: 'Try', period: 1 as const, cell: { row: 3, col: 6 }, minute });
+
+    it('describe el tipo, el reloj, la celda y que la zona sale del tipo', () => {
+      expect(describeFixedMark(mark(22.5))).toBe('Try 22:30 · D6 · zona fija por el tipo');
+    });
+
+    it('rellena con cero y el tiempo añadido queda en el último segundo del tiempo', () => {
+      expect(describeFixedMark(mark(5))).toBe('Try 05:00 · D6 · zona fija por el tipo');
+      expect(describeFixedMark(mark(40 - 1 / 60))).toBe('Try 39:59 · D6 · zona fija por el tipo');
     });
   });
 });
