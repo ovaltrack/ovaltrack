@@ -56,6 +56,14 @@ Then('el tipo de evento {string} no declara regla de zona', function (nombre) {
   assert.equal(findCatalogType(this, nombre).zoneRule ?? null, null);
 });
 
+Then('el tipo de evento {string} cierra el tramo', function (nombre) {
+  assert.equal(findCatalogType(this, nombre).zoneRule?.closesTramo, true, `"${nombre}" debería cerrar el tramo`);
+});
+
+Then('el tipo de evento {string} no cierra el tramo', function (nombre) {
+  assert.notEqual(findCatalogType(this, nombre).zoneRule?.closesTramo, true, `"${nombre}" no debería cerrar el tramo`);
+});
+
 // <==================== Alta y edición de eventos ====================>
 
 When('el entrenador agrega post-partido el evento {string} con atributos {string} para el equipo rival en el minuto {int} del periodo {int}', async function (tipoEvento, atributos, minuto, periodo) {

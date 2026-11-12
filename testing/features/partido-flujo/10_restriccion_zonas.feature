@@ -302,3 +302,130 @@ Característica: Restricción de zonas de la cancha según el tipo de evento
       | Tackle completado | OWN      | 1320            | 1       |           |
     Cuando el entrenador asigna la zona fila 2 columna 6 al periodo 1 entre el minuto 20 y el minuto 25
     Entonces el sistema responde con código 201
+
+  # --- CORTE DE TRAMO: después de un try, un try penal, un Kick H o un drop el juego se reinicia ---
+  # El tramo que contiene uno de esos eventos tiene que terminar en su minuto (fin = minuto del evento + 1).
+  # Nunca se rechaza el evento: si un try se carga dentro de un tramo, el tramo queda cruzándolo hasta que se corte.
+
+  Escenario: El catálogo indica qué tipos de evento cierran el tramo
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Cuando el entrenador consulta el catálogo de tipos de evento
+    Entonces el sistema responde con código 200
+    Y el tipo de evento "Try" cierra el tramo
+    Y el tipo de evento "Try penal" cierra el tramo
+    Y el tipo de evento "Kick H (Penal a palos)" cierra el tramo
+    Y el tipo de evento "Drop goal" cierra el tramo
+    Y el tipo de evento "Conversión" no cierra el tramo
+    Y el tipo de evento "Scrum" no cierra el tramo
+    Y el tipo de evento "Tackle completado" no cierra el tramo
+
+  Escenario: Un tramo que termina en el minuto del try se acepta
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
+    Y que se han registrado los siguientes eventos en el partido:
+      | tipo_evento | posesion | tiempo_segundos | periodo | atributos  |
+      | Try         | OWN      | 1350            | 1       | zone=right |
+    Cuando el entrenador asigna la zona fila 2 columna 5 al periodo 1 entre el minuto 20 y el minuto 23
+    Entonces el sistema responde con código 201
+
+  Escenario: Un tramo que empieza después del try se acepta
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
+    Y que se han registrado los siguientes eventos en el partido:
+      | tipo_evento | posesion | tiempo_segundos | periodo | atributos  |
+      | Try         | OWN      | 1350            | 1       | zone=right |
+    Cuando el entrenador asigna la zona fila 2 columna 3 al periodo 1 entre el minuto 23 y el minuto 30
+    Entonces el sistema responde con código 201
+
+  Escenario: Un try en el tiempo añadido cierra el tramo que termina en el 40
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
+    # Solo la captura en vivo registra tiempo añadido (el alta post-partido no pasa del 40′ en el 1T)
+    Y el entrenador registra en vivo el evento "Try" con atributos "zone=center" para el equipo propio en el minuto 43 del periodo 1
+    Cuando el entrenador asigna la zona fila 2 columna 5 al periodo 1 entre el minuto 35 y el minuto 40
+    Entonces el sistema responde con código 201
+
+  Escenario: Cargar un try dentro de un tramo nunca se rechaza y el tramo no cambia
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
+    Y que el partido tiene asignada la zona fila 2 columna 5 en el periodo 1 entre el minuto 20 y el minuto 25
+    Cuando el entrenador agrega post-partido el evento "Try" con atributos "zone=right" para el equipo propio en el minuto 22 del periodo 1
+    Entonces el sistema responde con código 200
+    Cuando el entrenador consulta las zonas del partido
+    Entonces la consulta devuelve 1 asignación de zona
+
+  Escenario: Cortar en el minuto del try un tramo que lo cruza se acepta
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
+    Y que el partido tiene asignada la zona fila 2 columna 5 en el periodo 1 entre el minuto 20 y el minuto 25
+    Y que se han registrado los siguientes eventos en el partido:
+      | tipo_evento | posesion | tiempo_segundos | periodo | atributos  |
+      | Try         | OWN      | 1350            | 1       | zone=right |
+    Cuando el entrenador modifica la zona asignada a fila 2 columna 5 entre el minuto 20 y el minuto 23
+    Entonces el sistema responde con código 200
+
+  Escenario: Crear un tramo que sigue después de un try es rechazado
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
+    Y que se han registrado los siguientes eventos en el partido:
+      | tipo_evento | posesion | tiempo_segundos | periodo | atributos  |
+      | Try         | OWN      | 1350            | 1       | zone=right |
+    Cuando el entrenador asigna la zona fila 2 columna 5 al periodo 1 entre el minuto 20 y el minuto 25
+    Entonces el sistema responde con 409 y "El tramo 1T 20'–25' no puede seguir después del Try (1T 22:30): terminalo en 23'"
+    Cuando el entrenador consulta las zonas del partido
+    Entonces la consulta devuelve 0 asignaciones de zona
+
+  Escenario: El try del rival también cierra el tramo
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
+    Y que se han registrado los siguientes eventos en el partido:
+      | tipo_evento | posesion | tiempo_segundos | periodo | atributos |
+      | Try         | OPPONENT | 1350            | 1       | zone=left |
+    Cuando el entrenador asigna la zona fila 2 columna 2 al periodo 1 entre el minuto 20 y el minuto 25
+    Entonces el sistema responde con 409 y "El tramo 1T 20'–25' no puede seguir después del Try (1T 22:30): terminalo en 23'"
+
+  Esquema del escenario: Un tanteo que reinicia el juego cierra el tramo
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
+    Y que se han registrado los siguientes eventos en el partido:
+      | tipo_evento | posesion | tiempo_segundos | periodo | atributos   |
+      | <tipo>      | OWN      | 1350            | 1       | <atributos> |
+    Cuando el entrenador asigna la zona fila 2 columna 4 al periodo 1 entre el minuto 20 y el minuto 25
+    Entonces el sistema responde con 409 y "El tramo 1T 20'–25' no puede seguir después del <tipo> (1T 22:30): terminalo en 23'"
+
+    Ejemplos:
+      | tipo                   | atributos           |
+      | Try penal              |                     |
+      | Kick H (Penal a palos) | wasSuccessful=true  |
+      | Kick H (Penal a palos) | wasSuccessful=false |
+      | Drop goal              | wasSuccessful=true  |
+
+  Escenario: Ampliar un tramo más allá de un try es rechazado
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
+    Y que el partido tiene asignada la zona fila 2 columna 5 en el periodo 1 entre el minuto 20 y el minuto 23
+    Y que se han registrado los siguientes eventos en el partido:
+      | tipo_evento | posesion | tiempo_segundos | periodo | atributos  |
+      | Try         | OWN      | 1350            | 1       | zone=right |
+    Cuando el entrenador modifica la zona asignada a fila 2 columna 5 entre el minuto 20 y el minuto 25
+    Entonces el sistema responde con 409 y "El tramo 1T 20'–25' no puede seguir después del Try (1T 22:30): terminalo en 23'"
+
+  Escenario: Editar solo la celda de un tramo que cruza un try exige cortarlo
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
+    Y que el partido tiene asignada la zona fila 2 columna 5 en el periodo 1 entre el minuto 20 y el minuto 25
+    Y que se han registrado los siguientes eventos en el partido:
+      | tipo_evento | posesion | tiempo_segundos | periodo | atributos  |
+      | Try         | OWN      | 1350            | 1       | zone=right |
+    Cuando el entrenador modifica la zona asignada a fila 2 columna 4 entre el minuto 20 y el minuto 25
+    Entonces el sistema responde con 409 y "El tramo 1T 20'–25' no puede seguir después del Try (1T 22:30): terminalo en 23'"
+
+  Escenario: Un tramo con dos tries es rechazado por el primero
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
+    Y que se han registrado los siguientes eventos en el partido:
+      | tipo_evento | posesion | tiempo_segundos | periodo | atributos  |
+      | Try         | OWN      | 1260            | 1       | zone=left  |
+      | Try         | OPPONENT | 1440            | 1       | zone=right |
+    Cuando el entrenador asigna la zona fila 2 columna 4 al periodo 1 entre el minuto 20 y el minuto 25
+    Entonces el sistema responde con 409 y "El tramo 1T 20'–25' no puede seguir después del Try (1T 21:00): terminalo en 22'"
