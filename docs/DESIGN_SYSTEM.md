@@ -640,6 +640,15 @@ La pantalla de post-partido está estructurada como una estación de trabajo de 
    - **Autoguardado con Debounce:** Pipeline RxJS con `debounceTime(400)` e indicador visual en tiempo real (`Guardando...`, `Guardado ✓`, `Error al guardar`; durante el debounce de la edición ya se muestra `Guardando...`, sin estado "pendiente" aparte).
    - **Cola de Revisión:** Tarjetas compactas (`02:36 Penal / infracción 1T`) con resaltado ámbar al seleccionar y stepper rápido.
    - **`EventFormComponent` Reutilizable:** Componente común compartido entre el inspector y el modal de alta, asegurando consistencia y mantenibilidad (SRP/DRY).
+   - **Zona fija por el tipo:** si el tipo de jugada fija la zona (Try, Try penal), el formulario muestra «Se ubica en D6 · In-goal rival» (`.zone-placement`, 0.75rem, `--text-secondary`, ícono `bi-geo-alt`) bajo el campo que fija la fila (el lado del apoyo) o, si la regla no depende de un atributo, bajo el tipo. El tooltip de la zona en «Ver» agrega «zona fija por el tipo».
+6. **Zonas de cancha (`PostMatchZonesComponent`, `/post-match/:id/zones`):**
+   - **Grilla de territorio (`ZoneTerritoryGridComponent`):** tramos como bloques `--btn-primary-bg` y huecos con rayado `--warning-tint`.
+   - **Marca de zona fija (◆):** rombo de solo lectura de 12px (`.fixed-mark`: fondo `--surface`, borde 2px `--navy`, rotado 45°) en la franja y el minuto de cada evento de zona fija. Se lee sobre el bloque verde y sobre el hueco ámbar. No es un tramo: no se selecciona, no ocupa rango y no bloquea el arrastre (los clics pasan a la pista). `title` y `aria-label`: «Try 22:30 · D6 · zona fija por el tipo». Sigue los filtros de tiempo y posesión.
+   - **Línea de corte por try:** línea vertical continua de 2px `--navy` sobre todas las franjas, en el minuto donde tiene que terminar el tramo (23′ para un try a las 22:30), con `title` y `aria-label` «Corte: Try 22:30 · el tramo termina en 23′». Se distingue del entretiempo, que es discontinuo y `--text-muted`.
+   - **Tramo que cruza un corte:** mismo anillo rojo que el solape (`.is-conflict, .is-cut`: `--surface` + `--error`), con «Sigue después del Try 22:30: cortalo en 23′.» en su `aria-label`.
+   - **Arrastre:** crear o estirar frena en el corte con el aviso del tooltip en vivo «tope: Try 22:30», igual que en el entretiempo o en un tramo vecino.
+   - **Panel de tramos (`ZoneAssignmentPanelComponent`):** el error del rango (`.inline-error`) muestra el mismo texto que el 409 del backend (solape, corte por try o celda prohibida) y deshabilita «Guardar tramo». Con un corte aparece «Terminar en 23′» (`.btn-outline`, 44px de alto), que lleva el fin del rango al corte, también al editar un tramo guardado que lo cruza.
+   - **Ayuda «?»:** suma «Zona fija por tipo de evento» y la regla del corte en «Rango del tramo». No hay tokens ni íconos nuevos.
 
 
 ---
