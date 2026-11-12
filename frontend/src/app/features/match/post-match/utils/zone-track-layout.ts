@@ -1,6 +1,6 @@
 import { ZONE_GRID_COLS, ZONE_HALF_MINUTES, ZoneAssignmentResponse, ZonePeriod } from '../../types/zone.types';
 import { ZONE_COLUMN_NAMES, ZONE_ROW_LETTERS, columnRangeLabel, zoneLabel } from './zone-grid';
-import { RuleEvent, ZoneRulesByType, isFixedZone, placeEventZone } from './zone-rule';
+import { RuleEvent, ZoneRulesByType, closesTramo, formatMatchTime, isFixedZone, placeEventZone } from './zone-rule';
 import { MinuteRange, ZoneEvent, ZonePeriodFilter, effectiveMatchTime, eventsInRange, findGaps, periodRange } from './zone-stats';
 
 /** Largo del eje horizontal de la grilla de territorio: los 80 minutos del partido, con el 2T a continuación del 1T. */
@@ -126,7 +126,8 @@ export function suggestNextRange(
   if (gaps.length === 0) return null;
 
   const gap = (afterMinute !== undefined ? gaps.find(g => g.start >= afterMinute) : undefined) ?? gaps[0];
-  return { start: gap.start, end: Math.min(gap.start + length, gap.end) };
+  const cutMinutes = cuts.filter(cut => cut.period === gap.period && cut.minute > gap.start).map(cut => cut.minute);
+  return { start: gap.start, end: Math.min(gap.start + length, gap.end, ...cutMinutes) };
 }
 
 export interface GapWithEvents extends PeriodGap {
@@ -176,9 +177,7 @@ export function fixedZoneMarks(events: RuleEvent[], rules: ZoneRulesByType, filt
 
 /** Texto de la marca para el tooltip y los lectores de pantalla, ej. "Try 22:30 · D6 · zona fija por el tipo". */
 export function describeFixedMark(mark: FixedZoneMark): string {
-  const seconds = Math.round(mark.minute * SECONDS_PER_MINUTE);
-  const clock = `${String(Math.floor(seconds / SECONDS_PER_MINUTE)).padStart(2, '0')}:${String(seconds % SECONDS_PER_MINUTE).padStart(2, '0')}`;
-  return `${mark.eventTypeName} ${clock} · ${zoneLabel(mark.cell)} · zona fija por el tipo`;
+  return `${mark.eventTypeName} ${formatMatchTime(Math.round(mark.minute * SECONDS_PER_MINUTE))} · ${zoneLabel(mark.cell)} · zona fija por el tipo`;
 }
 
 /**
@@ -204,15 +203,38 @@ type TimedRange = Pick<ZoneAssignmentResponse, 'period' | 'startMinute' | 'endMi
 
 /** Cortes del partido en orden cronológico, dentro del tiempo elegido. */
 export function tramoCuts(events: RuleEvent[], rules: ZoneRulesByType, filter: ZonePeriodFilter): TramoCutMark[] {
-  throw new Error('Sin implementar');
+  return [...events]
+    .sort((a, b) => a.period - b.period || a.matchTime - b.matchTime)
+    .filter(event => isZonePeriod(event.period) && (filter === 'ALL' || event.period === filter) && closesTramo(rules.get(event.eventTypeId)))
+    .map(event => {
+      const period = event.period as ZonePeriod;
+      return {
+        eventId: event.id,
+        eventTypeName: event.eventTypeName,
+        period,
+        // El tiempo añadido cuenta como el último minuto del tiempo: el corte queda en el 40′ o en el 80′
+        minute: Math.floor(effectiveMatchTime(period, event.matchTime) / SECONDS_PER_MINUTE) + 1,
+        label: `${event.eventTypeName} ${formatMatchTime(event.matchTime)}`
+      };
+    });
 }
 
 /** Primer corte que queda estrictamente adentro del rango: el tramo seguiría después del evento. */
 export function crossedCut(range: TimedRange, cuts: TramoCutMark[]): TramoCutMark | null {
-  throw new Error('Sin implementar');
+  return cuts
+    .filter(cut => cut.period === range.period && range.startMinute < cut.minute && cut.minute < range.endMinute)
+    .sort((a, b) => a.minute - b.minute)[0] ?? null;
 }
 
 /** Primer evento que el rango deja antes de su último minuto, con el mensaje del 409 del backend. */
 export function findTramoCut(range: TimedRange, events: RuleEvent[], rules: ZoneRulesByType): TramoCut | null {
-  throw new Error('Sin implementar');
+  const cut = crossedCut(range, tramoCuts(events, rules, range.period));
+  const event = cut ? events.find(candidate => candidate.id === cut.eventId) : undefined;
+  return cut && event
+    ? {
+      cut,
+      message: `El tramo ${range.period}T ${range.startMinute}'–${range.endMinute}' no puede seguir después del `
+        + `${event.eventTypeName} (${event.period}T ${formatMatchTime(event.matchTime)}): terminalo en ${cut.minute}'`
+    }
+    : null;
 }

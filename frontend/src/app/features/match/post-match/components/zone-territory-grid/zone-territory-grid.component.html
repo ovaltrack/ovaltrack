@@ -51,6 +51,7 @@
             <button type="button" class="block" data-testid="territory-block" tabindex="-1"
                     [class.is-selected]="block.assignment.id === selectedId()"
                     [class.is-conflict]="block.assignment.id === conflictId()"
+                    [class.is-cut]="block.crossesCut"
                     [class.is-linked]="isLinked(block.assignment)"
                     [class.is-dimmed]="!!highlightCell() && !isLinked(block.assignment)"
                     [style.left.%]="block.left" [style.width.%]="block.width"
@@ -74,6 +75,12 @@
                   [style.left.%]="mark.left" [attr.aria-label]="mark.aria" [attr.title]="mark.aria"></span>
           }
         </div>
+      }
+
+      <!-- Cortes por try: después de un tanteo el juego se reinicia y el tramo termina ahí -->
+      @for (cut of cutLines(); track cut.eventId) {
+        <span class="cut-line" role="img" data-testid="territory-cut"
+              [style.left.%]="cut.left" [attr.title]="cut.title" [attr.aria-label]="cut.title"></span>
       }
 
       @if (halfMark(); as mark) {

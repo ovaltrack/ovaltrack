@@ -6,6 +6,7 @@ import { ZoneService } from '../../services/zone.service';
 import { MatchTimelineEventResponse } from '../../types/event.types';
 import { ZONE_MOTION_MS } from '../utils/zone-motion';
 import { ZoneRulesByType, isFixedZone } from '../utils/zone-rule';
+import { TramoCutMark, tramoCuts } from '../utils/zone-track-layout';
 import { ZoneAssignmentResponse, ZoneAssignmentRequest, ZoneCellRef, ZonePeriod } from '../../types/zone.types';
 
 /**
@@ -51,6 +52,9 @@ export class MatchZonesStore {
     const rules = this.zoneRules();
     return this.events().map(event => ({ ...event, fixedZone: isFixedZone(rules.get(event.eventTypeId), event.attributes) && !!event.zone }));
   });
+
+  /** Cortes por try (y tanteos que reinician el juego): el tramo que los contiene termina en su minuto. */
+  readonly cuts = computed<TramoCutMark[]>(() => tramoCuts(this.events(), this.zoneRules(), 'ALL'));
 
   load(matchId: string): Observable<void> {
     this.isLoading.set(true);

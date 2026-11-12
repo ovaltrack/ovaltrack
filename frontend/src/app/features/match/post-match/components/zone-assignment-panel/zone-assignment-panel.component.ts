@@ -10,7 +10,7 @@ import { describeSegment, eventsLinkedByRange, eventsReleasedByEdit, findOverlap
 import { findZoneRuleConflict } from '../../utils/zone-rule';
 import { ListOverflow, OverflowMetrics, overflowCapacity, visibleWithOverflow } from '../../utils/list-overflow';
 import { observeHeight } from '../../utils/observe-height';
-import { GapWithEvents, TRACK_MINUTES, gapsWithEventCount, suggestNextRange } from '../../utils/zone-track-layout';
+import { GapWithEvents, TRACK_MINUTES, TramoCut, findTramoCut, gapsWithEventCount, suggestNextRange } from '../../utils/zone-track-layout';
 import { ZONE_HALF_MINUTES, ZoneAssignmentRequest, ZoneAssignmentResponse, ZoneCellRef, ZonePeriod } from '../../../types/zone.types';
 
 type RangeField = 'start' | 'end';
@@ -195,7 +195,22 @@ export class ZoneAssignmentPanelComponent implements OnInit, AfterViewInit {
 
     const range = this.usableRange();
     const clash = range ? findOverlap(range, this.store.assignments(), this.editingId) : null;
-    return clash ? `Choca con el tramo ${describeSegment(clash)}.` : this.zoneRuleProblem(range);
+    return clash ? `Choca con el tramo ${describeSegment(clash)}.` : this.tramoCut(range)?.message ?? this.zoneRuleProblem(range);
+  }
+
+  /** Minuto donde tiene que terminar el rango porque sigue después de un try; null si no cruza ningún corte. */
+  get cutEnd(): number | null {
+    return this.tramoCut(this.usableRange())?.cut.minute ?? null;
+  }
+
+  /** «Terminar en N′»: lleva el fin del rango al corte (sirve también para cortar un tramo guardado que cruza un try). */
+  endAtCut(minute: number): void {
+    this.endMinute = minute;
+    this.onRangeChange();
+  }
+
+  private tramoCut(range: UsableRange | null): TramoCut | null {
+    return range ? findTramoCut(range, this.store.events(), this.store.zoneRules()) : null;
   }
 
   /** Primer evento que la celda elegida dejaría en una zona que su tipo prohíbe; el 409 del backend dice lo mismo. */
@@ -383,7 +398,7 @@ export class ZoneAssignmentPanelComponent implements OnInit, AfterViewInit {
 
   /** Propone los próximos 5 minutos libres (o continúa desde `afterMinute`); sin rango si el partido está completo. */
   private applySuggestion(afterMinute?: number): void {
-    const range = suggestNextRange(this.store.assignments(), afterMinute);
+    const range = suggestNextRange(this.store.assignments(), afterMinute, this.store.cuts());
     this.startMinute = range?.start ?? null;
     this.endMinute = range?.end ?? null;
     this.syncSharedState();

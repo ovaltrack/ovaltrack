@@ -82,7 +82,7 @@ export function placeEventZone(
 
 /** Verdadero si el evento cierra el tramo que lo contiene (Try, Try penal, Kick H, Drop goal). */
 export function closesTramo(rule: ZoneRule | null | undefined): boolean {
-  throw new Error('Sin implementar');
+  return rule?.closesTramo === true;
 }
 
 /** Verdadero si la regla fija fila y columna sin necesitar ningún tramo. */
@@ -116,7 +116,8 @@ export function describeZoneRule(rule: ZoneRule): string {
   ].filter((text): text is string => text !== null).join(' y ') || 'cualquier celda';
 }
 
-function formatMatchTime(seconds: number): string {
+/** Reloj de partido de los mensajes: minutos acumulados y segundos con dos dígitos (ej. 65:00); igual que el backend. */
+export function formatMatchTime(seconds: number): string {
   const minutes = Math.floor(seconds / SECONDS_PER_MINUTE);
   return `${String(minutes).padStart(2, '0')}:${String(seconds % SECONDS_PER_MINUTE).padStart(2, '0')}`;
 }

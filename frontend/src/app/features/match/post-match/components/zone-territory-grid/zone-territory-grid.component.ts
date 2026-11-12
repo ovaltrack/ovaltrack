@@ -5,7 +5,7 @@ import { DragRange, dragNewRange, minuteAtPosition, resizeRange } from '../../ut
 import { ZONE_COLUMN_NAMES, zoneLabel } from '../../utils/zone-grid';
 import { ZoneEvent, ZonePeriodFilter, eventsInRange } from '../../utils/zone-stats';
 import {
-  BlockLayout, FixedZoneMark, PeriodGap, TramoCutMark, TRACK_MINUTES, allGaps, blockLabel, blockLayout, countByFranja, describeFixedMark, gapAtMinute, isInWindow, minuteAtOffset,
+  BlockLayout, FixedZoneMark, PeriodGap, TramoCutMark, TRACK_MINUTES, allGaps, blockLabel, blockLayout, countByFranja, crossedCut, describeFixedMark, gapAtMinute, isInWindow, minuteAtOffset,
   minuteToPercent, territoryRows, trackWindow
 } from '../../utils/zone-track-layout';
 
@@ -23,6 +23,15 @@ interface BlockView {
   width: number;
   label: string;
   aria: string;
+  /** El tramo sigue después de un try: hay que cortarlo en el minuto del corte. */
+  crossesCut: boolean;
+}
+
+/** Línea de corte por try: posición en % del eje y su motivo para el tooltip. */
+interface CutLineView {
+  eventId: string;
+  left: number;
+  title: string;
 }
 
 /** Marca de solo lectura de un evento de zona fija: posición horizontal en % del eje y texto para tooltip y lectores. */
@@ -237,12 +246,15 @@ export class ZoneTerritoryGridComponent {
       const shown = { ...assignment, ...this.currentRange(assignment) };
       const layout = this.layoutOf(shown);
       if (!layout) return [];
+      const cut = crossedCut(shown, this.cuts());
       return [{
         assignment,
         ...layout,
         label: blockLabel(shown, compact),
         aria: `Tramo ${assignment.period}T ${assignment.startMinute}′ a ${assignment.endMinute}′, zona ${zoneLabel(assignment)}. `
-          + (this.pickingPeriod() ? `Tocá para ver el ${assignment.period}T` : 'Tocá para editar')
+          + (cut ? `Sigue después del ${cut.label}: cortalo en ${cut.minute}′. ` : '')
+          + (this.pickingPeriod() ? `Tocá para ver el ${assignment.period}T` : 'Tocá para editar'),
+        crossesCut: cut !== null
       }];
     });
     const marks = this.fixedMarks().flatMap(mark => {
@@ -256,6 +268,12 @@ export class ZoneTerritoryGridComponent {
       marks: marks.filter(mark => mark.col === row.col)
     }));
   });
+
+  /** Cortes por try dentro del tramo mostrado: una línea vertical sobre todas las franjas. */
+  readonly cutLines = computed<CutLineView[]>(() => this.cuts().flatMap(cut => {
+    const left = minuteToPercent(cut.minute, this.view());
+    return left < 0 || left > 100 ? [] : [{ eventId: cut.eventId, left, title: `Corte: ${cut.label} · el tramo termina en ${cut.minute}′` }];
+  }));
 
   readonly gaps = computed(() => allGaps(this.assignments()).flatMap(gap => {
     const layout = this.layoutOf({ startMinute: gap.start, endMinute: gap.end });
@@ -435,8 +453,8 @@ export class ZoneTerritoryGridComponent {
     const rect = element.getBoundingClientRect();
     const current = minuteAtPosition(event.clientX - rect.left, rect.width, this.view());
     const { range, notice } = drag.resize
-      ? resizeRange(this.assignments(), drag.resize.segment, drag.resize.edge, current)
-      : dragNewRange(this.assignments(), drag.period, drag.anchor, current);
+      ? resizeRange(this.assignments(), drag.resize.segment, drag.resize.edge, current, this.cuts())
+      : dragNewRange(this.assignments(), drag.period, drag.anchor, current, this.cuts());
 
     // El tooltip es `fixed` (la grilla recorta lo que sobresale): se ubica sobre el centro del rango, encima de su fila.
     const rowIndex = this.rows().findIndex(row => row.col === drag.col);

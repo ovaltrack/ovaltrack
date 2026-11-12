@@ -100,7 +100,7 @@
 .block.is-linked { box-shadow: 0 0 0 1px var(--surface), 0 0 0 3px var(--btn-primary-bg); z-index: 1; }
 /* Seleccionado: anillo verde oscuro grueso con separación blanca */
 .block.is-selected { box-shadow: 0 0 0 2px var(--surface), 0 0 0 5px var(--btn-primary-bg); z-index: 2; }
-.block.is-conflict { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--error); z-index: 2; }
+.block.is-conflict, .block.is-cut { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--error); z-index: 2; }
 .block.is-dimmed { opacity: .4; }
 /* El tramo en edición no se atenúa: la selección tiene que verse siempre */
 .block.is-selected.is-dimmed, .block.is-conflict.is-dimmed { opacity: 1; }
@@ -120,6 +120,8 @@
 }
 
 .half-line { position: absolute; top: 0; bottom: 0; border-left: 2px dashed var(--text-muted); pointer-events: none; z-index: 1; }
+/* Corte por try: línea continua sobre todas las franjas; el tramo que la cruza se marca en rojo */
+.cut-line { position: absolute; top: 0; bottom: 0; width: 6px; margin-left: -3px; border-left: 2px solid var(--navy); background-clip: content-box; z-index: 2; }
 
 /* Hueco bajo el puntero y vista previa del formulario, dentro de la fila (--row = índice de fila) */
 .hover-gap, .preview, .drag-range {

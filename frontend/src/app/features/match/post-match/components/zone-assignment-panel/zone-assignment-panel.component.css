@@ -153,6 +153,8 @@
 }
 
 .field > .inline-error { margin: 10px 0 0; }
+/* «Terminar en N′»: lleva el fin del rango al corte por try */
+.btn-cut-fix { min-height: 44px; margin: 0 0 10px; padding: 0 16px; }
 .panel-footer > .inline-error { margin: 10px 0 0; }
 
 /* Una sola fila, sin salirse del panel: eliminar (ícono) a la izquierda; Cancelar y Guardar a la derecha */

@@ -85,11 +85,11 @@ describe('ZoneTerritoryGridComponent: cortes por try', () => {
   });
 
   it('dibuja una línea de corte en el minuto donde termina el tramo, con su motivo', () => {
-    render([tryCut]);
+    render([{ ...tryCut, minute: 20, label: 'Try 19:30' }]);
 
     const [line] = cuts();
-    expect(line.style.left).toBe('28.75%');
-    expect(line.getAttribute('title')).toBe('Corte: Try 22:30 · el tramo termina en 23′');
+    expect(line.style.left).toBe('25%');
+    expect(line.getAttribute('title')).toBe('Corte: Try 19:30 · el tramo termina en 20′');
   });
 
   it('marca el tramo que sigue después de un corte y lo dice en su descripción', () => {
