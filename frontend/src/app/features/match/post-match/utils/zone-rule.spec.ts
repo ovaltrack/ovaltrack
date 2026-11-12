@@ -4,7 +4,7 @@ import { RuleEvent, RuleRange, ZoneRulesByType, describeZoneRule, findZoneRuleCo
 describe('zone-rule', () => {
   const TRY: ZoneRule = { columns: [6], rowFrom: 'zone' };
   const TRY_PENALTY: ZoneRule = { columns: [6], rows: [2] };
-  const ENTRY_22: ZoneRule = { columns: [5] };
+  const FIXED_COLUMN: ZoneRule = { columns: [5] };
   const FIELD_PLAY: ZoneRule = { columns: [2, 3, 4, 5] };
   const FIELD_PLAY_WITH_SIDE: ZoneRule = { columns: [2, 3, 4, 5], rowFrom: 'zone' };
   const NO_RESTRICTION: ZoneRule = {};
@@ -39,8 +39,8 @@ describe('zone-rule', () => {
     });
 
     it('la fila del tramo se conserva cuando solo la columna es fija', () => {
-      expect(placeEventZone(ENTRY_22, 'OWN', {}, { row: 3, col: 2 })).toEqual({ row: 3, col: 5 });
-      expect(placeEventZone(ENTRY_22, 'OWN', {}, null)).toBeNull();
+      expect(placeEventZone(FIXED_COLUMN, 'OWN', {}, { row: 3, col: 2 })).toEqual({ row: 3, col: 5 });
+      expect(placeEventZone(FIXED_COLUMN, 'OWN', {}, null)).toBeNull();
     });
 
     it('una fila del atributo fuera de las filas permitidas no deja celda', () => {
@@ -118,7 +118,7 @@ describe('zone-rule', () => {
     });
 
     it('solo la columna fija, sin restricción o sin regla: no es fija', () => {
-      expect(isFixedZone(ENTRY_22, {})).toBeFalse();
+      expect(isFixedZone(FIXED_COLUMN, {})).toBeFalse();
       expect(isFixedZone(FIELD_PLAY, {})).toBeFalse();
       expect(isFixedZone(NO_RESTRICTION, {})).toBeFalse();
       expect(isFixedZone(null, {})).toBeFalse();

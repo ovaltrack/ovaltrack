@@ -21,7 +21,7 @@ class ZoneRuleTest {
 
     private static final ZoneRule TRY = new ZoneRule(List.of(6), null, "zone");
     private static final ZoneRule TRY_PENALTY = new ZoneRule(List.of(6), List.of(2), null);
-    private static final ZoneRule ENTRY_22 = new ZoneRule(List.of(5), null, null);
+    private static final ZoneRule FIXED_COLUMN = new ZoneRule(List.of(5), null, null);
     private static final ZoneRule FIELD_PLAY = new ZoneRule(List.of(2, 3, 4, 5), null, null);
     private static final ZoneRule FIELD_PLAY_WITH_SIDE = new ZoneRule(List.of(2, 3, 4, 5), null, "zone");
     private static final ZoneRule NO_RESTRICTION = new ZoneRule(null, null, null);
@@ -75,13 +75,13 @@ class ZoneRuleTest {
         @Test
         @DisplayName("La fila del tramo se conserva cuando solo la columna es fija")
         void shouldKeepAssignmentRow() {
-            assertEquals(cell(3, 5), ENTRY_22.place(Map.of(), cell(3, 2)));
+            assertEquals(cell(3, 5), FIXED_COLUMN.place(Map.of(), cell(3, 2)));
         }
 
         @Test
         @DisplayName("Con la columna fija pero sin fila no hay celda")
         void shouldReturnEmptyWhenRowIsUnknown() {
-            assertTrue(ENTRY_22.place(Map.of(), Optional.empty()).isEmpty());
+            assertTrue(FIXED_COLUMN.place(Map.of(), Optional.empty()).isEmpty());
         }
 
         @Test
@@ -163,7 +163,7 @@ class ZoneRuleTest {
         @Test
         @DisplayName("Solo la columna fija o ninguna restricción: no es fija")
         void shouldNotBeFixedWithoutRow() {
-            assertFalse(ENTRY_22.isFixed(Map.of()));
+            assertFalse(FIXED_COLUMN.isFixed(Map.of()));
             assertFalse(FIELD_PLAY.isFixed(Map.of()));
             assertFalse(NO_RESTRICTION.isFixed(Map.of()));
         }

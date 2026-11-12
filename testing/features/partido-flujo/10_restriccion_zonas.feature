@@ -31,8 +31,6 @@ Característica: Restricción de zonas de la cancha según el tipo de evento
     Y el tipo de evento "Try penal" declara la regla de zona:
       | columnas | 6 |
       | filas    | 2 |
-    Y el tipo de evento "Ingreso a 22m rival" declara la regla de zona:
-      | columnas | 5 |
     Y el tipo de evento "Scrum" declara la regla de zona:
       | columnas | 2,3,4,5 |
     Y el tipo de evento "Tackle completado" no declara regla de zona
@@ -97,21 +95,6 @@ Característica: Restricción de zonas de la cancha según el tipo de evento
     Y el evento "Try" del minuto 22 del periodo 1 pertenece a la zona fila 1 columna 6
 
   # --- HAPPY PATHS: columna fija y fila del tramo ---
-
-  Escenario: Ingreso a 22m rival queda en la columna 5 con la fila del tramo
-    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
-    Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
-    Y que el partido tiene asignada la zona fila 3 columna 2 en el periodo 1 entre el minuto 20 y el minuto 25
-    Cuando el entrenador agrega post-partido el evento "Ingreso a 22m rival" para el equipo propio en el minuto 22 del periodo 1
-    Entonces el sistema responde con código 200
-    Y el evento "Ingreso a 22m rival" del minuto 22 del periodo 1 pertenece a la zona fila 3 columna 5
-
-  Escenario: Ingreso a 22m rival sin tramo en su minuto queda sin zona
-    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
-    Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
-    Cuando el entrenador agrega post-partido el evento "Ingreso a 22m rival" para el equipo propio en el minuto 22 del periodo 1
-    Entonces el sistema responde con código 200
-    Y el evento "Ingreso a 22m rival" del minuto 22 del periodo 1 queda sin zona
 
   Escenario: Una conversión toma la fila del lado de la patada y la columna del tramo
     Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
