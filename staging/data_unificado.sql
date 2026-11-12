@@ -61,6 +61,8 @@ ALTER TABLE event_types ADD COLUMN IF NOT EXISTS actor VARCHAR(10) NOT NULL DEFA
 ALTER TABLE event_types ADD COLUMN IF NOT EXISTS possession_after VARCHAR(10) NOT NULL DEFAULT 'KEEP';
 -- follow_up_choices: eventos entre los que el analista elige al guardar este tipo (ej. cómo se juega un penal)
 ALTER TABLE event_types ADD COLUMN IF NOT EXISTS follow_up_choices JSONB NOT NULL DEFAULT '[]';
+-- zone_rule: restricción de zonas por tipo de evento (null = sin restricción)
+ALTER TABLE event_types ADD COLUMN IF NOT EXISTS zone_rule JSONB;
 
 
 
@@ -222,6 +224,10 @@ INSERT INTO matches (id, date, division_id, opponent_id, status, current_period,
 --   followUps (en una opción) | follow_up_choices (en el tipo): lista de {code, label?, preset?}; al guardar el evento
 --              se muestra una botonera con esos eventos (más «Nada más»). preset pre-llena campos en vivo del evento elegido
 --              y salta ese paso. El equipo del evento elegido se resuelve con la posesión ya actualizada (actor).
+--   zone_rule (jsonb, opcional) zonas de la cancha donde puede ocurrir el tipo, vistas desde el equipo que ejecuta el evento:
+--              columns = columnas permitidas (1 = in-goal propio ... 6 = in-goal rival), rows = filas permitidas (1 izquierda, 2 centro, 3 derecha),
+--              rowFrom = clave del atributo (left | center | right) de la que sale la fila. Un eje con un único valor queda fijo;
+--              si no, sale del tramo del partido. Sin zone_rule el tipo no tiene restricción (se carga con los UPDATE de abajo).
 -- Reglas del catálogo:
 --   * Máximo 2 toques por evento en el modal: jugador (si requires_player) + 1 campo 'live'.
 --   * Un solo tipo por acción; el resultado va en un campo, no en tipos duplicados.
@@ -1546,6 +1552,12 @@ VALUES
     $$["basic", "intermediate"]$$::jsonb,
     CURRENT_TIMESTAMP
 );
+
+-- zone_rule: zonas de la cancha donde puede ocurrir cada tipo (ver «zone_rule» en la cabecera del catálogo)
+UPDATE event_types SET zone_rule = '{"columns":[6],"rowFrom":"zone"}'::jsonb WHERE code = 'TRY';
+UPDATE event_types SET zone_rule = '{"columns":[6],"rows":[2]}'::jsonb WHERE code = 'PENALTY_TRY';
+UPDATE event_types SET zone_rule = '{"columns":[2,3,4,5],"rowFrom":"zone"}'::jsonb WHERE code IN ('CONVERSION', 'PENALTY_KICK');
+UPDATE event_types SET zone_rule = '{"columns":[2,3,4,5]}'::jsonb WHERE code IN ('DROP_GOAL', 'SCRUM', 'LINEOUT', 'MAUL', 'RUCK_OFFENSIVE', 'QUICK_PLAY');
 
 
 -- =========================================

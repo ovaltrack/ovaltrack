@@ -3,6 +3,7 @@ package com.ovaltrack.backend.event.business;
 import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,7 +33,9 @@ public class EventTypeService {
 
 	/** Regla de zona de cada tipo de evento que la declara, incluidos los dados de baja (los eventos viejos los siguen usando). */
 	public Map<UUID, ZoneRule> zoneRulesByTypeId() {
-		throw new UnsupportedOperationException("Sin implementar");
+		return eventTypeRepository.findAll().stream()
+				.filter(type -> type.getZoneRule() != null)
+				.collect(Collectors.toMap(EventType::getId, EventType::getZoneRule));
 	}
 
 	public EventType findEventTypeEntityById(UUID eventTypeId) {
