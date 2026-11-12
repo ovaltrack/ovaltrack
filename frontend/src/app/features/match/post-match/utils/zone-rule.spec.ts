@@ -1,5 +1,5 @@
 import { ZoneRule } from '../../types/event-type.types';
-import { RuleEvent, RuleRange, ZoneRulesByType, describeZoneRule, findZoneRuleConflict, isFixedZone, placeEventZone } from './zone-rule';
+import { RuleEvent, RuleRange, ZoneRulesByType, closesTramo, describeZoneRule, findZoneRuleConflict, isFixedZone, placeEventZone } from './zone-rule';
 
 describe('zone-rule', () => {
   const TRY: ZoneRule = { columns: [6], rowFrom: 'zone' };
@@ -210,6 +210,16 @@ describe('zone-rule', () => {
 
     it('sin eventos no hay conflicto', () => {
       expect(findZoneRuleConflict(inGoal, [], rules)).toBeNull();
+    });
+  });
+
+  describe('closesTramo', () => {
+    it('solo corta si la regla lo declara', () => {
+      expect(closesTramo({ columns: [6], rowFrom: 'zone', closesTramo: true })).toBeTrue();
+      expect(closesTramo({ columns: [2, 3, 4, 5], closesTramo: false })).toBeFalse();
+      expect(closesTramo(FIELD_PLAY)).toBeFalse();
+      expect(closesTramo(null)).toBeFalse();
+      expect(closesTramo(undefined)).toBeFalse();
     });
   });
 });

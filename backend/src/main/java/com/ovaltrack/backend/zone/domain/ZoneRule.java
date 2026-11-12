@@ -13,13 +13,24 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  * <ul>
  *   <li>{@code columns} / {@code rows}: celdas permitidas (null o vacío = sin restricción en ese eje).</li>
  *   <li>{@code rowFrom}: clave del atributo (left | center | right) de la que sale la fila.</li>
+ *   <li>{@code closesTramo}: después del evento el juego se reinicia, así que el tramo que lo contiene termina en su minuto.</li>
  * </ul>
  * Un eje con un único valor permitido queda fijo; si no, sale del tramo que contiene el minuto del evento.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record ZoneRule(List<Integer> columns, List<Integer> rows, String rowFrom) {
+public record ZoneRule(List<Integer> columns, List<Integer> rows, String rowFrom, Boolean closesTramo) {
 
     private static final Map<String, Integer> ROW_BY_SIDE = Map.of("left", 1, "center", 2, "right", 3);
+
+    /** Regla que no corta tramos. */
+    public ZoneRule(List<Integer> columns, List<Integer> rows, String rowFrom) {
+        this(columns, rows, rowFrom, null);
+    }
+
+    /** Verdadero si el evento cierra el tramo que lo contiene (Try, Try penal, Kick H, Drop goal). */
+    public boolean cutsTramo() {
+        throw new UnsupportedOperationException("Sin implementar");
+    }
 
     /** Celda final del evento (vista del equipo que lo ejecuta); vacío si falta un eje o la celda no está permitida. */
     public Optional<ZoneCell> place(Map<String, Object> attributes, Optional<ZoneCell> tramoCell) {

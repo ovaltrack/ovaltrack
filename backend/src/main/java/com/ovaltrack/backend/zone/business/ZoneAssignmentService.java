@@ -33,6 +33,7 @@ public class ZoneAssignmentService {
     private final ZoneAssignmentValidator validator;
     private final ZoneSummaryCalculator summaryCalculator;
     private final EventZoneRuleValidator ruleValidator;
+    private final TramoCutValidator cutValidator;
 
     @Transactional(readOnly = true)
     public MatchZonesResponseDTO findByMatch(UUID matchId, Authentication authentication) {

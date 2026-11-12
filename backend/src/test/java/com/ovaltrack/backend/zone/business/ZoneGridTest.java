@@ -30,6 +30,20 @@ class ZoneGridTest {
         }
     }
 
+    @ParameterizedTest(name = "período {0}, {1} s -> {2} s")
+    @CsvSource({"1,1350,1350", "1,2399,2399", "1,2580,2399", "2,3900,3900", "2,5040,4799"})
+    @DisplayName("El tiempo añadido cuenta como el último segundo del período")
+    void shouldClampAddedTime(int period, int seconds, int effective) {
+        assertEquals(effective, ZoneGrid.effectiveSeconds(period, seconds));
+    }
+
+    @ParameterizedTest(name = "{0} s -> {1}")
+    @CsvSource({"1350,22:30", "330,05:30", "3900,65:00", "0,00:00"})
+    @DisplayName("El reloj muestra minutos acumulados y segundos con dos dígitos")
+    void shouldFormatClock(int seconds, String clock) {
+        assertEquals(clock, ZoneGrid.clock(seconds));
+    }
+
     @ParameterizedTest(name = "fila {0} columna {1} -> {2}")
     @CsvSource({"1,1,I1", "2,4,C4", "3,6,D6"})
     @DisplayName("La etiqueta es la letra de la fila seguida de la columna")

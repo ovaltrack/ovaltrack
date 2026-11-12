@@ -169,6 +169,24 @@ class ZoneRuleTest {
         }
     }
 
+    @Nested
+    @DisplayName("cutsTramo: el evento cierra el tramo que lo contiene")
+    class CutsTramo {
+
+        @Test
+        @DisplayName("Con closesTramo verdadero corta el tramo")
+        void shouldCutWhenDeclared() {
+            assertTrue(new ZoneRule(List.of(6), null, "zone", true).cutsTramo());
+        }
+
+        @Test
+        @DisplayName("Con closesTramo falso o ausente no corta")
+        void shouldNotCutOtherwise() {
+            assertFalse(new ZoneRule(List.of(2, 3, 4, 5), null, null, false).cutsTramo());
+            assertFalse(FIELD_PLAY.cutsTramo());
+        }
+    }
+
     @ParameterizedTest(name = "{0}")
     @MethodSource("com.ovaltrack.backend.zone.domain.ZoneRuleTest#descriptions")
     @DisplayName("describeAllowed: texto de lo permitido para el mensaje de error")

@@ -113,9 +113,15 @@ export function gapAtMinute(assignments: ZoneAssignmentResponse[], minute: numbe
 
 /**
  * Rango sugerido para el próximo tramo, en minutos acumulados: empieza en el hueco que arranca en `afterMinute`
- * (o en el primero libre) y dura como mucho `length` minutos. Null si el partido está completo.
+ * (o en el primero libre), dura como mucho `length` minutos y termina antes si hay un corte (un try). Null si el
+ * partido está completo.
  */
-export function suggestNextRange(assignments: ZoneAssignmentResponse[], afterMinute?: number, length = 5): MinuteRange | null {
+export function suggestNextRange(
+  assignments: ZoneAssignmentResponse[],
+  afterMinute?: number,
+  cuts: TramoCutMark[] = [],
+  length = 5
+): MinuteRange | null {
   const gaps = allGaps(assignments);
   if (gaps.length === 0) return null;
 
@@ -173,4 +179,40 @@ export function describeFixedMark(mark: FixedZoneMark): string {
   const seconds = Math.round(mark.minute * SECONDS_PER_MINUTE);
   const clock = `${String(Math.floor(seconds / SECONDS_PER_MINUTE)).padStart(2, '0')}:${String(seconds % SECONDS_PER_MINUTE).padStart(2, '0')}`;
   return `${mark.eventTypeName} ${clock} · ${zoneLabel(mark.cell)} · zona fija por el tipo`;
+}
+
+/**
+ * Corte del territorio: después de un evento que reinicia el juego (Try, Try penal, Kick H, Drop goal) el tramo que lo
+ * contiene tiene que terminar en `minute` (el minuto del evento + 1, en minutos acumulados).
+ */
+export interface TramoCutMark {
+  eventId: string;
+  eventTypeName: string;
+  period: ZonePeriod;
+  minute: number;
+  /** Tipo y reloj del evento, ej. "Try 22:30" (tooltip y aviso de tope). */
+  label: string;
+}
+
+/** El primer corte que un rango deja adentro y el mismo mensaje que el 409 del backend. */
+export interface TramoCut {
+  cut: TramoCutMark;
+  message: string;
+}
+
+type TimedRange = Pick<ZoneAssignmentResponse, 'period' | 'startMinute' | 'endMinute'>;
+
+/** Cortes del partido en orden cronológico, dentro del tiempo elegido. */
+export function tramoCuts(events: RuleEvent[], rules: ZoneRulesByType, filter: ZonePeriodFilter): TramoCutMark[] {
+  throw new Error('Sin implementar');
+}
+
+/** Primer corte que queda estrictamente adentro del rango: el tramo seguiría después del evento. */
+export function crossedCut(range: TimedRange, cuts: TramoCutMark[]): TramoCutMark | null {
+  throw new Error('Sin implementar');
+}
+
+/** Primer evento que el rango deja antes de su último minuto, con el mensaje del 409 del backend. */
+export function findTramoCut(range: TimedRange, events: RuleEvent[], rules: ZoneRulesByType): TramoCut | null {
+  throw new Error('Sin implementar');
 }

@@ -26,6 +26,19 @@ public final class ZoneGrid {
         return ZoneCell.rowLetter(cell.row()) + cell.col();
     }
 
+    /**
+     * Segundo de juego con el que se ubica un evento: el tiempo añadido cuenta como el último segundo del período
+     * (minuto 40 en el 1T, 80 en el 2T), porque el fin de un tramo es exclusivo. No cambia el matchTime guardado.
+     */
+    public static int effectiveSeconds(int period, int matchTimeSeconds) {
+        throw new UnsupportedOperationException("Sin implementar");
+    }
+
+    /** Reloj de partido para los mensajes: minutos acumulados y segundos con dos dígitos (ej. 65:00, 05:30). */
+    public static String clock(int matchTimeSeconds) {
+        throw new UnsupportedOperationException("Sin implementar");
+    }
+
     public static boolean isValidCell(int row, int col) {
         return row >= 1 && row <= ROWS && col >= 1 && col <= COLS;
     }

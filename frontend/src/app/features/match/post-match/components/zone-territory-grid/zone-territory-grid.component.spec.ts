@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ZoneTerritoryGridComponent } from './zone-territory-grid.component';
-import { FixedZoneMark } from '../../utils/zone-track-layout';
+import { FixedZoneMark, TramoCutMark } from '../../utils/zone-track-layout';
+import { ZoneAssignmentResponse } from '../../../types/zone.types';
 
 describe('ZoneTerritoryGridComponent: marcas de zona fija', () => {
   let fixture: ComponentFixture<ZoneTerritoryGridComponent>;
@@ -62,5 +63,45 @@ describe('ZoneTerritoryGridComponent: marcas de zona fija', () => {
     render([mark('a', 'Try', { row: 3, col: 6 }, 22.5)]);
 
     expect(fixture.nativeElement.querySelectorAll('[data-testid="territory-gap"]').length).toBe(gapsBefore);
+  });
+});
+
+describe('ZoneTerritoryGridComponent: cortes por try', () => {
+  let fixture: ComponentFixture<ZoneTerritoryGridComponent>;
+
+  const tryCut: TramoCutMark = { eventId: 'a', eventTypeName: 'Try', period: 1, minute: 23, label: 'Try 22:30' };
+  const cuts = (): HTMLElement[] => Array.from(fixture.nativeElement.querySelectorAll('[data-testid="territory-cut"]'));
+  const block = (): HTMLElement => fixture.nativeElement.querySelector('[data-testid="territory-block"]');
+
+  const render = (marks: TramoCutMark[], assignments: ZoneAssignmentResponse[] = []): void => {
+    fixture.componentRef.setInput('cuts', marks);
+    fixture.componentRef.setInput('assignments', assignments);
+    fixture.detectChanges();
+  };
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [ZoneTerritoryGridComponent] }).compileComponents();
+    fixture = TestBed.createComponent(ZoneTerritoryGridComponent);
+  });
+
+  it('dibuja una línea de corte en el minuto donde termina el tramo, con su motivo', () => {
+    render([tryCut]);
+
+    const [line] = cuts();
+    expect(line.style.left).toBe('28.75%');
+    expect(line.getAttribute('title')).toBe('Corte: Try 22:30 · el tramo termina en 23′');
+  });
+
+  it('marca el tramo que sigue después de un corte y lo dice en su descripción', () => {
+    render([tryCut], [{ id: 'z', matchId: 'm', period: 1, startMinute: 20, endMinute: 25, row: 2, col: 5 }]);
+
+    expect(block().classList).toContain('is-cut');
+    expect(block().getAttribute('aria-label')).toContain('Sigue después del Try 22:30: cortalo en 23′.');
+  });
+
+  it('un tramo que termina en el corte no se marca', () => {
+    render([tryCut], [{ id: 'z', matchId: 'm', period: 1, startMinute: 20, endMinute: 23, row: 2, col: 5 }]);
+
+    expect(block().classList).not.toContain('is-cut');
   });
 });

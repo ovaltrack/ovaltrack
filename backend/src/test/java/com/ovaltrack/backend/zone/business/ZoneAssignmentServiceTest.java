@@ -3,6 +3,7 @@ package com.ovaltrack.backend.zone.business;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
@@ -45,6 +46,7 @@ class ZoneAssignmentServiceTest {
     @Mock private ZoneAssignmentRepository zoneAssignmentRepository;
     @Mock private EventRepository eventRepository;
     @Mock private EventZoneRuleValidator ruleValidator;
+    @Mock private TramoCutValidator cutValidator;
     @Mock private Authentication authentication;
 
     private final ZoneAssignmentValidator validator = new ZoneAssignmentValidator();
@@ -59,7 +61,7 @@ class ZoneAssignmentServiceTest {
     @BeforeEach
     void setUp() {
         service = new ZoneAssignmentService(matchService, matchSecurityValidator, zoneAssignmentRepository,
-                eventRepository, validator, summaryCalculator, ruleValidator);
+                eventRepository, validator, summaryCalculator, ruleValidator, cutValidator);
         matchId = UUID.randomUUID();
         match = new Match();
         match.setId(matchId);
@@ -271,5 +273,67 @@ class ZoneAssignmentServiceTest {
         service.delete(matchId, zoneId, authentication);
 
         verify(ruleValidator, never()).validateAssignment(any(), any());
+    }
+
+    // --- Corte de tramo por try ---
+
+    @Test
+    @DisplayName("Al crear, valida el corte por try con los mismos eventos y antes de guardar")
+    void shouldValidateTramoCutOnCreate() {
+        List<Event> events = List.of(new Event());
+        when(matchService.findMatchEntityById(matchId)).thenReturn(match);
+        when(zoneAssignmentRepository.findByMatchIdOrderByPeriodAscStartMinuteAsc(matchId)).thenReturn(List.of());
+        when(eventRepository.findPostMatchEventsByMatchId(matchId)).thenReturn(events);
+        when(zoneAssignmentRepository.save(any(ZoneAssignment.class))).thenAnswer(call -> call.getArgument(0));
+
+        service.create(matchId, request, authentication);
+
+        InOrder order = inOrder(ruleValidator, cutValidator, zoneAssignmentRepository);
+        order.verify(ruleValidator).validateAssignment(request, events);
+        order.verify(cutValidator).validateAssignment(request, events);
+        order.verify(zoneAssignmentRepository).save(any(ZoneAssignment.class));
+    }
+
+    @Test
+    @DisplayName("Si el tramo sigue después de un try, no se crea")
+    void shouldNotCreateWhenCutValidatorRejects() {
+        when(matchService.findMatchEntityById(matchId)).thenReturn(match);
+        when(zoneAssignmentRepository.findByMatchIdOrderByPeriodAscStartMinuteAsc(matchId)).thenReturn(List.of());
+        when(eventRepository.findPostMatchEventsByMatchId(matchId)).thenReturn(List.of());
+        doThrow(new BusinessException("El tramo 1T 10'–25' no puede seguir después del Try"))
+                .when(cutValidator).validateAssignment(any(), any());
+
+        assertThrows(BusinessException.class, () -> service.create(matchId, request, authentication));
+        verify(zoneAssignmentRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Al editar, valida el corte por try con el rango nuevo; si lo rechaza no se modifica")
+    void shouldValidateTramoCutOnUpdate() {
+        UUID zoneId = UUID.randomUUID();
+        ZoneAssignment current = zone(zoneId, 10, 25);
+        ZoneAssignmentCreationDTO widened = new ZoneAssignmentCreationDTO(2, 3, 1, 10, 30);
+        when(matchService.findMatchEntityById(matchId)).thenReturn(match);
+        when(zoneAssignmentRepository.findByIdAndMatchId(zoneId, matchId)).thenReturn(Optional.of(current));
+        when(zoneAssignmentRepository.findByMatchIdOrderByPeriodAscStartMinuteAsc(matchId)).thenReturn(List.of(current));
+        when(eventRepository.findPostMatchEventsByMatchId(matchId)).thenReturn(List.of());
+        doThrow(new BusinessException("El tramo 1T 10'–30' no puede seguir después del Try"))
+                .when(cutValidator).validateAssignment(any(), any());
+
+        assertThrows(BusinessException.class, () -> service.update(matchId, zoneId, widened, authentication));
+        verify(cutValidator).validateAssignment(eq(widened), any());
+        verify(zoneAssignmentRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Eliminar un tramo nunca valida el corte por try")
+    void shouldNotCheckTramoCutOnDelete() {
+        UUID zoneId = UUID.randomUUID();
+        when(matchService.findMatchEntityById(matchId)).thenReturn(match);
+        when(zoneAssignmentRepository.findByIdAndMatchId(zoneId, matchId)).thenReturn(Optional.of(zone(zoneId, 10, 25)));
+
+        service.delete(matchId, zoneId, authentication);
+
+        verify(cutValidator, never()).validateAssignment(any(), any());
     }
 }

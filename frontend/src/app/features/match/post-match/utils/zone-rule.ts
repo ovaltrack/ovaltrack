@@ -80,6 +80,11 @@ export function placeEventZone(
     : null;
 }
 
+/** Verdadero si el evento cierra el tramo que lo contiene (Try, Try penal, Kick H, Drop goal). */
+export function closesTramo(rule: ZoneRule | null | undefined): boolean {
+  throw new Error('Sin implementar');
+}
+
 /** Verdadero si la regla fija fila y columna sin necesitar ningún tramo. */
 export function isFixedZone(rule: ZoneRule | null | undefined, attributes: Record<string, unknown> | null | undefined): boolean {
   return !!rule

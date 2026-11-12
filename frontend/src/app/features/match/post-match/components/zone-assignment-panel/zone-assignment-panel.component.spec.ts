@@ -803,4 +803,50 @@ describe('ZoneAssignmentPanelComponent', () => {
       });
     });
   });
+
+  describe('corte por try', () => {
+    const tryEvent: MatchTimelineEventResponse = {
+      id: 'try', eventTypeId: 'try', eventTypeName: 'Try', matchTime: 22 * 60 + 30, period: 1, teamPossession: 'OWN',
+      attributes: { zone: 'right' }
+    };
+    const withTryRule = (): void =>
+      store.zoneRules.set(new Map([['try', { columns: [6], rowFrom: 'zone', closesTramo: true }]]));
+
+    it('un rango que sigue después del try muestra el motivo, deshabilita Guardar y ofrece terminar en su minuto', () => {
+      render([], [tryEvent]);
+      withTryRule();
+      selectCell(2, 5);
+      component.startMinute = 20;
+      component.endMinute = 25;
+      fixture.detectChanges();
+
+      expect(rangeError()).toContain("El tramo 1T 20'–25' no puede seguir después del Try (1T 22:30): terminalo en 23'");
+      expect(saveButton().disabled).toBeTrue();
+
+      query<HTMLButtonElement>('[data-testid="cut-fix"]')?.click();
+      fixture.detectChanges();
+
+      expect(component.endMinute).toBe(23);
+      expect(saveButton().disabled).toBeFalse();
+    });
+
+    it('un tramo guardado que cruza un try, al editarlo, ofrece cortarlo en el minuto del try', () => {
+      const crossing: ZoneAssignmentResponse = { ...existingZone, startMinute: 20, endMinute: 25, col: 5 };
+      render([crossing], [tryEvent]);
+      withTryRule();
+      component.startEdit(crossing);
+      fixture.detectChanges();
+
+      expect(query('[data-testid="cut-fix"]')?.textContent?.trim()).toBe('Terminar en 23′');
+    });
+
+    it('el asistente propone un rango que termina en el try', () => {
+      render([{ ...existingZone, startMinute: 0, endMinute: 20 }], [tryEvent]);
+      withTryRule();
+      component.cancel();
+      fixture.detectChanges();
+
+      expect([component.startMinute, component.endMinute]).toEqual([20, 23]);
+    });
+  });
 });

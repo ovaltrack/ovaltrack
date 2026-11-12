@@ -53,6 +53,8 @@ export interface ZoneRule {
   columns?: number[] | null;
   rows?: number[] | null;
   rowFrom?: string | null;
+  /** Después del evento el juego se reinicia: el tramo que lo contiene termina en su minuto. */
+  closesTramo?: boolean | null;
 }
 
 /** `basic`: modal de estadísticas de la carga en vivo · `intermediate`: resumen de entretiempo. */
