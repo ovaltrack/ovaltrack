@@ -190,10 +190,11 @@ export function zonePoints(events: RuleEvent[], rules: ZoneRulesByType, filter: 
     .sort((a, b) => a.minute - b.minute);
 }
 
-/** Texto del punto para el tooltip y los lectores de pantalla, ej. "Try 22:30 · D6 · el tramo termina en 23′". */
+/** Texto del punto para el tooltip y los lectores de pantalla, ej. "Try 22:30 · D6 · el tramo incluye todo el minuto 22 y termina en 23′". */
 export function describePoint(point: ZonePoint): string {
   const where = point.row === null ? `${ZONE_COLUMN_NAMES[point.col - 1]} (sin lateral)` : zoneLabel({ row: point.row, col: point.col });
-  const cut = point.cutMinute === null ? '' : ` · el tramo termina en ${point.cutMinute}′`;
+  // Los tramos son de minutos enteros: el tanto del 22:30 está en el minuto 22, así que su tramo termina en 23′
+  const cut = point.cutMinute === null ? '' : ` · el tramo incluye todo el minuto ${point.cutMinute - 1} y termina en ${point.cutMinute}′`;
   return `${point.eventTypeName} ${formatMatchTime(Math.round(point.minute * SECONDS_PER_MINUTE))} · ${where}${cut}`;
 }
 
@@ -210,8 +211,6 @@ export interface TramoCutMark {
   label: string;
   /** Quién ejecutó el tanteo: define quién saca después (el que lo recibe). */
   possession: Possession;
-  /** Letra de la tira de tanteo del eje: T (try), P (Kick H), D (drop). */
-  glyph: string;
 }
 
 /** El primer corte que un rango deja adentro y el mismo mensaje que el 409 del backend. */
@@ -235,8 +234,7 @@ export function tramoCuts(events: RuleEvent[], rules: ZoneRulesByType, types: Sc
         period,
         minute: cutMinuteOf(effectiveMatchTime(period, event.matchTime)),
         label: `${event.eventTypeName} ${formatMatchTime(event.matchTime)}`,
-        possession: event.teamPossession,
-        glyph: cutGlyph(types.get(event.eventTypeId)?.code, event.eventTypeName)
+        possession: event.teamPossession
       };
     });
 }
@@ -284,20 +282,11 @@ export function kickoffCell(cut: TramoCutMark): ZoneCellRef | null {
   return col === undefined ? null : { row: KICKOFF_ROW, col };
 }
 
-const GLYPH_BY_CODE: Readonly<Record<string, string>> = { TRY: 'T', PENALTY_TRY: 'T', PENALTY_KICK: 'P', DROP_GOAL: 'D' };
-
-/** Letra con la que se marca el corte en la tira de tanteo del eje: T (try, try penal), P (Kick H), D (drop goal). */
-export function cutGlyph(code: string | undefined, eventTypeName: string): string {
-  return (code ? GLYPH_BY_CODE[code] : undefined) ?? eventTypeName.charAt(0).toUpperCase();
-}
-
-/** Cortes que rodean al rango (el último que lo precede, los que cruza y el primero que lo sigue), en orden cronológico. */
-export function boundingCuts(range: TimedRange, cuts: TramoCutMark[]): TramoCutMark[] {
-  const sameHalf = cuts.filter(cut => cut.period === range.period);
-  const before = sameHalf.filter(cut => cut.minute <= range.startMinute).sort((a, b) => b.minute - a.minute).slice(0, 1);
-  const inside = sameHalf.filter(cut => cut.minute > range.startMinute && cut.minute < range.endMinute);
-  const after = sameHalf.filter(cut => cut.minute >= range.endMinute).sort((a, b) => a.minute - b.minute).slice(0, 1);
-  return [...before, ...inside, ...after].sort((a, b) => a.minute - b.minute);
+/** Cortes que toca el rango: los que cruza y los que caen justo en su inicio o su fin, en orden cronológico. */
+export function touchingCuts(range: TimedRange, cuts: TramoCutMark[]): TramoCutMark[] {
+  return cuts
+    .filter(cut => cut.period === range.period && range.startMinute <= cut.minute && cut.minute <= range.endMinute)
+    .sort((a, b) => a.minute - b.minute);
 }
 
 /** Marcas que quedaron juntas y se dibujan como una sola; `left` es el promedio de las marcas que agrupa. */

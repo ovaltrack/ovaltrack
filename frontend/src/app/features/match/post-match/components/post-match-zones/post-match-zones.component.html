@@ -48,8 +48,8 @@
                   <strong>Punto y tramo</strong>
                   <p data-testid="points-note">
                     Un <b>punto</b> (◆) es una jugada que ya sabe dónde ocurrió: un Try queda en el in-goal rival, del lado del apoyo si lo cargaste.
-                    Se dibuja en su minuto exacto; si hay varios juntos se ven como uno con el número. Cada tanto que reinicia el juego deja una marca en el
-                    eje del tiempo (<b>T</b> try, <b>P</b> Kick H, <b>D</b> drop) y su línea de corte aparece al señalarla o cerca del tramo que editás. Un <b>tramo</b> es un rango de minutos que da zona a las jugadas
+                    Se dibuja en su minuto exacto; si hay varios juntos se ven como uno con el número. La línea de corte de un tanto que reinicia el juego aparece al
+                    señalar su rombo o mientras editás el tramo que la toca. Un <b>tramo</b> es un rango de minutos que da zona a las jugadas
                     que no tienen una propia; no puede dejar a un Scrum o un Line-out en una zona que su tipo no permite.
                     El in-goal solo tiene puntos: no se crean tramos ahí (los que ya existían se siguen viendo, editando y borrando).
                   </p>
@@ -71,7 +71,8 @@
                     <li>Un tramo no puede cruzar el entretiempo: partilo en uno hasta el 40′ y otro desde el 40′.</li>
                     <li>El tiempo añadido cuenta como minuto 40 (1T) y 80 (2T).</li>
                     <li>Tocar un hueco propone solo el segmento hasta el próximo corte: lo que sigue a un tanto es otro segmento.</li>
-                    <li>Un try, un try penal, un Kick H o un drop cierran el tramo: después se reinicia el juego, así que el tramo termina en el minuto de esa jugada.</li>
+                    <li>Un try, un try penal, un Kick H o un drop cierran el tramo: después se reinicia el juego, así que el tramo termina al final del minuto de esa jugada.</li>
+                    <li>Los tramos van en minutos enteros: un try a las 5:11 entra en el minuto 5, así que su tramo termina en 6′ y no en 5′. Así el ataque que terminó en el try (5:00 a 5:11) no queda sin zona.</li>
                   </ul>
                   </div>
                   <div class="help-col">

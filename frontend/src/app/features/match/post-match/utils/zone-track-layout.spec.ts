@@ -491,7 +491,7 @@ describe('zone-track-layout', () => {
       });
 
       it('ignora los cortes del otro tiempo', () => {
-        expect(minutes({ period: 2, startMinute: 50, endMinute: 60 }, [at(55), at(60, 2), at(23)])).toEqual([55, 60]);
+        expect(minutes({ period: 2, startMinute: 50, endMinute: 60 }, [at(55, 2), at(60, 2), at(23)])).toEqual([55, 60]);
       });
 
       it('sin cortes devuelve una lista vacía', () => {

@@ -14,14 +14,6 @@
         }
       }
     </div>
-    <!-- Tira de tanteo: dónde hubo un tanto que reinicia el juego. El significado lo da la letra (T, P, D); la línea solo se ve al señalarla o cerca del rango en edición -->
-    <div class="score-strip" data-testid="territory-score-strip">
-      @for (mark of cutMarks(); track mark.key) {
-        <span class="cut-mark" role="img" data-testid="territory-cut-mark" [class.is-group]="mark.eventIds.length > 1" [class.is-hot]="isHot(mark.eventIds)"
-              [style.left.%]="mark.left" [attr.title]="mark.title" [attr.aria-label]="mark.title"
-              (mouseenter)="setHot(mark.eventIds)" (mouseleave)="setHot([])">{{ mark.label }}</span>
-      }
-    </div>
   </div>
 
   <div class="body" [style.--rows]="rowCount" [style.--guide-step]="guideStep()">
@@ -92,7 +84,7 @@
         </div>
       }
 
-      <!-- Líneas de corte: solo las vecinas al rango en edición y la del tanto señalado -->
+      <!-- Líneas de corte: solo las que toca el rango en edición y la del tanto señalado -->
       @for (line of cutLines(); track line.eventId) {
         <span class="cut-line" data-testid="territory-cut" aria-hidden="true"
               [class.is-hot]="isHot([line.eventId])" [style.left.%]="line.left"></span>

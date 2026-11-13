@@ -14,15 +14,7 @@
   padding: 0 10px 6px 0; font-size: 10.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
   color: var(--text-muted);
 }
-/* La regla y la tira de tanteo comparten la celda del eje: la tira arriba (letras T, P, D) y los minutos abajo */
-.ruler { grid-area: 1 / 2; position: relative; height: 36px; }
-.score-strip { grid-area: 1 / 2; position: relative; align-self: start; height: 16px; }
-.cut-mark {
-  position: absolute; top: 0; transform: translateX(-50%); box-sizing: border-box; min-width: 16px; height: 16px; padding: 0 3px;
-  display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid var(--surface);
-  background: var(--navy); color: var(--on-navy); font: 800 10px/1 var(--font-mono); cursor: default;
-}
-.cut-mark.is-hot { box-shadow: 0 0 0 2px var(--navy); z-index: 1; }
+.ruler { grid-area: 1 / 2; position: relative; height: 24px; }
 .tick {
   position: absolute; bottom: 4px; transform: translateX(-50%); white-space: nowrap;
   font: 600 11px var(--font-mono); color: var(--text-secondary);
@@ -141,7 +133,7 @@
 
 /* El entretiempo es el límite duro del partido: la línea más fuerte de la grilla, más que cualquier corte por tanto */
 .half-line { position: absolute; top: 0; bottom: 0; margin-left: -1px; border-left: 2px solid var(--text-secondary); pointer-events: none; z-index: 3; }
-/* Corte por tanto: línea fina y tenue, solo junto al rango en edición o al señalar el tanto; la tira del eje es la señal permanente */
+/* Corte por tanto: línea fina y tenue, solo junto al rango en edición o al señalar el rombo; el rombo es la señal permanente */
 .cut-line { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1px solid var(--text-muted); pointer-events: none; z-index: 2; }
 .cut-line.is-hot { border-left: 2px solid var(--navy); margin-left: -1px; }
 /* Resalte del punto señalado: anillo, sin cambiar el relleno */
