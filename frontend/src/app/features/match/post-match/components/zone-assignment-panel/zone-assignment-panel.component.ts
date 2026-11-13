@@ -11,7 +11,7 @@ import { findZoneRuleConflict } from '../../utils/zone-rule';
 import { ListOverflow, OverflowMetrics, overflowCapacity, visibleWithOverflow } from '../../utils/list-overflow';
 import { observeHeight } from '../../utils/observe-height';
 import {
-  GapWithEvents, TRACK_MINUTES, TramoCut, clampToCut, findTramoCut, gapsWithEventCount, kickoffCell, suggestNextRange
+  GapWithEvents, TRACK_MINUTES, TramoCut, clampToCut, cutReach, findTramoCut, gapsWithEventCount, kickoffCell, suggestNextRange
 } from '../../utils/zone-track-layout';
 import { ZONE_HALF_MINUTES, ZoneAssignmentRequest, ZoneAssignmentResponse, ZoneCellRef, ZonePeriod } from '../../../types/zone.types';
 
@@ -82,7 +82,7 @@ export class ZoneAssignmentPanelComponent implements OnInit, AfterViewInit {
   /** En móvil el formulario es una hoja inferior: compacta (resumen, lateral y Guardar) o expandida con todos los campos. */
   sheetOpen = false;
   serverError: string | null = null;
-  /** Aviso informativo (no es un error) cuando «Hasta» se llevó solo al corte de un tanteo, ej. "Termina en 23′ por el Try 22:30". */
+  /** Aviso informativo (no es un error) cuando «Hasta» se llevó solo al corte de un tanteo, ej. "El tramo llega hasta 22:59 (termina en 23′) por el Try 22:30". */
   cutNotice: string | null = null;
   /** Se intentó guardar sin elegir franja (atajo de teclado): el campo Franja lo marca como error. */
   pickAttempted = false;
@@ -235,7 +235,7 @@ export class ZoneAssignmentPanelComponent implements OnInit, AfterViewInit {
   private endAtCutIfCrossed(): void {
     const range = this.usableRange();
     const clamped = range ? clampToCut(range, this.store.cuts()) : null;
-    this.cutNotice = clamped ? `Termina en ${clamped.endMinute}′ por el ${clamped.cut.label}` : null;
+    this.cutNotice = clamped ? `El tramo ${cutReach(clamped.endMinute)} por el ${clamped.cut.label}` : null;
     if (clamped) this.endMinute = clamped.endMinute;
   }
 

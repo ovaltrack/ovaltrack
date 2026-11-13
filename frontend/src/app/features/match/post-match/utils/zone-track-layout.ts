@@ -191,15 +191,27 @@ export function zonePoints(events: RuleEvent[], rules: ZoneRulesByType, filter: 
 }
 
 /**
- * Texto del punto para el tooltip y los lectores de pantalla, ej. "Try 22:30 · D6 · el tramo incluye todo el minuto 22 y
- * termina en 23′". Con `tramoEnds` en false (ningún tramo termina en el corte) lo aclara en lugar de nombrar un tramo.
+ * Hasta dónde llega el tramo que corta un tanto, ej. "llega hasta 22:59 (termina en 23′)". Los tramos son de minutos
+ * enteros: el tanto del 22:30 está en el minuto 22, que el tramo cubre entero. Se nombra el último segundo cubierto y el
+ * minuto de fin queda como dato secundario, porque «termina en 23′» solo sonaba a que el tanto fue a las 23.
+ */
+export function cutReach(cutMinute: number): string {
+  return `llega hasta ${lastSecondBefore(cutMinute)} (termina en ${cutMinute}′)`;
+}
+
+function lastSecondBefore(cutMinute: number): string {
+  return formatMatchTime(cutMinute * SECONDS_PER_MINUTE - 1);
+}
+
+/**
+ * Texto del punto para el tooltip y los lectores de pantalla, ej. "Try 22:30 · D6 · el tramo llega hasta 22:59 (termina en
+ * 23′)". Con `tramoEnds` en false (ningún tramo termina en el corte) lo aclara en lugar de nombrar un tramo.
  */
 export function describePoint(point: ZonePoint, tramoEnds = true): string {
   const where = point.row === null ? `${ZONE_COLUMN_NAMES[point.col - 1]} (sin lateral)` : zoneLabel({ row: point.row, col: point.col });
-  // Los tramos son de minutos enteros: el tanto del 22:30 está en el minuto 22, así que su tramo termina en 23′
   const cut = point.cutMinute === null ? ''
-    : tramoEnds ? ` · el tramo incluye todo el minuto ${point.cutMinute - 1} y termina en ${point.cutMinute}′`
-      : ` · el corte cae al final del minuto ${point.cutMinute - 1}, pero ningún tramo termina en ${point.cutMinute}′`;
+    : tramoEnds ? ` · el tramo ${cutReach(point.cutMinute)}`
+      : ` · ningún tramo llega hasta ${lastSecondBefore(point.cutMinute)} (terminaría en ${point.cutMinute}′)`;
   return `${point.eventTypeName} ${formatMatchTime(Math.round(point.minute * SECONDS_PER_MINUTE))} · ${where}${cut}`;
 }
 
