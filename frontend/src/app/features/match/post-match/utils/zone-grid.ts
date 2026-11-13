@@ -1,4 +1,4 @@
-import { ZONE_GRID_COLS, ZONE_GRID_ROWS, ZoneCellRef } from '../../types/zone.types';
+import { ZONE_GRID_COLS, ZoneCellRef } from '../../types/zone.types';
 
 /**
  * Geometría de la cancha en metros. Es la única fuente de las proporciones y de los nombres de zona:
@@ -67,16 +67,6 @@ export function describeCount(count: number, unit: ZoneCountUnit): string {
   return count === 1 ? '1 evento' : `${count} eventos`;
 }
 
-/** Todas las celdas de la grilla, fila por fila. */
-export function allZoneCells(): ZoneCellRef[] {
-  const cells: ZoneCellRef[] = [];
-  for (let row = 1; row <= ZONE_GRID_ROWS; row++) {
-    for (let col = 1; col <= ZONE_GRID_COLS; col++) {
-      cells.push({ row, col });
-    }
-  }
-  return cells;
-}
 
 /** Conteo para la burbuja de la celda: desde 1000 se abrevia ("1k") para que no se salga de la píldora. */
 export function formatEventCount(count: number): string {
