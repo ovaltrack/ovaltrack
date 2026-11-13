@@ -167,6 +167,41 @@ describe('MatchReviewStore (HU-8.4)', () => {
       });
     });
 
+    describe('recorte de un tramo por un tanto', () => {
+      const tryType: LiveCaptureEventType = {
+        id: 't-try', name: 'Try', groupName: 'General', category: 'ATTACK', isScoring: true, points: 5, requiresPlayer: false, isActive: true,
+        createdAt: '', code: 'TRY', showInPalette: true, followUpEventTypeId: null, actor: 'ATTACKING',
+        possessionAfter: 'KEEP', followUpChoices: [], templateEventFields: [], zoneRule: { columns: [6], rowFrom: 'zone', closesTramo: true }
+      };
+      const tryAt = (seconds: number): MatchTimelineEventResponse =>
+        ({ id: 'try', eventTypeId: 't-try', eventTypeName: 'Try', matchTime: seconds, period: 1, teamPossession: 'OWN', attributes: { zone: 'center' } });
+      const largo = { ...tramo, startMinute: 10, endMinute: 30 };
+
+      it('predice el recorte con los tramos cargados', () => {
+        store.setEventTypesList([tryType]);
+        store.setZoneAssignments([largo]);
+
+        expect(store.tramoTrimFor(tryAt(22 * 60 + 30))).toEqual({ tramo: largo, endMinute: 23 });
+      });
+
+      it('sin tramos cargados no predice nada', () => {
+        store.setEventTypesList([tryType]);
+
+        expect(store.tramoTrimFor(tryAt(22 * 60 + 30))).toBeNull();
+      });
+
+      it('al aplicarlo el tramo termina en el corte y las jugadas que quedaron después pasan a no tener zona', () => {
+        store.setEventTypesList([tryType]);
+        store.setEvents([event('antes', 15 * 60, { row: 2, col: 4 }), event('despues', 25 * 60, { row: 2, col: 4 })]);
+        store.setZoneAssignments([largo]);
+
+        store.applyTramoTrim({ tramo: largo, endMinute: 23 });
+
+        expect(store.zoneAssignments()[0].endMinute).toBe(23);
+        expect(store.allViewModels().map(vm => vm.zone)).toEqual([{ row: 2, col: 4 }, null]);
+      });
+    });
+
     it('resetSession descarta los tramos', () => {
       store.setZoneAssignments([tramo]);
 

@@ -3,7 +3,7 @@ import { ZoneEvent } from './zone-stats';
 import {
   FULL_TRACK, allGaps, blockLabel, blockLayout, isInWindow, trackWindow, countByFranja, gapAtMinute, gapsWithEventCount,
   minuteAtOffset, minuteToPercent, suggestNextRange, territoryRows, zonePoints, describePoint, tramoCuts, crossedCut, findTramoCut,
-  TramoCutMark, ZonePoint, clampToCut, kickoffCell, touchingCuts, tramoEndingAt, cutReach, clusterMarks, segmentAt
+  TramoCutMark, ZonePoint, clampToCut, kickoffCell, touchingCuts, tramoEndingAt, cutReach, predictTramoTrim, describeTramoTrim, clusterMarks, segmentAt
 } from './zone-track-layout';
 import { TemplateField, ZoneRule } from '../../types/event-type.types';
 import { RuleEvent, ScoringTypesById, ZoneRulesByType } from './zone-rule';
@@ -506,6 +506,36 @@ describe('zone-track-layout', () => {
 
       it('los devuelve en orden cronológico', () => {
         expect(minutes({ period: 1, startMinute: 20, endMinute: 30 }, [at(28), at(21)])).toEqual([21, 28]);
+      });
+    });
+
+    describe('predictTramoTrim', () => {
+      const tramo = zone('z', 1, 20, 30);
+
+      it('un try dentro de un tramo que sigue después del corte lo recorta en el minuto siguiente', () => {
+        expect(predictTramoTrim(tryAt('a', 1, 22 * 60 + 30), [tramo], rules, types)).toEqual({ tramo, endMinute: 23 });
+      });
+
+      it('si el tramo ya termina en el corte no hay nada que recortar', () => {
+        expect(predictTramoTrim(tryAt('a', 1, 22 * 60 + 30), [zone('z', 1, 20, 23)], rules, types)).toBeNull();
+      });
+
+      it('un Kick H convertido recorta; uno errado no', () => {
+        expect(predictTramoTrim(kickAt('a', 22 * 60, true), [tramo], rules, types)?.endMinute).toBe(23);
+        expect(predictTramoTrim(kickAt('a', 22 * 60, false), [tramo], rules, types)).toBeNull();
+      });
+
+      it('un tipo que no corta, un try en un hueco o en el otro tiempo no recortan nada', () => {
+        expect(predictTramoTrim(rev('a', 'scrum', 'Scrum', 1, 22 * 60), [tramo], rules, types)).toBeNull();
+        expect(predictTramoTrim(tryAt('a', 1, 35 * 60), [tramo], rules, types)).toBeNull();
+        expect(predictTramoTrim(tryAt('a', 2, 62 * 60), [tramo], rules, types)).toBeNull();
+      });
+    });
+
+    describe('describeTramoTrim', () => {
+      it('dice dónde termina ahora el tramo y qué rango quedó como hueco', () => {
+        expect(describeTramoTrim({ tramo: zone('z', 1, 20, 30, 2, 4), endMinute: 23 }))
+          .toBe('El tramo C4 20′–30′ ahora termina en 23′ · 23′–30′ quedó como hueco');
       });
     });
 
