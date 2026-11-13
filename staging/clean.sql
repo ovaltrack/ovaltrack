@@ -99,6 +99,8 @@ ALTER TABLE event_types ADD COLUMN IF NOT EXISTS zone_rule JSONB;
 --              rowFrom = clave del atributo (left | center | right) de la que sale la fila. Un eje con un único valor queda fijo;
 --              si no, sale del tramo del partido. Sin zone_rule el tipo no tiene restricción (se carga con los UPDATE de abajo).
 --              closesTramo = true: después del evento el juego se reinicia, así que el tramo que lo contiene termina en su minuto.
+--              Solo cuentan los tanteos que puntúan (un Kick H o un drop con wasSuccessful = false no cortan). Al guardar el evento el
+--              backend acorta solo el tramo (TramoTrimmer) y lo que sigue queda como hueco.
 -- Reglas del catálogo:
 --   * Máximo 2 toques por evento en el modal: jugador (si requires_player) + 1 campo 'live'.
 --   * Un solo tipo por acción; el resultado va en un campo, no en tipos duplicados.
