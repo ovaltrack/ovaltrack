@@ -37,6 +37,8 @@ export class RugbyFieldComponent {
   readonly cells = input<ZoneCellSummary[]>([]);
   /** Qué cuentan las celdas: jugadas (por defecto) o minutos cubiertos por los tramos. */
   readonly unit = input<ZoneCountUnit>('events');
+  /** Aclaración bajo la escala de calor (ej. qué filtros no aplican a lo que se cuenta); null no muestra nada. */
+  readonly legendNote = input<string | null>(null);
   readonly selectedCell = input<ZoneCellRef | null>(null);
   readonly ownClubName = input<string>('Mi club');
   readonly opponentName = input<string>('Rival');

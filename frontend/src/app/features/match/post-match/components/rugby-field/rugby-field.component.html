@@ -108,6 +108,7 @@
           <i class="heat-swatch" [class.is-empty]="step.level === 0" [style.--heat]="step.mix" aria-hidden="true"></i>{{ step.label }}
         </span>
       </span>
+      <span *ngIf="legendNote() as note" class="heat-legend-note" data-testid="heat-legend-note">{{ note }}</span>
     </div>
     <span class="reading" data-testid="zone-reading" aria-live="polite">{{ reading() }}</span>
     <!-- Detalle de la celda señalada (o de las jugadas sin zona): lo aporta la pantalla -->

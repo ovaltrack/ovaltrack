@@ -233,6 +233,7 @@
 
 .heat-legend-steps { display: flex; flex-wrap: wrap; gap: 6px 14px; }
 .heat-legend-step { display: inline-flex; align-items: center; gap: 5px; }
+.heat-legend-note { font-family: var(--font-body); color: var(--text-muted); }
 
 .heat-swatch {
   width: 18px;

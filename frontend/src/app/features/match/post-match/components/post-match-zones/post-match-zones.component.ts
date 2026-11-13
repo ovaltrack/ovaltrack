@@ -91,7 +91,7 @@ export class PostMatchZonesComponent implements OnInit, OnDestroy {
     { value: 'ALL', label: 'Todos' }, { value: 'OWN', label: 'Propios' }, { value: 'OPPONENT', label: 'Rival' }
   ];
 
-  readonly minutesFilterNote = 'En «Minutos» no aplica: los tramos no tienen tipo de jugada ni posesión';
+  readonly minutesFilterNote = 'En «Minutos» no aplica: los tramos no tienen tipo de jugada';
 
   readonly modeOptions: { value: ZoneMapMode; label: string }[] = [
     { value: 'EVENTS', label: 'Eventos' }, { value: 'MINUTES', label: 'Minutos' }
@@ -109,12 +109,18 @@ export class PostMatchZonesComponent implements OnInit, OnDestroy {
   readonly typeOptions = computed(() => eventTypeOptions(this.zonesStore.events()));
   /** Tipo en vigor: el elegido si el partido lo tiene, si no todos. */
   readonly typeFilter = computed(() => validTypeFilter(this.selectedType(), this.typeOptions()));
-  /** En Minutos la cancha cuenta tramos, que no tienen tipo ni posesión: esos filtros no aplican. */
-  readonly eventFiltersApply = computed(() => this.mapMode() === 'EVENTS');
+  /** En Minutos la cancha cuenta tramos, que no tienen tipo: el filtro de tipo no aplica (la posesión sí, en la grilla). */
+  readonly typeFilterApplies = computed(() => this.mapMode() === 'EVENTS');
 
-  /** Eventos de la grilla de territorio: solo siguen la posesión; el tipo de jugada cambia únicamente el mapa de la cancha. */
+  /** En Minutos la cancha suma tramos, que no tienen posesión: la leyenda lo aclara porque la grilla sí la filtra. */
+  readonly legendNote = computed(() => this.mapMode() === 'MINUTES' ? 'Minutos: no se filtra por posesión' : null);
+
+  /**
+   * Eventos de la grilla de territorio: siempre siguen la posesión, también en Minutos (sus conteos por franja y sus
+   * puntos son jugadas); el tipo de jugada cambia únicamente el mapa de la cancha.
+   */
   readonly gridEvents = computed(() =>
-    filterEvents(this.zonesStore.events(), eventFiltersFor(this.mapMode(), 'ALL', this.possessionFilter())));
+    filterEvents(this.zonesStore.events(), { eventTypeId: 'ALL', possession: this.possessionFilter() }));
 
   /** Eventos del mapa de la cancha: la posesión y además el tipo de jugada elegido; el tiempo lo aplica `countByCell`. */
   readonly mapEvents = computed(() =>

@@ -28,7 +28,6 @@
               @for (option of possessionOptions; track option.value) {
                 <button type="button" class="filter-pill-btn" data-testid="possession-filter"
                         [class.active]="possessionFilter() === option.value" [attr.aria-pressed]="possessionFilter() === option.value"
-                        [disabled]="!eventFiltersApply()" [attr.title]="eventFiltersApply() ? null : minutesFilterNote"
                         (click)="setPossessionFilter(option.value)">{{ option.label }}</button>
               }
             </div>
@@ -56,7 +55,7 @@
                   <strong>Eventos o Minutos</strong>
                   <p data-testid="mode-note">
                     «Eventos» cuenta jugadas por zona; el tipo de jugada (junto al título del mapa) solo cambia la cancha, no la grilla. «Minutos» suma el tiempo
-                    que los tramos cubren en cada zona: ahí el tipo y la posesión no aplican, porque un tramo no los tiene. Los colores de la cancha
+                    que los tramos cubren en cada zona: ahí el tipo no aplica y la posesión solo filtra la grilla, porque un tramo no los tiene. Los colores de la cancha
                     se ajustan a los valores que se muestran, y su leyenda dice los rangos reales.
                   </p>
                   <strong>Jugadas sin zona</strong>
@@ -110,7 +109,7 @@
             <h3 class="map-title">{{ mapMode() === 'MINUTES' ? 'Minutos por zona' : 'Eventos por zona' }}</h3>
             <div class="filter-group" role="group" aria-label="Qué cuenta la cancha">
               <select class="type-select" data-testid="type-filter" aria-label="Tipo de jugada"
-                      [disabled]="!eventFiltersApply()" [attr.title]="eventFiltersApply() ? null : minutesFilterNote"
+                      [disabled]="!typeFilterApplies()" [attr.title]="typeFilterApplies() ? null : minutesFilterNote"
                       (change)="setTypeFilter($any($event.target).value)">
                 <option value="ALL" [selected]="typeFilter() === 'ALL'">Todas las jugadas</option>
                 @for (option of typeOptions(); track option.id) {
@@ -129,6 +128,7 @@
           <app-rugby-field
             [cells]="cellCounts()"
             [unit]="mapMode() === 'MINUTES' ? 'minutes' : 'events'"
+            [legendNote]="legendNote()"
             [selectedCell]="selectedCell()"
             [lockedCols]="lockedCols"
             [ownClubName]="ownClubName()"
