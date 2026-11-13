@@ -157,3 +157,20 @@ export interface BackendUserResponse {
     contactPhone?: string;
   };
 }
+
+/**
+ * Quién puede ver y editar los datos de una persona (misma regla que `PersonSecurityValidator` en el backend,
+ * que es quien la hace cumplir): el administrador del club, a cualquiera; el entrenador, solo a jugadores
+ * (con cuenta PLAYER o sin cuenta, `null`). El backend además limita al entrenador a sus divisiones.
+ */
+export function canEditPersonData(viewerRole: UserRole | null, targetRole: UserRole | null): boolean {
+  switch (viewerRole) {
+    case 'ADMIN_OVALTRACK':
+    case 'ADMIN_CLUB':
+      return true;
+    case 'COACH_ANALYST':
+      return targetRole === 'PLAYER' || targetRole === null;
+    default:
+      return false;
+  }
+}
