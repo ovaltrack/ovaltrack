@@ -19,6 +19,7 @@ import {
   StatusFilter,
   UserRole,
   bucketOf,
+  canEditPersonData,
   getMemberDisplayName,
   getMemberInitials,
   matchesSearchQuery,
@@ -28,6 +29,9 @@ import {
 } from '../../types/members.types';
 import { BatchActionBarComponent } from '../../components/batch-action-bar/batch-action-bar.component';
 import { DeactivateModalComponent } from '../../components/deactivate-modal/deactivate-modal.component';
+import { PersonEditDialogComponent } from '../../components/person-edit-dialog/person-edit-dialog.component';
+import { AuthService } from '../../../auth/services/auth.service';
+import { PersonResponse } from '../../../person/types/person.types';
 import { oneOf, persistedSignal } from '../../../../shared/utils/persisted-signal';
 
 @Component({
@@ -37,7 +41,8 @@ import { oneOf, persistedSignal } from '../../../../shared/utils/persisted-signa
     CommonModule,
     FormsModule,
     BatchActionBarComponent,
-    DeactivateModalComponent
+    DeactivateModalComponent,
+    PersonEditDialogComponent
   ],
   templateUrl: './members-list.component.html',
   styleUrl: './members-list.component.css',
@@ -46,6 +51,7 @@ import { oneOf, persistedSignal } from '../../../../shared/utils/persisted-signa
 export class MembersListComponent implements OnInit {
   private readonly membersService = inject(MembersService);
   private readonly toastService = inject(ToastService);
+  private readonly authService = inject(AuthService);
 
   readonly ROLE_META = ROLE_META;
   readonly SELECTABLE_ROLES = SELECTABLE_ROLES;
@@ -74,12 +80,10 @@ export class MembersListComponent implements OnInit {
       { key: 'NO_ROLE', label: 'Sin asignar', dashed: true }
     ];
 
-  // State Signals
   readonly members = signal<Member[]>([]);
   readonly initialRoles = signal<Map<string, UserRole>>(new Map());
   readonly dirtyMembers = signal<Set<string>>(new Set());
   readonly searchQuery = signal<string>('');
-  /** Filtros recordados en la pestaña (recarga o volver a la pantalla); se borran al cerrar sesión. */
   readonly activeFilter = persistedSignal<FilterCategory>('members.category', 'ALL', {
     isValid: oneOf(this.filterDefs.map(def => def.key)),
   });
@@ -89,8 +93,8 @@ export class MembersListComponent implements OnInit {
   readonly isLoading = signal<boolean>(true);
   readonly isSaving = signal<boolean>(false);
   readonly openMenu = signal<{ type: 'role' | 'actions'; memberId: string } | null>(null);
+  readonly editingPersonId = signal<string | null>(null);
 
-  // Computed Signals
   readonly statusCounts = computed(() => {
     let active = 0;
     let inactive = 0;
@@ -242,10 +246,8 @@ export class MembersListComponent implements OnInit {
       return;
     }
 
-    // Actualizar rol localmente en el signal
     this.updateMember(memberId, { role: newRole });
 
-    // Actualizar dirty set
     const initialRole = this.initialRoles().get(memberId);
     const updatedDirty = new Set(this.dirtyMembers());
     if (newRole !== initialRole) {
@@ -266,6 +268,25 @@ export class MembersListComponent implements OnInit {
 
   readonly memberToDeactivate = signal<Member | null>(null);
   readonly isDeactivating = signal<boolean>(false);
+
+  canEditData(member: Member): boolean {
+    return !!member.personId && canEditPersonData(this.authService.effectiveRole(), member.role);
+  }
+
+  editData(member: Member, event: Event): void {
+    event.stopPropagation();
+    this.closeMenus();
+    if (member.personId && this.canEditData(member)) {
+      this.editingPersonId.set(member.personId);
+    }
+  }
+
+  onPersonSaved(person: PersonResponse): void {
+    this.members.update(list => list.map(member =>
+      member.personId === person.id ? { ...member, firstName: person.firstName, lastName: person.lastName } : member
+    ));
+    this.editingPersonId.set(null);
+  }
 
   handleAction(member: Member, action: 'revoke' | 'activate', event: Event): void {
     event.stopPropagation();
