@@ -1,5 +1,5 @@
 import {
-  ZoneEvent, NO_ZONE_EVENT_FILTERS, coverageMinutes, effectiveMatchTime, eventTypeOptions, filterEvents, minutesByCell, countByCell, describeSegment, eventsInRange, eventsLinkedByRange, eventsReleasedByEdit,
+  ZoneEvent, NO_ZONE_EVENT_FILTERS, coverageMinutes, effectiveMatchTime, eventFiltersFor, eventTypeOptions, filterEvents, minutesByCell, validTypeFilter, countByCell, describeSegment, eventsInRange, eventsLinkedByRange, eventsReleasedByEdit,
   findGaps, findOverlap, periodRange, sortChronologically, unzonedEvents, zoneCoveragePercent
 } from './zone-stats';
 import { ZoneAssignmentResponse } from '../../types/zone.types';
@@ -257,6 +257,31 @@ describe('zone-stats', () => {
       const events = [typed('b', 'Tackle'), typed('a', 'Ágil'), typed('c', 'Zona')];
 
       expect(eventTypeOptions(events).map(option => option.name)).toEqual(['Ágil', 'Tackle', 'Zona']);
+    });
+  });
+
+  describe('modo de la cancha: Eventos o Minutos', () => {
+    it('en Eventos los filtros de tipo y posesión se aplican tal cual', () => {
+      expect(eventFiltersFor('EVENTS', 'scrum', 'OWN')).toEqual({ eventTypeId: 'scrum', possession: 'OWN' });
+    });
+
+    it('en Minutos no aplican: los tramos no tienen tipo ni posesión', () => {
+      expect(eventFiltersFor('MINUTES', 'scrum', 'OWN')).toEqual(NO_ZONE_EVENT_FILTERS);
+    });
+  });
+
+  describe('validTypeFilter', () => {
+    const options = [{ id: 'scrum', name: 'Scrum' }, { id: 'try', name: 'Try' }];
+
+    it('conserva el tipo elegido si el partido lo tiene y "ALL" siempre vale', () => {
+      expect(validTypeFilter('try', options)).toBe('try');
+      expect(validTypeFilter('ALL', options)).toBe('ALL');
+      expect(validTypeFilter('ALL', [])).toBe('ALL');
+    });
+
+    it('un tipo guardado que ya no está en el partido vuelve a "ALL"', () => {
+      expect(validTypeFilter('maul', options)).toBe('ALL');
+      expect(validTypeFilter('try', [])).toBe('ALL');
     });
   });
 

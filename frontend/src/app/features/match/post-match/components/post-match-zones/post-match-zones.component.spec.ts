@@ -688,4 +688,93 @@ describe('PostMatchZonesComponent', () => {
       expect(counts).toEqual(['0', '0', '0', '2', '0', '0']);
     });
   });
+
+  describe('filtro por tipo y modo Eventos / Minutos', () => {
+    const typed = (id: string, minute: number, col: number, eventTypeId: string, eventTypeName: string): MatchTimelineEventResponse =>
+      ({ ...ev(id, 1, minute, { row: 2, col }), eventTypeId, eventTypeName });
+    const mixed = [
+      typed('a', 12, 3, 'scrum', 'Scrum'),
+      typed('b', 14, 3, 'tackle', 'Tackle'),
+      typed('c', 16, 4, 'scrum', 'Scrum')
+    ];
+    const fieldCount = (row: number, col: number): string | undefined =>
+      cell(row, col).querySelector('[data-testid="zone-count"]')?.textContent?.trim();
+    const typeSelect = (): HTMLSelectElement => query('[data-testid="type-filter"]') as HTMLSelectElement;
+    const chooseType = (id: string): void => {
+      typeSelect().value = id;
+      typeSelect().dispatchEvent(new Event('change'));
+      fixture.detectChanges();
+    };
+    const clickMode = (label: string): void => {
+      (queryAll('[data-testid="mode-filter"]').find(button => button.textContent?.trim() === label) as HTMLElement).click();
+      fixture.detectChanges();
+    };
+
+    it('el filtro lista solo los tipos que tiene el partido, ordenados', () => {
+      createLoaded([zone], mixed);
+
+      expect(Array.from(typeSelect().options).map(option => option.textContent?.trim())).toEqual(['Todas las jugadas', 'Scrum', 'Tackle']);
+    });
+
+    it('con un tipo elegido la cancha cuenta solo ese tipo', () => {
+      createLoaded([zone], mixed);
+      expect([fieldCount(2, 3), fieldCount(2, 4)]).toEqual(['2', '1']);
+
+      chooseType('scrum');
+
+      expect([fieldCount(2, 3), fieldCount(2, 4)]).toEqual(['1', '1']);
+    });
+
+    it('un tipo recordado que el partido ya no tiene se ignora', () => {
+      createLoaded([zone], mixed);
+
+      component.selectedType.set('maul');
+
+      expect(component.typeFilter()).toBe('ALL');
+    });
+
+    it('en Minutos la cancha suma los minutos de los tramos, con su leyenda', () => {
+      createLoaded([zone], mixed);
+
+      clickMode('Minutos');
+
+      expect(fieldCount(2, 3)).toBe('15');
+      expect(fieldCount(2, 4)).toBeUndefined();
+      expect(query('[data-testid="heat-legend-title"]')?.textContent?.trim()).toBe('Minutos por zona');
+      expect(cell(2, 3).getAttribute('aria-label')).toContain('15 min');
+    });
+
+    it('en Minutos se deshabilitan los filtros de tipo y posesión y el de tiempo sigue activo', () => {
+      createLoaded([zone], mixed);
+
+      clickMode('Minutos');
+
+      expect(typeSelect().disabled).toBeTrue();
+      queryAll('[data-testid="possession-filter"]').forEach(button => expect((button as HTMLButtonElement).disabled).toBeTrue());
+      queryAll('[data-testid="period-filter"]').forEach(button => expect((button as HTMLButtonElement).disabled).toBeFalse());
+    });
+
+    it('en Minutos el tipo elegido no cambia los minutos, y al volver a Eventos se conserva', () => {
+      createLoaded([zone], mixed);
+      chooseType('scrum');
+
+      clickMode('Minutos');
+      expect(fieldCount(2, 3)).toBe('15');
+
+      clickMode('Eventos');
+      expect(typeSelect().disabled).toBeFalse();
+      expect(fieldCount(2, 3)).toBe('1');
+    });
+
+    it('en Minutos el filtro de tiempo recorta los tramos del tiempo elegido', () => {
+      createLoaded([zone, { ...zone, id: 'z2', period: 2, startMinute: 50, endMinute: 60, row: 3, col: 5 }], mixed);
+      clickMode('Minutos');
+
+      component.setPeriodFilter(2);
+      fixture.detectChanges();
+
+      expect(fieldCount(2, 3)).toBeUndefined();
+      expect(fieldCount(3, 5)).toBe('10');
+    });
+  });
 });

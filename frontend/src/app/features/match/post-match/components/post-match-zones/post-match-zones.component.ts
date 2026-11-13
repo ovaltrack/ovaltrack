@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { LayoutService } from 'src/app/core/services/layout.service';
 import { ToastService } from 'src/app/core/services/toast.service';
 import { UserContextService } from 'src/app/core/services/user-context.service';
-import { ZoneAssignmentResponse, ZoneCellRef } from '../../../types/zone.types';
+import { ZoneAssignmentResponse, ZoneCellRef, ZoneCellSummary } from '../../../types/zone.types';
 import { IN_GOAL_COLUMNS, isInGoalColumn } from '../../utils/zone-grid';
 import { MatchZonesStore } from '../../store/match-zones.store';
 import { PostMatchShellStore } from '../../store/post-match-shell.store';
@@ -14,7 +14,8 @@ import { LoadingGate } from '../../../../../shared/utils/loading-gate';
 import { ZoneDeepLinkTarget, resolveZoneDeepLink } from '../../utils/zone-deep-link';
 import { ZONE_SHORTCUT_HELP, isSaveShortcut, isTypingTarget, shortcutCell } from '../../utils/zone-shortcuts';
 import {
-  NO_ZONE_EVENT_FILTERS, ZonePeriodFilter, countByCell, filterEvents, unzonedEvents, zoneCoveragePercent
+  ZoneMapMode, ZonePeriodFilter, countByCell, eventFiltersFor, eventTypeOptions, filterEvents, minutesByCell, unzonedEvents, validTypeFilter,
+  zoneCoveragePercent
 } from '../../utils/zone-stats';
 import { Possession } from '../../../types/live-capture.types';
 import { RugbyFieldComponent } from '../rugby-field/rugby-field.component';
@@ -70,6 +71,11 @@ export class PostMatchZonesComponent implements OnInit, OnDestroy {
     isValid: oneOf<Possession | 'ALL'>(['ALL', 'OWN', 'OPPONENT']),
   });
 
+  /** Tipo de jugada elegido ('ALL' = todos); un valor recordado que el partido ya no tiene se ignora (ver `typeFilter`). */
+  readonly selectedType = persistedSignal<string>(null, 'ALL', { isValid: (value): value is string => typeof value === 'string' });
+  /** Qué cuenta la cancha: jugadas por zona o minutos cubiertos por los tramos. */
+  readonly mapMode = persistedSignal<ZoneMapMode>(null, 'EVENTS', { isValid: oneOf<ZoneMapMode>(['EVENTS', 'MINUTES']) });
+
   /** Pantalla angosta: la grilla muestra un tiempo por vez y el formulario es una hoja inferior. */
   readonly compact = watchCompactLayout(this.destroyRef);
 
@@ -81,6 +87,12 @@ export class PostMatchZonesComponent implements OnInit, OnDestroy {
     { value: 'ALL', label: 'Todos' }, { value: 'OWN', label: 'Propios' }, { value: 'OPPONENT', label: 'Rival' }
   ];
 
+  readonly minutesFilterNote = 'En «Minutos» no aplica: los tramos no tienen tipo de jugada ni posesión';
+
+  readonly modeOptions: { value: ZoneMapMode; label: string }[] = [
+    { value: 'EVENTS', label: 'Eventos' }, { value: 'MINUTES', label: 'Minutos' }
+  ];
+
   /** Enlace desde Eventos (`?tramo=` / `?minuto=`) ya interpretado, a la espera de que el formulario exista. */
   private readonly pendingDeepLink = signal<ZoneDeepLinkTarget | null>(null);
 
@@ -89,15 +101,24 @@ export class PostMatchZonesComponent implements OnInit, OnDestroy {
   readonly helpAlignEnd = signal<boolean>(false);
   readonly shortcutHelp = ZONE_SHORTCUT_HELP;
 
-  /** Eventos según la posesión elegida; el tiempo lo aplican por separado la cancha y la grilla. */
+  /** Tipos de jugada que tiene el partido: las opciones del filtro por tipo. */
+  readonly typeOptions = computed(() => eventTypeOptions(this.zonesStore.events()));
+  /** Tipo en vigor: el elegido si el partido lo tiene, si no todos. */
+  readonly typeFilter = computed(() => validTypeFilter(this.selectedType(), this.typeOptions()));
+  /** En Minutos la cancha cuenta tramos, que no tienen tipo ni posesión: esos filtros no aplican. */
+  readonly eventFiltersApply = computed(() => this.mapMode() === 'EVENTS');
+
+  /** Eventos según el tipo y la posesión elegidos; el tiempo lo aplican por separado la cancha y la grilla. */
   readonly filteredEvents = computed(() =>
-    filterEvents(this.zonesStore.events(), { ...NO_ZONE_EVENT_FILTERS, possession: this.possessionFilter() }));
+    filterEvents(this.zonesStore.events(), eventFiltersFor(this.mapMode(), this.typeFilter(), this.possessionFilter())));
 
   /** Puntos (jugadas con zona propia) del tiempo y la posesión elegidos: la grilla los dibuja sobre su franja. */
   readonly points = computed(() => zonePoints(this.filteredEvents(), this.zonesStore.zoneRules(), this.periodFilter()));
 
-  // Todo se deriva de los eventos que ya traen su zona: una sola fuente de verdad.
-  readonly cellCounts = computed(() => countByCell(this.filteredEvents(), this.periodFilter()));
+  // Todo se deriva de los eventos que ya traen su zona (una sola fuente de verdad) y, en Minutos, de los tramos.
+  readonly cellCounts = computed<ZoneCellSummary[]>(() => this.mapMode() === 'MINUTES'
+    ? minutesByCell(this.zonesStore.assignments(), this.periodFilter()).map(({ row, col, minutes }) => ({ row, col, eventCount: minutes }))
+    : countByCell(this.filteredEvents(), this.periodFilter()));
 
   // Indicadores del partido completo: no dependen de los filtros de la pantalla.
   readonly totalEvents = computed(() => this.zonesStore.events().length);
@@ -140,6 +161,8 @@ export class PostMatchZonesComponent implements OnInit, OnDestroy {
       return;
     }
     this.possessionFilter.useKey(`post-match.${id}.zones.possession`);
+    this.selectedType.useKey(`post-match.${id}.zones.type`);
+    this.mapMode.useKey(`post-match.${id}.zones.mode`);
     // En pantalla angosta el período lo maneja la vista (arranca en 1T y sigue al cursor): no se recuerda.
     if (!this.compact()) this.periodFilter.useKey(`post-match.${id}.zones.period`);
     this.load(id);
@@ -220,6 +243,14 @@ export class PostMatchZonesComponent implements OnInit, OnDestroy {
 
   setPossessionFilter(value: Possession | 'ALL'): void {
     this.possessionFilter.set(value);
+  }
+
+  setTypeFilter(eventTypeId: string): void {
+    this.selectedType.set(eventTypeId);
+  }
+
+  setMapMode(mode: ZoneMapMode): void {
+    this.mapMode.set(mode);
   }
 
   setPeriodFilter(filter: ZonePeriodFilter): void {

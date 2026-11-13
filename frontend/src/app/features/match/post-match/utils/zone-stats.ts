@@ -117,6 +117,9 @@ export function eventsReleasedByEdit<T extends ZoneEvent>(previous: RangeLike, n
   return eventsLinkedByRange(previous, events).filter(event => !stillLinked.has(event.id));
 }
 
+/** Qué cuenta la cancha: jugadas por zona (Eventos) o minutos cubiertos por los tramos (Minutos). */
+export type ZoneMapMode = 'EVENTS' | 'MINUTES';
+
 /** Filtros de eventos: tipo y posesión. 'ALL' no filtra. */
 export interface ZoneEventFilters {
   eventTypeId: string | 'ALL';
@@ -124,6 +127,16 @@ export interface ZoneEventFilters {
 }
 
 export const NO_ZONE_EVENT_FILTERS: ZoneEventFilters = { eventTypeId: 'ALL', possession: 'ALL' };
+
+/** Filtros que rigen según el modo: en Minutos no aplican (los tramos no tienen tipo ni posesión). */
+export function eventFiltersFor(mode: ZoneMapMode, eventTypeId: string | 'ALL', possession: Possession | 'ALL'): ZoneEventFilters {
+  return mode === 'EVENTS' ? { eventTypeId, possession } : NO_ZONE_EVENT_FILTERS;
+}
+
+/** El tipo elegido solo vale si el partido lo tiene (un valor recordado puede haber quedado viejo); si no, "ALL". */
+export function validTypeFilter(eventTypeId: string | 'ALL', options: EventTypeOption[]): string | 'ALL' {
+  return options.some(option => option.id === eventTypeId) ? eventTypeId : 'ALL';
+}
 
 type FilterableEvent = Pick<MatchTimelineEventResponse, 'eventTypeId' | 'teamPossession'>;
 

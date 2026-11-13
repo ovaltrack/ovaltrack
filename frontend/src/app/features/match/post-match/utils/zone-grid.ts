@@ -58,6 +58,15 @@ export function describeZone(cell: ZoneCellRef): string {
   ].join(' · ');
 }
 
+/** Qué cuenta una celda: jugadas (Eventos) o minutos cubiertos por los tramos (Minutos). */
+export type ZoneCountUnit = 'events' | 'minutes';
+
+/** Cantidad con su unidad para lecturas y lectores de pantalla, ej. "1 evento", "12 eventos", "35 min". */
+export function describeCount(count: number, unit: ZoneCountUnit): string {
+  if (unit === 'minutes') return `${count} min`;
+  return count === 1 ? '1 evento' : `${count} eventos`;
+}
+
 /** Todas las celdas de la grilla, fila por fila. */
 export function allZoneCells(): ZoneCellRef[] {
   const cells: ZoneCellRef[] = [];

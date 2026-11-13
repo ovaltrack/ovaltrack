@@ -102,8 +102,8 @@
         <path d="M104 1 L117 6 L104 11 Z" fill="currentColor" />
       </svg>
     </span>
-    <div class="heat-legend" data-testid="heat-legend" aria-label="Escala de calor: cantidad de eventos por zona">
-      <span class="heat-legend-title">Eventos por zona</span>
+    <div class="heat-legend" data-testid="heat-legend" [attr.aria-label]="'Escala de calor: ' + legendTitle().toLowerCase()">
+      <span class="heat-legend-title" data-testid="heat-legend-title">{{ legendTitle() }}</span>
       <span class="heat-legend-steps">
         <span *ngFor="let step of heatSteps" class="heat-legend-step">
           <i class="heat-swatch" [class.is-empty]="step.level === 0" [style.--heat]="heatMix(step.level)" aria-hidden="true"></i>{{ step.label }}

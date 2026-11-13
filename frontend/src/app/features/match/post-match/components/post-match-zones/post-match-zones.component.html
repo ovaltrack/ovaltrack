@@ -28,7 +28,23 @@
               @for (option of possessionOptions; track option.value) {
                 <button type="button" class="filter-pill-btn" data-testid="possession-filter"
                         [class.active]="possessionFilter() === option.value" [attr.aria-pressed]="possessionFilter() === option.value"
+                        [disabled]="!eventFiltersApply()" [attr.title]="eventFiltersApply() ? null : minutesFilterNote"
                         (click)="setPossessionFilter(option.value)">{{ option.label }}</button>
+              }
+              <span class="filter-divider" aria-hidden="true"></span>
+              <select class="type-select" data-testid="type-filter" aria-label="Tipo de jugada"
+                      [disabled]="!eventFiltersApply()" [attr.title]="eventFiltersApply() ? null : minutesFilterNote"
+                      (change)="setTypeFilter($any($event.target).value)">
+                <option value="ALL" [selected]="typeFilter() === 'ALL'">Todas las jugadas</option>
+                @for (option of typeOptions(); track option.id) {
+                  <option [value]="option.id" [selected]="typeFilter() === option.id">{{ option.name }}</option>
+                }
+              </select>
+              <span class="filter-divider" aria-hidden="true"></span>
+              @for (option of modeOptions; track option.value) {
+                <button type="button" class="filter-pill-btn" data-testid="mode-filter"
+                        [class.active]="mapMode() === option.value" [attr.aria-pressed]="mapMode() === option.value"
+                        (click)="setMapMode(option.value)">{{ option.label }}</button>
               }
             </div>
 
@@ -50,6 +66,11 @@
                     Se dibuja en su minuto exacto y de él sale la línea de corte. Un <b>tramo</b> es un rango de minutos que da zona a las jugadas
                     que no tienen una propia; no puede dejar a un Scrum o un Line-out en una zona que su tipo no permite.
                     El in-goal solo tiene puntos: no se crean tramos ahí (los que ya existían se siguen viendo, editando y borrando).
+                  </p>
+                  <strong>Eventos o Minutos</strong>
+                  <p data-testid="mode-note">
+                    «Eventos» cuenta jugadas por zona y admite filtrar por tipo y posesión. «Minutos» suma el tiempo que los tramos cubren en
+                    cada zona: ahí el tipo y la posesión no aplican, porque un tramo no los tiene.
                   </p>
                   <strong>Rango del tramo</strong>
                   <ul data-testid="range-rules">
@@ -92,6 +113,7 @@
 
           <app-rugby-field
             [cells]="cellCounts()"
+            [unit]="mapMode() === 'MINUTES' ? 'minutes' : 'events'"
             [selectedCell]="selectedCell()"
             [lockedCols]="lockedCols"
             [ownClubName]="ownClubName()"

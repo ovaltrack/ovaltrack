@@ -372,4 +372,25 @@ describe('RugbyFieldComponent', () => {
       expect(selected).toEqual([]);
     });
   });
+
+  describe('unidad de las celdas', () => {
+    it('por defecto cuenta eventos, en la lectura, la etiqueta y la leyenda', () => {
+      render([{ row: 2, col: 3, eventCount: 1 }]);
+
+      expect(cellAt(2, 3)?.getAttribute('aria-label')).toContain('1 evento');
+      expect(fixture.nativeElement.querySelector('[data-testid="heat-legend-title"]').textContent.trim()).toBe('Eventos por zona');
+    });
+
+    it('en minutos habla de minutos', () => {
+      fixture.componentRef.setInput('unit', 'minutes');
+      render([{ row: 2, col: 3, eventCount: 12 }]);
+
+      cellAt(2, 3)?.dispatchEvent(new Event('mouseenter'));
+      fixture.detectChanges();
+
+      expect(cellAt(2, 3)?.getAttribute('aria-label')).toContain('12 min');
+      expect(reading()).toContain('12 min');
+      expect(fixture.nativeElement.querySelector('[data-testid="heat-legend-title"]').textContent.trim()).toBe('Minutos por zona');
+    });
+  });
 });

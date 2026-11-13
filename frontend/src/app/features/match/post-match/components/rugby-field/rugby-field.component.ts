@@ -5,7 +5,7 @@ import { CountTweenDirective } from './count-tween.directive';
 import { HEAT_STEPS, heatLevel, heatMix } from '../../utils/zone-heat';
 import {
   ZONE_COLUMN_METERS, ZONE_FIELD_LENGTH_M, ZONE_FIELD_WIDTH_M, ZONE_ROW_METERS,
-  ZONE_ROW_LETTERS, ZONE_ROW_SHORT_NAMES, describeZone, formatEventCount, rowRangeLabel, shortTeamName, zoneLabel
+  ZONE_ROW_LETTERS, ZONE_ROW_SHORT_NAMES, ZoneCountUnit, describeCount, describeZone, formatEventCount, rowRangeLabel, shortTeamName, zoneLabel
 } from '../../utils/zone-grid';
 
 interface FieldCell extends ZoneCellRef {
@@ -33,7 +33,10 @@ const PX_PER_METER = 10;
 export class RugbyFieldComponent {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
+  /** Cantidad por celda (`eventCount`); lo que cuenta —jugadas o minutos— lo dice `unit`. */
   readonly cells = input<ZoneCellSummary[]>([]);
+  /** Qué cuentan las celdas: jugadas (por defecto) o minutos cubiertos por los tramos. */
+  readonly unit = input<ZoneCountUnit>('events');
   readonly selectedCell = input<ZoneCellRef | null>(null);
   readonly ownClubName = input<string>('Mi club');
   readonly opponentName = input<string>('Rival');
@@ -103,9 +106,10 @@ export class RugbyFieldComponent {
     const cell = this.activeCell();
     if (!cell) return 'Pasá el cursor o tocá una zona';
     const count = this.cells().find(c => c.row === cell.row && c.col === cell.col)?.eventCount ?? 0;
-    const events = count === 1 ? '1 evento' : `${count} eventos`;
-    return `${describeZone(cell)} · ${events}`;
+    return `${describeZone(cell)} · ${describeCount(count, this.unit())}`;
   });
+
+  readonly legendTitle = computed(() => this.unit() === 'minutes' ? 'Minutos por zona' : 'Eventos por zona');
 
   readonly gridLabel = computed(() => this.selectable()
     ? 'Cancha: elegí la franja y el lateral del tramo'
@@ -182,8 +186,7 @@ export class RugbyFieldComponent {
   }
 
   ariaLabel(cell: FieldCell): string {
-    const events = cell.count === 1 ? '1 evento' : `${cell.count} eventos`;
-    return `${describeZone(cell)}: ${events}${this.isLocked(cell) ? '. Solo puntos: no admite tramos' : ''}`;
+    return `${describeZone(cell)}: ${describeCount(cell.count, this.unit())}${this.isLocked(cell) ? '. Solo puntos: no admite tramos' : ''}`;
   }
 
   private nextCell(key: string, cell: ZoneCellRef): ZoneCellRef | null {
