@@ -342,6 +342,16 @@ describe('PostMatchZonesComponent', () => {
       expect(rules).toContain('Inicio incluido, fin excluido: 20′–25′ y 25′–30′ no se pisan.');
       expect(rules).toContain('El tiempo añadido cuenta como minuto 40 (1T) y 80 (2T).');
     });
+
+    it('la ayuda explica por qué un try a las 5:11 corta el tramo en 6′ y no menciona la tira de letras', () => {
+      createLoaded();
+
+      query<HTMLButtonElement>('[data-testid="shortcuts-toggle"]')?.click();
+      fixture.detectChanges();
+
+      expect(query('[data-testid="range-rules"]')?.textContent).toContain('un try a las 5:11 entra en el minuto 5, así que su tramo termina en 6′ y no en 5′');
+      expect(query('[data-testid="points-note"]')?.textContent).not.toContain('(T try');
+    });
   });
 
   describe('estados de carga y vacío', () => {

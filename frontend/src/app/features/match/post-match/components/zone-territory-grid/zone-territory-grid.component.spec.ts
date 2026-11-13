@@ -60,8 +60,8 @@ describe('ZoneTerritoryGridComponent: puntos de zona', () => {
     render([point('a')]);
 
     const [element] = allPoints();
-    expect(element.getAttribute('aria-label')).toBe('Try 22:30 · D6 · el tramo termina en 23′');
-    expect(element.getAttribute('title')).toBe('Try 22:30 · D6 · el tramo termina en 23′');
+    expect(element.getAttribute('aria-label')).toBe('Try 22:30 · D6 · el tramo incluye todo el minuto 22 y termina en 23′');
+    expect(element.getAttribute('title')).toBe('Try 22:30 · D6 · el tramo incluye todo el minuto 22 y termina en 23′');
   });
 
   it('no es un tramo: no se puede seleccionar ni agrega bloques', () => {
@@ -79,30 +79,18 @@ describe('ZoneTerritoryGridComponent: puntos de zona', () => {
     expect(fixture.nativeElement.querySelectorAll('[data-testid="territory-gap"]').length).toBe(gapsBefore);
   });
 
-  describe('cortes: tira de tanteo en el eje y línea solo cuando hace falta', () => {
-    const tryCut: TramoCutMark = { eventId: 'a', eventTypeName: 'Try', period: 1, minute: 23, label: 'Try 22:30', possession: 'OWN', glyph: 'T' };
-    const marks = (): HTMLElement[] => Array.from(fixture.nativeElement.querySelectorAll('[data-testid="territory-cut-mark"]'));
+  describe('cortes: el rombo es la señal y la línea solo aparece cuando hace falta', () => {
+    const tryCut: TramoCutMark = { eventId: 'a', eventTypeName: 'Try', period: 1, minute: 23, label: 'Try 22:30', possession: 'OWN' };
     const hover = (element: HTMLElement): void => {
       element.dispatchEvent(new Event('mouseenter'));
       fixture.detectChanges();
     };
 
-    it('cada corte es una marca con su letra sobre el eje, con el mismo texto que el punto', () => {
+    it('el eje solo tiene los minutos: no hay tira de tanteo ni marcas por corte', () => {
       render([point('a')], [tryCut]);
 
-      expect(marks().length).toBe(1);
-      expect(marks()[0].textContent?.trim()).toBe('T');
-      expect(marks()[0].getAttribute('title')).toBe(allPoints()[0].getAttribute('title'));
-      expect(marks()[0].style.left).toBe(`${(23 / 80) * 100}%`);
-    });
-
-    it('un corte sin punto (Kick H, Drop goal) tiene su marca con la letra y el motivo', () => {
-      const kick: TramoCutMark = { eventId: 'k', eventTypeName: 'Kick H', period: 1, minute: 31, label: 'Kick H 30:10', possession: 'OWN', glyph: 'P' };
-
-      render([point('a')], [tryCut, kick]);
-
-      expect(marks().map(mark => mark.textContent?.trim())).toEqual(['T', 'P']);
-      expect(marks()[1].getAttribute('title')).toBe('Corte: Kick H 30:10 · el tramo termina en 31′');
+      expect(fixture.nativeElement.querySelector('[data-testid="territory-score-strip"]')).toBeNull();
+      expect(fixture.nativeElement.querySelector('[data-testid="territory-cut-mark"]')).toBeNull();
     });
 
     it('en la vista normal no hay líneas de corte sobre la grilla', () => {
@@ -124,33 +112,22 @@ describe('ZoneTerritoryGridComponent: puntos de zona', () => {
       expect(cutLines().length).toBe(0);
     });
 
-    it('pasar el puntero por la marca del eje muestra la línea de ese corte', () => {
-      render([point('a')], [tryCut]);
-
-      hover(marks()[0]);
-
-      expect(cutLines().length).toBe(1);
-      expect(cutLines()[0].style.left).toBe(`${(23 / 80) * 100}%`);
-    });
-
-    it('con un rango en edición se ven los cortes vecinos y no los lejanos', () => {
+    it('con un rango en edición solo se ven los cortes que toca, no los lejanos ni los vecinos', () => {
       const cut = (eventId: string, minute: number): TramoCutMark => ({ ...tryCut, eventId, minute });
       fixture.componentRef.setInput('previewRange', { period: 1, startMinute: 20, endMinute: 23 });
 
       render([], [cut('a', 5), cut('b', 23), cut('c', 38)]);
 
-      expect(cutLines().map(line => line.style.left)).toEqual([`${(5 / 80) * 100}%`, `${(23 / 80) * 100}%`]);
+      expect(cutLines().map(line => line.style.left)).toEqual([`${(23 / 80) * 100}%`]);
     });
 
-    it('dos cortes casi juntos se dibujan como una sola marca con el número', () => {
-      const near: TramoCutMark = { ...tryCut, eventId: 'b', minute: 23.05, label: 'Try 22:33' };
+    it('un corte sin rombo (Kick H, Drop goal) se ve como línea cuando el rango en edición lo toca', () => {
+      const kick: TramoCutMark = { eventId: 'k', eventTypeName: 'Kick H', period: 1, minute: 31, label: 'Kick H 30:10', possession: 'OWN' };
+      fixture.componentRef.setInput('previewRange', { period: 1, startMinute: 28, endMinute: 31 });
 
-      render([], [tryCut, near]);
+      render([point('a')], [tryCut, kick]);
 
-      expect(marks().length).toBe(1);
-      expect(marks()[0].textContent?.trim()).toBe('2');
-      expect(marks()[0].getAttribute('title')).toContain('Try 22:30');
-      expect(marks()[0].getAttribute('title')).toContain('Try 22:33');
+      expect(cutLines().map(line => line.style.left)).toEqual([`${(31 / 80) * 100}%`]);
     });
 
     it('dos puntos casi juntos en una franja se dibujan como uno con el número', () => {
@@ -172,7 +149,7 @@ describe('ZoneTerritoryGridComponent: puntos de zona', () => {
 describe('ZoneTerritoryGridComponent: cortes por try', () => {
   let fixture: ComponentFixture<ZoneTerritoryGridComponent>;
 
-  const tryCut: TramoCutMark = { eventId: 'a', eventTypeName: 'Try', period: 1, minute: 23, label: 'Try 22:30', possession: 'OWN', glyph: 'T' };
+  const tryCut: TramoCutMark = { eventId: 'a', eventTypeName: 'Try', period: 1, minute: 23, label: 'Try 22:30', possession: 'OWN' };
   const cuts = (): HTMLElement[] => Array.from(fixture.nativeElement.querySelectorAll('[data-testid="territory-cut"]'));
   const block = (): HTMLElement => fixture.nativeElement.querySelector('[data-testid="territory-block"]');
 
@@ -185,14 +162,6 @@ describe('ZoneTerritoryGridComponent: cortes por try', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({ imports: [ZoneTerritoryGridComponent] }).compileComponents();
     fixture = TestBed.createComponent(ZoneTerritoryGridComponent);
-  });
-
-  it('marca el corte en el eje, en el minuto donde termina el tramo, con su motivo', () => {
-    render([{ ...tryCut, minute: 20, label: 'Try 19:30' }]);
-
-    const [mark] = Array.from(fixture.nativeElement.querySelectorAll('[data-testid="territory-cut-mark"]')) as HTMLElement[];
-    expect(mark.style.left).toBe('25%');
-    expect(mark.getAttribute('title')).toBe('Corte: Try 19:30 · el tramo termina en 20′');
   });
 
   it('el tramo que se está editando muestra la línea de su corte', () => {
@@ -297,7 +266,7 @@ describe('ZoneTerritoryGridComponent: in-goal solo para puntos', () => {
 describe('ZoneTerritoryGridComponent: un toque propone el segmento entre cortes', () => {
   let fixture: ComponentFixture<ZoneTerritoryGridComponent>;
   const selections: TerritoryGapSelection[] = [];
-  const tryCut: TramoCutMark = { eventId: 'a', eventTypeName: 'Try', period: 1, minute: 23, label: 'Try 22:30', possession: 'OWN', glyph: 'T' };
+  const tryCut: TramoCutMark = { eventId: 'a', eventTypeName: 'Try', period: 1, minute: 23, label: 'Try 22:30', possession: 'OWN' };
 
   const tracks = (): HTMLElement => fixture.nativeElement.querySelector('[data-testid="territory-tracks"]');
   const rowAt = (index: number): HTMLElement => fixture.nativeElement.querySelectorAll('[data-testid="territory-row"]')[index];
