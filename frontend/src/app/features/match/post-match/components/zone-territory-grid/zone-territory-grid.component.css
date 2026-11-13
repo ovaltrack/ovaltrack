@@ -112,7 +112,7 @@
 .block.is-linked { box-shadow: 0 0 0 1px var(--surface), 0 0 0 3px var(--btn-primary-bg); z-index: 1; }
 /* Seleccionado: anillo verde oscuro grueso con separación blanca */
 .block.is-selected { box-shadow: 0 0 0 2px var(--surface), 0 0 0 5px var(--btn-primary-bg); z-index: 2; }
-.block.is-conflict, .block.is-cut { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--error); z-index: 2; }
+.block.is-conflict { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--error); z-index: 2; }
 /* Borde del tramo que cortó el tanto señalado: barra lima en su fin (el lima solo va sobre el verde botella del bloque) */
 .block.is-cut-edge::after {
   content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 4px; background: var(--brand-signature); pointer-events: none;

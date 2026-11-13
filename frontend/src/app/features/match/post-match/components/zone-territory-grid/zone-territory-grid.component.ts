@@ -6,7 +6,7 @@ import { ZONE_COLUMN_NAMES, isInGoalColumn, zoneLabel } from '../../utils/zone-g
 import { ZoneEvent, ZonePeriodFilter, eventsInRange } from '../../utils/zone-stats';
 import { observeWidth } from '../../utils/observe-width';
 import {
-  BlockLayout, PeriodGap, TramoCutMark, TRACK_MINUTES, ZonePoint, allGaps, blockLabel, blockLayout, clusterMarks, countByFranja, crossedCut,
+  BlockLayout, PeriodGap, TramoCutMark, TRACK_MINUTES, ZonePoint, allGaps, blockLabel, blockLayout, clusterMarks, countByFranja,
   describePoint, gapAtMinute, isInWindow, minuteAtOffset, minuteToPercent, segmentAt, territoryRows, touchingCuts, trackWindow, tramoEndingAt
 } from '../../utils/zone-track-layout';
 
@@ -24,8 +24,6 @@ interface BlockView {
   width: number;
   label: string;
   aria: string;
-  /** El tramo sigue después de un try: hay que cortarlo en el minuto del corte. */
-  crossesCut: boolean;
 }
 
 /** Línea de corte sobre las franjas: solo se dibuja la de los cortes que toca el rango en edición o la del tanto que se señala. */
@@ -289,15 +287,12 @@ export class ZoneTerritoryGridComponent {
       const shown = { ...assignment, ...this.currentRange(assignment) };
       const layout = this.layoutOf(shown);
       if (!layout) return [];
-      const cut = crossedCut(shown, this.cuts());
       return [{
         assignment,
         ...layout,
         label: blockLabel(shown, compact),
         aria: `Tramo ${assignment.period}T ${assignment.startMinute}′ a ${assignment.endMinute}′, zona ${zoneLabel(assignment)}. `
-          + (cut ? `Sigue después del ${cut.label}: cortalo en ${cut.minute}′. ` : '')
-          + (this.pickingPeriod() ? `Tocá para ver el ${assignment.period}T` : 'Tocá para editar'),
-        crossesCut: cut !== null
+          + (this.pickingPeriod() ? `Tocá para ver el ${assignment.period}T` : 'Tocá para editar')
       }];
     });
     const points = this.points().flatMap(point => {

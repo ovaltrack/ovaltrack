@@ -53,7 +53,6 @@
             <button type="button" class="block" data-testid="territory-block" tabindex="-1"
                     [class.is-selected]="block.assignment.id === selectedId()"
                     [class.is-conflict]="block.assignment.id === conflictId()"
-                    [class.is-cut]="block.crossesCut"
                     [class.is-cut-edge]="cutEdgeIds().has(block.assignment.id)"
                     [class.is-linked]="isLinked(block.assignment)"
                     [class.is-dimmed]="!!highlightCell() && !isLinked(block.assignment)"

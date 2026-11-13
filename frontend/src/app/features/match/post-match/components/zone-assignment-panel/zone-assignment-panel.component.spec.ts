@@ -863,7 +863,7 @@ describe('ZoneAssignmentPanelComponent', () => {
     const withTryRule = (): void =>
       store.zoneRules.set(new Map([['try', { columns: [6], rowFrom: 'zone', closesTramo: true }]]));
 
-    it('un rango que sigue después del try muestra el motivo, deshabilita Guardar y ofrece terminar en su minuto', () => {
+    it('un rango que sigue después del try, antes de confirmarlo, muestra el motivo del 409 y deshabilita Guardar', () => {
       render([], [tryEvent]);
       withTryRule();
       selectCell(2, 5);
@@ -873,22 +873,6 @@ describe('ZoneAssignmentPanelComponent', () => {
 
       expect(rangeError()).toContain("El tramo 1T 20'–25' no puede seguir después del Try (1T 22:30): terminalo en 23'");
       expect(saveButton().disabled).toBeTrue();
-
-      query<HTMLButtonElement>('[data-testid="cut-fix"]')?.click();
-      fixture.detectChanges();
-
-      expect(component.endMinute).toBe(23);
-      expect(saveButton().disabled).toBeFalse();
-    });
-
-    it('un tramo guardado que cruza un try, al editarlo, ofrece cortarlo en el minuto del try', () => {
-      const crossing: ZoneAssignmentResponse = { ...existingZone, startMinute: 20, endMinute: 25, col: 5 };
-      render([crossing], [tryEvent]);
-      withTryRule();
-      component.startEdit(crossing);
-      fixture.detectChanges();
-
-      expect(query('[data-testid="cut-fix"]')?.textContent?.trim()).toBe('Terminar en 23′');
     });
 
     it('al confirmar un «Hasta» que sigue después del try, el rango termina en el corte y se avisa sin error', () => {
@@ -903,7 +887,6 @@ describe('ZoneAssignmentPanelComponent', () => {
       expect(component.endMinute).toBe(23);
       expect(query('[data-testid="cut-notice"]')?.textContent?.trim()).toBe('El tramo llega hasta 22:59 (termina en 23′) por el Try 22:30');
       expect(rangeError()).toBe('');
-      expect(query('[data-testid="cut-fix"]')).toBeNull();
       expect(saveButton().disabled).toBeFalse();
     });
 

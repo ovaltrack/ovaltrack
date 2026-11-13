@@ -91,8 +91,6 @@
       <p *ngIf="rangeProblem as problem" class="inline-error" role="alert" data-testid="range-error">
         <i class="bi bi-exclamation-triangle-fill"></i> {{ problem }}
       </p>
-      <button *ngIf="cutEnd as minute" type="button" class="btn btn-outline btn-cut-fix" data-testid="cut-fix"
-              [disabled]="store.isSaving()" (click)="endAtCut(minute)">Terminar en {{ minute }}′</button>
 
     </div>
 

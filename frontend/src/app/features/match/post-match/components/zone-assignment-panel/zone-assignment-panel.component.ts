@@ -226,21 +226,10 @@ export class ZoneAssignmentPanelComponent implements OnInit, AfterViewInit {
     return clash ? `Choca con el tramo ${describeSegment(clash)}.` : this.tramoCut(range)?.message ?? this.zoneRuleProblem(range);
   }
 
-  /** Minuto donde tiene que terminar el rango porque sigue después de un try; null si no cruza ningún corte. */
-  get cutEnd(): number | null {
-    return this.tramoCut(this.usableRange())?.cut.minute ?? null;
-  }
-
-  /** «Terminar en N′»: lleva el fin del rango al corte (sirve también para cortar un tramo guardado que cruza un try). */
-  endAtCut(minute: number): void {
-    this.endMinute = minute;
-    this.onRangeChange();
-  }
-
   /**
    * Si el rango sigue después de un tanteo, lleva «Hasta» al corte y lo avisa: el sistema ya sabe dónde termina el
-   * tramo, así que no es un error. Un tramo guardado que ya cruza uno (datos viejos) conserva el error y «Terminar en N′»
-   * hasta que se toque su rango.
+   * tramo, así que no es un error. Un tramo guardado que ya cruza uno (datos viejos) conserva el error del 409 hasta que
+   * se toque su rango.
    */
   private endAtCutIfCrossed(): void {
     const range = this.usableRange();
