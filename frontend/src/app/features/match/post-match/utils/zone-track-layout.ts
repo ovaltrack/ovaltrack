@@ -1,6 +1,7 @@
-import { ZONE_GRID_COLS, ZONE_HALF_MINUTES, ZoneAssignmentResponse, ZonePeriod } from '../../types/zone.types';
+import { Possession } from '../../types/live-capture.types';
+import { ZONE_GRID_COLS, ZONE_HALF_MINUTES, ZoneAssignmentResponse, ZoneCellRef, ZonePeriod } from '../../types/zone.types';
 import { ZONE_COLUMN_NAMES, ZONE_ROW_LETTERS, columnRangeLabel, isInGoalColumn, zoneLabel } from './zone-grid';
-import { RuleEvent, ZoneRulesByType, closesTramo, fixedColumn, formatMatchTime, placeEventZone } from './zone-rule';
+import { RuleEvent, ScoringTypesById, ZoneRulesByType, closesTramo, eventClosesTramo, fixedColumn, formatMatchTime, placeEventZone } from './zone-rule';
 import { MinuteRange, ZoneEvent, ZonePeriodFilter, effectiveMatchTime, eventsInRange, findGaps, periodRange } from './zone-stats';
 
 /** Largo del eje horizontal de la grilla de territorio: los 80 minutos del partido, con el 2T a continuación del 1T. */
@@ -220,6 +221,8 @@ export interface TramoCutMark {
   minute: number;
   /** Tipo y reloj del evento, ej. "Try 22:30" (tooltip y aviso de tope). */
   label: string;
+  /** Quién ejecutó el tanteo: define quién saca después (el que lo recibe). */
+  possession: Possession;
 }
 
 /** El primer corte que un rango deja adentro y el mismo mensaje que el 409 del backend. */
@@ -231,10 +234,10 @@ export interface TramoCut {
 type TimedRange = Pick<ZoneAssignmentResponse, 'period' | 'startMinute' | 'endMinute'>;
 
 /** Cortes del partido en orden cronológico, dentro del tiempo elegido. */
-export function tramoCuts(events: RuleEvent[], rules: ZoneRulesByType, filter: ZonePeriodFilter): TramoCutMark[] {
+export function tramoCuts(events: RuleEvent[], rules: ZoneRulesByType, types: ScoringTypesById, filter: ZonePeriodFilter): TramoCutMark[] {
   return [...events]
     .sort((a, b) => a.period - b.period || a.matchTime - b.matchTime)
-    .filter(event => isZonePeriod(event.period) && (filter === 'ALL' || event.period === filter) && closesTramo(rules.get(event.eventTypeId)))
+    .filter(event => isZonePeriod(event.period) && (filter === 'ALL' || event.period === filter) && eventClosesTramo(event, rules, types))
     .map(event => {
       const period = event.period as ZonePeriod;
       return {
@@ -242,7 +245,8 @@ export function tramoCuts(events: RuleEvent[], rules: ZoneRulesByType, filter: Z
         eventTypeName: event.eventTypeName,
         period,
         minute: cutMinuteOf(effectiveMatchTime(period, event.matchTime)),
-        label: `${event.eventTypeName} ${formatMatchTime(event.matchTime)}`
+        label: `${event.eventTypeName} ${formatMatchTime(event.matchTime)}`,
+        possession: event.teamPossession
       };
     });
 }
@@ -255,8 +259,8 @@ export function crossedCut(range: TimedRange, cuts: TramoCutMark[]): TramoCutMar
 }
 
 /** Primer evento que el rango deja antes de su último minuto, con el mensaje del 409 del backend. */
-export function findTramoCut(range: TimedRange, events: RuleEvent[], rules: ZoneRulesByType): TramoCut | null {
-  const cut = crossedCut(range, tramoCuts(events, rules, range.period));
+export function findTramoCut(range: TimedRange, events: RuleEvent[], rules: ZoneRulesByType, types: ScoringTypesById): TramoCut | null {
+  const cut = crossedCut(range, tramoCuts(events, rules, types, range.period));
   const event = cut ? events.find(candidate => candidate.id === cut.eventId) : undefined;
   return cut && event
     ? {
@@ -265,4 +269,20 @@ export function findTramoCut(range: TimedRange, events: RuleEvent[], rules: Zone
         + `${event.eventTypeName} (${event.period}T ${formatMatchTime(event.matchTime)}): terminalo en ${cut.minute}'`
     }
     : null;
+}
+
+/** Rango que sigue después de un tanteo, ya llevado a su corte: `endMinute` es donde termina el tramo y `cut` el motivo. */
+export interface ClampedRange {
+  endMinute: number;
+  cut: TramoCutMark;
+}
+
+/** El corte que el rango cruza y dónde terminarlo; null si no cruza ninguno. El sistema ya sabe dónde corta: no es un error. */
+export function clampToCut(range: TimedRange, cuts: TramoCutMark[]): ClampedRange | null {
+  throw new Error('no implementado');
+}
+
+/** Celda donde se propone seguir después del corte: quien recibe el saque juega en su campo (propio: campo propio; rival: campo rival). */
+export function kickoffCell(cut: TramoCutMark): ZoneCellRef | null {
+  throw new Error('no implementado');
 }

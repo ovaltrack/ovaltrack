@@ -13,7 +13,7 @@ export const liveFields = (type: LiveCaptureEventType): TemplateField[] =>
  * Indica si un evento suma puntos. Un campo marcado con el efecto `scoring`
  * (penal, drop gol, conversión) lo decide: si vale `false` no suma.
  */
-export function countsAsScoring(type: LiveCaptureEventType, attrs?: Record<string, unknown> | null): boolean {
+export function countsAsScoring(type: Pick<LiveCaptureEventType, 'isScoring' | 'templateEventFields'>, attrs?: Record<string, unknown> | null): boolean {
   if (!type.isScoring) {
     return false;
   }

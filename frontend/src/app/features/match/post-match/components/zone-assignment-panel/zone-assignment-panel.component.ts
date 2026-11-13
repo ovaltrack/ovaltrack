@@ -210,7 +210,7 @@ export class ZoneAssignmentPanelComponent implements OnInit, AfterViewInit {
   }
 
   private tramoCut(range: UsableRange | null): TramoCut | null {
-    return range ? findTramoCut(range, this.store.events(), this.store.zoneRules()) : null;
+    return range ? findTramoCut(range, this.store.events(), this.store.zoneRules(), this.store.scoringTypes()) : null;
   }
 
   /** Primer evento que la celda elegida dejaría en una zona que su tipo prohíbe; el 409 del backend dice lo mismo. */

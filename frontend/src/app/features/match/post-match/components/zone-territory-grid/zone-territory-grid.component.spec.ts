@@ -80,7 +80,7 @@ describe('ZoneTerritoryGridComponent: puntos de zona', () => {
   });
 
   describe('línea de corte del punto', () => {
-    const tryCut: TramoCutMark = { eventId: 'a', eventTypeName: 'Try', period: 1, minute: 23, label: 'Try 22:30' };
+    const tryCut: TramoCutMark = { eventId: 'a', eventTypeName: 'Try', period: 1, minute: 23, label: 'Try 22:30', possession: 'OWN' };
 
     it('nace del punto: una sola línea en el minuto del corte, con el mismo texto que el punto', () => {
       render([point('a')], [tryCut]);
@@ -91,7 +91,7 @@ describe('ZoneTerritoryGridComponent: puntos de zona', () => {
     });
 
     it('un corte sin punto (Kick H, Drop goal) sigue como línea suelta con su motivo', () => {
-      const kick: TramoCutMark = { eventId: 'k', eventTypeName: 'Kick H', period: 1, minute: 31, label: 'Kick H 30:10' };
+      const kick: TramoCutMark = { eventId: 'k', eventTypeName: 'Kick H', period: 1, minute: 31, label: 'Kick H 30:10', possession: 'OWN' };
 
       render([point('a')], [tryCut, kick]);
 
@@ -126,7 +126,7 @@ describe('ZoneTerritoryGridComponent: puntos de zona', () => {
 describe('ZoneTerritoryGridComponent: cortes por try', () => {
   let fixture: ComponentFixture<ZoneTerritoryGridComponent>;
 
-  const tryCut: TramoCutMark = { eventId: 'a', eventTypeName: 'Try', period: 1, minute: 23, label: 'Try 22:30' };
+  const tryCut: TramoCutMark = { eventId: 'a', eventTypeName: 'Try', period: 1, minute: 23, label: 'Try 22:30', possession: 'OWN' };
   const cuts = (): HTMLElement[] => Array.from(fixture.nativeElement.querySelectorAll('[data-testid="territory-cut"]'));
   const block = (): HTMLElement => fixture.nativeElement.querySelector('[data-testid="territory-block"]');
 

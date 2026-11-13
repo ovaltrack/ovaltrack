@@ -5,7 +5,7 @@ import { EventTypeService } from '../../services/event-type.service';
 import { ZoneService } from '../../services/zone.service';
 import { MatchTimelineEventResponse } from '../../types/event.types';
 import { ZONE_MOTION_MS } from '../utils/zone-motion';
-import { ZoneRulesByType, isFixedZone } from '../utils/zone-rule';
+import { ScoringTypesById, ZoneRulesByType, isFixedZone } from '../utils/zone-rule';
 import { TramoCutMark, tramoCuts } from '../utils/zone-track-layout';
 import { ZoneAssignmentResponse, ZoneAssignmentRequest, ZoneCellRef, ZonePeriod } from '../../types/zone.types';
 
@@ -25,6 +25,8 @@ export class MatchZonesStore {
   private readonly activeTypeIds = signal<Set<string> | null>(null);
   /** Regla de zona de cada tipo de evento (catálogo): define qué eventos tienen zona fija y no dependen de un tramo. */
   readonly zoneRules = signal<ZoneRulesByType>(new Map());
+  /** Del catálogo, lo que decide si un evento puntúa: un Kick H o un drop errados no cortan el tramo. */
+  readonly scoringTypes = signal<ScoringTypesById>(new Map());
   readonly isLoading = signal<boolean>(false);
   readonly isSaving = signal<boolean>(false);
   /** Tramo que choca con el rango en edición; lo resaltan la lista y la timeline (estado de UI compartido). */
@@ -54,7 +56,7 @@ export class MatchZonesStore {
   });
 
   /** Cortes por try (y tanteos que reinician el juego): el tramo que los contiene termina en su minuto. */
-  readonly cuts = computed<TramoCutMark[]>(() => tramoCuts(this.events(), this.zoneRules(), 'ALL'));
+  readonly cuts = computed<TramoCutMark[]>(() => tramoCuts(this.events(), this.zoneRules(), this.scoringTypes(), 'ALL'));
 
   load(matchId: string): Observable<void> {
     this.isLoading.set(true);
@@ -68,6 +70,7 @@ export class MatchZonesStore {
         this.rawEvents.set(events);
         this.activeTypeIds.set(types.length > 0 ? new Set(types.map(type => type.id)) : null);
         this.zoneRules.set(new Map(types.map(type => [type.id, type.zoneRule ?? null])));
+        this.scoringTypes.set(new Map(types.map(type => [type.id, type])));
       }),
       map(() => undefined),
       finalize(() => this.isLoading.set(false))
@@ -105,6 +108,7 @@ export class MatchZonesStore {
     this.rawEvents.set([]);
     this.activeTypeIds.set(null);
     this.zoneRules.set(new Map());
+    this.scoringTypes.set(new Map());
   }
 
   private runAndReload(matchId: string, write$: Observable<unknown>): Observable<void> {

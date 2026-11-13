@@ -1,5 +1,5 @@
-import { ZoneRule } from '../../types/event-type.types';
-import { RuleEvent, RuleRange, ZoneRulesByType, closesTramo, describeZoneRule, findZoneRuleConflict, fixedColumn, isFixedZone, placeEventZone } from './zone-rule';
+import { TemplateField, ZoneRule } from '../../types/event-type.types';
+import { RuleEvent, RuleRange, ScoringTypesById, ZoneRulesByType, closesTramo, eventClosesTramo, describeZoneRule, findZoneRuleConflict, fixedColumn, isFixedZone, placeEventZone } from './zone-rule';
 
 describe('zone-rule', () => {
   const TRY: ZoneRule = { columns: [6], rowFrom: 'zone' };
@@ -253,6 +253,44 @@ describe('zone-rule', () => {
     it('no depende de los atributos: el try sin lado también tiene columna fija', () => {
       expect(isFixedZone(TRY, {})).toBeFalse();
       expect(fixedColumn(TRY, 'OWN')).toBe(6);
+    });
+  });
+
+  describe('eventClosesTramo: el tipo lo declara y el tanteo cuenta', () => {
+    const RESULT: TemplateField = { key: 'wasSuccessful', label: 'Resultado', type: 'boolean', phase: 'live', required: true, effects: ['scoring'] };
+    const rules: ZoneRulesByType = new Map<string, ZoneRule | null>([
+      ['try', { columns: [6], rowFrom: 'zone', closesTramo: true }],
+      ['kick', { columns: [2, 3, 4, 5], rowFrom: 'zone', closesTramo: true }],
+      ['scrum', { columns: [2, 3, 4, 5] }]
+    ]);
+    const types: ScoringTypesById = new Map([
+      ['try', { isScoring: true, templateEventFields: [] }],
+      ['kick', { isScoring: true, templateEventFields: [RESULT] }],
+      ['scrum', { isScoring: false, templateEventFields: [] }]
+    ]);
+    const event = (eventTypeId: string, attributes: Record<string, unknown> = {}): RuleEvent =>
+      ({ id: 'e', eventTypeId, eventTypeName: eventTypeId, period: 1, matchTime: 600, teamPossession: 'OWN', attributes });
+
+    it('un try corta siempre: no tiene campo de resultado', () => {
+      expect(eventClosesTramo(event('try', { zone: 'left' }), rules, types)).toBeTrue();
+    });
+
+    it('un Kick H convertido corta y uno errado no', () => {
+      expect(eventClosesTramo(event('kick', { wasSuccessful: true }), rules, types)).toBeTrue();
+      expect(eventClosesTramo(event('kick', { wasSuccessful: false }), rules, types)).toBeFalse();
+    });
+
+    it('un Kick H sin el resultado cargado cuenta como tanteo', () => {
+      expect(eventClosesTramo(event('kick'), rules, types)).toBeTrue();
+    });
+
+    it('un tipo con regla que no corta, o sin regla, no corta', () => {
+      expect(eventClosesTramo(event('scrum'), rules, types)).toBeFalse();
+      expect(eventClosesTramo(event('tackle'), rules, types)).toBeFalse();
+    });
+
+    it('un tipo ausente del catálogo cuenta como tanteo si su regla corta', () => {
+      expect(eventClosesTramo(event('try'), rules, new Map())).toBeTrue();
     });
   });
 });

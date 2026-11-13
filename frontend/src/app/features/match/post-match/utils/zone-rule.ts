@@ -1,5 +1,5 @@
 import { MatchTimelineEventResponse } from '../../types/event.types';
-import { ZoneRule } from '../../types/event-type.types';
+import { BackendEventTypeResponse, ZoneRule } from '../../types/event-type.types';
 import { Possession } from '../../types/live-capture.types';
 import { ZONE_GRID_COLS, ZONE_GRID_ROWS, ZoneCellRef, ZonePeriod } from '../../types/zone.types';
 import { ZONE_ROW_LETTERS, zoneLabel } from './zone-grid';
@@ -11,6 +11,9 @@ export type RuleEvent = Pick<MatchTimelineEventResponse,
 
 /** Regla de zona de cada tipo de evento, por id; los tipos sin regla pueden faltar o valer null. */
 export type ZoneRulesByType = ReadonlyMap<string, ZoneRule | null | undefined>;
+
+/** De cada tipo del catálogo, lo que decide si un evento puntúa (`isScoring` y el campo con efecto `scoring`). */
+export type ScoringTypesById = ReadonlyMap<string, Pick<BackendEventTypeResponse, 'isScoring' | 'templateEventFields'>>;
 
 /** Tramo propuesto (nuevo o editado) que se quiere comprobar contra los eventos que contiene. */
 export interface RuleRange {
@@ -87,6 +90,14 @@ export function placeEventZone(
 /** Verdadero si el evento cierra el tramo que lo contiene (Try, Try penal, Kick H, Drop goal). */
 export function closesTramo(rule: ZoneRule | null | undefined): boolean {
   return rule?.closesTramo === true;
+}
+
+/**
+ * Verdadero si el evento cierra el tramo que lo contiene: su tipo lo declara y el tanteo cuenta. Un Kick H o un drop
+ * errados no reinician el juego con un saque de centro, así que no cortan. Un tipo ausente del catálogo cuenta como tanteo.
+ */
+export function eventClosesTramo(event: RuleEvent, rules: ZoneRulesByType, types: ScoringTypesById): boolean {
+  return closesTramo(rules.get(event.eventTypeId));
 }
 
 /** Verdadero si la regla fija fila y columna sin necesitar ningún tramo. */
