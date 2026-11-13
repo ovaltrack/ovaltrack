@@ -1,4 +1,4 @@
-import { Member, matchesStatus, membersFooterLabel, showsStatus } from './members.types';
+import { Member, UserRole, canEditPersonData, matchesStatus, membersFooterLabel, showsStatus } from './members.types';
 
 const member = (active: boolean): Member => ({
   id: 'u1', personId: 'p1', email: 'a@club.com', firstName: 'Ana', lastName: 'Gómez', role: 'PLAYER', active, isProtected: false
@@ -30,5 +30,23 @@ describe('membersFooterLabel', () => {
 
   it('sin resultados muestra cero', () => {
     expect(membersFooterLabel(0, 25)).toBe('Mostrando 0 de 25');
+  });
+});
+
+describe('quién puede editar los datos de una persona', () => {
+  const roles: (UserRole | null)[] = ['ADMIN_OVALTRACK', 'ADMIN_CLUB', 'COACH_ANALYST', 'PLAYER', 'NO_ROLE', null];
+
+  it('el administrador del club edita a cualquiera, incluidos entrenadores y administradores', () => {
+    expect(roles.every(target => canEditPersonData('ADMIN_CLUB', target))).toBeTrue();
+  });
+
+  it('el entrenador edita solo a jugadores, con o sin cuenta', () => {
+    expect(roles.filter(target => canEditPersonData('COACH_ANALYST', target))).toEqual(['PLAYER', null]);
+  });
+
+  it('un jugador, una cuenta sin rol o sin sesión no editan a nadie', () => {
+    for (const viewer of ['PLAYER', 'NO_ROLE', null] as (UserRole | null)[]) {
+      expect(roles.some(target => canEditPersonData(viewer, target))).withContext(String(viewer)).toBeFalse();
+    }
   });
 });
