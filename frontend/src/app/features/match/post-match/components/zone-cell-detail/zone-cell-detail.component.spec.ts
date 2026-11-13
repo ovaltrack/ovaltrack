@@ -12,10 +12,6 @@ describe('ZoneCellDetailComponent', () => {
   const text = (): string => fixture.nativeElement.textContent.replace(/\s+/g, ' ').trim();
 
   const tramo: ZoneAssignmentResponse = { id: 'z1', matchId: 'm', period: 1, startMinute: 20, endMinute: 25, row: 2, col: 6 };
-  const gapItem: UnzonedItem = {
-    event: { id: 'e1', eventTypeId: 't', eventTypeName: 'Scrum', period: 1, matchTime: 600, teamPossession: 'OWN', attributes: {}, zone: null },
-    reason: 'GAP', tramo: null, minute: 10, clock: '1T 10:00', reasonText: 'Ningún tramo cubre este minuto'
-  };
   const forbiddenItem: UnzonedItem = {
     event: { id: 'e2', eventTypeId: 't', eventTypeName: 'Line-out', period: 1, matchTime: 1320, teamPossession: 'OPPONENT', attributes: {}, zone: null },
     reason: 'FORBIDDEN', tramo, minute: 22, clock: '1T 22:00',
@@ -92,53 +88,51 @@ describe('ZoneCellDetailComponent', () => {
   describe('jugadas sin zona', () => {
     beforeEach(() => {
       fixture.componentRef.setInput('view', 'unzoned');
-      fixture.componentRef.setInput('unzoned', [gapItem, forbiddenItem, noTimeItem]);
+      fixture.componentRef.setInput('unzoned', [forbiddenItem, noTimeItem]);
+      fixture.componentRef.setInput('inGaps', { events: 22, gaps: 3 });
       fixture.detectChanges();
     });
 
-    it('lista cada jugada con su reloj, tipo, equipo y motivo', () => {
+    it('las jugadas en huecos van en una sola línea, con el enlace a los huecos', () => {
+      expect(query('[data-testid="unzoned-gaps"]')?.textContent).toContain('22 jugadas en 3 huecos');
+      expect(query('[data-testid="unzoned-gaps-link"]')?.textContent?.trim()).toBe('Ver huecos');
+    });
+
+    it('«Ver huecos» avisa para llevar a la lista de huecos del panel', () => {
+      let requested = 0;
+      component.gapsRequested.subscribe(() => requested++);
+
+      query<HTMLButtonElement>('[data-testid="unzoned-gaps-link"]')?.click();
+
+      expect(requested).toBe(1);
+    });
+
+    it('lista solo lo que los huecos no explican, con su reloj, tipo, equipo y motivo', () => {
       const rows = queryAll('[data-testid="unzoned-item"]');
 
-      expect(rows.length).toBe(3);
-      expect(rows[0].textContent).toContain('1T 10:00');
-      expect(rows[0].textContent).toContain('Scrum');
-      expect(rows[0].textContent).toContain('Ningún tramo cubre este minuto');
-      expect(rows[1].textContent).toContain('Rival');
-      expect(rows[1].textContent).toContain('no admite Line-out');
+      expect(rows.length).toBe(2);
+      expect(rows[0].textContent).toContain('Rival');
+      expect(rows[0].textContent).toContain('no admite Line-out');
+      expect(rows[1].textContent).toContain('Sin tiempo de partido');
     });
 
-    it('el título cuenta las jugadas', () => {
-      expect(query('[data-testid="unzoned-title"]')?.textContent).toContain('3 jugadas sin zona');
+    it('el título cuenta todas las jugadas sin zona, también las de los huecos', () => {
+      expect(query('[data-testid="unzoned-title"]')?.textContent).toContain('24 jugadas sin zona');
     });
 
-    it('un hueco ofrece completarlo y un tramo que no admite el tipo, abrirlo', () => {
+    it('un tramo que no admite el tipo ofrece abrirlo; sin tiempo, solo ver la jugada en Eventos', () => {
       const rows = queryAll('[data-testid="unzoned-item"]');
 
-      expect(rows[0].querySelector('[data-testid="unzoned-fix"]')?.textContent?.trim()).toBe('Completar hueco');
-      expect(rows[1].querySelector('[data-testid="unzoned-fix"]')?.textContent?.trim()).toBe('Abrir tramo');
-    });
-
-    it('sin tiempo de partido no hay arreglo posible acá: solo ver la jugada en Eventos', () => {
-      const row = queryAll('[data-testid="unzoned-item"]')[2];
-
-      expect(row.querySelector('[data-testid="unzoned-fix"]')).toBeNull();
-      expect(row.querySelector('[data-testid="unzoned-event"]')).not.toBeNull();
-    });
-
-    it('completar el hueco avisa con la jugada', () => {
-      const requested: UnzonedItem[] = [];
-      component.gapRequested.subscribe(item => requested.push(item));
-
-      queryAll('[data-testid="unzoned-item"]')[0].querySelector<HTMLButtonElement>('[data-testid="unzoned-fix"]')?.click();
-
-      expect(requested).toEqual([gapItem]);
+      expect(rows[0].querySelector('[data-testid="unzoned-fix"]')?.textContent?.trim()).toBe('Abrir tramo');
+      expect(rows[1].querySelector('[data-testid="unzoned-fix"]')).toBeNull();
+      expect(rows[1].querySelector('[data-testid="unzoned-event"]')).not.toBeNull();
     });
 
     it('abrir el tramo avisa con el tramo', () => {
       const requested: ZoneAssignmentResponse[] = [];
       component.tramoRequested.subscribe(item => requested.push(item));
 
-      queryAll('[data-testid="unzoned-item"]')[1].querySelector<HTMLButtonElement>('[data-testid="unzoned-fix"]')?.click();
+      queryAll('[data-testid="unzoned-item"]')[0].querySelector<HTMLButtonElement>('[data-testid="unzoned-fix"]')?.click();
 
       expect(requested).toEqual([tramo]);
     });
@@ -147,7 +141,7 @@ describe('ZoneCellDetailComponent', () => {
       const requested: string[] = [];
       component.eventRequested.subscribe(id => requested.push(id));
 
-      queryAll('[data-testid="unzoned-item"]')[1].querySelector<HTMLButtonElement>('[data-testid="unzoned-event"]')?.click();
+      queryAll('[data-testid="unzoned-item"]')[0].querySelector<HTMLButtonElement>('[data-testid="unzoned-event"]')?.click();
 
       expect(requested).toEqual(['e2']);
     });
@@ -162,18 +156,29 @@ describe('ZoneCellDetailComponent', () => {
     });
 
     it('con una sola jugada el título va en singular', () => {
-      fixture.componentRef.setInput('unzoned', [gapItem]);
+      fixture.componentRef.setInput('unzoned', [forbiddenItem]);
+      fixture.componentRef.setInput('inGaps', { events: 0, gaps: 0 });
       fixture.detectChanges();
 
       expect(query('[data-testid="unzoned-title"]')?.textContent).toContain('1 jugada sin zona');
+      expect(query('[data-testid="unzoned-gaps"]')).toBeNull();
     });
 
-    it('sin jugadas sin zona lo celebra y no deja una lista vacía', () => {
+    it('si todas están en huecos no queda una lista vacía ni el mensaje de que todo tiene zona', () => {
       fixture.componentRef.setInput('unzoned', []);
       fixture.detectChanges();
 
-      expect(query('[data-testid="unzoned-empty"]')?.textContent).toContain('Todas las jugadas tienen zona');
       expect(query('[data-testid="unzoned-item"]')).toBeNull();
+      expect(query('[data-testid="unzoned-empty"]')).toBeNull();
+      expect(query('[data-testid="unzoned-gaps"]')).not.toBeNull();
+    });
+
+    it('sin jugadas sin zona lo celebra', () => {
+      fixture.componentRef.setInput('unzoned', []);
+      fixture.componentRef.setInput('inGaps', { events: 0, gaps: 0 });
+      fixture.detectChanges();
+
+      expect(query('[data-testid="unzoned-empty"]')?.textContent).toContain('Todas las jugadas tienen zona');
     });
   });
 
@@ -183,7 +188,7 @@ describe('ZoneCellDetailComponent', () => {
     expect(text()).not.toContain('sin zona');
 
     fixture.componentRef.setInput('view', 'unzoned');
-    fixture.componentRef.setInput('unzoned', [gapItem]);
+    fixture.componentRef.setInput('unzoned', [forbiddenItem]);
     fixture.detectChanges();
     expect(query('[data-testid="cell-detail-title"]')).toBeNull();
   });

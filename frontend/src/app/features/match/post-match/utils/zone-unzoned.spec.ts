@@ -1,7 +1,7 @@
 import { ZoneRule } from '../../types/event-type.types';
 import { ZoneAssignmentResponse } from '../../types/zone.types';
 import { ZoneRulesByType } from './zone-rule';
-import { UnzonedSource, unzonedReason, unzonedWithReason } from './zone-unzoned';
+import { UnzonedSource, describeGapGroup, groupUnzoned, unzonedReason, unzonedWithReason } from './zone-unzoned';
 
 describe('zone-unzoned', () => {
   const tramo = (id: string, period: 1 | 2, startMinute: number, endMinute: number, row = 2, col = 6): ZoneAssignmentResponse =>
@@ -101,6 +101,39 @@ describe('zone-unzoned', () => {
 
     it('sin jugadas sin zona devuelve una lista vacía', () => {
       expect(unzonedWithReason([], tramos, rules)).toEqual([]);
+    });
+  });
+
+  describe('groupUnzoned', () => {
+    // Tramos 1T 20′–25′ (C6: no admite Scrum) y 2T 50′–60′: quedan huecos en 1T 0′–20′, 1T 25′–40′, 2T 40′–50′ y 2T 60′–80′
+    const tramos = [tramo('a', 1, 20, 25), tramo('b', 2, 50, 60, 2, 4)];
+    const items = unzonedWithReason([
+      event('h1', 'tackle', 'Tackle', 1, 5 * 60),
+      event('h2', 'tackle', 'Tackle', 1, 10 * 60),
+      event('prohibido', 'scrum', 'Scrum', 1, 22 * 60),
+      event('h3', 'tackle', 'Tackle', 1, 30 * 60),
+      event('h4', 'tackle', 'Tackle', 2, 70 * 60),
+      event('sinTiempo', 'tackle', 'Tackle', 3, 0)
+    ], tramos, rules);
+
+    it('resume las jugadas en huecos con cuántos huecos distintos ocupan', () => {
+      expect(groupUnzoned(items, tramos).inGaps).toEqual({ events: 4, gaps: 3 });
+    });
+
+    it('lista solo lo que los huecos no explican, en el mismo orden: celda prohibida y sin tiempo', () => {
+      expect(groupUnzoned(items, tramos).listed.map(item => item.event.id)).toEqual(['prohibido', 'sinTiempo']);
+    });
+
+    it('sin jugadas en huecos el resumen queda en cero', () => {
+      expect(groupUnzoned([], tramos)).toEqual({ inGaps: { events: 0, gaps: 0 }, listed: [] });
+    });
+  });
+
+  describe('describeGapGroup', () => {
+    it('dice cuántas jugadas y en cuántos huecos, en singular o plural', () => {
+      expect(describeGapGroup({ events: 1, gaps: 1 })).toBe('1 jugada en 1 hueco');
+      expect(describeGapGroup({ events: 2, gaps: 1 })).toBe('2 jugadas en 1 hueco');
+      expect(describeGapGroup({ events: 22, gaps: 3 })).toBe('22 jugadas en 3 huecos');
     });
   });
 });

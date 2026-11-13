@@ -711,16 +711,14 @@ describe('PostMatchZonesComponent', () => {
     const items = (): HTMLElement[] => queryAll('[data-testid="unzoned-item"]');
     const panel = (): ZoneAssignmentPanelComponent => fixture.debugElement.query(By.directive(ZoneAssignmentPanelComponent)).componentInstance;
 
-    it('el KPI «sin zona» abre la lista con el motivo de cada jugada, en orden cronológico', () => {
+    it('el KPI «sin zona» abre la lista: las jugadas en huecos se resumen en una línea y no se listan', () => {
       createLoaded([zone], withUnzoned);
 
       kpiLink()?.click();
       fixture.detectChanges();
 
-      expect(items().length).toBe(2);
-      expect(items()[0].textContent).toContain('1T 35:00');
-      expect(items()[0].textContent).toContain('Ningún tramo cubre este minuto');
-      expect(items()[1].textContent).toContain('2T 50:00');
+      expect(query('[data-testid="unzoned-gaps"]')?.textContent).toContain('2 jugadas en 2 huecos');
+      expect(items().length).toBe(0);
     });
 
     it('el enlace del panel abre la misma lista', () => {
@@ -732,29 +730,15 @@ describe('PostMatchZonesComponent', () => {
       expect(query('[data-testid="unzoned-title"]')?.textContent).toContain('2 jugadas sin zona');
     });
 
-    it('«Completar hueco» precarga el hueco de la jugada en el formulario', () => {
+    it('«Ver huecos» lleva a «Huecos sin zona» del panel (en móvil abre la hoja)', () => {
       createLoaded([zone], withUnzoned);
       kpiLink()?.click();
       fixture.detectChanges();
 
-      items()[0].querySelector<HTMLButtonElement>('[data-testid="unzoned-fix"]')?.click();
+      query<HTMLButtonElement>('[data-testid="unzoned-gaps-link"]')?.click();
       fixture.detectChanges();
 
-      expect([panel().startMinute, panel().endMinute]).toEqual([25, 40]);
-    });
-
-    it('un hueco que cruza un tanto se completa solo hasta el corte que lo separa de la jugada', () => {
-      const tryEvent: MatchTimelineEventResponse = { ...typed('try', 1, 22, null, 'try', 'Try'), matchTime: 22 * 60 + 30, attributes: { zone: 'right' } };
-      createLoaded([], [tryEvent, typed('despues', 1, 30, null)]);
-      TestBed.inject(MatchZonesStore).zoneRules.set(new Map([['try', { columns: [6], rowFrom: 'zone', closesTramo: true }]]));
-      fixture.detectChanges();
-      kpiLink()?.click();
-      fixture.detectChanges();
-
-      items().find(item => item.textContent?.includes('1T 30:00'))?.querySelector<HTMLButtonElement>('[data-testid="unzoned-fix"]')?.click();
-      fixture.detectChanges();
-
-      expect([panel().startMinute, panel().endMinute]).toEqual([23, 40]);
+      expect(panel().sheetOpen).toBeTrue();
     });
 
     it('«Abrir tramo» carga para editar el tramo que no admite la jugada', () => {
@@ -770,7 +754,7 @@ describe('PostMatchZonesComponent', () => {
     });
 
     it('«Ver en Eventos» deja la jugada seleccionada y navega a la pantalla de Eventos', () => {
-      createLoaded([zone], withUnzoned);
+      createLoaded([{ ...zone, startMinute: 20, endMinute: 25, col: 6 }], [typed('lineout', 1, 22, null, 'lineout', 'Line-out')]);
       const navigate = spyOn(router, 'navigate').and.resolveTo(true);
       const shell = TestBed.inject(PostMatchShellStore) as unknown as { lastSelectedEventId: WritableSignal<string | null> };
       kpiLink()?.click();
@@ -778,7 +762,7 @@ describe('PostMatchZonesComponent', () => {
 
       items()[0].querySelector<HTMLButtonElement>('[data-testid="unzoned-event"]')?.click();
 
-      expect(shell.lastSelectedEventId()).toBe('hueco');
+      expect(shell.lastSelectedEventId()).toBe('lineout');
       expect(navigate).toHaveBeenCalledWith(['/post-match', 'match-1']);
     });
 
