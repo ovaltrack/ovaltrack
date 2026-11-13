@@ -47,10 +47,10 @@ export class MatchZonesStore {
     return active === null ? raw : raw.filter(event => active.has(event.eventTypeId));
   });
 
-  /** Los mismos eventos, marcados si su zona sale de la regla del tipo (`fixedZone`) y ningún tramo se la da ni se la quita. */
+  /** Los mismos eventos, marcados si su zona la da la regla del tipo (`zonePoint`) y ningún tramo se la da ni se la quita. */
   readonly zoneEvents = computed(() => {
     const rules = this.zoneRules();
-    return this.events().map(event => ({ ...event, fixedZone: isFixedZone(rules.get(event.eventTypeId), event.attributes) && !!event.zone }));
+    return this.events().map(event => ({ ...event, zonePoint: isFixedZone(rules.get(event.eventTypeId), event.attributes) && !!event.zone }));
   });
 
   /** Cortes por try (y tanteos que reinician el juego): el tramo que los contiene termina en su minuto. */

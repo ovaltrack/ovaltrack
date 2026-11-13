@@ -89,8 +89,8 @@
 .block:hover { background: var(--btn-primary-hover); }
 .block-label { font: 700 11px var(--font-mono); letter-spacing: .02em; white-space: nowrap; }
 
-/* Marca ◆ de un evento de zona fija: rombo de solo lectura sobre su franja; el borde navy se lee sobre el bloque verde y sobre el hueco ámbar */
-.fixed-mark {
+/* Punto de una jugada con zona propia: rombo de solo lectura sobre su franja; el borde navy se lee sobre el bloque verde y sobre el hueco ámbar */
+.zone-point {
   position: absolute; top: 50%; z-index: 2; width: 12px; height: 12px; box-sizing: border-box;
   transform: translate(-50%, -50%) rotate(45deg);
   background: var(--surface); border: 2px solid var(--navy); border-radius: 2px;
@@ -122,6 +122,9 @@
 .half-line { position: absolute; top: 0; bottom: 0; border-left: 2px dashed var(--text-muted); pointer-events: none; z-index: 1; }
 /* Corte por try: línea continua sobre todas las franjas; el tramo que la cruza se marca en rojo */
 .cut-line { position: absolute; top: 0; bottom: 0; width: 6px; margin-left: -3px; border-left: 2px solid var(--navy); background-clip: content-box; z-index: 2; }
+/* Punto y línea de corte del mismo evento se resaltan juntos al pasar sobre cualquiera de los dos */
+.zone-point.is-hot { background: var(--navy); }
+.cut-line.is-hot { border-left-width: 4px; }
 
 /* Hueco bajo el puntero y vista previa del formulario, dentro de la fila (--row = índice de fila) */
 .hover-gap, .preview, .drag-range {

@@ -57,9 +57,7 @@ export function describeSegment(a: ZoneAssignmentResponse): string {
 export type ZonePeriodFilter = 'ALL' | ZonePeriod;
 
 export type ZoneEvent = Pick<MatchTimelineEventResponse, 'id' | 'period' | 'matchTime' | 'zone'> & {
-  /** Su zona sale de la regla del tipo y no de un tramo: ningún cambio de tramos se la quita. */
-  fixedZone?: boolean;
-  /** Su zona (fila y columna) la da el propio evento y ningún tramo se la da ni se la quita; reemplaza a `fixedZone`. */
+  /** Su zona (fila y columna) la da el propio evento: ningún cambio de tramos se la da ni se la quita. */
   zonePoint?: boolean;
 };
 
@@ -108,9 +106,9 @@ export function eventsInRange<T extends ZoneEvent>(range: RangeLike, events: T[]
   });
 }
 
-/** Eventos del rango cuya zona depende de un tramo: los de zona fija ya tienen la suya por la regla del tipo. */
+/** Eventos del rango cuya zona depende de un tramo: los puntos ya tienen la suya por la regla del tipo. */
 export function eventsLinkedByRange<T extends ZoneEvent>(range: RangeLike, events: T[]): T[] {
-  return eventsInRange(range, events.filter(event => !event.fixedZone));
+  return eventsInRange(range, events.filter(event => !event.zonePoint));
 }
 
 /** Eventos que hoy tienen zona gracias al rango anterior y la perderían con el nuevo. */
@@ -145,7 +143,14 @@ export interface ZoneCellMinutes {
 
 /** Minutos cubiertos por los tramos en cada celda, dentro del tiempo elegido; solo informa las celdas con tramos. */
 export function minutesByCell(assignments: ZoneAssignmentResponse[], filter: ZonePeriodFilter): ZoneCellMinutes[] {
-  throw new Error('minutesByCell: no implementado');
+  const totals = new Map<string, ZoneCellMinutes>();
+  for (const assignment of assignments.filter(a => filter === 'ALL' || a.period === filter)) {
+    const key = `${assignment.row}-${assignment.col}`;
+    const entry = totals.get(key) ?? { row: assignment.row, col: assignment.col, minutes: 0 };
+    entry.minutes += assignment.endMinute - assignment.startMinute;
+    totals.set(key, entry);
+  }
+  return [...totals.values()].sort((a, b) => a.row - b.row || a.col - b.col);
 }
 
 /** Tipo de evento presente en el partido, para las opciones del filtro. */
@@ -156,7 +161,8 @@ export interface EventTypeOption {
 
 /** Tipos que aparecen en los eventos, sin repetir y por nombre. */
 export function eventTypeOptions(events: Pick<MatchTimelineEventResponse, 'eventTypeId' | 'eventTypeName'>[]): EventTypeOption[] {
-  throw new Error('eventTypeOptions: no implementado');
+  const names = new Map(events.map(event => [event.eventTypeId, event.eventTypeName]));
+  return [...names].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name, 'es'));
 }
 
 /** Minutos de un tiempo que ya tienen un tramo asignado (0–40). */

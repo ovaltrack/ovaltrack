@@ -48,9 +48,13 @@ function allows(allowed: number[] | null | undefined, value: number): boolean {
   return !allowed || allowed.length === 0 || allowed.includes(value);
 }
 
+function mirrorColumn(col: number): number {
+  return ZONE_GRID_COLS + 1 - col;
+}
+
 /** Celda vista desde el otro equipo: la columna (6 <-> 1) y la fila (I <-> D) se invierten; dos veces es la original. */
 function mirrorCell(cell: ZoneCellRef): ZoneCellRef {
-  return { row: ZONE_GRID_ROWS + 1 - cell.row, col: ZONE_GRID_COLS + 1 - cell.col };
+  return { row: ZONE_GRID_ROWS + 1 - cell.row, col: mirrorColumn(cell.col) };
 }
 
 function orient(cell: ZoneCellRef, mirrored: boolean): ZoneCellRef {
@@ -97,7 +101,8 @@ export function isFixedZone(rule: ZoneRule | null | undefined, attributes: Recor
  * deja varias columnas o ninguna. Alcanza para ubicar al evento en su franja aunque no se conozca la fila.
  */
 export function fixedColumn(rule: ZoneRule | null | undefined, possession: Possession | null | undefined): number | null {
-  throw new Error('fixedColumn: no implementado');
+  const column = onlyValue(rule?.columns);
+  return column !== null && possession === 'OPPONENT' ? mirrorColumn(column) : column;
 }
 
 function isContiguous(sortedValues: number[]): boolean {

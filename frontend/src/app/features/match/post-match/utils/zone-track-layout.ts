@@ -1,6 +1,6 @@
 import { ZONE_GRID_COLS, ZONE_HALF_MINUTES, ZoneAssignmentResponse, ZonePeriod } from '../../types/zone.types';
 import { ZONE_COLUMN_NAMES, ZONE_ROW_LETTERS, columnRangeLabel, zoneLabel } from './zone-grid';
-import { RuleEvent, ZoneRulesByType, closesTramo, formatMatchTime, isFixedZone, placeEventZone } from './zone-rule';
+import { RuleEvent, ZoneRulesByType, closesTramo, fixedColumn, formatMatchTime, placeEventZone } from './zone-rule';
 import { MinuteRange, ZoneEvent, ZonePeriodFilter, effectiveMatchTime, eventsInRange, findGaps, periodRange } from './zone-stats';
 
 /** Largo del eje horizontal de la grilla de territorio: los 80 minutos del partido, con el 2T a continuación del 1T. */
@@ -144,40 +144,15 @@ export function gapsWithEventCount(assignments: ZoneAssignmentResponse[], events
   }));
 }
 
-/** Evento de zona fija a dibujar como marca de solo lectura sobre la grilla de territorio. */
-export interface FixedZoneMark {
-  eventId: string;
-  eventTypeName: string;
-  period: ZonePeriod;
-  cell: { row: number; col: number };
-  /** Minuto acumulado con decimales (22:30 -> 22,5); el tiempo añadido queda en el último segundo del tiempo. */
-  minute: number;
-}
-
 const SECONDS_PER_MINUTE = 60;
 
 function isZonePeriod(period: number): period is ZonePeriod {
   return period === 1 || period === 2;
 }
 
-/** Eventos cuya zona fija la da la regla del tipo, en orden cronológico y dentro del tiempo elegido. */
-export function fixedZoneMarks(events: RuleEvent[], rules: ZoneRulesByType, filter: ZonePeriodFilter): FixedZoneMark[] {
-  return events
-    .filter(event => isZonePeriod(event.period) && (filter === 'ALL' || event.period === filter))
-    .flatMap(event => {
-      const rule = rules.get(event.eventTypeId);
-      const cell = isFixedZone(rule, event.attributes) ? placeEventZone(rule, event.teamPossession, event.attributes, null) : null;
-      const period = event.period as ZonePeriod;
-      return cell
-        ? [{ eventId: event.id, eventTypeName: event.eventTypeName, period, cell, minute: effectiveMatchTime(period, event.matchTime) / SECONDS_PER_MINUTE }]
-        : [];
-    })
-    .sort((a, b) => a.minute - b.minute);
-}
-
-/** Texto de la marca para el tooltip y los lectores de pantalla, ej. "Try 22:30 · D6 · zona fija por el tipo". */
-export function describeFixedMark(mark: FixedZoneMark): string {
-  return `${mark.eventTypeName} ${formatMatchTime(Math.round(mark.minute * SECONDS_PER_MINUTE))} · ${zoneLabel(mark.cell)} · zona fija por el tipo`;
+/** Minuto en que termina el tramo que contiene un evento que reinicia el juego: el tiempo añadido queda en el 40′ o en el 80′. */
+function cutMinuteOf(effectiveSeconds: number): number {
+  return Math.floor(effectiveSeconds / SECONDS_PER_MINUTE) + 1;
 }
 
 /**
@@ -198,17 +173,37 @@ export interface ZonePoint {
 
 /** Eventos cuya columna fija la regla del tipo, en orden cronológico y dentro del tiempo elegido. */
 export function zonePoints(events: RuleEvent[], rules: ZoneRulesByType, filter: ZonePeriodFilter): ZonePoint[] {
-  throw new Error('zonePoints: no implementado');
+  return events
+    .filter(event => isZonePeriod(event.period) && (filter === 'ALL' || event.period === filter))
+    .flatMap(event => {
+      const rule = rules.get(event.eventTypeId);
+      const col = fixedColumn(rule, event.teamPossession);
+      const period = event.period as ZonePeriod;
+      const seconds = effectiveMatchTime(period, event.matchTime);
+      return col === null ? [] : [{
+        eventId: event.id,
+        eventTypeName: event.eventTypeName,
+        period,
+        col,
+        row: placeEventZone(rule, event.teamPossession, event.attributes, null)?.row ?? null,
+        minute: seconds / SECONDS_PER_MINUTE,
+        cutMinute: closesTramo(rule) ? cutMinuteOf(seconds) : null
+      }];
+    })
+    .sort((a, b) => a.minute - b.minute);
 }
 
 /** Texto del punto para el tooltip y los lectores de pantalla, ej. "Try 22:30 · D6 · el tramo termina en 23′". */
 export function describePoint(point: ZonePoint): string {
-  throw new Error('describePoint: no implementado');
+  const where = point.row === null ? `${ZONE_COLUMN_NAMES[point.col - 1]} (sin lateral)` : zoneLabel({ row: point.row, col: point.col });
+  const cut = point.cutMinute === null ? '' : ` · el tramo termina en ${point.cutMinute}′`;
+  return `${point.eventTypeName} ${formatMatchTime(Math.round(point.minute * SECONDS_PER_MINUTE))} · ${where}${cut}`;
 }
 
 /** Cortes que no nacen de un punto (Kick H, Drop goal): la grilla los dibuja como línea suelta. */
 export function looseCuts(cuts: TramoCutMark[], points: ZonePoint[]): TramoCutMark[] {
-  throw new Error('looseCuts: no implementado');
+  const withPoint = new Set(points.map(point => point.eventId));
+  return cuts.filter(cut => !withPoint.has(cut.eventId));
 }
 
 /**
@@ -243,8 +238,7 @@ export function tramoCuts(events: RuleEvent[], rules: ZoneRulesByType, filter: Z
         eventId: event.id,
         eventTypeName: event.eventTypeName,
         period,
-        // El tiempo añadido cuenta como el último minuto del tiempo: el corte queda en el 40′ o en el 80′
-        minute: Math.floor(effectiveMatchTime(period, event.matchTime) / SECONDS_PER_MINUTE) + 1,
+        minute: cutMinuteOf(effectiveMatchTime(period, event.matchTime)),
         label: `${event.eventTypeName} ${formatMatchTime(event.matchTime)}`
       };
     });

@@ -5,8 +5,8 @@ import { DragRange, dragNewRange, minuteAtPosition, resizeRange } from '../../ut
 import { ZONE_COLUMN_NAMES, zoneLabel } from '../../utils/zone-grid';
 import { ZoneEvent, ZonePeriodFilter, eventsInRange } from '../../utils/zone-stats';
 import {
-  BlockLayout, FixedZoneMark, PeriodGap, TramoCutMark, TRACK_MINUTES, allGaps, blockLabel, blockLayout, countByFranja, crossedCut, describeFixedMark, gapAtMinute, isInWindow, minuteAtOffset,
-  minuteToPercent, territoryRows, trackWindow
+  BlockLayout, PeriodGap, TramoCutMark, TRACK_MINUTES, ZonePoint, allGaps, blockLabel, blockLayout, countByFranja, crossedCut, describePoint, gapAtMinute, isInWindow,
+  looseCuts, minuteAtOffset, minuteToPercent, territoryRows, trackWindow
 } from '../../utils/zone-track-layout';
 
 /** Tramo o hueco elegido en una fila de la grilla: `col` es la franja (fila de la grilla) sobre la que se hizo clic. */
@@ -27,15 +27,16 @@ interface BlockView {
   crossesCut: boolean;
 }
 
-/** Línea de corte por try: posición en % del eje y su motivo para el tooltip. */
+/** Línea de corte: posición en % del eje y su motivo para el tooltip. Si nace de un punto (`pointId`) comparte con él hover y texto. */
 interface CutLineView {
   eventId: string;
   left: number;
   title: string;
+  pointId: string | null;
 }
 
-/** Marca de solo lectura de un evento de zona fija: posición horizontal en % del eje y texto para tooltip y lectores. */
-interface MarkView {
+/** Punto de solo lectura de una jugada con zona propia: posición horizontal en % del eje y texto para tooltip y lectores. */
+interface PointView {
   eventId: string;
   left: number;
   aria: string;
@@ -47,7 +48,7 @@ interface RowView {
   range: string;
   count: number;
   blocks: BlockView[];
-  marks: MarkView[];
+  points: PointView[];
 }
 
 interface Tick {
@@ -107,9 +108,12 @@ interface DragState {
 })
 export class ZoneTerritoryGridComponent {
   readonly assignments = input<ZoneAssignmentResponse[]>([]);
-  /** Eventos de zona fija: se dibujan como marcas de solo lectura sobre la fila de su franja, sin ocupar rango. */
-  readonly fixedMarks = input<FixedZoneMark[]>([]);
-  /** Cortes por try: línea vertical sobre todas las franjas; el arrastre frena ahí y un tramo que los cruza se marca. */
+  /** Jugadas con zona propia (Try, Try penal): puntos de solo lectura en la fila de su franja, sin ocupar rango. */
+  readonly points = input<ZonePoint[]>([]);
+  /**
+   * Cortes por try (y tanteos que reinician el juego): el arrastre frena ahí y un tramo que los cruza se marca. La línea
+   * vertical nace del punto si lo hay; los cortes sin punto (Kick H, Drop goal) se dibujan sueltos.
+   */
   readonly cuts = input<TramoCutMark[]>([]);
   /** Eventos ya filtrados por posesión: sus conteos por franja aparecen en cada fila. */
   readonly events = input<ZoneEvent[]>([]);
@@ -138,6 +142,8 @@ export class ZoneTerritoryGridComponent {
   readonly rangeResized = output<{ startMinute: number; endMinute: number }>();
   /** Tramo bajo el cursor o el foco (null al salir): la cancha resalta su celda. */
   readonly segmentHover = output<string | null>();
+  /** Punto bajo el cursor o el foco: él y su línea de corte se resaltan juntos. */
+  readonly hotPointId = signal<string | null>(null);
   /** Con "Todo" en pantalla angosta: el tiempo (1T o 2T) del minuto tocado, para que la página cambie el filtro. */
   readonly periodRequested = output<ZonePeriod>();
   /** Clic en una fila dentro de un hueco: propone ese hueco y esa franja. */
@@ -257,23 +263,31 @@ export class ZoneTerritoryGridComponent {
         crossesCut: cut !== null
       }];
     });
-    const marks = this.fixedMarks().flatMap(mark => {
-      const left = minuteToPercent(mark.minute, this.view());
-      return left < 0 || left > 100 ? [] : [{ col: mark.cell.col, eventId: mark.eventId, left, aria: describeFixedMark(mark) }];
+    const points = this.points().flatMap(point => {
+      const left = minuteToPercent(point.minute, this.view());
+      return left < 0 || left > 100 ? [] : [{ col: point.col, eventId: point.eventId, left, aria: describePoint(point) }];
     });
     return territoryRows().map(row => ({
       ...row,
       count: counts.get(row.col) ?? 0,
       blocks: blocks.filter(block => block.assignment.col === row.col),
-      marks: marks.filter(mark => mark.col === row.col)
+      points: points.filter(point => point.col === row.col)
     }));
   });
 
-  /** Cortes por try dentro del tramo mostrado: una línea vertical sobre todas las franjas. */
-  readonly cutLines = computed<CutLineView[]>(() => this.cuts().flatMap(cut => {
-    const left = minuteToPercent(cut.minute, this.view());
-    return left < 0 || left > 100 ? [] : [{ eventId: cut.eventId, left, title: `Corte: ${cut.label} · el tramo termina en ${cut.minute}′` }];
-  }));
+  /** Líneas de corte dentro del tramo mostrado, sobre todas las franjas: las de cada punto y las sueltas. */
+  readonly cutLines = computed<CutLineView[]>(() => {
+    const own = this.points().flatMap(point => point.cutMinute === null ? [] : [{
+      eventId: point.eventId, minute: point.cutMinute, title: describePoint(point), pointId: point.eventId
+    }]);
+    const loose = looseCuts(this.cuts(), this.points()).map(cut => ({
+      eventId: cut.eventId, minute: cut.minute, title: `Corte: ${cut.label} · el tramo termina en ${cut.minute}′`, pointId: null
+    }));
+    return [...own, ...loose].flatMap(({ minute, ...line }) => {
+      const left = minuteToPercent(minute, this.view());
+      return left < 0 || left > 100 ? [] : [{ ...line, left }];
+    });
+  });
 
   readonly gaps = computed(() => allGaps(this.assignments()).flatMap(gap => {
     const layout = this.layoutOf({ startMinute: gap.start, endMinute: gap.end });
