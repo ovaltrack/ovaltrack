@@ -16,6 +16,7 @@ import { EventFormComponent, EventFormData } from '../event-form/event-form.comp
 import { TemplateField } from '../../../types/event-type.types';
 import { ZoneCellRef } from '../../../types/zone.types';
 import { EventZoneLink, describeEventZone, resolveEventZoneLink } from '../../utils/zone-event-link';
+import { describeTramoTrim } from '../../utils/zone-track-layout';
 import { displayAttributeLabel } from '../../utils/attribute-labels';
 import { OverflowMetrics, overflowCapacity, visibleWithOverflow } from '../../utils/list-overflow';
 import { observeHeight } from '../../utils/observe-height';
@@ -232,7 +233,14 @@ export class PostMatchPanelComponent implements OnDestroy {
   }
 
   private onSaveConfirmed(id: string, payload: Partial<MatchTimelineEventResponse>, timeChanged: boolean): void {
+    // Un tanto que queda dentro de un tramo lo recorta en el backend: se calcula con el evento ya editado y se avisa
+    const before = this.store.rawEvents().find(event => event.id === id);
+    const trim = before ? this.store.tramoTrimFor({ ...before, ...payload }) : null;
     this.store.updateEvent(id, payload);
+    if (trim) {
+      this.store.applyTramoTrim(trim);
+      this.toastService.info(describeTramoTrim(trim), 'Zonas');
+    }
     // Con otro tiempo el evento cambia de lugar: la tabla lo sigue, salvo que ya se haya pasado a otro evento
     if (timeChanged && this.store.selectedEventId() === id) {
       this.store.revealEvent(id);

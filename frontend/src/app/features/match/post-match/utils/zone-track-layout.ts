@@ -2,7 +2,7 @@ import { Possession } from '../../types/live-capture.types';
 import { ZONE_GRID_COLS, ZONE_HALF_MINUTES, ZoneAssignmentResponse, ZoneCellRef, ZonePeriod } from '../../types/zone.types';
 import { ZONE_COLUMN_NAMES, ZONE_ROW_LETTERS, columnRangeLabel, isInGoalColumn, zoneLabel } from './zone-grid';
 import { RuleEvent, ScoringTypesById, ZoneRulesByType, closesTramo, eventClosesTramo, fixedColumn, formatMatchTime, placeEventZone } from './zone-rule';
-import { MinuteRange, ZoneEvent, ZonePeriodFilter, effectiveMatchTime, eventsInRange, findGaps, periodRange } from './zone-stats';
+import { MinuteRange, ZoneEvent, ZonePeriodFilter, effectiveMatchTime, eventsInRange, findGaps, periodRange, tramoAtEvent } from './zone-stats';
 
 /** Largo del eje horizontal de la grilla de territorio: los 80 minutos del partido, con el 2T a continuación del 1T. */
 export const TRACK_MINUTES = ZONE_HALF_MINUTES * 2;
@@ -282,6 +282,29 @@ export function findTramoCut(range: TimedRange, events: RuleEvent[], rules: Zone
         + `${event.eventTypeName} (${event.period}T ${formatMatchTime(event.matchTime)}): terminalo en ${cut.minute}'`
     }
     : null;
+}
+
+/** Recorte que hace el backend (`TramoTrimmer`) al guardar un tanto: el tramo que contiene su minuto termina en `endMinute`. */
+export interface TramoTrim {
+  tramo: ZoneAssignmentResponse;
+  endMinute: number;
+}
+
+/**
+ * El recorte que va a hacer el backend al guardar el evento: solo si es un tanto que reinicia el juego y el tramo que
+ * contiene su minuto sigue después del corte. Null si no recorta nada (otro tipo, un hueco o un tramo ya cortado).
+ */
+export function predictTramoTrim(event: RuleEvent, assignments: ZoneAssignmentResponse[], rules: ZoneRulesByType, types: ScoringTypesById): TramoTrim | null {
+  if (!isZonePeriod(event.period) || !eventClosesTramo(event, rules, types)) return null;
+  const tramo = tramoAtEvent(event, assignments);
+  const endMinute = cutMinuteOf(effectiveMatchTime(event.period, event.matchTime));
+  return tramo && tramo.endMinute > endMinute ? { tramo, endMinute } : null;
+}
+
+/** Aviso del recorte, ej. "El tramo C4 20′–30′ ahora termina en 23′ · 23′–30′ quedó como hueco". */
+export function describeTramoTrim({ tramo, endMinute }: TramoTrim): string {
+  return `El tramo ${zoneLabel(tramo)} ${tramo.startMinute}′–${tramo.endMinute}′ ahora termina en ${endMinute}′ · `
+    + `${endMinute}′–${tramo.endMinute}′ quedó como hueco`;
 }
 
 /** Rango que sigue después de un tanteo, ya llevado a su corte: `endMinute` es donde termina el tramo y `cut` el motivo. */

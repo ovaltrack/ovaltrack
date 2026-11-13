@@ -23,7 +23,9 @@ import {
   formatOnlyTime
 } from '../utils/match-review.utils';
 import { zoneForEvent } from '../utils/zone-event-link';
-import { ZoneRulesByType, isFixedZone } from '../utils/zone-rule';
+import { ScoringTypesById, ZoneRulesByType, isFixedZone } from '../utils/zone-rule';
+import { eventsInRange } from '../utils/zone-stats';
+import { TramoTrim, predictTramoTrim } from '../utils/zone-track-layout';
 import { countsAsScoring, scoringTeam } from '../../statistics/calculators/event-rules';
 import { oneOf, persistedSignal } from '../../../../shared/utils/persisted-signal';
 
@@ -67,6 +69,9 @@ export class MatchReviewStore {
   /** Regla de zona de cada tipo de evento, del catálogo; los tipos sin regla valen null. */
   readonly zoneRulesByType = computed<ZoneRulesByType>(() =>
     new Map(this.eventTypesList().map(type => [type.id, type.zoneRule ?? null])));
+  /** Tipos por id con lo que dice si un tanto cuenta (un Kick H errado no reinicia el juego). */
+  private readonly scoringTypesById = computed<ScoringTypesById>(() =>
+    new Map(this.eventTypesList().map(type => [type.id, type])));
   readonly availablePlayers = signal<AvailablePlayer[]>([]);
   /** Tramos de zona del partido (solo lectura): dan el rango y el enlace a Zonas de cada evento. */
   readonly zoneAssignments = signal<ZoneAssignmentResponse[]>([]);
@@ -287,6 +292,23 @@ export class MatchReviewStore {
   setZoneAssignments(assignments: ZoneAssignmentResponse[]): void {
     this.zoneAssignments.set(assignments);
     this.zonesStatus.set('loaded');
+  }
+
+  /** Recorte que hará el backend al guardar el evento (un tanto dentro de un tramo); null sin tramos cargados o si no recorta. */
+  tramoTrimFor(event: MatchTimelineEventResponse): TramoTrim | null {
+    if (this.zonesStatus() !== 'loaded') return null;
+    return predictTramoTrim(event, this.zoneAssignments(), this.zoneRulesByType(), this.scoringTypesById());
+  }
+
+  /**
+   * Refleja el recorte que hizo el backend al guardar un tanto, sin volver a pedir los tramos: el tramo termina en el corte
+   * y las jugadas que quedaron después descartan la zona del servidor para derivarla de nuevo (ahora caen en un hueco).
+   */
+  applyTramoTrim({ tramo, endMinute }: TramoTrim): void {
+    this.zoneAssignments.update(list => list.map(a => a.id === tramo.id ? { ...a, endMinute } : a));
+    const released = { period: tramo.period, startMinute: endMinute, endMinute: tramo.endMinute };
+    const releasedIds = new Set(eventsInRange(released, this.rawEvents()).map(event => event.id));
+    this.rawEvents.update(events => events.map(event => releasedIds.has(event.id) ? { ...event, zone: undefined } : event));
   }
 
   setZonesFailed(): void {

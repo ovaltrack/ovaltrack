@@ -10,6 +10,7 @@ import { EventFormComponent, EventFormData } from '../event-form/event-form.comp
 import { EventPrefillHints, buildEventPrefill } from '../../utils/event-prefill';
 import { toMatchTimeSeconds, validateEventTime } from '../../utils/event-time';
 import { NextEvent, nextEvents } from '../../utils/follow-up';
+import { describeTramoTrim } from '../../utils/zone-track-layout';
 
 @Component({
   selector: 'app-post-match-create-modal',
@@ -186,9 +187,16 @@ export class PostMatchCreateModalComponent implements OnChanges {
         };
 
         const next = this.followUpsOf(eventTypeName);
+        // Un tanto dentro de un tramo lo recorta en el backend: se refleja acá y se avisa en el mismo toast
+        const trim = this.store.tramoTrimFor(timelineEvent);
 
         this.store.addEvent(timelineEvent);
-        this.toastService.success('Evento agregado correctamente');
+        if (trim) {
+          this.store.applyTramoTrim(trim);
+          this.toastService.success(describeTramoTrim(trim), 'Evento agregado');
+        } else {
+          this.toastService.success('Evento agregado correctamente');
+        }
         this.created.emit(timelineEvent);
         this.continueWith(next);
       },
