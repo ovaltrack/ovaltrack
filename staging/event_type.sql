@@ -1357,5 +1357,5 @@ UPDATE event_types SET zone_rule = '{"columns":[2,3,4,5],"rowFrom":"zone","close
 UPDATE event_types SET zone_rule = '{"columns":[2,3,4,5],"closesTramo":true}'::jsonb WHERE code = 'DROP_GOAL';
 UPDATE event_types SET zone_rule = '{"columns":[2,3,4,5],"rowFrom":"zone"}'::jsonb WHERE code = 'CONVERSION';
 UPDATE event_types SET zone_rule = '{"columns":[2,3,4,5]}'::jsonb WHERE code IN ('SCRUM', 'LINEOUT', 'MAUL', 'RUCK_OFFENSIVE', 'QUICK_PLAY');
--- Kick-off / Salida: de centro (col. 3-4), de 22m (2-3) o drop-out de ingol (1-2); nunca desde el campo rival
+-- Kick-off / Salida: de centro (col. 3-4), de 22m (2-3) o drop-out de ingol (1-2); nunca desde el 22 rival ni el in-goal rival
 UPDATE event_types SET zone_rule = '{"columns":[1,2,3,4]}'::jsonb WHERE code = 'RESTART_KICK';

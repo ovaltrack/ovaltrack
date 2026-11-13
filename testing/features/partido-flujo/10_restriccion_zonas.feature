@@ -129,7 +129,7 @@ Característica: Restricción de zonas de la cancha según el tipo de evento
       | Tackle completado |
       | Acarreo (Carry)   |
 
-  # Un saque (salida de centro, de 22m o drop-out de ingol) nunca sale del campo rival: solo se restringe la columna.
+  # Un saque (salida de centro, de 22m o drop-out de ingol) nunca sale del 22 rival ni del in-goal rival: solo se restringe la columna.
   Escenario: Un kick-off propio se acepta en la mitad propia y toma la zona del tramo
     Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
     Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
@@ -226,14 +226,14 @@ Característica: Restricción de zonas de la cancha según el tipo de evento
     Cuando el entrenador consulta la línea de eventos del partido cerrado
     Entonces la línea de eventos no contiene eventos "Scrum"
 
-  Escenario: Un kick-off propio en un tramo del campo rival es rechazado
+  Escenario: Un kick-off propio en un tramo del 22 rival es rechazado
     Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
     Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
     Y que el partido tiene asignada la zona fila 2 columna 5 en el periodo 1 entre el minuto 20 y el minuto 25
     Cuando el entrenador agrega post-partido el evento "Kick-off / Salida" con atributos "outcome=received_clean" para el equipo propio en el minuto 22 del periodo 1
     Entonces el sistema responde con 409 y "Kick-off / Salida (1T 22:00) no puede quedar en C5 (tramo 1T 20'–25'): solo puede ocurrir en las columnas 1 a 4"
 
-  Escenario: Un kick-off del rival en un tramo de nuestro in-goal es rechazado porque desde su lado sería el campo rival
+  Escenario: Un kick-off del rival en un tramo de nuestro in-goal es rechazado porque desde su lado sería el in-goal rival
     Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
     Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
     Y que el partido tiene asignada la zona fila 2 columna 1 en el periodo 1 entre el minuto 20 y el minuto 25
