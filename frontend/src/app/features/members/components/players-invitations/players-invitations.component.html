@@ -77,6 +77,12 @@
                     @if (statusDetail(p); as detail) { <span class="pi-detail">{{ detail }}</span> }
                   </td>
                   <td class="pi-action">
+                    @if (canEditPlayers()) {
+                      <button type="button" class="btn btn-outline pi-btn" (click)="editingPersonId.set(p.personId)"
+                        [attr.aria-label]="'Editar datos de ' + playerName(p)">
+                        <i class="bi bi-pencil" aria-hidden="true"></i> Editar
+                      </button>
+                    }
                     @if (STATUS[p.status].action; as action) {
                       <button type="button" class="btn btn-outline pi-btn" [disabled]="isSending(p)" (click)="invite(p)"
                         [attr.aria-label]="action + ' a ' + playerName(p)">
@@ -98,3 +104,9 @@
     }
   }
 </section>
+
+<app-person-edit-dialog
+  [personId]="editingPersonId()"
+  (saved)="onPersonSaved($event)"
+  (cancel)="editingPersonId.set(null)"
+/>
