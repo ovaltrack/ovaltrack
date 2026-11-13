@@ -37,6 +37,7 @@ import com.ovaltrack.backend.match.domain.Match;
 import com.ovaltrack.backend.match.domain.MatchStatus;
 import com.ovaltrack.backend.match.repository.MatchRepository;
 import com.ovaltrack.backend.zone.business.EventZoneRuleValidator;
+import com.ovaltrack.backend.zone.business.TramoTrimmer;
 import com.ovaltrack.backend.zone.domain.ZoneAssignment;
 import com.ovaltrack.backend.zone.repository.ZoneAssignmentRepository;
 
@@ -51,6 +52,7 @@ class EventServiceZoneRuleTest {
     @Mock private MatchSecurityValidator matchSecurityValidator;
     @Mock private ZoneAssignmentRepository zoneAssignmentRepository;
     @Mock private EventZoneRuleValidator zoneRuleValidator;
+    @Mock private TramoTrimmer tramoTrimmer;
     @Mock private Authentication authentication;
 
     @InjectMocks private EventService eventService;

@@ -17,6 +17,7 @@ import com.ovaltrack.backend.common.config.exceptions.BusinessException;
 import com.ovaltrack.backend.event.domain.Event;
 import com.ovaltrack.backend.event.domain.EventPossession;
 import com.ovaltrack.backend.event.domain.EventType;
+import com.ovaltrack.backend.event.domain.TemplateField;
 import com.ovaltrack.backend.zone.domain.ZoneRule;
 import com.ovaltrack.backend.zone.domain.dto.ZoneAssignmentCreationDTO;
 
@@ -26,6 +27,8 @@ class TramoCutValidatorTest {
     private static final ZoneRule TRY = new ZoneRule(List.of(6), null, "zone", true);
     private static final ZoneRule PENALTY_KICK = new ZoneRule(List.of(2, 3, 4, 5), null, "zone", true);
     private static final ZoneRule SCRUM = new ZoneRule(List.of(2, 3, 4, 5), null, null);
+    private static final TemplateField RESULT = new TemplateField("wasSuccessful", "Resultado", "boolean", "live", true,
+            null, null, null, null, List.of("scoring"), "Convertido", "Errado");
 
     private final TramoCutValidator validator = new TramoCutValidator(new EventZoneResolver());
 
@@ -34,6 +37,7 @@ class TramoCutValidatorTest {
         type.setId(UUID.randomUUID());
         type.setName(typeName);
         type.setZoneRule(rule);
+        type.setIsScoring(rule != null && rule.cutsTramo());
         Event event = new Event();
         event.setId(UUID.randomUUID());
         event.setEventType(type);
@@ -47,6 +51,13 @@ class TramoCutValidatorTest {
 
     private Event tryAt(int period, int seconds) {
         return event("Try", TRY, period, seconds);
+    }
+
+    private Event kickAt(boolean successful) {
+        Event kick = event("Kick H", PENALTY_KICK, 1, 22 * 60 + 30);
+        kick.getEventType().setTemplateEventFields(List.of(RESULT));
+        kick.setAttributes(Map.of("wasSuccessful", successful));
+        return kick;
     }
 
     private ZoneAssignmentCreationDTO tramo(int period, int startMinute, int endMinute) {
@@ -116,6 +127,22 @@ class TramoCutValidatorTest {
         Event tackle = event("Tackle completado", null, 1, 22 * 60);
 
         assertDoesNotThrow(() -> validator.validateAssignment(tramo(1, 20, 25), List.of(inactive, otherPeriod, scrum, tackle)));
+    }
+
+    @Test
+    @DisplayName("Un Kick H convertido cierra el tramo")
+    void shouldCutWithConvertedKick() {
+        Event kick = kickAt(true);
+
+        BusinessException error = rejection(tramo(1, 20, 25), List.of(kick));
+
+        assertEquals("El tramo 1T 20'–25' no puede seguir después del Kick H (1T 22:30): terminalo en 23'", error.getMessage());
+    }
+
+    @Test
+    @DisplayName("Un Kick H errado no cierra el tramo")
+    void shouldNotCutWithMissedKick() {
+        assertDoesNotThrow(() -> validator.validateAssignment(tramo(1, 20, 25), List.of(kickAt(false))));
     }
 
     @Test
