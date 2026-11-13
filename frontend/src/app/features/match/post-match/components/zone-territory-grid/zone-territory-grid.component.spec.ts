@@ -57,6 +57,7 @@ describe('ZoneTerritoryGridComponent: puntos de zona', () => {
   });
 
   it('describe el punto para el puntero y los lectores de pantalla', () => {
+    fixture.componentRef.setInput('assignments', [{ id: 'z', matchId: 'm', period: 1, startMinute: 18, endMinute: 23, row: 2, col: 5 }]);
     render([point('a')]);
 
     const [element] = allPoints();
@@ -99,17 +100,29 @@ describe('ZoneTerritoryGridComponent: puntos de zona', () => {
       expect(cutLines().length).toBe(0);
     });
 
-    it('pasar el puntero por el punto muestra su línea resaltada, y al salir la oculta', () => {
+    it('pasar el puntero por el punto resalta el borde del tramo que corta, sin dibujar la línea', () => {
+      fixture.componentRef.setInput('assignments', [
+        { id: 'z', matchId: 'm', period: 1, startMinute: 18, endMinute: 23, row: 2, col: 5 },
+        { id: 'y', matchId: 'm', period: 1, startMinute: 10, endMinute: 18, row: 2, col: 4 }
+      ]);
       render([point('a')], [tryCut]);
+      const edges = (): HTMLElement[] => Array.from(fixture.nativeElement.querySelectorAll('[data-testid="territory-block"].is-cut-edge'));
 
       hover(allPoints()[0]);
-      expect(cutLines().length).toBe(1);
-      expect(cutLines()[0].classList).toContain('is-hot');
+      expect(cutLines().length).toBe(0);
       expect(allPoints()[0].classList).toContain('is-hot');
+      expect(edges().length).toBe(1);
+      expect(edges()[0].getAttribute('aria-label')).toContain('18′ a 23′');
 
       allPoints()[0].dispatchEvent(new Event('mouseleave'));
       fixture.detectChanges();
-      expect(cutLines().length).toBe(0);
+      expect(edges().length).toBe(0);
+    });
+
+    it('sin un tramo que termine en el corte, el tooltip del punto lo dice', () => {
+      render([point('a')], [tryCut]);
+
+      expect(allPoints()[0].getAttribute('title')).toBe('Try 22:30 · D6 · el corte cae al final del minuto 22, pero ningún tramo termina en 23′');
     });
 
     it('con un rango en edición solo se ven los cortes que toca, no los lejanos ni los vecinos', () => {

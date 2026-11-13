@@ -3,7 +3,7 @@ import { ZoneEvent } from './zone-stats';
 import {
   FULL_TRACK, allGaps, blockLabel, blockLayout, isInWindow, trackWindow, countByFranja, gapAtMinute, gapsWithEventCount,
   minuteAtOffset, minuteToPercent, suggestNextRange, territoryRows, zonePoints, describePoint, tramoCuts, crossedCut, findTramoCut,
-  TramoCutMark, ZonePoint, clampToCut, kickoffCell, touchingCuts, clusterMarks, segmentAt
+  TramoCutMark, ZonePoint, clampToCut, kickoffCell, touchingCuts, tramoEndingAt, clusterMarks, segmentAt
 } from './zone-track-layout';
 import { TemplateField, ZoneRule } from '../../types/event-type.types';
 import { RuleEvent, ScoringTypesById, ZoneRulesByType } from './zone-rule';
@@ -321,8 +321,14 @@ describe('zone-track-layout', () => {
       expect(describePoint(point({ row: null, col: 1 }))).toBe('Try 22:30 · In-goal propio (sin lateral) · el tramo incluye todo el minuto 22 y termina en 23′');
     });
 
+    it('sin un tramo que termine en el corte lo dice, sin dejar de explicar el minuto', () => {
+      expect(describePoint(point({ minute: 5 + 11 / 60, cutMinute: 6 }), false))
+        .toBe('Try 05:11 · D6 · el corte cae al final del minuto 5, pero ningún tramo termina en 6′');
+    });
+
     it('un punto que no corta no habla del tramo', () => {
       expect(describePoint(point({ eventTypeName: 'Ingreso', col: 5, row: 2, cutMinute: null }))).toBe('Ingreso 22:30 · C5');
+      expect(describePoint(point({ eventTypeName: 'Ingreso', col: 5, row: 2, cutMinute: null }), false)).toBe('Ingreso 22:30 · C5');
     });
   });
 
@@ -500,6 +506,27 @@ describe('zone-track-layout', () => {
 
       it('los devuelve en orden cronológico', () => {
         expect(minutes({ period: 1, startMinute: 20, endMinute: 30 }, [at(28), at(21)])).toEqual([21, 28]);
+      });
+    });
+
+    describe('tramoEndingAt', () => {
+      it('devuelve el tramo que termina justo en el corte, en cualquier franja', () => {
+        const ending = zone('z', 1, 1, 6, 2, 5);
+
+        expect(tramoEndingAt([zone('y', 1, 6, 10), ending], cut(6))).toBe(ending);
+      });
+
+      it('null si antes del corte hay un hueco', () => {
+        expect(tramoEndingAt([zone('y', 1, 0, 4), zone('x', 1, 6, 10)], cut(6))).toBeNull();
+      });
+
+      it('null si un tramo viejo cruza el corte en vez de terminar en él', () => {
+        expect(tramoEndingAt([zone('y', 1, 0, 10)], cut(6))).toBeNull();
+      });
+
+      it('ignora el tramo del otro tiempo que termina en el mismo minuto', () => {
+        expect(tramoEndingAt([zone('y', 2, 41, 46)], cut(46))).toBeNull();
+        expect(tramoEndingAt([zone('y', 2, 41, 46)], cut(46, 'Try 45:10', 2))?.id).toBe('y');
       });
     });
 
