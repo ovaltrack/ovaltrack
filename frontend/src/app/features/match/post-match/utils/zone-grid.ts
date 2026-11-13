@@ -1,4 +1,4 @@
-import { ZONE_GRID_COLS, ZONE_GRID_ROWS, ZoneCellRef } from '../../types/zone.types';
+import { ZONE_GRID_COLS, ZoneCellRef } from '../../types/zone.types';
 
 /**
  * Geometría de la cancha en metros. Es la única fuente de las proporciones y de los nombres de zona:
@@ -18,7 +18,12 @@ export const ZONE_ROW_NAMES = ['Izquierda', 'Centro', 'Derecha'] as const;
 export const ZONE_ROW_SHORT_NAMES = ['Izq.', 'Centro', 'Der.'] as const;
 export const ZONE_COLUMN_NAMES = ['In-goal propio', '22 propio', 'Campo propio', 'Campo rival', '22 rival', 'In-goal rival'] as const;
 
-const IN_GOAL_COLUMNS = [1, ZONE_GRID_COLS];
+/** Columnas de in-goal (propio y rival): admiten puntos, no tramos nuevos. */
+export const IN_GOAL_COLUMNS: readonly number[] = [1, ZONE_GRID_COLS];
+
+export function isInGoalColumn(col: number): boolean {
+  return IN_GOAL_COLUMNS.includes(col);
+}
 
 /** Etiqueta fija de una zona: letra de fila + número de columna (I1 … D6). */
 export function zoneLabel(cell: ZoneCellRef): string {
@@ -33,7 +38,7 @@ export function rowRangeLabel(row: number): string {
 
 /** Rango en metros de la columna desde la línea de gol propia (0–100 m); vacío para los in-goals. */
 export function columnRangeLabel(col: number): string {
-  if (IN_GOAL_COLUMNS.includes(col)) return '';
+  if (isInGoalColumn(col)) return '';
   const start = ZONE_COLUMN_METERS.slice(1, col - 1).reduce((sum, m) => sum + m, 0);
   return `${start}–${start + ZONE_COLUMN_METERS[col - 1]} m`;
 }
@@ -53,16 +58,15 @@ export function describeZone(cell: ZoneCellRef): string {
   ].join(' · ');
 }
 
-/** Todas las celdas de la grilla, fila por fila. */
-export function allZoneCells(): ZoneCellRef[] {
-  const cells: ZoneCellRef[] = [];
-  for (let row = 1; row <= ZONE_GRID_ROWS; row++) {
-    for (let col = 1; col <= ZONE_GRID_COLS; col++) {
-      cells.push({ row, col });
-    }
-  }
-  return cells;
+/** Qué cuenta una celda: jugadas (Eventos) o minutos cubiertos por los tramos (Minutos). */
+export type ZoneCountUnit = 'events' | 'minutes';
+
+/** Cantidad con su unidad para lecturas y lectores de pantalla, ej. "1 evento", "12 eventos", "35 min". */
+export function describeCount(count: number, unit: ZoneCountUnit): string {
+  if (unit === 'minutes') return `${count} min`;
+  return count === 1 ? '1 evento' : `${count} eventos`;
 }
+
 
 /** Conteo para la burbuja de la celda: desde 1000 se abrevia ("1k") para que no se salga de la píldora. */
 export function formatEventCount(count: number): string {

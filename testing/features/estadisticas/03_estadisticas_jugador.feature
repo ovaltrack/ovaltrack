@@ -38,10 +38,13 @@ Característica: Estadísticas de un jugador
       | turnoversWon        | 0       | 0       | EQUAL     |
 
   Escenario: Los eventos del jugador se ubican en la zona del tramo asignado
-    Dado que el partido tiene asignada la zona fila 1 columna 5 en el periodo 1 entre el minuto 0 y el minuto 40
+    # El Try de los antecedentes (5:00) cierra el tramo: el primero termina en el 6′
+    Dado que el partido tiene asignada la zona fila 1 columna 5 en el periodo 1 entre el minuto 0 y el minuto 6
+    Y que el partido tiene asignada la zona fila 1 columna 5 en el periodo 1 entre el minuto 6 y el minuto 40
     Cuando consulta las estadísticas de "Blue Album" en el partido
     Entonces el sistema responde con 200
-    Y el mapa de zonas del jugador tiene 3 eventos en la celda fila 1 columna 5
+    Y el mapa de zonas del jugador tiene 2 eventos en la celda fila 1 columna 5
+    Y el mapa de zonas del jugador tiene 1 eventos en la celda fila 1 columna 6
     Y el mapa de zonas del jugador tiene 2 eventos sin zona
 
   Escenario: El entrenador ve las estadísticas generales del jugador en la temporada

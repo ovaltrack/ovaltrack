@@ -1,4 +1,5 @@
 import { EventZoneLink, describeEventZone, resolveEventZoneLink, zoneForEvent } from './zone-event-link';
+import { ZoneRule } from '../../types/event-type.types';
 import { ZoneAssignmentResponse } from '../../types/zone.types';
 
 describe('zone-event-link', () => {
@@ -124,6 +125,48 @@ describe('zone-event-link', () => {
     it('devuelve null sin tramo en ese minuto o sin tiempo válido', () => {
       expect(zoneForEvent(event(2, 55), [segment('a', 1, 0, 40)])).toBeNull();
       expect(zoneForEvent({ period: 0, matchTime: 600 }, [segment('a', 1, 0, 40)])).toBeNull();
+    });
+  });
+
+  describe('zoneForEvent con la regla del tipo', () => {
+    const TRY: ZoneRule = { columns: [6], rowFrom: 'zone' };
+    const FIELD_PLAY: ZoneRule = { columns: [2, 3, 4, 5] };
+    const timed = (minutes: number, teamPossession: 'OWN' | 'OPPONENT' | 'NEUTRAL' = 'OWN', attributes: Record<string, unknown> = {}) =>
+      ({ period: 1, matchTime: minutes * 60, teamPossession, attributes });
+
+    it('sin regla devuelve la celda del tramo, como siempre', () => {
+      expect(zoneForEvent(timed(22), [segment('a', 1, 20, 25, 2, 5)])).toEqual({ row: 2, col: 5 });
+      expect(zoneForEvent(timed(22), [segment('a', 1, 20, 25, 2, 5)], null)).toEqual({ row: 2, col: 5 });
+    });
+
+    it('una zona fija ignora el tramo', () => {
+      expect(zoneForEvent(timed(22, 'OWN', { zone: 'right' }), [segment('a', 1, 20, 25, 2, 5)], TRY)).toEqual({ row: 3, col: 6 });
+    });
+
+    it('una zona fija existe aunque no haya tramos', () => {
+      expect(zoneForEvent(timed(30, 'OWN', { zone: 'left' }), [], TRY)).toEqual({ row: 1, col: 6 });
+    });
+
+    it('un try del rival se espeja', () => {
+      expect(zoneForEvent(timed(22, 'OPPONENT', { zone: 'left' }), [segment('a', 1, 20, 25, 2, 5)], TRY)).toEqual({ row: 3, col: 1 });
+    });
+
+    it('una celda de tramo prohibida para el tipo deja el evento sin zona', () => {
+      expect(zoneForEvent(timed(22), [segment('a', 1, 20, 25, 2, 6)], FIELD_PLAY)).toBeNull();
+    });
+
+    it('una celda de tramo permitida se conserva', () => {
+      expect(zoneForEvent(timed(22), [segment('a', 1, 20, 25, 2, 4)], FIELD_PLAY)).toEqual({ row: 2, col: 4 });
+    });
+  });
+
+  describe('describeEventZone con zona fija', () => {
+    it('aclara que la zona sale del tipo de evento y no de un tramo', () => {
+      expect(describeEventZone({ row: 3, col: 6 }, null, true)).toBe('D6 · Derecha · In-goal rival · zona fija por el tipo');
+    });
+
+    it('sin zona fija el texto no cambia', () => {
+      expect(describeEventZone({ row: 3, col: 6 }, null, false)).toBe('D6 · Derecha · In-goal rival');
     });
   });
 

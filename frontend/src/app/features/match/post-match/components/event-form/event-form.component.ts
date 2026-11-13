@@ -8,6 +8,8 @@ import { TemplateField } from '../../../types/event-type.types';
 import { EventPrefillHints } from '../../utils/event-prefill';
 import { toMatchTimeSeconds, validateEventTime } from '../../utils/event-time';
 import { formatTimeSeconds } from '../../utils/match-review.utils';
+import { ZONE_COLUMN_NAMES, zoneLabel } from '../../utils/zone-grid';
+import { isFixedZone, placeEventZone } from '../../utils/zone-rule';
 
 export interface EventFormData {
   /** Evento que se edita; sin id (alta) el formulario siempre toma los datos que recibe. */
@@ -102,6 +104,19 @@ export class EventFormComponent {
     if (!typeId) return [];
     const type = this.store.eventTypesList().find(t => t.id === typeId);
     return type?.templateEventFields || [];
+  });
+
+  private readonly zoneRule = computed(() => this.store.zoneRulesByType().get(this.eventTypeId()) ?? null);
+
+  /** Atributo que fija la fila de la zona (ej. el lado del apoyo): la línea de ubicación va debajo de ese campo. */
+  readonly placementFieldKey = computed<string | null>(() => this.zoneRule()?.rowFrom ?? null);
+
+  /** Dónde se ubica la jugada cuando su tipo fija la zona sin depender de un tramo (ej. "Se ubica en D6 · In-goal rival"). */
+  readonly fixedPlacement = computed<string | null>(() => {
+    const rule = this.zoneRule();
+    const attributes = this.attributes();
+    const cell = isFixedZone(rule, attributes) ? placeEventZone(rule, this.teamPossession(), attributes, null) : null;
+    return cell ? `Se ubica en ${zoneLabel(cell)} · ${ZONE_COLUMN_NAMES[cell.col - 1]}` : null;
   });
 
   private emitChange(): void {

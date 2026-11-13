@@ -1,0 +1,36 @@
+:host { display: block; width: 100%; min-width: 0; }
+
+.cell-detail {
+  display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; box-sizing: border-box;
+  border: 1px solid var(--border-sport-subtle); border-radius: var(--radius-md); background: var(--surface);
+}
+
+.detail-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.detail-title { margin: 0; font: 700 13px var(--font-head); color: var(--text-primary); }
+.detail-close, .detail-action {
+  min-height: 32px; padding: 0 12px; border: 1px solid var(--btn-outline-border); border-radius: 9999px;
+  background: var(--btn-outline-bg); color: var(--btn-outline-fg); font: 600 12px var(--font-body); cursor: pointer;
+}
+.detail-close:hover, .detail-action:hover { background: var(--surface-alt); }
+.detail-action--quiet { border-color: transparent; background: transparent; color: var(--text-secondary); text-decoration: underline; }
+
+.detail-empty { margin: 0; font-size: 12.5px; color: var(--text-secondary); }
+/* Resumen de las jugadas en huecos: una línea con el enlace a «Huecos sin zona» */
+.detail-gaps { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-secondary); }
+
+/* Con muchas jugadas la lista scrollea por dentro: el costado de la cancha no crece sin límite */
+.detail-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }
+.detail-item { padding: 6px 0; border-bottom: 1px solid var(--border); }
+.detail-item:last-child { border-bottom: 0; }
+.detail-item--row { font: 600 12px var(--font-mono); color: var(--text-primary); }
+.item-line { margin: 0; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.item-clock { font: 600 11.5px var(--font-mono); color: var(--text-secondary); }
+.item-type { font-size: 12.5px; color: var(--text-primary); }
+.item-team { font-size: 11.5px; color: var(--text-muted); }
+.item-reason { margin: 2px 0 0; font-size: 12px; line-height: 1.35; color: var(--text-secondary); }
+.item-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+
+/* En táctil los botones llegan al alto mínimo de toque */
+@media (pointer: coarse) {
+  .detail-close, .detail-action { min-height: 44px; }
+}

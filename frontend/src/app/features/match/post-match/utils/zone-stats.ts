@@ -56,7 +56,10 @@ export function describeSegment(a: ZoneAssignmentResponse): string {
 
 export type ZonePeriodFilter = 'ALL' | ZonePeriod;
 
-export type ZoneEvent = Pick<MatchTimelineEventResponse, 'id' | 'period' | 'matchTime' | 'zone'>;
+export type ZoneEvent = Pick<MatchTimelineEventResponse, 'id' | 'period' | 'matchTime' | 'zone'> & {
+  /** Su zona (fila y columna) la da el propio evento: ningún cambio de tramos se la da ni se la quita. */
+  zonePoint?: boolean;
+};
 
 const SECONDS_PER_MINUTE = 60;
 
@@ -103,11 +106,19 @@ export function eventsInRange<T extends ZoneEvent>(range: RangeLike, events: T[]
   });
 }
 
+/** Eventos del rango cuya zona depende de un tramo: los puntos ya tienen la suya por la regla del tipo. */
+export function eventsLinkedByRange<T extends ZoneEvent>(range: RangeLike, events: T[]): T[] {
+  return eventsInRange(range, events.filter(event => !event.zonePoint));
+}
+
 /** Eventos que hoy tienen zona gracias al rango anterior y la perderían con el nuevo. */
 export function eventsReleasedByEdit<T extends ZoneEvent>(previous: RangeLike, next: RangeLike, events: T[]): T[] {
-  const stillLinked = new Set(eventsInRange(next, events).map(event => event.id));
-  return eventsInRange(previous, events).filter(event => !stillLinked.has(event.id));
+  const stillLinked = new Set(eventsLinkedByRange(next, events).map(event => event.id));
+  return eventsLinkedByRange(previous, events).filter(event => !stillLinked.has(event.id));
 }
+
+/** Qué cuenta la cancha: jugadas por zona (Eventos) o minutos cubiertos por los tramos (Minutos). */
+export type ZoneMapMode = 'EVENTS' | 'MINUTES';
 
 /** Filtros de eventos: tipo y posesión. 'ALL' no filtra. */
 export interface ZoneEventFilters {
@@ -117,6 +128,16 @@ export interface ZoneEventFilters {
 
 export const NO_ZONE_EVENT_FILTERS: ZoneEventFilters = { eventTypeId: 'ALL', possession: 'ALL' };
 
+/** Filtros que rigen según el modo: en Minutos no aplican (los tramos no tienen tipo ni posesión). */
+export function eventFiltersFor(mode: ZoneMapMode, eventTypeId: string | 'ALL', possession: Possession | 'ALL'): ZoneEventFilters {
+  return mode === 'EVENTS' ? { eventTypeId, possession } : NO_ZONE_EVENT_FILTERS;
+}
+
+/** El tipo elegido solo vale si el partido lo tiene (un valor recordado puede haber quedado viejo); si no, "ALL". */
+export function validTypeFilter(eventTypeId: string | 'ALL', options: EventTypeOption[]): string | 'ALL' {
+  return options.some(option => option.id === eventTypeId) ? eventTypeId : 'ALL';
+}
+
 type FilterableEvent = Pick<MatchTimelineEventResponse, 'eventTypeId' | 'teamPossession'>;
 
 export function filterEvents<T extends FilterableEvent>(events: T[], filters: ZoneEventFilters): T[] {
@@ -124,6 +145,37 @@ export function filterEvents<T extends FilterableEvent>(events: T[], filters: Zo
     (filters.eventTypeId === 'ALL' || event.eventTypeId === filters.eventTypeId) &&
     (filters.possession === 'ALL' || event.teamPossession === filters.possession)
   );
+}
+
+/** Minutos de partido que cubren los tramos en una celda. */
+export interface ZoneCellMinutes {
+  row: number;
+  col: number;
+  minutes: number;
+}
+
+/** Minutos cubiertos por los tramos en cada celda, dentro del tiempo elegido; solo informa las celdas con tramos. */
+export function minutesByCell(assignments: ZoneAssignmentResponse[], filter: ZonePeriodFilter): ZoneCellMinutes[] {
+  const totals = new Map<string, ZoneCellMinutes>();
+  for (const assignment of assignments.filter(a => filter === 'ALL' || a.period === filter)) {
+    const key = `${assignment.row}-${assignment.col}`;
+    const entry = totals.get(key) ?? { row: assignment.row, col: assignment.col, minutes: 0 };
+    entry.minutes += assignment.endMinute - assignment.startMinute;
+    totals.set(key, entry);
+  }
+  return [...totals.values()].sort((a, b) => a.row - b.row || a.col - b.col);
+}
+
+/** Tipo de evento presente en el partido, para las opciones del filtro. */
+export interface EventTypeOption {
+  id: string;
+  name: string;
+}
+
+/** Tipos que aparecen en los eventos, sin repetir y por nombre. */
+export function eventTypeOptions(events: Pick<MatchTimelineEventResponse, 'eventTypeId' | 'eventTypeName'>[]): EventTypeOption[] {
+  const names = new Map(events.map(event => [event.eventTypeId, event.eventTypeName]));
+  return [...names].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name, 'es'));
 }
 
 /** Minutos de un tiempo que ya tienen un tramo asignado (0–40). */
@@ -138,4 +190,12 @@ export function coverageMinutes(assignments: RangeLike[], period: ZonePeriod): n
 export function zoneCoveragePercent(assignments: RangeLike[]): number {
   const covered = coverageMinutes(assignments, 1) + coverageMinutes(assignments, 2);
   return Math.round((covered / (ZONE_HALF_MINUTES * 2)) * 100);
+}
+
+/** Tramo que contiene el minuto del evento (rango [inicio, fin), con el tiempo añadido en el último segundo); null si cae en un hueco. */
+export function tramoAtEvent(event: Pick<ZoneEvent, 'period' | 'matchTime'>, assignments: ZoneAssignmentResponse[]): ZoneAssignmentResponse | null {
+  const period = event.period as ZonePeriod;
+  const seconds = effectiveMatchTime(period, event.matchTime);
+  return assignments.find(a =>
+    a.period === period && a.startMinute * SECONDS_PER_MINUTE <= seconds && seconds < a.endMinute * SECONDS_PER_MINUTE) ?? null;
 }

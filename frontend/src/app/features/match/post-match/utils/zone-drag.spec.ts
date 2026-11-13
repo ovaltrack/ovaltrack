@@ -125,4 +125,34 @@ describe('zone-drag', () => {
         range: { period: 2, startMinute: 40, endMinute: 60 }, notice: 'tope: entretiempo' });
     });
   });
+
+  describe('cortes por try', () => {
+    const tryCut = { period: 1 as const, minute: 23, label: 'Try 22:30' };
+
+    it('crear arrastrando frena en el corte hacia adelante y lo nombra', () => {
+      expect(dragNewRange([], 1, 20, 30, [tryCut])).toEqual({ range: { period: 1, startMinute: 20, endMinute: 23 }, notice: 'tope: Try 22:30' });
+    });
+
+    it('crear arrastrando hacia atrás frena en el corte', () => {
+      expect(dragNewRange([], 1, 28, 15, [tryCut])).toEqual({ range: { period: 1, startMinute: 23, endMinute: 28 }, notice: 'tope: Try 22:30' });
+    });
+
+    it('un corte de otro tiempo no frena', () => {
+      expect(dragNewRange([], 2, 50, 60, [tryCut]).notice).toBeNull();
+    });
+
+    it('estirar el fin de un tramo frena en el corte', () => {
+      const segment = { id: 's', period: 1 as const, startMinute: 20, endMinute: 22, row: 2, col: 5 };
+
+      expect(resizeRange([segment], segment, 'end', 30, [tryCut]))
+        .toEqual({ range: { period: 1, startMinute: 20, endMinute: 23 }, notice: 'tope: Try 22:30' });
+    });
+
+    it('estirar el inicio de un tramo frena en el corte', () => {
+      const segment = { id: 's', period: 1 as const, startMinute: 25, endMinute: 30, row: 2, col: 3 };
+
+      expect(resizeRange([segment], segment, 'start', 15, [tryCut]))
+        .toEqual({ range: { period: 1, startMinute: 23, endMinute: 30 }, notice: 'tope: Try 22:30' });
+    });
+  });
 });

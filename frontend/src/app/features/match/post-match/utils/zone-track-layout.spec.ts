@@ -1,9 +1,12 @@
 import { ZoneAssignmentResponse } from '../../types/zone.types';
 import { ZoneEvent } from './zone-stats';
 import {
-  FULL_TRACK, allGaps, blockLabel, blockLayout, isInWindow, trackWindow, countByFranja, gapAtMinute, gapsWithEventCount, isShortBlock,
-  minuteAtOffset, minuteToPercent, suggestNextRange, territoryRows
+  FULL_TRACK, allGaps, blockLabel, blockLayout, isInWindow, trackWindow, countByFranja, gapAtMinute, gapsWithEventCount,
+  minuteAtOffset, minuteToPercent, suggestNextRange, territoryRows, zonePoints, describePoint, tramoCuts, crossedCut, findTramoCut,
+  TramoCutMark, ZonePoint, clampToCut, kickoffCell, touchingCuts, tramoEndingAt, cutReach, predictTramoTrim, describeTramoTrim, clusterMarks, segmentAt
 } from './zone-track-layout';
+import { TemplateField, ZoneRule } from '../../types/event-type.types';
+import { RuleEvent, ScoringTypesById, ZoneRulesByType } from './zone-rule';
 
 describe('zone-track-layout', () => {
   const zone = (id: string, period: 1 | 2, startMinute: number, endMinute: number, row = 2, col = 3): ZoneAssignmentResponse =>
@@ -53,28 +56,17 @@ describe('zone-track-layout', () => {
     });
   });
 
-  describe('bloques cortos', () => {
-    it('de 1 o 2 minutos son cortos; de 3 o más, no', () => {
-      expect(isShortBlock({ startMinute: 10, endMinute: 11 })).toBeTrue();
-      expect(isShortBlock({ startMinute: 10, endMinute: 12 })).toBeTrue();
-      expect(isShortBlock({ startMinute: 10, endMinute: 13 })).toBeFalse();
-    });
-
-    it('la etiqueta es la celda completa, o solo la letra del lateral si es corto', () => {
-      expect(blockLabel(zone('a', 1, 10, 25, 3, 5))).toBe('D5');
+  describe('etiqueta del bloque', () => {
+    it('es siempre la letra del lateral, sea largo o corto: la fila de la grilla ya dice la franja', () => {
+      expect(blockLabel(zone('a', 1, 10, 25, 3, 5))).toBe('D');
       expect(blockLabel(zone('b', 1, 10, 11, 3, 5))).toBe('D');
       expect(blockLabel(zone('c', 1, 10, 12, 1, 2))).toBe('I');
+      expect(blockLabel(zone('d', 1, 10, 40, 2, 4))).toBe('C');
     });
-  });
 
-  describe('etiqueta en pantalla angosta', () => {
-    it('los bloques de menos de 4 minutos no llevan etiqueta; los de 4 o más, la celda', () => {
+    it('en pantalla angosta los bloques de menos de 4 minutos no llevan etiqueta; los de 4 o más, la letra', () => {
       expect(blockLabel(zone('a', 1, 10, 13), true)).toBe('');
-      expect(blockLabel(zone('b', 1, 10, 14), true)).toBe('C3');
-    });
-
-    it('en pantalla ancha no cambia: el corto muestra la letra del lateral', () => {
-      expect(blockLabel(zone('a', 1, 10, 12))).toBe('C');
+      expect(blockLabel(zone('b', 1, 10, 14), true)).toBe('C');
     });
   });
 
@@ -85,6 +77,10 @@ describe('zone-track-layout', () => {
       expect(rows.map(r => r.col)).toEqual([6, 5, 4, 3, 2, 1]);
       expect(rows[0].name).toBe('In-goal rival');
       expect(rows[5].name).toBe('In-goal propio');
+    });
+
+    it('solo las franjas de in-goal son carriles de puntos', () => {
+      expect(territoryRows().map(r => r.inGoal)).toEqual([true, false, false, false, false, true]);
     });
 
     it('informa los metros de cada franja y "in-goal" para los extremos', () => {
@@ -162,6 +158,108 @@ describe('zone-track-layout', () => {
     });
   });
 
+  describe('gapsWithEventCount con zonas fijas', () => {
+    it('un evento de zona fija dentro de un hueco no cuenta: ya tiene zona', () => {
+      const assignments = [zone('a', 1, 10, 25)];
+      const events = [ev('sin', 1, 5, null), ev('fija', 1, 30, { row: 2, col: 6 })];
+
+      expect(gapsWithEventCount(assignments, events).map(g => g.eventCount)).toEqual([1, 0, 0]);
+    });
+  });
+
+  describe('gapsWithEventCount con puntos sin fila', () => {
+    it('un try sin lado todavía no tiene zona: cuenta en el hueco hasta que un tramo le dé la fila', () => {
+      const events = [ev('try', 1, 30, null), ev('con-tramo', 1, 12, { row: 1, col: 6 })];
+
+      expect(gapsWithEventCount([zone('a', 1, 10, 25)], events).map(g => g.eventCount)).toEqual([0, 1, 0]);
+    });
+  });
+
+  describe('zonePoints', () => {
+    const TRY: ZoneRule = { columns: [6], rowFrom: 'zone', closesTramo: true };
+    const TRY_PENALTY: ZoneRule = { columns: [6], rows: [2], closesTramo: true };
+    const KICK: ZoneRule = { columns: [2, 3, 4, 5], rowFrom: 'zone', closesTramo: true };
+    const rules: ZoneRulesByType = new Map<string, ZoneRule | null>([
+      ['try', TRY], ['penaltyTry', TRY_PENALTY], ['kick', KICK], ['scrum', { columns: [2, 3, 4, 5] }], ['tackle', null]
+    ]);
+    const rev = (id: string, typeId: string, period: 1 | 2, seconds: number, extra: Partial<RuleEvent> = {}): RuleEvent =>
+      ({ id, eventTypeId: typeId, eventTypeName: typeId, period, matchTime: seconds, teamPossession: 'OWN', attributes: {}, ...extra });
+    const tryAt = (id: string, period: 1 | 2, seconds: number, zoneAttr: string, extra: Partial<RuleEvent> = {}) =>
+      rev(id, 'try', period, seconds, { attributes: { zone: zoneAttr }, ...extra });
+
+    it('ubica el try en su celda y su minuto con decimales (22:30 -> 22,5), con el corte en el minuto siguiente', () => {
+      const [point] = zonePoints([tryAt('a', 1, 22 * 60 + 30, 'right')], rules, 'ALL');
+
+      expect(point).toEqual({ eventId: 'a', eventTypeName: 'try', period: 1, col: 6, row: 3, minute: 22.5, cutMinute: 23 });
+    });
+
+    it('un try del rival se ubica espejado', () => {
+      const [point] = zonePoints([tryAt('a', 1, 600, 'left', { teamPossession: 'OPPONENT' })], rules, 'ALL');
+
+      expect([point.col, point.row]).toEqual([1, 3]);
+    });
+
+    it('un try sin el atributo de lado también es un punto: tiene columna y la fila queda sin conocer', () => {
+      const [point] = zonePoints([rev('a', 'try', 1, 600)], rules, 'ALL');
+
+      expect([point.col, point.row]).toEqual([6, null]);
+    });
+
+    it('un try sin lado del rival va a la columna 1 sin fila', () => {
+      const [point] = zonePoints([rev('a', 'try', 1, 600, { teamPossession: 'OPPONENT' })], rules, 'ALL');
+
+      expect([point.col, point.row]).toEqual([1, null]);
+    });
+
+    it('el try penal trae la fila de la regla', () => {
+      const [point] = zonePoints([rev('a', 'penaltyTry', 2, 50 * 60)], rules, 'ALL');
+
+      expect(point).toEqual({ eventId: 'a', eventTypeName: 'penaltyTry', period: 2, col: 6, row: 2, minute: 50, cutMinute: 51 });
+    });
+
+    it('un tipo de columna fija que no corta es un punto sin corte', () => {
+      const fixedNoCut: ZoneRulesByType = new Map<string, ZoneRule | null>([['entry', { columns: [5], rows: [2] }]]);
+
+      expect(zonePoints([rev('a', 'entry', 1, 600)], fixedNoCut, 'ALL').map(p => p.cutMinute)).toEqual([null]);
+    });
+
+    it('solo son puntos los eventos de columna única: no los tipos de varias columnas ni sin regla', () => {
+      const events = [
+        rev('s', 'scrum', 1, 600), rev('t', 'tackle', 1, 600), rev('u', 'desconocido', 1, 600),
+        rev('k', 'kick', 1, 700, { attributes: { zone: 'left' } }), tryAt('a', 1, 800, 'left')
+      ];
+
+      expect(zonePoints(events, rules, 'ALL').map(p => p.eventId)).toEqual(['a']);
+    });
+
+    it('respeta el filtro de tiempo e ignora los eventos con un tiempo inválido', () => {
+      const events = [tryAt('a', 1, 600, 'left'), tryAt('b', 2, 3000, 'left'), { ...tryAt('c', 1, 900, 'left'), period: 3 }];
+
+      expect(zonePoints(events, rules, 1).map(p => p.eventId)).toEqual(['a']);
+      expect(zonePoints(events, rules, 2).map(p => p.eventId)).toEqual(['b']);
+      expect(zonePoints(events, rules, 'ALL').map(p => p.eventId)).toEqual(['a', 'b']);
+    });
+
+    it('ordena cronológicamente y deja el tiempo añadido en el último segundo del tiempo, con el corte en el 40', () => {
+      const events = [tryAt('late', 1, 43 * 60, 'left'), tryAt('early', 1, 5 * 60, 'left')];
+      const points = zonePoints(events, rules, 'ALL');
+
+      expect(points.map(p => p.eventId)).toEqual(['early', 'late']);
+      expect(points[1].minute).toBeCloseTo(40 - 1 / 60, 5);
+      expect(points[1].cutMinute).toBe(40);
+    });
+
+    it('el corte del punto coincide con el de tramoCuts para el mismo evento', () => {
+      const events = [tryAt('a', 1, 22 * 60 + 30, 'left'), tryAt('b', 1, 43 * 60, 'left'), tryAt('c', 2, 50 * 60, 'left')];
+
+      expect(zonePoints(events, rules, 'ALL').map(p => p.cutMinute)).toEqual(tramoCuts(events, rules, new Map(), 'ALL').map(cut => cut.minute));
+    });
+
+    it('sin eventos no hay puntos', () => {
+      expect(zonePoints([], rules, 'ALL')).toEqual([]);
+    });
+  });
+
   describe('suggestNextRange', () => {
     const assignments = [zone('a', 1, 0, 5), zone('b', 1, 10, 25)];
 
@@ -198,6 +296,357 @@ describe('zone-track-layout', () => {
 
     it('si afterMinute cae dentro de un hueco, salta al siguiente hueco que arranca desde ahí', () => {
       expect(suggestNextRange(assignments, 7)).toEqual({ start: 25, end: 30 });
+    });
+  });
+
+  describe('describePoint', () => {
+    const point = (extra: Partial<ZonePoint> = {}): ZonePoint =>
+      ({ eventId: 'a', eventTypeName: 'Try', period: 1, col: 6, row: 3, minute: 22.5, cutMinute: 23, ...extra });
+
+    it('describe el tipo, el reloj, la celda y hasta qué segundo llega el tramo', () => {
+      expect(describePoint(point())).toBe('Try 22:30 · D6 · el tramo llega hasta 22:59 (termina en 23′)');
+    });
+
+    it('un try a las 5:11 dice que su tramo llega hasta 5:59, con el 6′ como dato secundario', () => {
+      expect(describePoint(point({ minute: 5 + 11 / 60, cutMinute: 6 }))).toBe('Try 05:11 · D6 · el tramo llega hasta 05:59 (termina en 6′)');
+    });
+
+    it('rellena con cero y el tiempo añadido queda en el último segundo del tiempo', () => {
+      expect(describePoint(point({ minute: 5, cutMinute: 6 }))).toBe('Try 05:00 · D6 · el tramo llega hasta 05:59 (termina en 6′)');
+      expect(describePoint(point({ minute: 40 - 1 / 60, cutMinute: 40 }))).toBe('Try 39:59 · D6 · el tramo llega hasta 39:59 (termina en 40′)');
+    });
+
+    it('sin fila conocida nombra la franja y aclara que falta el lateral', () => {
+      expect(describePoint(point({ row: null }))).toBe('Try 22:30 · In-goal rival (sin lateral) · el tramo llega hasta 22:59 (termina en 23′)');
+      expect(describePoint(point({ row: null, col: 1 }))).toBe('Try 22:30 · In-goal propio (sin lateral) · el tramo llega hasta 22:59 (termina en 23′)');
+    });
+
+    it('sin un tramo que termine en el corte lo dice, sin dejar de explicar el minuto', () => {
+      expect(describePoint(point({ minute: 5 + 11 / 60, cutMinute: 6 }), false))
+        .toBe('Try 05:11 · D6 · ningún tramo llega hasta 05:59 (terminaría en 6′)');
+    });
+
+    it('un punto que no corta no habla del tramo', () => {
+      expect(describePoint(point({ eventTypeName: 'Ingreso', col: 5, row: 2, cutMinute: null }))).toBe('Ingreso 22:30 · C5');
+      expect(describePoint(point({ eventTypeName: 'Ingreso', col: 5, row: 2, cutMinute: null }), false)).toBe('Ingreso 22:30 · C5');
+    });
+  });
+
+  describe('cortes por try', () => {
+    const TRY: ZoneRule = { columns: [6], rowFrom: 'zone', closesTramo: true };
+    const KICK: ZoneRule = { columns: [2, 3, 4, 5], rowFrom: 'zone', closesTramo: true };
+    const rules: ZoneRulesByType = new Map<string, ZoneRule | null>([
+      ['try', TRY], ['kick', KICK], ['scrum', { columns: [2, 3, 4, 5] }], ['tackle', null]
+    ]);
+    /** Campo «Resultado» del Kick H y el drop: si vale false el tanteo no suma y no reinicia el juego. */
+    const RESULT: TemplateField = { key: 'wasSuccessful', label: 'Resultado', type: 'boolean', phase: 'live', required: true, effects: ['scoring'] };
+    const types: ScoringTypesById = new Map([
+      ['try', { isScoring: true, templateEventFields: [], code: 'TRY' }],
+      ['kick', { isScoring: true, templateEventFields: [RESULT], code: 'PENALTY_KICK' }],
+      ['scrum', { isScoring: false, templateEventFields: [] }],
+      ['tackle', { isScoring: false, templateEventFields: [] }]
+    ]);
+    const rev = (id: string, typeId: string, name: string, period: number, seconds: number, extra: Partial<RuleEvent> = {}): RuleEvent =>
+      ({ id, eventTypeId: typeId, eventTypeName: name, period, matchTime: seconds, teamPossession: 'OWN', attributes: {}, ...extra });
+    const tryAt = (id: string, period: number, seconds: number, extra: Partial<RuleEvent> = {}) => rev(id, 'try', 'Try', period, seconds, extra);
+    const kickAt = (id: string, seconds: number, wasSuccessful: boolean | undefined) =>
+      rev(id, 'kick', 'Kick H (Penal a palos)', 1, seconds, { attributes: wasSuccessful === undefined ? {} : { wasSuccessful } });
+    const cut = (minute: number, label = 'Try 22:30', period: 1 | 2 = 1, possession: TramoCutMark['possession'] = 'OWN'): TramoCutMark =>
+      ({ eventId: 'x', eventTypeName: 'Try', period, minute, label, possession });
+
+    describe('tramoCuts', () => {
+      it('el try corta en el minuto siguiente al suyo y se describe con su reloj', () => {
+        expect(tramoCuts([tryAt('a', 1, 22 * 60 + 30)], rules, types, 'ALL'))
+          .toEqual([{ eventId: 'a', eventTypeName: 'Try', period: 1, minute: 23, label: 'Try 22:30', possession: 'OWN' }]);
+      });
+
+      it('cortan los tipos que lo declaran, también del rival; no los demás', () => {
+        const events = [
+          tryAt('rival', 1, 600, { teamPossession: 'OPPONENT' }),
+          rev('kick', 'kick', 'Kick H (Penal a palos)', 1, 900),
+          rev('scrum', 'scrum', 'Scrum', 1, 700),
+          rev('tackle', 'tackle', 'Tackle completado', 1, 800),
+          rev('otro', 'desconocido', 'Otro', 1, 850)
+        ];
+
+        expect(tramoCuts(events, rules, types, 'ALL').map(c => c.eventId)).toEqual(['rival', 'kick']);
+      });
+
+      it('el tiempo añadido corta en el final del tiempo y conserva su reloj', () => {
+        const [mark] = tramoCuts([tryAt('a', 1, 43 * 60)], rules, types, 'ALL');
+
+        expect([mark.minute, mark.label]).toEqual([40, 'Try 43:00']);
+      });
+
+      it('ordena cronológicamente, respeta el filtro de tiempo e ignora eventos sin tiempo válido', () => {
+        const events = [tryAt('b', 2, 50 * 60), tryAt('a', 1, 5 * 60), tryAt('sin', 3, 600)];
+
+        expect(tramoCuts(events, rules, types, 'ALL').map(c => c.eventId)).toEqual(['a', 'b']);
+        expect(tramoCuts(events, rules, types, 2).map(c => c.eventId)).toEqual(['b']);
+      });
+
+      it('un Kick H o un drop convertidos cortan; errados no', () => {
+        const events = [kickAt('convertido', 600, true), kickAt('errado', 900, false)];
+
+        expect(tramoCuts(events, rules, types, 'ALL').map(c => c.eventId)).toEqual(['convertido']);
+      });
+
+      it('un Kick H sin el resultado cargado todavía cuenta como tanteo, igual que el marcador', () => {
+        expect(tramoCuts([kickAt('a', 600, undefined)], rules, types, 'ALL').map(c => c.eventId)).toEqual(['a']);
+      });
+
+      it('un tipo ausente del catálogo cuenta como tanteo: se conserva el corte que declara su regla', () => {
+        expect(tramoCuts([tryAt('a', 1, 600)], rules, new Map(), 'ALL').map(c => c.eventId)).toEqual(['a']);
+      });
+
+      it('guarda quién ejecutó el tanteo', () => {
+        expect(tramoCuts([tryAt('rival', 1, 600, { teamPossession: 'OPPONENT' })], rules, types, 'ALL').map(c => c.possession)).toEqual(['OPPONENT']);
+      });
+    });
+
+    describe('crossedCut', () => {
+      it('detecta el corte que queda adentro del rango', () => {
+        expect(crossedCut({ period: 1, startMinute: 20, endMinute: 25 }, [cut(23)])?.minute).toBe(23);
+      });
+
+      it('un rango que termina o empieza en el corte no lo cruza, ni uno de otro tiempo', () => {
+        expect(crossedCut({ period: 1, startMinute: 20, endMinute: 23 }, [cut(23)])).toBeNull();
+        expect(crossedCut({ period: 1, startMinute: 23, endMinute: 30 }, [cut(23)])).toBeNull();
+        expect(crossedCut({ period: 2, startMinute: 40, endMinute: 60 }, [cut(23)])).toBeNull();
+      });
+
+      it('con varios cortes devuelve el primero', () => {
+        expect(crossedCut({ period: 1, startMinute: 20, endMinute: 30 }, [cut(25, 'Try 24:00'), cut(22, 'Try 21:00')])?.label)
+          .toBe('Try 21:00');
+      });
+    });
+
+    describe('findTramoCut', () => {
+      it('arma el mismo mensaje que el 409 del backend', () => {
+        expect(findTramoCut({ period: 1, startMinute: 20, endMinute: 25 }, [tryAt('a', 1, 22 * 60 + 30)], rules, types)?.message)
+          .toBe("El tramo 1T 20'–25' no puede seguir después del Try (1T 22:30): terminalo en 23'");
+      });
+
+      it('en el segundo tiempo usa el tiempo acumulado y el nombre del tipo', () => {
+        const kick = rev('k', 'kick', 'Kick H (Penal a palos)', 2, 65 * 60);
+
+        expect(findTramoCut({ period: 2, startMinute: 60, endMinute: 70 }, [kick], rules, types)?.message)
+          .toBe("El tramo 2T 60'–70' no puede seguir después del Kick H (Penal a palos) (2T 65:00): terminalo en 66'");
+      });
+
+      it('sin corte adentro no hay problema', () => {
+        expect(findTramoCut({ period: 1, startMinute: 20, endMinute: 23 }, [tryAt('a', 1, 22 * 60 + 30)], rules, types)).toBeNull();
+      });
+
+      it('un Kick H errado dentro del rango no es un problema', () => {
+        expect(findTramoCut({ period: 1, startMinute: 20, endMinute: 25 }, [kickAt('a', 22 * 60 + 30, false)], rules, types)).toBeNull();
+      });
+    });
+
+    describe('clampToCut', () => {
+      it('lleva el fin del rango al corte que cruza y dice cuál es', () => {
+        const mark = cut(23);
+
+        expect(clampToCut({ period: 1, startMinute: 20, endMinute: 25 }, [mark])).toEqual({ endMinute: 23, cut: mark });
+      });
+
+      it('un rango que termina en el corte, empieza después de él o es de otro tiempo no se toca', () => {
+        expect(clampToCut({ period: 1, startMinute: 20, endMinute: 23 }, [cut(23)])).toBeNull();
+        expect(clampToCut({ period: 1, startMinute: 23, endMinute: 30 }, [cut(23)])).toBeNull();
+        expect(clampToCut({ period: 2, startMinute: 40, endMinute: 60 }, [cut(23)])).toBeNull();
+      });
+
+      it('con varios cortes adentro lo lleva al primero', () => {
+        expect(clampToCut({ period: 1, startMinute: 20, endMinute: 30 }, [cut(25, 'Try 24:00'), cut(22, 'Try 21:00')])?.endMinute).toBe(22);
+      });
+
+      it('sin cortes no hace nada', () => {
+        expect(clampToCut({ period: 1, startMinute: 0, endMinute: 40 }, [])).toBeNull();
+      });
+    });
+
+    describe('kickoffCell', () => {
+      it('después de un tanteo propio saca el rival y recibimos: campo propio, lateral centro', () => {
+        expect(kickoffCell(cut(23, 'Try 22:30', 1, 'OWN'))).toEqual({ row: 2, col: 3 });
+      });
+
+      it('después de un tanteo del rival sacamos nosotros: campo rival, lateral centro', () => {
+        expect(kickoffCell(cut(23, 'Try 22:30', 1, 'OPPONENT'))).toEqual({ row: 2, col: 4 });
+      });
+
+      it('con posesión neutral no se sabe quién saca y no propone nada', () => {
+        expect(kickoffCell(cut(23, 'Try 22:30', 1, 'NEUTRAL'))).toBeNull();
+      });
+    });
+
+    describe('touchingCuts', () => {
+      const at = (minute: number, period: 1 | 2 = 1): TramoCutMark => cut(minute, `Try ${minute}`, period);
+      const minutes = (range: { period: 1 | 2; startMinute: number; endMinute: number }, cuts: TramoCutMark[]): number[] =>
+        touchingCuts(range, cuts).map(c => c.minute);
+
+      it('no devuelve los cortes lejanos, ni el anterior ni el siguiente al rango', () => {
+        expect(minutes({ period: 1, startMinute: 20, endMinute: 25 }, [at(5), at(12), at(30), at(38)])).toEqual([]);
+      });
+
+      it('un corte justo en el inicio o en el fin del rango lo toca', () => {
+        expect(minutes({ period: 1, startMinute: 20, endMinute: 25 }, [at(20), at(25)])).toEqual([20, 25]);
+      });
+
+      it('incluye los cortes que el rango cruza (tramos viejos que siguen después de un tanto)', () => {
+        expect(minutes({ period: 1, startMinute: 20, endMinute: 30 }, [at(10), at(22), at(26), at(35)])).toEqual([22, 26]);
+      });
+
+      it('ignora los cortes del otro tiempo', () => {
+        expect(minutes({ period: 2, startMinute: 50, endMinute: 60 }, [at(55, 2), at(60, 2), at(23)])).toEqual([55, 60]);
+      });
+
+      it('sin cortes devuelve una lista vacía', () => {
+        expect(minutes({ period: 1, startMinute: 0, endMinute: 5 }, [])).toEqual([]);
+      });
+
+      it('los devuelve en orden cronológico', () => {
+        expect(minutes({ period: 1, startMinute: 20, endMinute: 30 }, [at(28), at(21)])).toEqual([21, 28]);
+      });
+    });
+
+    describe('predictTramoTrim', () => {
+      const tramo = zone('z', 1, 20, 30);
+
+      it('un try dentro de un tramo que sigue después del corte lo recorta en el minuto siguiente', () => {
+        expect(predictTramoTrim(tryAt('a', 1, 22 * 60 + 30), [tramo], rules, types)).toEqual({ tramo, endMinute: 23 });
+      });
+
+      it('si el tramo ya termina en el corte no hay nada que recortar', () => {
+        expect(predictTramoTrim(tryAt('a', 1, 22 * 60 + 30), [zone('z', 1, 20, 23)], rules, types)).toBeNull();
+      });
+
+      it('un Kick H convertido recorta; uno errado no', () => {
+        expect(predictTramoTrim(kickAt('a', 22 * 60, true), [tramo], rules, types)?.endMinute).toBe(23);
+        expect(predictTramoTrim(kickAt('a', 22 * 60, false), [tramo], rules, types)).toBeNull();
+      });
+
+      it('un tipo que no corta, un try en un hueco o en el otro tiempo no recortan nada', () => {
+        expect(predictTramoTrim(rev('a', 'scrum', 'Scrum', 1, 22 * 60), [tramo], rules, types)).toBeNull();
+        expect(predictTramoTrim(tryAt('a', 1, 35 * 60), [tramo], rules, types)).toBeNull();
+        expect(predictTramoTrim(tryAt('a', 2, 62 * 60), [tramo], rules, types)).toBeNull();
+      });
+    });
+
+    describe('describeTramoTrim', () => {
+      it('dice dónde termina ahora el tramo y qué rango quedó como hueco', () => {
+        expect(describeTramoTrim({ tramo: zone('z', 1, 20, 30, 2, 4), endMinute: 23 }))
+          .toBe('El tramo C4 20′–30′ ahora termina en 23′ · 23′–30′ quedó como hueco');
+      });
+    });
+
+    describe('cutReach', () => {
+      it('dice el último segundo que cubre el tramo y deja el minuto de fin entre paréntesis', () => {
+        expect(cutReach(26)).toBe('llega hasta 25:59 (termina en 26′)');
+        expect(cutReach(6)).toBe('llega hasta 05:59 (termina en 6′)');
+      });
+
+      it('en el 2T usa el reloj acumulado del partido', () => {
+        expect(cutReach(66)).toBe('llega hasta 65:59 (termina en 66′)');
+      });
+    });
+
+    describe('tramoEndingAt', () => {
+      it('devuelve el tramo que termina justo en el corte, en cualquier franja', () => {
+        const ending = zone('z', 1, 1, 6, 2, 5);
+
+        expect(tramoEndingAt([zone('y', 1, 6, 10), ending], cut(6))).toBe(ending);
+      });
+
+      it('null si antes del corte hay un hueco', () => {
+        expect(tramoEndingAt([zone('y', 1, 0, 4), zone('x', 1, 6, 10)], cut(6))).toBeNull();
+      });
+
+      it('null si un tramo viejo cruza el corte en vez de terminar en él', () => {
+        expect(tramoEndingAt([zone('y', 1, 0, 10)], cut(6))).toBeNull();
+      });
+
+      it('ignora el tramo del otro tiempo que termina en el mismo minuto', () => {
+        expect(tramoEndingAt([zone('y', 2, 41, 46)], cut(46))).toBeNull();
+        expect(tramoEndingAt([zone('y', 2, 41, 46)], cut(46, 'Try 45:10', 2))?.id).toBe('y');
+      });
+    });
+
+    describe('segmentAt', () => {
+      const gap = { period: 1 as const, start: 20, end: 40 };
+
+      it('sin cortes adentro es todo el hueco', () => {
+        expect(segmentAt(gap, 30, [])).toEqual({ start: 20, end: 40 });
+      });
+
+      it('un toque antes del corte propone desde el inicio del hueco hasta el corte', () => {
+        expect(segmentAt(gap, 21, [cut(23)])).toEqual({ start: 20, end: 23 });
+      });
+
+      it('un toque después del corte propone desde el corte hasta el fin del hueco', () => {
+        expect(segmentAt(gap, 30, [cut(23)])).toEqual({ start: 23, end: 40 });
+      });
+
+      it('un toque justo en el minuto del corte ya es el segmento siguiente', () => {
+        expect(segmentAt(gap, 23, [cut(23)])).toEqual({ start: 23, end: 40 });
+      });
+
+      it('entre dos cortes propone solo ese segmento', () => {
+        expect(segmentAt(gap, 27, [cut(23), cut(31)])).toEqual({ start: 23, end: 31 });
+      });
+
+      it('ignora los cortes de otro tiempo y los que caen fuera del hueco', () => {
+        expect(segmentAt(gap, 30, [cut(23, 'Try 22:30', 2), cut(10), cut(40)])).toEqual({ start: 20, end: 40 });
+      });
+    });
+
+    describe('clusterMarks', () => {
+      const mark = (id: string, left: number): { id: string; left: number } => ({ id, left });
+      const ids = (clusters: { items: { id: string }[] }[]): string[][] => clusters.map(c => c.items.map(item => item.id));
+
+      it('junta las marcas a menos de 12 px y deja separadas las demás', () => {
+        // 1000 px de ancho: 1 % = 10 px
+        expect(ids(clusterMarks([mark('a', 20), mark('b', 20.5), mark('c', 40)], 1000))).toEqual([['a', 'b'], ['c']]);
+      });
+
+      it('exactamente a 12 px no se juntan', () => {
+        // 800 px de ancho: 1 % = 8 px, así que 1,5 % son justo 12 px
+        expect(ids(clusterMarks([mark('a', 20), mark('b', 21.5)], 800))).toEqual([['a'], ['b']]);
+      });
+
+      it('encadena: tres marcas a 8 px una de otra forman un solo grupo', () => {
+        expect(ids(clusterMarks([mark('a', 10), mark('b', 10.8), mark('c', 11.6)], 1000))).toEqual([['a', 'b', 'c']]);
+      });
+
+      it('la posición del grupo es el promedio de sus marcas', () => {
+        expect(clusterMarks([mark('a', 20), mark('b', 21)], 1000)[0].left).toBe(20.5);
+      });
+
+      it('ordena por posición aunque lleguen desordenadas', () => {
+        expect(ids(clusterMarks([mark('c', 60), mark('a', 10), mark('b', 30)], 1000))).toEqual([['a'], ['b'], ['c']]);
+      });
+
+      it('sin ancho medido no agrupa nada', () => {
+        expect(ids(clusterMarks([mark('a', 20), mark('b', 20.01)], 0))).toEqual([['a'], ['b']]);
+      });
+
+      it('sin marcas no hay grupos', () => {
+        expect(clusterMarks([], 1000)).toEqual([]);
+      });
+
+      it('con menos ancho se juntan más: 3 % son 9 px en 300 px y 30 px en 1000 px', () => {
+        expect(ids(clusterMarks([mark('a', 20), mark('b', 23)], 300))).toEqual([['a', 'b']]);
+        expect(ids(clusterMarks([mark('a', 20), mark('b', 23)], 1000))).toEqual([['a'], ['b']]);
+      });
+    });
+
+    describe('suggestNextRange con cortes', () => {
+      it('el rango sugerido termina en el próximo corte', () => {
+        expect(suggestNextRange([zone('a', 1, 0, 20)], undefined, [cut(23)])).toEqual({ start: 20, end: 23 });
+      });
+
+      it('un corte en el inicio del hueco no lo acorta', () => {
+        expect(suggestNextRange([zone('a', 1, 0, 23)], undefined, [cut(23)])).toEqual({ start: 23, end: 28 });
+      });
     });
   });
 });

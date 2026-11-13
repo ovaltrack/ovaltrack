@@ -23,6 +23,9 @@ import {
   formatOnlyTime
 } from '../utils/match-review.utils';
 import { zoneForEvent } from '../utils/zone-event-link';
+import { ScoringTypesById, ZoneRulesByType, isFixedZone } from '../utils/zone-rule';
+import { eventsInRange } from '../utils/zone-stats';
+import { TramoTrim, predictTramoTrim } from '../utils/zone-track-layout';
 import { countsAsScoring, scoringTeam } from '../../statistics/calculators/event-rules';
 import { oneOf, persistedSignal } from '../../../../shared/utils/persisted-signal';
 
@@ -63,6 +66,12 @@ export class MatchReviewStore {
   readonly selectedEventId = signal<string | null>(null);
   readonly eventTypesDict = signal<Record<string, string>>({});
   readonly eventTypesList = signal<LiveCaptureEventType[]>([]);
+  /** Regla de zona de cada tipo de evento, del catálogo; los tipos sin regla valen null. */
+  readonly zoneRulesByType = computed<ZoneRulesByType>(() =>
+    new Map(this.eventTypesList().map(type => [type.id, type.zoneRule ?? null])));
+  /** Tipos por id con lo que dice si un tanto cuenta (un Kick H errado no reinicia el juego). */
+  private readonly scoringTypesById = computed<ScoringTypesById>(() =>
+    new Map(this.eventTypesList().map(type => [type.id, type])));
   readonly availablePlayers = signal<AvailablePlayer[]>([]);
   /** Tramos de zona del partido (solo lectura): dan el rango y el enlace a Zonas de cada evento. */
   readonly zoneAssignments = signal<ZoneAssignmentResponse[]>([]);
@@ -151,11 +160,16 @@ export class MatchReviewStore {
     const term = currentFilters.searchTerm.trim().toLowerCase();
     const zonesLoaded = this.zonesStatus() === 'loaded';
     const assignments = this.zoneAssignments();
+    const rules = this.zoneRulesByType();
 
     return raw.map(e => {
       const vm = this.buildBaseViewModel(e, dict, scale);
-      // El servidor informa la zona; los eventos recién creados en esta pantalla no la traen y se derivan con los tramos
-      vm.zone = e.zone !== undefined ? e.zone : (zonesLoaded ? zoneForEvent(e, assignments) : undefined);
+      const rule = rules.get(e.eventTypeId) ?? null;
+      const fixedByType = isFixedZone(rule, e.attributes);
+      // El servidor informa la zona; los eventos recién creados o editados en esta pantalla no la traen y se derivan con
+      // la regla del tipo y los tramos (una zona fija no necesita que los tramos estén cargados)
+      vm.zone = e.zone !== undefined ? e.zone : (zonesLoaded || fixedByType ? zoneForEvent(e, assignments, rule) : undefined);
+      vm.zoneFixed = fixedByType && !!vm.zone;
       vm.isDimmed = !this.evaluateFilters(vm, currentFilters, term);
       return vm;
     });
@@ -278,6 +292,23 @@ export class MatchReviewStore {
   setZoneAssignments(assignments: ZoneAssignmentResponse[]): void {
     this.zoneAssignments.set(assignments);
     this.zonesStatus.set('loaded');
+  }
+
+  /** Recorte que hará el backend al guardar el evento (un tanto dentro de un tramo); null sin tramos cargados o si no recorta. */
+  tramoTrimFor(event: MatchTimelineEventResponse): TramoTrim | null {
+    if (this.zonesStatus() !== 'loaded') return null;
+    return predictTramoTrim(event, this.zoneAssignments(), this.zoneRulesByType(), this.scoringTypesById());
+  }
+
+  /**
+   * Refleja el recorte que hizo el backend al guardar un tanto, sin volver a pedir los tramos: el tramo termina en el corte
+   * y las jugadas que quedaron después descartan la zona del servidor para derivarla de nuevo (ahora caen en un hueco).
+   */
+  applyTramoTrim({ tramo, endMinute }: TramoTrim): void {
+    this.zoneAssignments.update(list => list.map(a => a.id === tramo.id ? { ...a, endMinute } : a));
+    const released = { period: tramo.period, startMinute: endMinute, endMinute: tramo.endMinute };
+    const releasedIds = new Set(eventsInRange(released, this.rawEvents()).map(event => event.id));
+    this.rawEvents.update(events => events.map(event => releasedIds.has(event.id) ? { ...event, zone: undefined } : event));
   }
 
   setZonesFailed(): void {
@@ -451,8 +482,9 @@ export class MatchReviewStore {
       const existing = current[index];
       const dict = this.eventTypesDict();
       const updated = { ...existing, ...partial };
-      // La zona depende del tiempo: si cambió, se descarta la del servidor y se deriva de los tramos
-      if (partial.matchTime !== undefined || partial.period !== undefined) {
+      // La zona depende del tiempo y, si el tipo tiene regla, también del tipo, la posesión y los atributos:
+      // si cambió algo de eso, se descarta la del servidor y se deriva
+      if (this.changesZone(existing, updated, partial)) {
         updated.zone = undefined;
       }
       if (partial.eventTypeId && dict[partial.eventTypeId]) {
@@ -484,6 +516,18 @@ export class MatchReviewStore {
       this.rawEvents.set(newArray);
     }
     this.confirmedChange.next();
+  }
+
+  private changesZone(
+    existing: MatchTimelineEventResponse,
+    updated: MatchTimelineEventResponse,
+    partial: Partial<MatchTimelineEventResponse>
+  ): boolean {
+    const rules = this.zoneRulesByType();
+    const changesTime = partial.matchTime !== undefined || partial.period !== undefined;
+    const changesWhatRulesRead = partial.eventTypeId !== undefined || partial.teamPossession !== undefined || partial.attributes !== undefined;
+    const hasRule = !!rules.get(existing.eventTypeId) || !!rules.get(updated.eventTypeId);
+    return changesTime || (changesWhatRulesRead && hasRule);
   }
 
   addEvent(event: MatchTimelineEventResponse): void {

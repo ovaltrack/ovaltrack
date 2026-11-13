@@ -1,5 +1,7 @@
 package com.ovaltrack.backend.zone.business;
 
+import com.ovaltrack.backend.zone.domain.ZoneCell;
+
 /**
  * Geometría fija de la zonificación: 3 filas (ancho de la cancha) x 6 columnas (ingoal, 22, mitad, mitad, 22, ingoal)
  * y la duración reglamentaria de cada tiempo. Es el único lugar donde viven estas constantes.
@@ -10,8 +12,32 @@ public final class ZoneGrid {
     public static final int COLS = 6;
     public static final int HALF_MINUTES = 40;
     public static final int PERIODS = 2;
+    public static final int SECONDS_PER_MINUTE = 60;
 
     private ZoneGrid() {
+    }
+
+    /** Celda vista desde el otro equipo: la columna se invierte (6 <-> 1) y la fila también (I <-> D). */
+    public static ZoneCell mirror(ZoneCell cell) {
+        return new ZoneCell(ROWS + 1 - cell.row(), COLS + 1 - cell.col());
+    }
+
+    /** Etiqueta de la celda: letra de fila + columna (I1 ... D6). */
+    public static String label(ZoneCell cell) {
+        return ZoneCell.rowLetter(cell.row()) + cell.col();
+    }
+
+    /**
+     * Segundo de juego con el que se ubica un evento: el tiempo añadido cuenta como el último segundo del período
+     * (minuto 40 en el 1T, 80 en el 2T), porque el fin de un tramo es exclusivo. No cambia el matchTime guardado.
+     */
+    public static int effectiveSeconds(int period, int matchTimeSeconds) {
+        return Math.min(matchTimeSeconds, periodEndMinute(period) * SECONDS_PER_MINUTE - 1);
+    }
+
+    /** Reloj de partido para los mensajes: minutos acumulados y segundos con dos dígitos (ej. 65:00, 05:30). */
+    public static String clock(int matchTimeSeconds) {
+        return "%02d:%02d".formatted(matchTimeSeconds / SECONDS_PER_MINUTE, matchTimeSeconds % SECONDS_PER_MINUTE);
     }
 
     public static boolean isValidCell(int row, int col) {

@@ -9,6 +9,8 @@ import { BackendEventCreationRequest, MatchTimelineEventResponse } from '../../.
 import { EventFormComponent, EventFormData } from '../event-form/event-form.component';
 import { EventPrefillHints, buildEventPrefill } from '../../utils/event-prefill';
 import { toMatchTimeSeconds, validateEventTime } from '../../utils/event-time';
+import { NextEvent, nextEvents } from '../../utils/follow-up';
+import { describeTramoTrim } from '../../utils/zone-track-layout';
 
 @Component({
   selector: 'app-post-match-create-modal',
@@ -33,6 +35,13 @@ export class PostMatchCreateModalComponent implements OnChanges {
   /** Valores iniciales del formulario según el filtro de período y el evento seleccionado al abrir. */
   readonly initialData = signal<EventFormData | null>(null);
   readonly prefillHints = signal<EventPrefillHints | null>(null);
+
+  /** Opciones del catálogo para continuar después de guardar (solo si hay más de una); null = formulario de alta. */
+  readonly nextChoices = signal<NextEvent[] | null>(null);
+  /** El formulario abierto es un evento propuesto por el catálogo: se puede omitir. */
+  readonly isFollowUp = signal<boolean>(false);
+  /** Evento recién guardado del que sale lo que sigue. */
+  followUpName = '';
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['isOpen'] && this.isOpen) {
@@ -94,6 +103,11 @@ export class PostMatchCreateModalComponent implements OnChanges {
   onClose(): void {
     if (this.isSubmitting()) return;
     this.close.emit();
+  }
+
+  get closeLabel(): string {
+    if (this.nextChoices()) return 'Nada más';
+    return this.isFollowUp() ? 'Omitir' : 'Cancelar';
   }
 
   get formattedDisplayTime(): string {
@@ -172,11 +186,19 @@ export class PostMatchCreateModalComponent implements OnChanges {
           attributes: res.attributes || undefined
         };
 
+        const next = this.followUpsOf(eventTypeName);
+        // Un tanto dentro de un tramo lo recorta en el backend: se refleja acá y se avisa en el mismo toast
+        const trim = this.store.tramoTrimFor(timelineEvent);
+
         this.store.addEvent(timelineEvent);
-        this.toastService.success('Evento agregado correctamente');
+        if (trim) {
+          this.store.applyTramoTrim(trim);
+          this.toastService.success(describeTramoTrim(trim), 'Evento agregado');
+        } else {
+          this.toastService.success('Evento agregado correctamente');
+        }
         this.created.emit(timelineEvent);
-        this.resetForm();
-        this.close.emit();
+        this.continueWith(next);
       },
       error: (err) => {
         this.isSubmitting.set(false);
@@ -186,7 +208,49 @@ export class PostMatchCreateModalComponent implements OnChanges {
     });
   }
 
+  /** Eventos que el catálogo propone después del que se acaba de guardar (con el formulario todavía intacto). */
+  private followUpsOf(eventTypeName: string): NextEvent[] {
+    const types = this.store.eventTypesList();
+    const saved = types.find(type => type.id === this.eventTypeId);
+    this.followUpName = eventTypeName;
+    return saved ? nextEvents(saved, this.attributes, this.possession === 'NEUTRAL' ? null : this.possession, types) : [];
+  }
+
+  private continueWith(next: NextEvent[]): void {
+    if (next.length === 0) {
+      this.resetForm();
+      this.close.emit();
+    } else if (next.length === 1) {
+      this.prefillNext(next[0]);
+    } else {
+      this.nextChoices.set(next);
+    }
+  }
+
+  /** Pasa el formulario al evento siguiente: mismo período y tiempo que el anterior, equipo y preset del catálogo. */
+  prefillNext(next: NextEvent): void {
+    this.nextChoices.set(null);
+    this.isFollowUp.set(true);
+    this.eventTypeId = next.type.id;
+    this.possession = next.team ?? this.possession;
+    this.playerId = '';
+    this.attributes = Object.keys(next.preset).length > 0 ? { ...next.preset } : null;
+    this.isFormValid = true;
+    this.initialData.set({
+      eventTypeId: this.eventTypeId,
+      teamPossession: this.possession,
+      playerId: null,
+      period: this.period,
+      minute: this.minute,
+      second: this.second,
+      attributes: this.attributes
+    });
+    this.prefillHints.set({ time: `Sigue a ${this.followUpName} · ${this.formattedDisplayTime}` });
+  }
+
   private resetForm(): void {
+    this.nextChoices.set(null);
+    this.isFollowUp.set(false);
     this.eventTypeId = '';
     this.period = 1;
     this.minute = 1;

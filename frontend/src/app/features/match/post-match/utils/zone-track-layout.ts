@@ -1,12 +1,11 @@
-import { ZONE_GRID_COLS, ZONE_HALF_MINUTES, ZoneAssignmentResponse, ZonePeriod } from '../../types/zone.types';
-import { ZONE_COLUMN_NAMES, ZONE_ROW_LETTERS, columnRangeLabel, zoneLabel } from './zone-grid';
-import { MinuteRange, ZoneEvent, ZonePeriodFilter, eventsInRange, findGaps, periodRange } from './zone-stats';
+import { Possession } from '../../types/live-capture.types';
+import { ZONE_GRID_COLS, ZONE_HALF_MINUTES, ZoneAssignmentResponse, ZoneCellRef, ZonePeriod } from '../../types/zone.types';
+import { ZONE_COLUMN_NAMES, ZONE_ROW_LETTERS, columnRangeLabel, isInGoalColumn, zoneLabel } from './zone-grid';
+import { RuleEvent, ScoringTypesById, ZoneRulesByType, closesTramo, eventClosesTramo, fixedColumn, formatMatchTime, placeEventZone } from './zone-rule';
+import { MinuteRange, ZoneEvent, ZonePeriodFilter, effectiveMatchTime, eventsInRange, findGaps, periodRange, tramoAtEvent } from './zone-stats';
 
 /** Largo del eje horizontal de la grilla de territorio: los 80 minutos del partido, con el 2T a continuación del 1T. */
 export const TRACK_MINUTES = ZONE_HALF_MINUTES * 2;
-
-/** Un bloque de esta duración o menor no entra con la etiqueta completa: muestra solo la letra del lateral. */
-export const SHORT_BLOCK_MINUTES = 2;
 
 /** En pantallas angostas, un bloque de menos de estos minutos no lleva etiqueta: el detalle va en su aria-label y tooltip. */
 export const UNLABELED_BLOCK_MINUTES = 4;
@@ -49,17 +48,13 @@ export function blockLayout(range: TimeRange, window: TrackWindow = FULL_TRACK):
   return { left: minuteToPercent(start, window), width: ((end - start) / (window.end - window.start)) * 100 };
 }
 
-export function isShortBlock(range: TimeRange): boolean {
-  return range.endMinute - range.startMinute <= SHORT_BLOCK_MINUTES;
-}
-
 /**
- * Etiqueta del bloque: la celda completa (D5) o, si es muy corto, solo la letra del lateral (D). En pantallas angostas
- * los de menos de 4 minutos no llevan etiqueta.
+ * Etiqueta del bloque: solo la letra del lateral (I, C o D), también en los de 1 minuto: la fila de la grilla ya dice la
+ * franja y el detalle completo va en el tooltip. En pantallas angostas los de menos de 4 minutos no llevan etiqueta.
  */
 export function blockLabel(assignment: ZoneAssignmentResponse, compact = false): string {
   if (compact && assignment.endMinute - assignment.startMinute < UNLABELED_BLOCK_MINUTES) return '';
-  return isShortBlock(assignment) ? ZONE_ROW_LETTERS[assignment.row - 1] : zoneLabel(assignment);
+  return ZONE_ROW_LETTERS[assignment.row - 1];
 }
 
 /** Una fila de la grilla de territorio = una franja de la cancha (columna 1–6). */
@@ -68,6 +63,8 @@ export interface TerritoryRow {
   name: string;
   /** Metros desde la línea de gol propia, o "in-goal". */
   range: string;
+  /** Carril de in-goal: fino y solo para puntos (no se crean tramos ahí). */
+  inGoal: boolean;
 }
 
 /** Filas de arriba hacia abajo: el in-goal rival primero (dirección de ataque) y el propio al final. */
@@ -75,7 +72,8 @@ export function territoryRows(): TerritoryRow[] {
   return Array.from({ length: ZONE_GRID_COLS }, (_, i) => ZONE_GRID_COLS - i).map(col => ({
     col,
     name: ZONE_COLUMN_NAMES[col - 1],
-    range: columnRangeLabel(col) || 'in-goal'
+    range: columnRangeLabel(col) || 'in-goal',
+    inGoal: isInGoalColumn(col)
   }));
 }
 
@@ -112,14 +110,21 @@ export function gapAtMinute(assignments: ZoneAssignmentResponse[], minute: numbe
 
 /**
  * Rango sugerido para el próximo tramo, en minutos acumulados: empieza en el hueco que arranca en `afterMinute`
- * (o en el primero libre) y dura como mucho `length` minutos. Null si el partido está completo.
+ * (o en el primero libre), dura como mucho `length` minutos y termina antes si hay un corte (un try). Null si el
+ * partido está completo.
  */
-export function suggestNextRange(assignments: ZoneAssignmentResponse[], afterMinute?: number, length = 5): MinuteRange | null {
+export function suggestNextRange(
+  assignments: ZoneAssignmentResponse[],
+  afterMinute?: number,
+  cuts: TramoCutMark[] = [],
+  length = 5
+): MinuteRange | null {
   const gaps = allGaps(assignments);
   if (gaps.length === 0) return null;
 
   const gap = (afterMinute !== undefined ? gaps.find(g => g.start >= afterMinute) : undefined) ?? gaps[0];
-  return { start: gap.start, end: Math.min(gap.start + length, gap.end) };
+  const cutMinutes = cuts.filter(cut => cut.period === gap.period && cut.minute > gap.start).map(cut => cut.minute);
+  return { start: gap.start, end: Math.min(gap.start + length, gap.end, ...cutMinutes) };
 }
 
 export interface GapWithEvents extends PeriodGap {
@@ -128,8 +133,239 @@ export interface GapWithEvents extends PeriodGap {
 }
 
 export function gapsWithEventCount(assignments: ZoneAssignmentResponse[], events: ZoneEvent[]): GapWithEvents[] {
+  // Un evento que ya tiene zona (la fija su tipo) no queda sin zona por caer en un hueco.
+  const unzoned = events.filter(event => !event.zone);
   return allGaps(assignments).map(gap => ({
     ...gap,
-    eventCount: eventsInRange({ period: gap.period, startMinute: gap.start, endMinute: gap.end }, events).length
+    eventCount: eventsInRange({ period: gap.period, startMinute: gap.start, endMinute: gap.end }, unzoned).length
   }));
+}
+
+const SECONDS_PER_MINUTE = 60;
+
+function isZonePeriod(period: number): period is ZonePeriod {
+  return period === 1 || period === 2;
+}
+
+/** Minuto en que termina el tramo que contiene un evento que reinicia el juego: el tiempo añadido queda en el 40′ o en el 80′. */
+function cutMinuteOf(effectiveSeconds: number): number {
+  return Math.floor(effectiveSeconds / SECONDS_PER_MINUTE) + 1;
+}
+
+/**
+ * Jugada con zona propia, a dibujar sobre la grilla de territorio en su mm:ss exacto. Alcanza con la columna (los
+ * carriles son franjas): la fila solo se conoce si la fija la regla o el lado del apoyo.
+ */
+export interface ZonePoint {
+  eventId: string;
+  eventTypeName: string;
+  period: ZonePeriod;
+  col: number;
+  row: number | null;
+  /** Minuto acumulado con decimales (22:30 -> 22,5); el tiempo añadido queda en el último segundo del tiempo. */
+  minute: number;
+  /** Minuto en que termina el tramo que lo contiene si el tipo reinicia el juego (Try); null si no corta. */
+  cutMinute: number | null;
+}
+
+/** Eventos cuya columna fija la regla del tipo, en orden cronológico y dentro del tiempo elegido. */
+export function zonePoints(events: RuleEvent[], rules: ZoneRulesByType, filter: ZonePeriodFilter): ZonePoint[] {
+  return events
+    .filter(event => isZonePeriod(event.period) && (filter === 'ALL' || event.period === filter))
+    .flatMap(event => {
+      const rule = rules.get(event.eventTypeId);
+      const col = fixedColumn(rule, event.teamPossession);
+      const period = event.period as ZonePeriod;
+      const seconds = effectiveMatchTime(period, event.matchTime);
+      return col === null ? [] : [{
+        eventId: event.id,
+        eventTypeName: event.eventTypeName,
+        period,
+        col,
+        row: placeEventZone(rule, event.teamPossession, event.attributes, null)?.row ?? null,
+        minute: seconds / SECONDS_PER_MINUTE,
+        cutMinute: closesTramo(rule) ? cutMinuteOf(seconds) : null
+      }];
+    })
+    .sort((a, b) => a.minute - b.minute);
+}
+
+/**
+ * Hasta dónde llega el tramo que corta un tanto, ej. "llega hasta 22:59 (termina en 23′)". Los tramos son de minutos
+ * enteros: el tanto del 22:30 está en el minuto 22, que el tramo cubre entero. Se nombra el último segundo cubierto y el
+ * minuto de fin queda como dato secundario, porque «termina en 23′» solo sonaba a que el tanto fue a las 23.
+ */
+export function cutReach(cutMinute: number): string {
+  return `llega hasta ${lastSecondBefore(cutMinute)} (termina en ${cutMinute}′)`;
+}
+
+function lastSecondBefore(cutMinute: number): string {
+  return formatMatchTime(cutMinute * SECONDS_PER_MINUTE - 1);
+}
+
+/**
+ * Texto del punto para el tooltip y los lectores de pantalla, ej. "Try 22:30 · D6 · el tramo llega hasta 22:59 (termina en
+ * 23′)". Con `tramoEnds` en false (ningún tramo termina en el corte) lo aclara en lugar de nombrar un tramo.
+ */
+export function describePoint(point: ZonePoint, tramoEnds = true): string {
+  const where = point.row === null ? `${ZONE_COLUMN_NAMES[point.col - 1]} (sin lateral)` : zoneLabel({ row: point.row, col: point.col });
+  const cut = point.cutMinute === null ? ''
+    : tramoEnds ? ` · el tramo ${cutReach(point.cutMinute)}`
+      : ` · ningún tramo llega hasta ${lastSecondBefore(point.cutMinute)} (terminaría en ${point.cutMinute}′)`;
+  return `${point.eventTypeName} ${formatMatchTime(Math.round(point.minute * SECONDS_PER_MINUTE))} · ${where}${cut}`;
+}
+
+/**
+ * Corte del territorio: después de un evento que reinicia el juego (Try, Try penal, Kick H, Drop goal) el tramo que lo
+ * contiene tiene que terminar en `minute` (el minuto del evento + 1, en minutos acumulados).
+ */
+export interface TramoCutMark {
+  eventId: string;
+  eventTypeName: string;
+  period: ZonePeriod;
+  minute: number;
+  /** Tipo y reloj del evento, ej. "Try 22:30" (tooltip y aviso de tope). */
+  label: string;
+  /** Quién ejecutó el tanteo: define quién saca después (el que lo recibe). */
+  possession: Possession;
+}
+
+/** El primer corte que un rango deja adentro y el mismo mensaje que el 409 del backend. */
+export interface TramoCut {
+  cut: TramoCutMark;
+  message: string;
+}
+
+type TimedRange = Pick<ZoneAssignmentResponse, 'period' | 'startMinute' | 'endMinute'>;
+
+/** Cortes del partido en orden cronológico, dentro del tiempo elegido. */
+export function tramoCuts(events: RuleEvent[], rules: ZoneRulesByType, types: ScoringTypesById, filter: ZonePeriodFilter): TramoCutMark[] {
+  return [...events]
+    .sort((a, b) => a.period - b.period || a.matchTime - b.matchTime)
+    .filter(event => isZonePeriod(event.period) && (filter === 'ALL' || event.period === filter) && eventClosesTramo(event, rules, types))
+    .map(event => {
+      const period = event.period as ZonePeriod;
+      return {
+        eventId: event.id,
+        eventTypeName: event.eventTypeName,
+        period,
+        minute: cutMinuteOf(effectiveMatchTime(period, event.matchTime)),
+        label: `${event.eventTypeName} ${formatMatchTime(event.matchTime)}`,
+        possession: event.teamPossession
+      };
+    });
+}
+
+/**
+ * Tramo que termina justo en el corte: el que el tanto cortó. Sin solapes dentro de un tiempo hay como mucho uno; null si
+ * antes del corte hay un hueco o un tramo viejo que lo cruza.
+ */
+export function tramoEndingAt(assignments: ZoneAssignmentResponse[], cut: Pick<TramoCutMark, 'period' | 'minute'>): ZoneAssignmentResponse | null {
+  return assignments.find(assignment => assignment.period === cut.period && assignment.endMinute === cut.minute) ?? null;
+}
+
+/** Primer corte que queda estrictamente adentro del rango: el tramo seguiría después del evento. */
+export function crossedCut(range: TimedRange, cuts: TramoCutMark[]): TramoCutMark | null {
+  return cuts
+    .filter(cut => cut.period === range.period && range.startMinute < cut.minute && cut.minute < range.endMinute)
+    .sort((a, b) => a.minute - b.minute)[0] ?? null;
+}
+
+/** Primer evento que el rango deja antes de su último minuto, con el mensaje del 409 del backend. */
+export function findTramoCut(range: TimedRange, events: RuleEvent[], rules: ZoneRulesByType, types: ScoringTypesById): TramoCut | null {
+  const cut = crossedCut(range, tramoCuts(events, rules, types, range.period));
+  const event = cut ? events.find(candidate => candidate.id === cut.eventId) : undefined;
+  return cut && event
+    ? {
+      cut,
+      message: `El tramo ${range.period}T ${range.startMinute}'–${range.endMinute}' no puede seguir después del `
+        + `${event.eventTypeName} (${event.period}T ${formatMatchTime(event.matchTime)}): terminalo en ${cut.minute}'`
+    }
+    : null;
+}
+
+/** Recorte que hace el backend (`TramoTrimmer`) al guardar un tanto: el tramo que contiene su minuto termina en `endMinute`. */
+export interface TramoTrim {
+  tramo: ZoneAssignmentResponse;
+  endMinute: number;
+}
+
+/**
+ * El recorte que va a hacer el backend al guardar el evento: solo si es un tanto que reinicia el juego y el tramo que
+ * contiene su minuto sigue después del corte. Null si no recorta nada (otro tipo, un hueco o un tramo ya cortado).
+ */
+export function predictTramoTrim(event: RuleEvent, assignments: ZoneAssignmentResponse[], rules: ZoneRulesByType, types: ScoringTypesById): TramoTrim | null {
+  if (!isZonePeriod(event.period) || !eventClosesTramo(event, rules, types)) return null;
+  const tramo = tramoAtEvent(event, assignments);
+  const endMinute = cutMinuteOf(effectiveMatchTime(event.period, event.matchTime));
+  return tramo && tramo.endMinute > endMinute ? { tramo, endMinute } : null;
+}
+
+/** Aviso del recorte, ej. "El tramo C4 20′–30′ ahora termina en 23′ · 23′–30′ quedó como hueco". */
+export function describeTramoTrim({ tramo, endMinute }: TramoTrim): string {
+  return `El tramo ${zoneLabel(tramo)} ${tramo.startMinute}′–${tramo.endMinute}′ ahora termina en ${endMinute}′ · `
+    + `${endMinute}′–${tramo.endMinute}′ quedó como hueco`;
+}
+
+/** Rango que sigue después de un tanteo, ya llevado a su corte: `endMinute` es donde termina el tramo y `cut` el motivo. */
+export interface ClampedRange {
+  endMinute: number;
+  cut: TramoCutMark;
+}
+
+/** El corte que el rango cruza y dónde terminarlo; null si no cruza ninguno. El sistema ya sabe dónde corta: no es un error. */
+export function clampToCut(range: TimedRange, cuts: TramoCutMark[]): ClampedRange | null {
+  const cut = crossedCut(range, cuts);
+  return cut ? { endMinute: cut.minute, cut } : null;
+}
+
+/** Lateral que se propone después de un corte: el centro, que es donde cae el saque. */
+const KICKOFF_ROW = 2;
+/** Columnas del saque de centro: el campo propio (3) cuando lo recibimos y el rival (4) cuando sacamos nosotros. */
+const KICKOFF_COLUMN: Partial<Record<Possession, number>> = { OWN: 3, OPPONENT: 4 };
+
+/** Celda donde se propone seguir después del corte: quien recibe el saque juega en su campo (propio: campo propio; rival: campo rival). */
+export function kickoffCell(cut: TramoCutMark): ZoneCellRef | null {
+  const col = KICKOFF_COLUMN[cut.possession];
+  return col === undefined ? null : { row: KICKOFF_ROW, col };
+}
+
+/** Cortes que toca el rango: los que cruza y los que caen justo en su inicio o su fin, en orden cronológico. */
+export function touchingCuts(range: TimedRange, cuts: TramoCutMark[]): TramoCutMark[] {
+  return cuts
+    .filter(cut => cut.period === range.period && range.startMinute <= cut.minute && cut.minute <= range.endMinute)
+    .sort((a, b) => a.minute - b.minute);
+}
+
+/** Marcas que quedaron juntas y se dibujan como una sola; `left` es el promedio de las marcas que agrupa. */
+export interface MarkCluster<T> {
+  left: number;
+  items: T[];
+}
+
+/** Agrupa las marcas (posición en % del eje) que quedan a menos de `minGapPx` píxeles. Sin ancho medido no agrupa. */
+export function clusterMarks<T extends { left: number }>(marks: T[], trackWidthPx: number, minGapPx = 12): MarkCluster<T>[] {
+  const sorted = [...marks].sort((a, b) => a.left - b.left);
+  // Sin ancho medido (todavía no se dibujó) no se sabe qué está cerca: cada marca queda sola.
+  const minGapPercent = trackWidthPx > 0 ? (minGapPx / trackWidthPx) * 100 : 0;
+  const groups = sorted.reduce<T[][]>((acc, mark) => {
+    const current = acc[acc.length - 1];
+    const previous = current?.[current.length - 1];
+    return previous && mark.left - previous.left < minGapPercent
+      ? [...acc.slice(0, -1), [...current, mark]]
+      : [...acc, [mark]];
+  }, []);
+  return groups.map(items => ({ left: items.reduce((sum, item) => sum + item.left, 0) / items.length, items }));
+}
+
+/**
+ * Segmento de un hueco que corresponde a un toque en `minute`: va del corte anterior (o del inicio del hueco) al corte
+ * siguiente (o al fin del hueco). Un tanto reinicia el juego, así que lo que sigue es otro segmento.
+ */
+export function segmentAt(gap: PeriodGap, minute: number, cuts: TramoCutMark[]): MinuteRange {
+  const inside = cuts.filter(cut => cut.period === gap.period && cut.minute > gap.start && cut.minute < gap.end);
+  return {
+    start: Math.max(gap.start, ...inside.filter(cut => cut.minute <= minute).map(cut => cut.minute)),
+    end: Math.min(gap.end, ...inside.filter(cut => cut.minute > minute).map(cut => cut.minute))
+  };
 }

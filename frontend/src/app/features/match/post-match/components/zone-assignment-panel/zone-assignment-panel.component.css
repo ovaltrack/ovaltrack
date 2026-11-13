@@ -153,6 +153,7 @@
 }
 
 .field > .inline-error { margin: 10px 0 0; }
+/* «Terminar en N′»: lleva el fin del rango al corte por try */
 .panel-footer > .inline-error { margin: 10px 0 0; }
 
 /* Una sola fila, sin salirse del panel: eliminar (ícono) a la izquierda; Cancelar y Guardar a la derecha */
@@ -212,6 +213,12 @@
 }
 
 .match-complete { margin: 0; display: flex; align-items: center; gap: 8px; min-height: 44px; font-size: 13.5px; font-weight: 700; color: var(--success); }
+.match-complete.is-pending { flex-wrap: wrap; gap: 4px; color: var(--text-secondary); }
+.pending-link {
+  min-height: 44px; padding: 0 4px; border: 0; background: transparent; font: inherit; color: var(--warning);
+  text-decoration: underline; cursor: pointer;
+}
+.pending-link:focus-visible { outline: 3px solid var(--navy); outline-offset: 2px; }
 
 .gap-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 

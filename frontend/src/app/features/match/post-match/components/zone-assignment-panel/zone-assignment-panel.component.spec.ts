@@ -803,4 +803,182 @@ describe('ZoneAssignmentPanelComponent', () => {
       });
     });
   });
+
+  describe('tiempo cubierto con jugadas sin zona', () => {
+    const full: ZoneAssignmentResponse[] = [
+      { ...existingZone, id: 'p1', startMinute: 0, endMinute: 40 },
+      { ...existingZone, id: 'p2', period: 2, startMinute: 40, endMinute: 80 }
+    ];
+    const zoned = (id: string): MatchTimelineEventResponse => ({ ...ev(id, 1, 10), zone: { row: 2, col: 3 } });
+
+    it('sin huecos y todas las jugadas con zona dice «Partido completo»', () => {
+      render(full, [zoned('a')]);
+
+      expect(query('[data-testid="match-complete"]')?.textContent).toContain('Partido completo');
+      expect(query('[data-testid="time-covered"]')).toBeNull();
+    });
+
+    it('sin huecos pero con jugadas sin zona no dice «Partido completo»: dice cuántas quedan', () => {
+      render(full, [ev('a', 1, 10), ev('b', 1, 12), zoned('c')]);
+
+      expect(query('[data-testid="match-complete"]')).toBeNull();
+      expect(query('[data-testid="time-covered"]')?.textContent?.replace(/\s+/g, ' ')).toContain('Tiempo cubierto · 2 jugadas sin zona');
+    });
+
+    it('con una sola jugada va en singular', () => {
+      render(full, [ev('a', 1, 10)]);
+
+      expect(query('[data-testid="time-covered"]')?.textContent).toContain('1 jugada sin zona');
+    });
+
+    it('el número es un enlace que pide la lista', () => {
+      render(full, [ev('a', 1, 10)]);
+      let requested = 0;
+      component.unzonedRequested.subscribe(() => requested++);
+
+      query<HTMLButtonElement>('[data-testid="unzoned-link"]')?.click();
+
+      expect(requested).toBe(1);
+    });
+
+    it('con huecos sigue mostrando la lista de huecos y no el mensaje de tiempo cubierto', () => {
+      render([{ ...existingZone, startMinute: 0, endMinute: 10 }], [ev('a', 1, 30)]);
+
+      expect(query('[data-testid="time-covered"]')).toBeNull();
+      expect(query('[data-testid="match-complete"]')).toBeNull();
+    });
+
+    it('cuenta todas las jugadas sin zona del partido, también las que caen en un tramo que no las admite', () => {
+      render(full, [ev('a', 1, 10), ev('b', 2, 50)]);
+
+      expect(component.unzonedCount).toBe(2);
+    });
+  });
+
+  describe('corte por try', () => {
+    const tryEvent: MatchTimelineEventResponse = {
+      id: 'try', eventTypeId: 'try', eventTypeName: 'Try', matchTime: 22 * 60 + 30, period: 1, teamPossession: 'OWN',
+      attributes: { zone: 'right' }
+    };
+    const withTryRule = (): void =>
+      store.zoneRules.set(new Map([['try', { columns: [6], rowFrom: 'zone', closesTramo: true }]]));
+
+    it('un rango que sigue después del try, antes de confirmarlo, muestra el motivo del 409 y deshabilita Guardar', () => {
+      render([], [tryEvent]);
+      withTryRule();
+      selectCell(2, 5);
+      component.startMinute = 20;
+      component.endMinute = 25;
+      fixture.detectChanges();
+
+      expect(rangeError()).toContain("El tramo 1T 20'–25' no puede seguir después del Try (1T 22:30): terminalo en 23'");
+      expect(saveButton().disabled).toBeTrue();
+    });
+
+    it('al confirmar un «Hasta» que sigue después del try, el rango termina en el corte y se avisa sin error', () => {
+      render([], [tryEvent]);
+      withTryRule();
+      selectCell(2, 5);
+      component.startMinute = 20;
+      component.endMinute = 25;
+      component.confirmRange();
+      fixture.detectChanges();
+
+      expect(component.endMinute).toBe(23);
+      expect(query('[data-testid="cut-notice"]')?.textContent?.trim()).toBe('El tramo llega hasta 22:59 (termina en 23′) por el Try 22:30');
+      expect(rangeError()).toBe('');
+      expect(saveButton().disabled).toBeFalse();
+    });
+
+    it('sumar minutos con el botón + también lo lleva al corte', () => {
+      render([], [tryEvent]);
+      withTryRule();
+      selectCell(2, 5);
+      component.startMinute = 20;
+      component.endMinute = 22;
+      component.adjust('end', 3);
+      fixture.detectChanges();
+
+      expect(component.endMinute).toBe(23);
+      expect(query('[data-testid="cut-notice"]')).not.toBeNull();
+    });
+
+    it('precargar un hueco que cruza un try lo deja hasta el corte', () => {
+      render([], [tryEvent]);
+      withTryRule();
+      component.prefill({ startMinute: 20, endMinute: 40 });
+      fixture.detectChanges();
+
+      expect([component.startMinute, component.endMinute]).toEqual([20, 23]);
+      expect(query('[data-testid="cut-notice"]')?.textContent).toContain('llega hasta 22:59 (termina en 23′)');
+    });
+
+    it('el aviso desaparece al volver a escribir un rango que no cruza nada', () => {
+      render([], [tryEvent]);
+      withTryRule();
+      component.prefill({ startMinute: 20, endMinute: 40 });
+      component.endMinute = 22;
+      component.onRangeChange();
+      fixture.detectChanges();
+
+      expect(query('[data-testid="cut-notice"]')).toBeNull();
+    });
+
+    it('un Kick H errado dentro del rango no es un corte: no avisa ni ajusta', () => {
+      const missedKick: MatchTimelineEventResponse = {
+        id: 'k', eventTypeId: 'kick', eventTypeName: 'Kick H (Penal a palos)', matchTime: 22 * 60 + 30, period: 1, teamPossession: 'OWN',
+        attributes: { wasSuccessful: false }
+      };
+      render([], [missedKick]);
+      store.zoneRules.set(new Map([['kick', { columns: [2, 3, 4, 5], rowFrom: 'zone', closesTramo: true }]]));
+      store.scoringTypes.set(new Map([['kick', {
+        isScoring: true,
+        templateEventFields: [{ key: 'wasSuccessful', label: 'Resultado', type: 'boolean', phase: 'live', required: true, effects: ['scoring'] }]
+      }]]));
+      selectCell(2, 4);
+      component.startMinute = 20;
+      component.endMinute = 25;
+      component.confirmRange();
+      fixture.detectChanges();
+
+      expect(component.endMinute).toBe(25);
+      expect(query('[data-testid="cut-notice"]')).toBeNull();
+      expect(rangeError()).toBe('');
+    });
+
+    it('después de guardar un tramo que termina en un try propio propone el campo propio para seguir', () => {
+      render([], [tryEvent]);
+      withTryRule();
+      selectCell(2, 5);
+      component.startMinute = 20;
+      component.endMinute = 23;
+      component.save();
+
+      http.expectOne(zonesUrl).flush({ ...existingZone, startMinute: 20, endMinute: 23, col: 5 });
+      http.expectOne(zonesUrl).flush({ assignments: [{ ...existingZone, startMinute: 20, endMinute: 23, col: 5 }], summary: { cells: [], unzonedEventCount: 0 } });
+      http.expectOne(eventsUrl).flush([tryEvent]);
+      fixture.detectChanges();
+
+      expect(component.selectedCell()).toEqual({ row: 2, col: 3 });
+      expect(component.startMinute).toBe(23);
+    });
+
+    it('cancelar no propone zona: deja la franja sin elegir', () => {
+      render([{ ...existingZone, startMinute: 0, endMinute: 23, col: 5 }], [tryEvent]);
+      withTryRule();
+      component.cancel();
+      fixture.detectChanges();
+
+      expect(component.selectedCell()).toBeNull();
+    });
+
+    it('el asistente propone un rango que termina en el try', () => {
+      render([{ ...existingZone, startMinute: 0, endMinute: 20 }], [tryEvent]);
+      withTryRule();
+      component.cancel();
+      fixture.detectChanges();
+
+      expect([component.startMinute, component.endMinute]).toEqual([20, 23]);
+    });
+  });
 });

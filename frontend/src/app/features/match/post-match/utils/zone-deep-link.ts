@@ -12,7 +12,7 @@ export interface ZoneDeepLinkParams {
 export type ZoneDeepLinkTarget =
   | { kind: 'none' }
   | { kind: 'segment'; segment: ZoneAssignmentResponse }
-  | { kind: 'gap'; gap: PeriodGap }
+  | { kind: 'gap'; gap: PeriodGap; minute: number }
   | { kind: 'invalid'; reason: 'tramo' | 'minuto' };
 
 const INTEGER = /^\d+$/;
@@ -20,7 +20,8 @@ const INTEGER = /^\d+$/;
 /**
  * Interpreta los parámetros contra los tramos del partido. Un tramo que no está entre ellos (borrado, de otro partido
  * o inventado) y un minuto fuera de 0–79 son inválidos: la pantalla los ignora y avisa. `tramo` manda sobre `minuto`;
- * un minuto que ya está dentro de un tramo abre ese tramo, y si cae en un hueco, lo precarga.
+ * un minuto que ya está dentro de un tramo abre ese tramo, y si cae en un hueco, lo precarga (con el minuto, para
+ * proponer solo el segmento entre cortes).
  */
 export function resolveZoneDeepLink(params: ZoneDeepLinkParams, assignments: ZoneAssignmentResponse[]): ZoneDeepLinkTarget {
   if (params.tramo) {
@@ -38,7 +39,7 @@ export function resolveZoneDeepLink(params: ZoneDeepLinkParams, assignments: Zon
   if (segment) return { kind: 'segment', segment };
 
   const gap = gapAtMinute(assignments, minute);
-  return gap ? { kind: 'gap', gap } : { kind: 'invalid', reason: 'minuto' };
+  return gap ? { kind: 'gap', gap, minute } : { kind: 'invalid', reason: 'minuto' };
 }
 
 /**

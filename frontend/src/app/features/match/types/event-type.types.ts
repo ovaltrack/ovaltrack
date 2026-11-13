@@ -41,6 +41,20 @@ export interface BackendEventTypeResponse {
    * post-partido muestran todos los tipos. Puede faltar en tipos cacheados antes de esta columna.
    */
   statView?: LiveStatView[] | null;
+  /** Zonas de la cancha donde puede ocurrir el tipo; null/ausente = sin restricción (tipos cacheados antes de esta columna). */
+  zoneRule?: ZoneRule | null;
+}
+
+/**
+ * Regla de zona de un tipo de evento, vista desde el equipo que lo ejecuta (espejo de `ZoneRule` del backend).
+ * Un eje con un único valor queda fijo; si no, sale del tramo. `rowFrom` es el atributo (left | center | right) que fija la fila.
+ */
+export interface ZoneRule {
+  columns?: number[] | null;
+  rows?: number[] | null;
+  rowFrom?: string | null;
+  /** Después del evento el juego se reinicia: el tramo que lo contiene termina en su minuto. */
+  closesTramo?: boolean | null;
 }
 
 /** `basic`: modal de estadísticas de la carga en vivo · `intermediate`: resumen de entretiempo. */

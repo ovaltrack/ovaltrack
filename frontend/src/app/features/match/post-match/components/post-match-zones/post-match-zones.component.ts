@@ -1,22 +1,28 @@
-import { Component, DestroyRef, HostListener, OnDestroy, OnInit, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
+import { Component, DestroyRef, ElementRef, HostListener, OnDestroy, OnInit, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LayoutService } from 'src/app/core/services/layout.service';
 import { ToastService } from 'src/app/core/services/toast.service';
 import { UserContextService } from 'src/app/core/services/user-context.service';
-import { ZoneAssignmentResponse, ZoneCellRef } from '../../../types/zone.types';
+import { ZoneAssignmentResponse, ZoneCellRef, ZoneCellSummary } from '../../../types/zone.types';
+import { IN_GOAL_COLUMNS, isInGoalColumn } from '../../utils/zone-grid';
 import { MatchZonesStore } from '../../store/match-zones.store';
 import { PostMatchShellStore } from '../../store/post-match-shell.store';
 import { watchCompactLayout } from '../../utils/zone-compact';
+import { segmentAt, zonePoints } from '../../utils/zone-track-layout';
+import { cellEventRows, cellTramoRows } from '../../utils/zone-cell-detail';
+import { groupUnzoned, unzonedWithReason } from '../../utils/zone-unzoned';
 import { LoadingGate } from '../../../../../shared/utils/loading-gate';
 import { ZoneDeepLinkTarget, resolveZoneDeepLink } from '../../utils/zone-deep-link';
 import { ZONE_SHORTCUT_HELP, isSaveShortcut, isTypingTarget, shortcutCell } from '../../utils/zone-shortcuts';
 import {
-  NO_ZONE_EVENT_FILTERS, ZonePeriodFilter, countByCell, filterEvents, unzonedEvents, zoneCoveragePercent
+  ZoneMapMode, ZonePeriodFilter, countByCell, eventFiltersFor, eventTypeOptions, filterEvents, minutesByCell, validTypeFilter,
+  zoneCoveragePercent
 } from '../../utils/zone-stats';
 import { Possession } from '../../../types/live-capture.types';
 import { RugbyFieldComponent } from '../rugby-field/rugby-field.component';
 import { ZoneAssignmentPanelComponent } from '../zone-assignment-panel/zone-assignment-panel.component';
+import { ZoneCellDetailComponent, ZoneDetailView } from '../zone-cell-detail/zone-cell-detail.component';
 import { ZoneKpiStripComponent } from '../zone-kpi-strip/zone-kpi-strip.component';
 import { RugbyBallLoaderComponent } from '../../../../../shared/components/rugby-ball-loader/rugby-ball-loader.component';
 import { TerritoryGapSelection, ZoneTerritoryGridComponent } from '../zone-territory-grid/zone-territory-grid.component';
@@ -36,7 +42,7 @@ const HELP_VIEWPORT_MARGIN = 24;
 @Component({
   selector: 'app-post-match-zones',
   standalone: true,
-  imports: [RugbyFieldComponent, ZoneAssignmentPanelComponent, ZoneTerritoryGridComponent, ZoneKpiStripComponent, RugbyBallLoaderComponent],
+  imports: [RugbyFieldComponent, ZoneAssignmentPanelComponent, ZoneTerritoryGridComponent, ZoneKpiStripComponent, ZoneCellDetailComponent, RugbyBallLoaderComponent],
   templateUrl: './post-match-zones.component.html',
   styleUrls: ['../../styles/filter-pills.css', './post-match-zones.component.css']
 })
@@ -52,6 +58,7 @@ export class PostMatchZonesComponent implements OnInit, OnDestroy {
 
   private readonly panel = viewChild(ZoneAssignmentPanelComponent);
   private readonly grid = viewChild(ZoneTerritoryGridComponent);
+  private readonly detail = viewChild(ZoneCellDetailComponent, { read: ElementRef });
 
   readonly matchId = signal<string>('');
   /** La pelota aparece solo si la carga tarda (ver LoadingGate). */
@@ -68,6 +75,11 @@ export class PostMatchZonesComponent implements OnInit, OnDestroy {
     isValid: oneOf<Possession | 'ALL'>(['ALL', 'OWN', 'OPPONENT']),
   });
 
+  /** Tipo de jugada elegido ('ALL' = todos); un valor recordado que el partido ya no tiene se ignora (ver `typeFilter`). */
+  readonly selectedType = persistedSignal<string>(null, 'ALL', { isValid: (value): value is string => typeof value === 'string' });
+  /** Qué cuenta la cancha: jugadas por zona o minutos cubiertos por los tramos. */
+  readonly mapMode = persistedSignal<ZoneMapMode>(null, 'EVENTS', { isValid: oneOf<ZoneMapMode>(['EVENTS', 'MINUTES']) });
+
   /** Pantalla angosta: la grilla muestra un tiempo por vez y el formulario es una hoja inferior. */
   readonly compact = watchCompactLayout(this.destroyRef);
 
@@ -79,6 +91,12 @@ export class PostMatchZonesComponent implements OnInit, OnDestroy {
     { value: 'ALL', label: 'Todos' }, { value: 'OWN', label: 'Propios' }, { value: 'OPPONENT', label: 'Rival' }
   ];
 
+  readonly minutesFilterNote = 'En «Minutos» no aplica: los tramos no tienen tipo de jugada';
+
+  readonly modeOptions: { value: ZoneMapMode; label: string }[] = [
+    { value: 'EVENTS', label: 'Eventos' }, { value: 'MINUTES', label: 'Minutos' }
+  ];
+
   /** Enlace desde Eventos (`?tramo=` / `?minuto=`) ya interpretado, a la espera de que el formulario exista. */
   private readonly pendingDeepLink = signal<ZoneDeepLinkTarget | null>(null);
 
@@ -87,17 +105,64 @@ export class PostMatchZonesComponent implements OnInit, OnDestroy {
   readonly helpAlignEnd = signal<boolean>(false);
   readonly shortcutHelp = ZONE_SHORTCUT_HELP;
 
-  /** Eventos según la posesión elegida; el tiempo lo aplican por separado la cancha y la grilla. */
-  readonly filteredEvents = computed(() =>
-    filterEvents(this.zonesStore.events(), { ...NO_ZONE_EVENT_FILTERS, possession: this.possessionFilter() }));
+  /** Tipos de jugada que tiene el partido: las opciones del filtro por tipo. */
+  readonly typeOptions = computed(() => eventTypeOptions(this.zonesStore.events()));
+  /** Tipo en vigor: el elegido si el partido lo tiene, si no todos. */
+  readonly typeFilter = computed(() => validTypeFilter(this.selectedType(), this.typeOptions()));
+  /** En Minutos la cancha cuenta tramos, que no tienen tipo: el filtro de tipo no aplica (la posesión sí, en la grilla). */
+  readonly typeFilterApplies = computed(() => this.mapMode() === 'EVENTS');
 
-  // Todo se deriva de los eventos que ya traen su zona: una sola fuente de verdad.
-  readonly cellCounts = computed(() => countByCell(this.filteredEvents(), this.periodFilter()));
+  /** En Minutos la cancha suma tramos, que no tienen posesión: la leyenda lo aclara porque la grilla sí la filtra. */
+  readonly legendNote = computed(() => this.mapMode() === 'MINUTES' ? 'Minutos: no se filtra por posesión' : null);
+
+  /**
+   * Eventos de la grilla de territorio: siempre siguen la posesión, también en Minutos (sus conteos por franja y sus
+   * puntos son jugadas); el tipo de jugada cambia únicamente el mapa de la cancha.
+   */
+  readonly gridEvents = computed(() =>
+    filterEvents(this.zonesStore.events(), { eventTypeId: 'ALL', possession: this.possessionFilter() }));
+
+  /** Eventos del mapa de la cancha: la posesión y además el tipo de jugada elegido; el tiempo lo aplica `countByCell`. */
+  readonly mapEvents = computed(() =>
+    filterEvents(this.zonesStore.events(), eventFiltersFor(this.mapMode(), this.typeFilter(), this.possessionFilter())));
+
+  /** Puntos (jugadas con zona propia) del tiempo y la posesión elegidos: la grilla los dibuja sobre su franja. */
+  readonly points = computed(() => zonePoints(this.gridEvents(), this.zonesStore.zoneRules(), this.periodFilter()));
+
+  // Todo se deriva de los eventos que ya traen su zona (una sola fuente de verdad) y, en Minutos, de los tramos.
+  readonly cellCounts = computed<ZoneCellSummary[]>(() => this.mapMode() === 'MINUTES'
+    ? minutesByCell(this.zonesStore.assignments(), this.periodFilter()).map(({ row, col, minutes }) => ({ row, col, eventCount: minutes }))
+    : countByCell(this.mapEvents(), this.periodFilter()));
 
   // Indicadores del partido completo: no dependen de los filtros de la pantalla.
   readonly totalEvents = computed(() => this.zonesStore.events().length);
-  readonly totalUnzoned = computed(() => unzonedEvents(this.zonesStore.events(), 'ALL').length);
+  /** Las jugadas sin zona del partido con su motivo: alimentan el KPI, el enlace del panel y la lista del detalle. */
+  readonly unzonedItems = computed(() => unzonedWithReason(this.zonesStore.events(), this.zonesStore.assignments(), this.zonesStore.zoneRules()));
+  readonly totalUnzoned = computed(() => this.unzonedItems().length);
+  /** Las de hueco se resumen (ya están en «Huecos sin zona»); el detalle lista solo celda prohibida y sin tiempo. */
+  readonly unzonedGroups = computed(() => groupUnzoned(this.unzonedItems(), this.zonesStore.assignments()));
   readonly coveragePercent = computed(() => zoneCoveragePercent(this.zonesStore.assignments()));
+
+  /** Celda que se tocó en la cancha: su detalle queda fijo hasta que se toque otra. */
+  readonly inspectedCell = signal<ZoneCellRef | null>(null);
+  /** Qué muestra el detalle: la celda o la lista de jugadas sin zona. */
+  readonly detailView = signal<ZoneDetailView>('cell');
+  /** Celda del detalle: la que está bajo el puntero y, si no hay ninguna, la última que se tocó. */
+  readonly shownCell = computed(() => this.zonesStore.hoverCell() ?? this.inspectedCell());
+
+  /** Jugadas de la celda mostrada: siguen los mismos filtros que el mapa (tipo, posesión y tiempo). */
+  readonly detailEventRows = computed(() => {
+    const cell = this.shownCell();
+    return cell && this.mapMode() === 'EVENTS'
+      ? cellEventRows(this.mapEvents(), cell, this.zonesStore.assignments(), this.zonesStore.zoneRules(), this.periodFilter())
+      : [];
+  });
+
+  /** Tramos de la celda mostrada, para el modo Minutos. */
+  readonly detailTramoRows = computed(() => {
+    const cell = this.shownCell();
+    return cell && this.mapMode() === 'MINUTES' ? cellTramoRows(this.zonesStore.assignments(), cell, this.periodFilter()) : [];
+  });
 
   /** Celda de la cancha bajo el cursor: la grilla destaca sus tramos y atenúa el resto. */
   readonly highlightedCell = this.zonesStore.hoverCell;
@@ -135,6 +200,8 @@ export class PostMatchZonesComponent implements OnInit, OnDestroy {
       return;
     }
     this.possessionFilter.useKey(`post-match.${id}.zones.possession`);
+    this.selectedType.useKey(`post-match.${id}.zones.type`);
+    this.mapMode.useKey(`post-match.${id}.zones.mode`);
     // En pantalla angosta el período lo maneja la vista (arranca en 1T y sigue al cursor): no se recuerda.
     if (!this.compact()) this.periodFilter.useKey(`post-match.${id}.zones.period`);
     this.load(id);
@@ -217,12 +284,61 @@ export class PostMatchZonesComponent implements OnInit, OnDestroy {
     this.possessionFilter.set(value);
   }
 
+  setTypeFilter(eventTypeId: string): void {
+    this.selectedType.set(eventTypeId);
+  }
+
+  setMapMode(mode: ZoneMapMode): void {
+    this.mapMode.set(mode);
+  }
+
+  /** Muestra al costado de la cancha las jugadas sin zona con su motivo. */
+  openUnzoned(): void {
+    this.detailView.set('unzoned');
+    // En pantallas angostas el detalle queda debajo de la cancha: se lo acerca a la vista
+    queueMicrotask(() => this.detail()?.nativeElement.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' }));
+  }
+
+  closeUnzoned(): void {
+    this.detailView.set('cell');
+  }
+
+  /** Tocar una celda de la cancha (también las del in-goal) fija su detalle y saca la lista de jugadas sin zona. */
+  onCellInspected(cell: ZoneCellRef): void {
+    this.inspectedCell.set(cell);
+    this.detailView.set('cell');
+  }
+
+  /** Las jugadas en huecos se completan desde «Huecos sin zona» del panel. */
+  onUnzonedGaps(): void {
+    this.panel()?.showGaps();
+  }
+
+  /** Abrir el tramo que no admite la jugada para corregirlo. */
+  onUnzonedTramo(tramo: ZoneAssignmentResponse): void {
+    const panel = this.panel();
+    if (panel) this.applyDeepLink(panel, { kind: 'segment', segment: tramo });
+  }
+
+  /** Llevar a Eventos con la jugada seleccionada. */
+  onUnzonedEvent(eventId: string): void {
+    this.shell.lastSelectedEventId.set(eventId);
+    this.router.navigate(['/post-match', this.matchId()]);
+  }
+
   setPeriodFilter(filter: ZonePeriodFilter): void {
     this.periodFilter.set(filter);
   }
 
-  /** Tocar una zona de la cancha elige franja y lateral a la vez. */
+  /** Franjas de la cancha que no se eligen para un tramo: el in-goal solo tiene puntos. */
+  readonly lockedCols = IN_GOAL_COLUMNS;
+
+  /** Tocar una zona de la cancha elige franja y lateral a la vez; el in-goal no admite tramos, así que no se elige. */
   onCellSelected(cell: ZoneCellRef): void {
+    if (isInGoalColumn(cell.col)) {
+      this.toastService.info('El in-goal solo tiene puntos: los tramos van de la franja 22 propio a la 22 rival.', 'Zonas');
+      return;
+    }
     this.selectedCell.set(cell);
   }
 
@@ -271,7 +387,9 @@ export class PostMatchZonesComponent implements OnInit, OnDestroy {
       panel.startEdit(target.segment);
     } else if (target.kind === 'gap') {
       if (this.compact()) this.periodFilter.set(target.gap.period);
-      panel.prefill({ startMinute: target.gap.start, endMinute: target.gap.end });
+      // Un tanto reinicia el juego: se propone el segmento entre cortes que contiene el minuto, no el hueco entero
+      const segment = segmentAt(target.gap, target.minute, this.zonesStore.cuts());
+      panel.prefill({ startMinute: segment.start, endMinute: segment.end });
     }
   }
 

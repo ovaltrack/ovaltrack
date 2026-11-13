@@ -58,7 +58,7 @@
             <button type="button" class="step-btn" aria-label="Restar un minuto a Desde"
                     [disabled]="store.isSaving()" (click)="adjust('start', -1)">−</button>
             <input id="zone-start" type="number" class="form-control" step="1" inputmode="numeric"
-                   [(ngModel)]="startMinute" (ngModelChange)="onRangeChange()" [disabled]="store.isSaving()" />
+                   [(ngModel)]="startMinute" (ngModelChange)="onRangeChange()" (change)="confirmRange()" [disabled]="store.isSaving()" />
             <button type="button" class="step-btn" aria-label="Sumar un minuto a Desde"
                     [disabled]="store.isSaving()" (click)="adjust('start', 1)">+</button>
           </div>
@@ -73,7 +73,7 @@
             <button type="button" class="step-btn" aria-label="Restar un minuto a Hasta"
                     [disabled]="store.isSaving()" (click)="adjust('end', -1)">−</button>
             <input id="zone-end" type="number" class="form-control" step="1" inputmode="numeric"
-                   [(ngModel)]="endMinute" (ngModelChange)="onRangeChange()" [disabled]="store.isSaving()" />
+                   [(ngModel)]="endMinute" (ngModelChange)="onRangeChange()" (change)="confirmRange()" [disabled]="store.isSaving()" />
             <button type="button" class="step-btn" aria-label="Sumar un minuto a Hasta"
                     [disabled]="store.isSaving()" (click)="adjust('end', 1)">+</button>
           </div>
@@ -83,6 +83,7 @@
       <p *ngIf="linkedEventCount !== null" class="preview" data-testid="linked-preview">
         {{ period }}T · se vincularán <strong>{{ linkedEventCount }}</strong> {{ linkedEventCount === 1 ? 'evento' : 'eventos' }}
       </p>
+      <p *ngIf="cutNotice" class="preview" role="status" data-testid="cut-notice">{{ cutNotice }}</p>
       <p *ngIf="releasedEventCount > 0" class="preview preview-warn" data-testid="released-preview">
         {{ releasedEventCount }} {{ releasedEventCount === 1 ? 'evento pasará' : 'eventos pasarán' }} a "Sin zona"
       </p>
@@ -125,8 +126,16 @@
         <span class="count-pill" data-testid="gaps-count">{{ gaps.length }}</span>
       </div>
 
-      <p *ngIf="gaps.length === 0" class="match-complete" data-testid="match-complete">
+      <p *ngIf="gaps.length === 0 && unzonedCount === 0" class="match-complete" data-testid="match-complete">
         <i class="bi bi-check-circle-fill"></i> Partido completo
+      </p>
+
+      <!-- Todo el tiempo tiene tramo, pero hay jugadas que quedaron sin zona: no se dice «completo» -->
+      <p *ngIf="gaps.length === 0 && unzonedCount > 0" class="match-complete is-pending" data-testid="time-covered">
+        Tiempo cubierto ·
+        <button type="button" class="pending-link" data-testid="unzoned-link" (click)="unzonedRequested.emit()">
+          {{ unzonedCount }} {{ unzonedCount === 1 ? 'jugada sin zona' : 'jugadas sin zona' }}
+        </button>
       </p>
 
       <!-- Solo entran los huecos completos en el alto disponible; el resto se resume al pie, sin scroll -->

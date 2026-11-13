@@ -35,6 +35,8 @@ export interface ReviewEventViewModel {
   note?: string | null;
   /** Zona de la cancha del evento; null = sin zona; ausente = no se sabe (el servidor no la informó y no hay tramos cargados). */
   zone?: ZoneCellRef | null;
+  /** La zona sale de la regla del tipo y no de un tramo (se muestra "zona fija por el tipo"). */
+  zoneFixed?: boolean;
   isDimmed: boolean; // True si queda fuera de los filtros activos (para el gráfico)
 }
 

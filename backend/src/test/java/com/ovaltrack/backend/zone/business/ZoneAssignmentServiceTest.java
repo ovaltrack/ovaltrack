@@ -3,7 +3,9 @@ package com.ovaltrack.backend.zone.business;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -16,6 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
@@ -23,6 +26,7 @@ import org.springframework.security.core.Authentication;
 
 import com.ovaltrack.backend.common.config.exceptions.BusinessException;
 import com.ovaltrack.backend.common.config.exceptions.EntityNotFoundException;
+import com.ovaltrack.backend.event.domain.Event;
 import com.ovaltrack.backend.event.repository.EventRepository;
 import com.ovaltrack.backend.match.business.MatchSecurityValidator;
 import com.ovaltrack.backend.match.business.MatchService;
@@ -41,6 +45,8 @@ class ZoneAssignmentServiceTest {
     @Mock private MatchSecurityValidator matchSecurityValidator;
     @Mock private ZoneAssignmentRepository zoneAssignmentRepository;
     @Mock private EventRepository eventRepository;
+    @Mock private EventZoneRuleValidator ruleValidator;
+    @Mock private TramoCutValidator cutValidator;
     @Mock private Authentication authentication;
 
     private final ZoneAssignmentValidator validator = new ZoneAssignmentValidator();
@@ -55,7 +61,7 @@ class ZoneAssignmentServiceTest {
     @BeforeEach
     void setUp() {
         service = new ZoneAssignmentService(matchService, matchSecurityValidator, zoneAssignmentRepository,
-                eventRepository, validator, summaryCalculator);
+                eventRepository, validator, summaryCalculator, ruleValidator, cutValidator);
         matchId = UUID.randomUUID();
         match = new Match();
         match.setId(matchId);
@@ -178,5 +184,156 @@ class ZoneAssignmentServiceTest {
         when(zoneAssignmentRepository.findByIdAndMatchId(zoneId, matchId)).thenReturn(Optional.empty());
 
         assertThrows(EntityNotFoundException.class, () -> service.delete(matchId, zoneId, authentication));
+    }
+
+    // --- Regla de zona por tipo de evento ---
+
+    @Test
+    @DisplayName("Al crear, valida los eventos del partido contra la celda pedida después de las reglas de rango")
+    void shouldValidateEventZoneRulesOnCreate() {
+        List<Event> events = List.of(new Event());
+        when(matchService.findMatchEntityById(matchId)).thenReturn(match);
+        when(zoneAssignmentRepository.findByMatchIdOrderByPeriodAscStartMinuteAsc(matchId)).thenReturn(List.of());
+        when(eventRepository.findPostMatchEventsByMatchId(matchId)).thenReturn(events);
+        when(zoneAssignmentRepository.save(any(ZoneAssignment.class))).thenAnswer(call -> call.getArgument(0));
+
+        service.create(matchId, request, authentication);
+
+        InOrder order = inOrder(ruleValidator, zoneAssignmentRepository);
+        order.verify(ruleValidator).validateAssignment(request, events);
+        order.verify(zoneAssignmentRepository).save(any(ZoneAssignment.class));
+    }
+
+    @Test
+    @DisplayName("Si la regla de zona rechaza el tramo, no se crea")
+    void shouldNotCreateWhenRuleValidatorRejects() {
+        when(matchService.findMatchEntityById(matchId)).thenReturn(match);
+        when(zoneAssignmentRepository.findByMatchIdOrderByPeriodAscStartMinuteAsc(matchId)).thenReturn(List.of());
+        when(eventRepository.findPostMatchEventsByMatchId(matchId)).thenReturn(List.of());
+        doThrow(new BusinessException("Scrum (1T 22:00) no puede quedar en C6"))
+                .when(ruleValidator).validateAssignment(any(), any());
+
+        assertThrows(BusinessException.class, () -> service.create(matchId, request, authentication));
+        verify(zoneAssignmentRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Si el rango es inválido, ni siquiera se consultan los eventos")
+    void shouldNotCheckEventZoneRulesWhenRangeIsInvalid() {
+        when(matchService.findMatchEntityById(matchId)).thenReturn(match);
+        when(zoneAssignmentRepository.findByMatchIdOrderByPeriodAscStartMinuteAsc(matchId)).thenReturn(List.of());
+
+        assertThrows(BusinessException.class, () -> service.create(matchId,
+                new ZoneAssignmentCreationDTO(2, 3, 1, 25, 10), authentication));
+        verify(ruleValidator, never()).validateAssignment(any(), any());
+    }
+
+    @Test
+    @DisplayName("Al editar, valida los eventos contra la celda y el rango nuevos")
+    void shouldValidateEventZoneRulesOnUpdate() {
+        UUID zoneId = UUID.randomUUID();
+        ZoneAssignment current = zone(zoneId, 10, 25);
+        List<Event> events = List.of(new Event());
+        ZoneAssignmentCreationDTO moved = new ZoneAssignmentCreationDTO(2, 1, 1, 10, 25);
+        when(matchService.findMatchEntityById(matchId)).thenReturn(match);
+        when(zoneAssignmentRepository.findByIdAndMatchId(zoneId, matchId)).thenReturn(Optional.of(current));
+        when(zoneAssignmentRepository.findByMatchIdOrderByPeriodAscStartMinuteAsc(matchId)).thenReturn(List.of(current));
+        when(eventRepository.findPostMatchEventsByMatchId(matchId)).thenReturn(events);
+        when(zoneAssignmentRepository.save(any(ZoneAssignment.class))).thenAnswer(call -> call.getArgument(0));
+
+        service.update(matchId, zoneId, moved, authentication);
+
+        verify(ruleValidator).validateAssignment(moved, events);
+    }
+
+    @Test
+    @DisplayName("Si la regla de zona rechaza el cambio, el tramo no se modifica")
+    void shouldNotUpdateWhenRuleValidatorRejects() {
+        UUID zoneId = UUID.randomUUID();
+        ZoneAssignment current = zone(zoneId, 10, 25);
+        when(matchService.findMatchEntityById(matchId)).thenReturn(match);
+        when(zoneAssignmentRepository.findByIdAndMatchId(zoneId, matchId)).thenReturn(Optional.of(current));
+        when(zoneAssignmentRepository.findByMatchIdOrderByPeriodAscStartMinuteAsc(matchId)).thenReturn(List.of(current));
+        when(eventRepository.findPostMatchEventsByMatchId(matchId)).thenReturn(List.of());
+        doThrow(new BusinessException("Maul (1T 15:00) no puede quedar en C1"))
+                .when(ruleValidator).validateAssignment(any(), any());
+
+        assertThrows(BusinessException.class, () -> service.update(matchId, zoneId,
+                new ZoneAssignmentCreationDTO(2, 1, 1, 10, 25), authentication));
+        verify(zoneAssignmentRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Eliminar un tramo nunca consulta la regla de zona")
+    void shouldNotCheckEventZoneRulesOnDelete() {
+        UUID zoneId = UUID.randomUUID();
+        when(matchService.findMatchEntityById(matchId)).thenReturn(match);
+        when(zoneAssignmentRepository.findByIdAndMatchId(zoneId, matchId)).thenReturn(Optional.of(zone(zoneId, 10, 25)));
+
+        service.delete(matchId, zoneId, authentication);
+
+        verify(ruleValidator, never()).validateAssignment(any(), any());
+    }
+
+    // --- Corte de tramo por try ---
+
+    @Test
+    @DisplayName("Al crear, valida el corte por try con los mismos eventos y antes de guardar")
+    void shouldValidateTramoCutOnCreate() {
+        List<Event> events = List.of(new Event());
+        when(matchService.findMatchEntityById(matchId)).thenReturn(match);
+        when(zoneAssignmentRepository.findByMatchIdOrderByPeriodAscStartMinuteAsc(matchId)).thenReturn(List.of());
+        when(eventRepository.findPostMatchEventsByMatchId(matchId)).thenReturn(events);
+        when(zoneAssignmentRepository.save(any(ZoneAssignment.class))).thenAnswer(call -> call.getArgument(0));
+
+        service.create(matchId, request, authentication);
+
+        InOrder order = inOrder(ruleValidator, cutValidator, zoneAssignmentRepository);
+        order.verify(ruleValidator).validateAssignment(request, events);
+        order.verify(cutValidator).validateAssignment(request, events);
+        order.verify(zoneAssignmentRepository).save(any(ZoneAssignment.class));
+    }
+
+    @Test
+    @DisplayName("Si el tramo sigue después de un try, no se crea")
+    void shouldNotCreateWhenCutValidatorRejects() {
+        when(matchService.findMatchEntityById(matchId)).thenReturn(match);
+        when(zoneAssignmentRepository.findByMatchIdOrderByPeriodAscStartMinuteAsc(matchId)).thenReturn(List.of());
+        when(eventRepository.findPostMatchEventsByMatchId(matchId)).thenReturn(List.of());
+        doThrow(new BusinessException("El tramo 1T 10'–25' no puede seguir después del Try"))
+                .when(cutValidator).validateAssignment(any(), any());
+
+        assertThrows(BusinessException.class, () -> service.create(matchId, request, authentication));
+        verify(zoneAssignmentRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Al editar, valida el corte por try con el rango nuevo; si lo rechaza no se modifica")
+    void shouldValidateTramoCutOnUpdate() {
+        UUID zoneId = UUID.randomUUID();
+        ZoneAssignment current = zone(zoneId, 10, 25);
+        ZoneAssignmentCreationDTO widened = new ZoneAssignmentCreationDTO(2, 3, 1, 10, 30);
+        when(matchService.findMatchEntityById(matchId)).thenReturn(match);
+        when(zoneAssignmentRepository.findByIdAndMatchId(zoneId, matchId)).thenReturn(Optional.of(current));
+        when(zoneAssignmentRepository.findByMatchIdOrderByPeriodAscStartMinuteAsc(matchId)).thenReturn(List.of(current));
+        when(eventRepository.findPostMatchEventsByMatchId(matchId)).thenReturn(List.of());
+        doThrow(new BusinessException("El tramo 1T 10'–30' no puede seguir después del Try"))
+                .when(cutValidator).validateAssignment(any(), any());
+
+        assertThrows(BusinessException.class, () -> service.update(matchId, zoneId, widened, authentication));
+        verify(cutValidator).validateAssignment(eq(widened), any());
+        verify(zoneAssignmentRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Eliminar un tramo nunca valida el corte por try")
+    void shouldNotCheckTramoCutOnDelete() {
+        UUID zoneId = UUID.randomUUID();
+        when(matchService.findMatchEntityById(matchId)).thenReturn(match);
+        when(zoneAssignmentRepository.findByIdAndMatchId(zoneId, matchId)).thenReturn(Optional.of(zone(zoneId, 10, 25)));
+
+        service.delete(matchId, zoneId, authentication);
+
+        verify(cutValidator, never()).validateAssignment(any(), any());
     }
 }

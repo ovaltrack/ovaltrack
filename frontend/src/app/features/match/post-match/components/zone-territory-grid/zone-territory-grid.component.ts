@@ -1,12 +1,13 @@
-import { Component, ElementRef, computed, input, output, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, NgZone, computed, effect, inject, input, output, signal, viewChild } from '@angular/core';
 import { NavStop, rowStops, stepMinute, stepRow, stopAt } from '../../utils/zone-nav';
 import { ZONE_GRID_COLS, ZONE_HALF_MINUTES, ZoneAssignmentResponse, ZoneCellRef, ZonePeriod } from '../../../types/zone.types';
 import { DragRange, dragNewRange, minuteAtPosition, resizeRange } from '../../utils/zone-drag';
-import { ZONE_COLUMN_NAMES, zoneLabel } from '../../utils/zone-grid';
+import { ZONE_COLUMN_NAMES, isInGoalColumn, zoneLabel } from '../../utils/zone-grid';
 import { ZoneEvent, ZonePeriodFilter, eventsInRange } from '../../utils/zone-stats';
+import { observeWidth } from '../../utils/observe-width';
 import {
-  BlockLayout, PeriodGap, TRACK_MINUTES, allGaps, blockLabel, blockLayout, countByFranja, gapAtMinute, isInWindow, minuteAtOffset,
-  minuteToPercent, territoryRows, trackWindow
+  BlockLayout, PeriodGap, TramoCutMark, TRACK_MINUTES, ZonePoint, allGaps, blockLabel, blockLayout, clusterMarks, countByFranja,
+  describePoint, gapAtMinute, isInWindow, minuteAtOffset, minuteToPercent, segmentAt, territoryRows, touchingCuts, trackWindow, tramoEndingAt
 } from '../../utils/zone-track-layout';
 
 /** Tramo o hueco elegido en una fila de la grilla: `col` es la franja (fila de la grilla) sobre la que se hizo clic. */
@@ -25,12 +26,36 @@ interface BlockView {
   aria: string;
 }
 
+/** Línea de corte sobre las franjas: solo se dibuja la de los cortes que toca el rango en edición o la del tanto que se señala. */
+interface CutLineView {
+  eventId: string;
+  left: number;
+}
+
+/** Punto de solo lectura de una jugada con zona propia: posición horizontal en % del eje y texto para tooltip y lectores. */
+interface PointView {
+  eventId: string;
+  left: number;
+  aria: string;
+}
+
+/** Uno o varios puntos de una fila que quedaron juntos: con varios se dibuja el número y el tooltip los lista. */
+interface PointGroup {
+  key: string;
+  left: number;
+  count: number;
+  aria: string;
+  eventIds: string[];
+}
+
 interface RowView {
   col: number;
   name: string;
   range: string;
+  inGoal: boolean;
   count: number;
   blocks: BlockView[];
+  pointGroups: PointGroup[];
 }
 
 interface Tick {
@@ -90,6 +115,13 @@ interface DragState {
 })
 export class ZoneTerritoryGridComponent {
   readonly assignments = input<ZoneAssignmentResponse[]>([]);
+  /** Jugadas con zona propia (Try, Try penal): puntos de solo lectura en la fila de su franja, sin ocupar rango. */
+  readonly points = input<ZonePoint[]>([]);
+  /**
+   * Cortes por try (y tanteos que reinician el juego): el arrastre frena ahí y un tramo que los cruza se marca. Su línea
+   * vertical solo se dibuja junto al rango en edición; señalar el rombo resalta el fin del tramo que cortó.
+   */
+  readonly cuts = input<TramoCutMark[]>([]);
   /** Eventos ya filtrados por posesión: sus conteos por franja aparecen en cada fila. */
   readonly events = input<ZoneEvent[]>([]);
   /** Todos los eventos del partido: el tooltip del arrastre cuenta los que entran en el rango, sin filtros. */
@@ -123,8 +155,35 @@ export class ZoneTerritoryGridComponent {
   readonly gapSelected = output<TerritoryGapSelection>();
 
   private readonly tracks = viewChild<ElementRef<HTMLElement>>('tracks');
+  private readonly ngZone = inject(NgZone);
+
+  /** Ancho en píxeles del eje: con él se sabe qué puntos quedan a menos de 12 px y se dibujan como uno. */
+  private readonly trackWidth = signal(0);
+  /** Eventos señalados con el puntero (un punto o un grupo): se resalta el borde del tramo que cortan. */
+  private readonly hotEventIds = signal<readonly string[]>([]);
+
+  constructor() {
+    effect(onCleanup => {
+      const element = this.tracks()?.nativeElement;
+      if (!element) return;
+      const stop = observeWidth(element, width => this.ngZone.run(() => this.trackWidth.set(width)));
+      onCleanup(stop);
+    });
+  }
 
   readonly rowCount = territoryRows().length;
+
+  /**
+   * Posición y alto de cada fila (de arriba hacia abajo) para lo que se dibuja encima de la grilla: los carriles de
+   * in-goal son más finos (`--lane-h`) que las franjas del campo (`--row-h`).
+   */
+  readonly rowBoxes = territoryRows().map((row, index, all) => {
+    const lanes = all.slice(0, index).filter(previous => previous.inGoal).length;
+    return {
+      top: `calc(${lanes} * var(--lane-h) + ${index - lanes} * var(--row-h))`,
+      height: row.inGoal ? 'var(--lane-h)' : 'var(--row-h)'
+    };
+  });
 
   /** Tramo de partido que se ve en el eje: los 80 minutos o, en pantalla angosta con 1T/2T, un solo tiempo. */
   readonly view = computed(() => trackWindow(this.periodFilter(), this.compact()));
@@ -193,6 +252,9 @@ export class ZoneTerritoryGridComponent {
     if (stop?.kind === 'block') {
       return `${franja}: tramo ${zoneLabel(stop.assignment)}, ${stop.assignment.period}T de ${stop.start}′ a ${stop.end}′. Enter para editar`;
     }
+    if (stop?.kind === 'gap' && isInGoalColumn(cursor.col)) {
+      return `${franja}, minuto ${cursor.minute}: el in-goal solo tiene puntos, no admite tramos nuevos`;
+    }
     if (stop?.kind === 'gap') {
       return `${franja}, minuto ${cursor.minute}: hueco sin zona de ${stop.start}′ a ${stop.end}′. Enter para completar desde acá`;
     }
@@ -233,12 +295,66 @@ export class ZoneTerritoryGridComponent {
           + (this.pickingPeriod() ? `Tocá para ver el ${assignment.period}T` : 'Tocá para editar')
       }];
     });
+    const points = this.points().flatMap(point => {
+      const left = minuteToPercent(point.minute, this.view());
+      const tramoEnds = point.cutMinute === null || tramoEndingAt(this.assignments(), { period: point.period, minute: point.cutMinute }) !== null;
+      return left < 0 || left > 100 ? [] : [{ col: point.col, eventId: point.eventId, left, aria: describePoint(point, tramoEnds) }];
+    });
     return territoryRows().map(row => ({
       ...row,
       count: counts.get(row.col) ?? 0,
-      blocks: blocks.filter(block => block.assignment.col === row.col)
+      blocks: blocks.filter(block => block.assignment.col === row.col),
+      pointGroups: clusterMarks(points.filter(point => point.col === row.col), this.trackWidth()).map(group => ({
+        key: group.items.map(item => item.eventId).join('+'),
+        left: group.left,
+        count: group.items.length,
+        aria: group.items.length === 1 ? group.items[0].aria : `${group.items.length} jugadas: ${group.items.map(item => item.aria).join('; ')}`,
+        eventIds: group.items.map(item => item.eventId)
+      }))
     }));
   });
+
+  /** Cortes dentro del tramo mostrado, con su posición en el eje. */
+  private readonly cutViews = computed<CutLineView[]>(() =>
+    this.cuts().flatMap(cut => {
+      const left = minuteToPercent(cut.minute, this.view());
+      return left < 0 || left > 100 ? [] : [{ eventId: cut.eventId, left }];
+    }));
+
+  /** Rango que se está armando: el que se arrastra o, si no, el del formulario. */
+  private readonly activeRange = computed(() => {
+    const drag = this.drag();
+    return drag?.moved && drag.range ? drag.range : this.previewRange();
+  });
+
+  /**
+   * Líneas de corte a toda altura: solo las de los cortes que toca el rango en edición, para ver dónde frena. Señalar un
+   * rombo no dibuja la línea (quedaría pegada a él): resalta el borde del tramo que corta (`cutEdgeIds`).
+   */
+  readonly cutLines = computed<CutLineView[]>(() => {
+    const range = this.activeRange();
+    if (!range) return [];
+    const touching = new Set(touchingCuts(range, this.cuts()).map(cut => cut.eventId));
+    return this.cutViews().filter(cut => touching.has(cut.eventId));
+  });
+
+  /** Tramos que terminan en el corte del rombo señalado: su borde derecho se resalta para unir el tanto con su corte. */
+  readonly cutEdgeIds = computed(() => {
+    const hot = this.hotEventIds();
+    return new Set(this.cuts()
+      .filter(cut => hot.includes(cut.eventId))
+      .map(cut => tramoEndingAt(this.assignments(), cut)?.id)
+      .filter((id): id is string => id !== undefined));
+  });
+
+  setHot(eventIds: readonly string[]): void {
+    this.hotEventIds.set(eventIds);
+  }
+
+  isHot(eventIds: readonly string[]): boolean {
+    const hot = this.hotEventIds();
+    return eventIds.some(id => hot.includes(id));
+  }
 
   readonly gaps = computed(() => allGaps(this.assignments()).flatMap(gap => {
     const layout = this.layoutOf({ startMinute: gap.start, endMinute: gap.end });
@@ -315,8 +431,10 @@ export class ZoneTerritoryGridComponent {
     }
     const target = this.targetAt(event);
     if (target) {
-      this.cursor.set({ col: target.col, minute: target.gap.start });
-      this.gapSelected.emit({ period: target.gap.period, startMinute: target.gap.start, endMinute: target.gap.end, col: target.col });
+      // Un tanto reinicia el juego: el toque propone el segmento entre cortes, no el hueco entero
+      const segment = segmentAt(target.gap, target.minute, this.cuts());
+      this.cursor.set({ col: target.col, minute: segment.start });
+      this.gapSelected.emit({ period: target.gap.period, startMinute: segment.start, endMinute: segment.end, col: target.col });
     }
   }
 
@@ -418,16 +536,17 @@ export class ZoneTerritoryGridComponent {
     const rect = element.getBoundingClientRect();
     const current = minuteAtPosition(event.clientX - rect.left, rect.width, this.view());
     const { range, notice } = drag.resize
-      ? resizeRange(this.assignments(), drag.resize.segment, drag.resize.edge, current)
-      : dragNewRange(this.assignments(), drag.period, drag.anchor, current);
+      ? resizeRange(this.assignments(), drag.resize.segment, drag.resize.edge, current, this.cuts())
+      : dragNewRange(this.assignments(), drag.period, drag.anchor, current, this.cuts());
 
     // El tooltip es `fixed` (la grilla recorta lo que sobresale): se ubica sobre el centro del rango, encima de su fila.
     const rowIndex = this.rows().findIndex(row => row.col === drag.col);
+    const rowTop = this.rowElements()[rowIndex]?.getBoundingClientRect().top ?? rect.top;
     const centerMinute = range ? (range.startMinute + range.endMinute) / 2 : current;
     this.drag.set({
       ...drag, moved: true, range, notice,
       tipX: Math.min(Math.max(rect.left + (minuteToPercent(centerMinute, this.view()) / 100) * rect.width, TIP_EDGE_PX), window.innerWidth - TIP_EDGE_PX),
-      tipY: rect.top + (rect.height / this.rowCount) * rowIndex - TIP_GAP_PX
+      tipY: rowTop - TIP_GAP_PX
     });
 
     const changed = range && (range.startMinute !== drag.range?.startMinute || range.endMinute !== drag.range?.endMinute);
@@ -465,9 +584,9 @@ export class ZoneTerritoryGridComponent {
     return true;
   }
 
-  /** Primera parada de la franja elegida o, sin franja, de la fila de arriba (el in-goal rival). */
+  /** Primera parada de la franja elegida o, sin franja, de la primera fila que admite tramos (el 22 rival). */
   private initialCursor(): GridCursor {
-    const col = this.selectedCol() ?? ZONE_GRID_COLS;
+    const col = this.selectedCol() ?? territoryRows().find(row => !row.inGoal)?.col ?? ZONE_GRID_COLS;
     return { col, minute: rowStops(this.assignments(), col)[0]?.start ?? 0 };
   }
 
@@ -475,8 +594,9 @@ export class ZoneTerritoryGridComponent {
   private activate(cursor: GridCursor): void {
     const stop: NavStop | null = stopAt(rowStops(this.assignments(), cursor.col), cursor.minute);
     if (stop?.kind === 'block') this.segmentSelected.emit(stop.assignment);
-    else if (stop?.kind === 'gap') {
-      this.gapSelected.emit({ period: stop.period, startMinute: cursor.minute, endMinute: stop.end, col: cursor.col });
+    else if (stop?.kind === 'gap' && !isInGoalColumn(cursor.col)) {
+      const segment = segmentAt({ period: stop.period, start: stop.start, end: stop.end }, cursor.minute, this.cuts());
+      this.gapSelected.emit({ period: stop.period, startMinute: cursor.minute, endMinute: segment.end, col: cursor.col });
     }
   }
 
@@ -500,14 +620,28 @@ export class ZoneTerritoryGridComponent {
     this.periodRequested.emit(minute >= ZONE_HALF_MINUTES ? 2 : 1);
   }
 
-  /** Franja (por la altura del puntero) y hueco (por el minuto) bajo el puntero; null si ese minuto ya tiene tramo. */
-  private targetAt(event: MouseEvent): { col: number; gap: PeriodGap } | null {
+  private rowElements(): HTMLElement[] {
+    return Array.from(this.tracks()?.nativeElement.querySelectorAll<HTMLElement>('.row-track') ?? []);
+  }
+
+  /** Fila bajo la altura del puntero; las alturas no son parejas (el in-goal es más fino), así que se miden las filas. */
+  private rowIndexAt(clientY: number): number {
+    const elements = this.rowElements();
+    const index = elements.findIndex(element => clientY < element.getBoundingClientRect().bottom);
+    return index < 0 ? elements.length - 1 : index;
+  }
+
+  /**
+   * Franja (por la altura del puntero) y hueco (por el minuto) bajo el puntero; null si ese minuto ya tiene tramo o si
+   * la franja es de in-goal, que solo admite puntos: ahí no se crean tramos.
+   */
+  private targetAt(event: MouseEvent): { col: number; gap: PeriodGap; minute: number } | null {
     const rect = this.tracks()?.nativeElement.getBoundingClientRect();
     if (!rect || rect.width <= 0 || rect.height <= 0) return null;
 
-    const rows = territoryRows();
-    const rowIndex = Math.min(Math.max(Math.floor(((event.clientY - rect.top) / rect.height) * rows.length), 0), rows.length - 1);
-    const gap = gapAtMinute(this.assignments(), minuteAtOffset(event.clientX - rect.left, rect.width, this.view()));
-    return gap ? { col: rows[rowIndex].col, gap } : null;
+    const row = territoryRows()[this.rowIndexAt(event.clientY)];
+    const minute = minuteAtOffset(event.clientX - rect.left, rect.width, this.view());
+    const gap = row.inGoal ? null : gapAtMinute(this.assignments(), minute);
+    return gap ? { col: row.col, gap, minute } : null;
   }
 }

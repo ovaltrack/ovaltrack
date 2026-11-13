@@ -20,12 +20,14 @@
     <div class="labels">
       @for (row of rows(); track row.col) {
         <div class="row-label" [class.is-selected]="selectedCol() === row.col" [class.is-cursor]="cursorView()?.col === row.col"
+             [class.is-lane]="row.inGoal" [attr.title]="row.inGoal ? 'Solo puntos: el in-goal no admite tramos nuevos' : null"
              data-testid="territory-row-label">
           <span class="row-text">
             <strong class="row-name">{{ row.name }}</strong>
             <span class="row-range">{{ row.range }}</span>
           </span>
-          <span class="row-count" data-testid="territory-row-count">{{ row.count }}</span>
+          <span class="row-count" data-testid="territory-row-count"
+                title="Jugadas con zona en esta franja, tengan punto o la reciban de un tramo">{{ row.count }}</span>
         </div>
       }
     </div>
@@ -46,11 +48,12 @@
       }
 
       @for (row of rows(); track row.col; let i = $index) {
-        <div class="row-track" [class.is-selected]="selectedCol() === row.col" data-testid="territory-row">
+        <div class="row-track" [class.is-selected]="selectedCol() === row.col" [class.is-lane]="row.inGoal" data-testid="territory-row">
           @for (block of row.blocks; track block.assignment.id) {
             <button type="button" class="block" data-testid="territory-block" tabindex="-1"
                     [class.is-selected]="block.assignment.id === selectedId()"
                     [class.is-conflict]="block.assignment.id === conflictId()"
+                    [class.is-cut-edge]="cutEdgeIds().has(block.assignment.id)"
                     [class.is-linked]="isLinked(block.assignment)"
                     [class.is-dimmed]="!!highlightCell() && !isLinked(block.assignment)"
                     [style.left.%]="block.left" [style.width.%]="block.width"
@@ -68,7 +71,23 @@
                     [style.left.%]="block.left + block.width" (pointerdown)="onHandleDown($event, block.assignment, 'end')" (click)="$event.stopPropagation()"></span>
             }
           }
+          <!-- Jugadas con zona propia: punto de solo lectura, no es un tramo ni ocupa rango; varios juntos se dibujan como uno con el número -->
+          @for (group of row.pointGroups; track group.key) {
+            <span class="zone-point" role="img" data-testid="territory-point" [class.is-cluster]="group.count > 1" [class.is-hot]="isHot(group.eventIds)"
+                  [style.left.%]="group.left" [attr.aria-label]="group.aria" [attr.title]="group.aria"
+                  (mouseenter)="setHot(group.eventIds)" (mouseleave)="setHot([])">
+              @if (group.count > 1) {
+                <span class="point-count">{{ group.count }}</span>
+              }
+            </span>
+          }
         </div>
+      }
+
+      <!-- Líneas de corte: solo las que toca el rango en edición; el rombo señalado resalta el borde del tramo que corta -->
+      @for (line of cutLines(); track line.eventId) {
+        <span class="cut-line" data-testid="territory-cut" aria-hidden="true"
+              [class.is-hot]="isHot([line.eventId])" [style.left.%]="line.left"></span>
       }
 
       @if (halfMark(); as mark) {
@@ -77,13 +96,13 @@
 
       @if (hoverGap(); as hover) {
         <span class="hover-gap" data-testid="territory-hover" aria-hidden="true"
-              [style.--row]="hover.rowIndex" [style.left.%]="hover.left" [style.width.%]="hover.width"></span>
+              [style.--row-top]="rowBoxes[hover.rowIndex].top" [style.--row-height]="rowBoxes[hover.rowIndex].height" [style.left.%]="hover.left" [style.width.%]="hover.width"></span>
       }
 
       @if (preview(); as range) {
         @if (range.rowIndex >= 0) {
           <span class="preview" data-testid="territory-preview"
-                [style.--row]="range.rowIndex" [style.left.%]="range.left" [style.width.%]="range.width"
+                [style.--row-top]="rowBoxes[range.rowIndex].top" [style.--row-height]="rowBoxes[range.rowIndex].height" [style.left.%]="range.left" [style.width.%]="range.width"
                 [attr.title]="range.aria" aria-hidden="true"></span>
         }
       }
@@ -92,18 +111,18 @@
         <!-- Cursor del teclado: la parada (tramo o hueco) y el minuto, sobre la fila elegida -->
         @if (cursor.stop; as stop) {
           <span class="cursor-stop" data-testid="territory-cursor-stop" aria-hidden="true"
-                [class.on-block]="cursor.onBlock" [style.--row]="cursor.rowIndex" [style.left.%]="stop.left" [style.width.%]="stop.width"></span>
+                [class.on-block]="cursor.onBlock" [style.--row-top]="rowBoxes[cursor.rowIndex].top" [style.--row-height]="rowBoxes[cursor.rowIndex].height" [style.left.%]="stop.left" [style.width.%]="stop.width"></span>
         }
         @if (cursor.minute; as minute) {
           <span class="cursor-minute" data-testid="territory-cursor-minute" aria-hidden="true"
-                [style.--row]="cursor.rowIndex" [style.left.%]="minute.left" [style.width.%]="minute.width"></span>
+                [style.--row-top]="rowBoxes[cursor.rowIndex].top" [style.--row-height]="rowBoxes[cursor.rowIndex].height" [style.left.%]="minute.left" [style.width.%]="minute.width"></span>
         }
       }
 
       @if (dragView(); as drag) {
         @if (drag.layout; as layout) {
           <span class="drag-range" data-testid="territory-drag-range" aria-hidden="true"
-                [style.--row]="drag.rowIndex" [style.left.%]="layout.left" [style.width.%]="layout.width"></span>
+                [style.--row-top]="rowBoxes[drag.rowIndex].top" [style.--row-height]="rowBoxes[drag.rowIndex].height" [style.left.%]="layout.left" [style.width.%]="layout.width"></span>
         }
         <div class="drag-tip" data-testid="territory-drag-tip" role="status" aria-live="polite"
              [style.left.px]="drag.tipX" [style.top.px]="drag.tipY">

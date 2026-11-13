@@ -73,6 +73,8 @@ ALTER TABLE event_types ADD COLUMN IF NOT EXISTS actor VARCHAR(10) NOT NULL DEFA
 ALTER TABLE event_types ADD COLUMN IF NOT EXISTS possession_after VARCHAR(10) NOT NULL DEFAULT 'KEEP';
 -- follow_up_choices: eventos entre los que el analista elige al guardar este tipo (ej. cómo se juega un penal)
 ALTER TABLE event_types ADD COLUMN IF NOT EXISTS follow_up_choices JSONB NOT NULL DEFAULT '[]';
+-- zone_rule: restricción de zonas por tipo de evento (null = sin restricción)
+ALTER TABLE event_types ADD COLUMN IF NOT EXISTS zone_rule JSONB;
 
 
 -- =========================================
@@ -92,6 +94,13 @@ ALTER TABLE event_types ADD COLUMN IF NOT EXISTS follow_up_choices JSONB NOT NUL
 --   followUps (en una opción) | follow_up_choices (en el tipo): lista de {code, label?, preset?}; al guardar el evento
 --              se muestra una botonera con esos eventos (más «Nada más»). preset pre-llena campos en vivo del evento elegido
 --              y salta ese paso. El equipo del evento elegido se resuelve con la posesión ya actualizada (actor).
+--   zone_rule (jsonb, opcional) zonas de la cancha donde puede ocurrir el tipo, vistas desde el equipo que ejecuta el evento:
+--              columns = columnas permitidas (1 = in-goal propio ... 6 = in-goal rival), rows = filas permitidas (1 izquierda, 2 centro, 3 derecha),
+--              rowFrom = clave del atributo (left | center | right) de la que sale la fila. Un eje con un único valor queda fijo;
+--              si no, sale del tramo del partido. Sin zone_rule el tipo no tiene restricción (se carga con los UPDATE de abajo).
+--              closesTramo = true: después del evento el juego se reinicia, así que el tramo que lo contiene termina en su minuto.
+--              Solo cuentan los tanteos que puntúan (un Kick H o un drop con wasSuccessful = false no cortan). Al guardar el evento el
+--              backend acorta solo el tramo (TramoTrimmer) y lo que sigue queda como hueco.
 -- Reglas del catálogo:
 --   * Máximo 2 toques por evento en el modal: jugador (si requires_player) + 1 campo 'live'.
 --   * Un solo tipo por acción; el resultado va en un campo, no en tipos duplicados.
@@ -1416,6 +1425,17 @@ VALUES
     $$["basic", "intermediate"]$$::jsonb,
     CURRENT_TIMESTAMP
 );
+
+-- zone_rule: zonas de la cancha donde puede ocurrir cada tipo (ver «zone_rule» en la cabecera del catálogo)
+-- closesTramo: después del evento el juego se reinicia (saque o salida de 22), así que el tramo que lo contiene termina en su minuto
+UPDATE event_types SET zone_rule = '{"columns":[6],"rowFrom":"zone","closesTramo":true}'::jsonb WHERE code = 'TRY';
+UPDATE event_types SET zone_rule = '{"columns":[6],"rows":[2],"closesTramo":true}'::jsonb WHERE code = 'PENALTY_TRY';
+UPDATE event_types SET zone_rule = '{"columns":[2,3,4,5],"rowFrom":"zone","closesTramo":true}'::jsonb WHERE code = 'PENALTY_KICK';
+UPDATE event_types SET zone_rule = '{"columns":[2,3,4,5],"closesTramo":true}'::jsonb WHERE code = 'DROP_GOAL';
+UPDATE event_types SET zone_rule = '{"columns":[2,3,4,5],"rowFrom":"zone"}'::jsonb WHERE code = 'CONVERSION';
+UPDATE event_types SET zone_rule = '{"columns":[2,3,4,5]}'::jsonb WHERE code IN ('SCRUM', 'LINEOUT', 'MAUL', 'RUCK_OFFENSIVE', 'QUICK_PLAY');
+-- Kick-off / Salida: de centro (col. 3-4), de 22m (2-3) o drop-out de ingol (1-2); nunca desde el campo rival
+UPDATE event_types SET zone_rule = '{"columns":[1,2,3,4]}'::jsonb WHERE code = 'RESTART_KICK';
 
 UPDATE event_types
 SET template_event_fields = (

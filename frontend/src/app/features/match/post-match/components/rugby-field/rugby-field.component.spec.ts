@@ -203,20 +203,100 @@ describe('RugbyFieldComponent', () => {
     });
   });
 
-  describe('escala de calor', () => {
+  describe('escala de calor relativa', () => {
     const legend = (): HTMLElement | null => fixture.nativeElement.querySelector('[data-testid="heat-legend"]');
+    const legendText = (): string | undefined => legend()?.textContent?.replace(/\s+/g, ' ').trim();
+    const counts = (values: number[]) => values.map((eventCount, index) => ({ row: (index % 3) + 1, col: Math.floor(index / 3) + 1, eventCount }));
 
-    it('muestra la leyenda con los cortes 0 · 1–5 · 6–15 · 16–30 · 30+', () => {
+    it('sin eventos la leyenda solo muestra el 0', () => {
       render([]);
 
-      expect(legend()?.textContent?.replace(/\s+/g, ' ')).toContain('0 1–5 6–15 16–30 30+');
+      expect(legendText()).toContain('0');
+      expect(legendText()).not.toContain('–');
     });
 
-    it('la posición en la escala depende del nivel, no del máximo del partido', () => {
-      render([{ row: 1, col: 1, eventCount: 3 }, { row: 2, col: 2, eventCount: 118 }]);
+    it('muestra los rangos reales del máximo actual, no cortes fijos', () => {
+      render(counts([1, 1, 2, 2, 3, 4, 5, 6, 7, 8, 10]));
 
-      expect(cellAt(1, 1)?.style.getPropertyValue('--heat')).toBe('0');
-      expect(cellAt(2, 2)?.style.getPropertyValue('--heat')).toBe('1');
+      expect(legendText()).toContain('0 1–2 3–4 5–7 8–10');
+    });
+
+    it('un 10 y un 1 ya no caen en el mismo tono', () => {
+      render(counts([1, 1, 2, 2, 3, 4, 5, 6, 7, 8, 10]));
+
+      expect(cellAt(1, 1)?.style.getPropertyValue('--heat')).not.toBe(cellAt(3, 4)?.style.getPropertyValue('--heat'));
+    });
+
+    it('con un solo tipo de jugada (todas las celdas en 1) el mapa tiene un solo nivel', () => {
+      render(counts([1, 1, 1]));
+
+      expect(legendText()).toContain('0 1');
+      expect(legendText()).not.toContain('–');
+    });
+
+    it('en Minutos la escala también sigue a los valores', () => {
+      fixture.componentRef.setInput('unit', 'minutes');
+      render(counts([12, 20, 25, 31, 40, 55, 60, 80, 120, 300]));
+
+      expect(legendText()).toContain('12–25 31–40 55–80 120–300');
+    });
+
+    it('el 0 de la leyenda se dibuja con el verde de la cancha vacía', () => {
+      render([]);
+
+      expect(legend()?.querySelector('.heat-swatch.is-empty')).not.toBeNull();
+    });
+  });
+
+  describe('detalle de la celda tocada', () => {
+    const inspected = (): ZoneCellRef[] => {
+      const cells: ZoneCellRef[] = [];
+      fixture.componentInstance.cellInspected.subscribe(cell => cells.push(cell));
+      return cells;
+    };
+
+    it('tocar una celda elegible avisa que se la inspecciona y que se la eligió', () => {
+      render([]);
+      const cells = inspected();
+      const selected: ZoneCellRef[] = [];
+      fixture.componentInstance.cellSelected.subscribe(cell => selected.push(cell));
+
+      cellAt(2, 3)?.click();
+
+      expect(cells).toEqual([{ row: 2, col: 3 }]);
+      expect(selected).toEqual([{ row: 2, col: 3 }]);
+    });
+
+    it('una celda bloqueada (in-goal) también se inspecciona aunque no se elija', () => {
+      fixture.componentRef.setInput('lockedCols', [1, 6]);
+      render([]);
+      const cells = inspected();
+      const selected: ZoneCellRef[] = [];
+      fixture.componentInstance.cellSelected.subscribe(cell => selected.push(cell));
+
+      cellAt(2, 6)?.click();
+
+      expect(cells).toEqual([{ row: 2, col: 6 }]);
+      expect(selected).toEqual([]);
+    });
+
+    it('en solo lectura también se inspecciona', () => {
+      fixture.componentRef.setInput('selectable', false);
+      render([]);
+      const cells = inspected();
+
+      cellAt(1, 2)?.click();
+
+      expect(cells).toEqual([{ row: 1, col: 2 }]);
+    });
+
+    it('Enter en una celda con el teclado la inspecciona igual que el toque', () => {
+      render([]);
+      const cells = inspected();
+
+      key(cellAt(3, 4), 'Enter');
+
+      expect(cells).toEqual([{ row: 3, col: 4 }]);
     });
   });
 
@@ -333,6 +413,64 @@ describe('RugbyFieldComponent', () => {
 
       key(cellAt(2, 6), 'Home');
       expect(cellAt(2, 1)?.getAttribute('tabindex')).toBe('0');
+    });
+  });
+
+  describe('franjas bloqueadas (in-goal solo para puntos)', () => {
+    const selected: ZoneCellRef[] = [];
+
+    beforeEach(() => {
+      selected.length = 0;
+      fixture.componentInstance.cellSelected.subscribe(value => selected.push(value));
+      fixture.componentRef.setInput('lockedCols', [1, 6]);
+      render([]);
+    });
+
+    it('tocar una celda bloqueada no la elige, pero muestra su lectura', () => {
+      cellAt(2, 6)?.click();
+      fixture.detectChanges();
+
+      expect(selected).toEqual([]);
+      expect(reading()).toContain('C6');
+    });
+
+    it('las celdas del campo siguen eligiéndose', () => {
+      cellAt(2, 3)?.click();
+
+      expect(selected).toEqual([{ row: 2, col: 3 }]);
+    });
+
+    it('la celda bloqueada se marca como deshabilitada y lo dice en su etiqueta', () => {
+      expect(cellAt(2, 1)?.getAttribute('aria-disabled')).toBe('true');
+      expect(cellAt(2, 1)?.getAttribute('aria-label')).toContain('Solo puntos: no admite tramos');
+      expect(cellAt(2, 3)?.getAttribute('aria-disabled')).toBeNull();
+    });
+
+    it('Enter sobre una celda bloqueada tampoco la elige', () => {
+      key(cellAt(1, 6), 'Enter');
+
+      expect(selected).toEqual([]);
+    });
+  });
+
+  describe('unidad de las celdas', () => {
+    it('por defecto cuenta eventos, en la lectura, la etiqueta y la leyenda', () => {
+      render([{ row: 2, col: 3, eventCount: 1 }]);
+
+      expect(cellAt(2, 3)?.getAttribute('aria-label')).toContain('1 evento');
+      expect(fixture.nativeElement.querySelector('[data-testid="heat-legend"]').getAttribute('aria-label')).toBe('Escala de calor: eventos por zona');
+    });
+
+    it('en minutos habla de minutos', () => {
+      fixture.componentRef.setInput('unit', 'minutes');
+      render([{ row: 2, col: 3, eventCount: 12 }]);
+
+      cellAt(2, 3)?.dispatchEvent(new Event('mouseenter'));
+      fixture.detectChanges();
+
+      expect(cellAt(2, 3)?.getAttribute('aria-label')).toContain('12 min');
+      expect(reading()).toContain('12 min');
+      expect(fixture.nativeElement.querySelector('[data-testid="heat-legend"]').getAttribute('aria-label')).toBe('Escala de calor: minutos por zona');
     });
   });
 });

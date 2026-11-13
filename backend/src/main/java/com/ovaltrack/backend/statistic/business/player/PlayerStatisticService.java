@@ -24,6 +24,7 @@ import com.ovaltrack.backend.statistic.domain.dto.PlayerZoneMapDTO;
 import com.ovaltrack.backend.zone.business.EventZoneResolver;
 import com.ovaltrack.backend.zone.domain.ZoneAssignment;
 import com.ovaltrack.backend.zone.domain.ZoneCell;
+import com.ovaltrack.backend.zone.domain.ZoneQuery;
 import com.ovaltrack.backend.zone.repository.ZoneAssignmentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
@@ -244,7 +245,7 @@ public class PlayerStatisticService {
         int unzoned = 0;
         for (Event event : playerEvents) {
             List<ZoneAssignment> assignments = zonesByMatch.getOrDefault(event.getMatch().getId(), List.of());
-            Optional<ZoneCell> cell = zoneResolver.resolve(event.getPeriod(), event.getMatchTime(), assignments);
+            Optional<ZoneCell> cell = zoneResolver.resolve(ZoneQuery.of(event), assignments);
             if (cell.isPresent()) {
                 counts.merge(cell.get(), 1, Integer::sum);
             } else {

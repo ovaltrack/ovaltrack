@@ -2,6 +2,8 @@
   display: block;
   --label-w: 168px;
   --row-h: 36px;
+  /* Carril de in-goal: más fino, solo aloja puntos (y los tramos que ya existían) */
+  --lane-h: 22px;
 }
 
 .territory { display: flex; flex-direction: column; min-width: 0; }
@@ -12,7 +14,7 @@
   padding: 0 10px 6px 0; font-size: 10.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
   color: var(--text-muted);
 }
-.ruler { position: relative; height: 22px; }
+.ruler { grid-area: 1 / 2; position: relative; height: 24px; }
 .tick {
   position: absolute; bottom: 4px; transform: translateX(-50%); white-space: nowrap;
   font: 600 11px var(--font-mono); color: var(--text-secondary);
@@ -38,6 +40,9 @@
   border-bottom: 1px solid var(--border);
 }
 .row-label:last-child { border-bottom: 0; }
+.row-label.is-lane { height: var(--lane-h); }
+.row-label.is-lane .row-range { display: none; }
+.row-label.is-lane .row-name { font-weight: 600; color: var(--text-secondary); }
 .row-label.is-selected { background: var(--grass-tint-strong); box-shadow: inset 3px 0 0 var(--btn-primary-bg); }
 .row-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
 .row-name { font-size: 12.5px; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -60,7 +65,7 @@
 .row-label.is-cursor { box-shadow: inset 4px 0 0 var(--navy); background: var(--navy-tint); }
 .cursor-stop, .cursor-minute {
   position: absolute; pointer-events: none; box-sizing: border-box; z-index: 5;
-  top: calc(var(--row) * var(--row-h)); height: var(--row-h);
+  top: var(--row-top); height: var(--row-height);
 }
 .cursor-stop { border: 3px solid var(--navy); border-radius: var(--radius-sm); box-shadow: 0 0 0 1px var(--surface); }
 .cursor-stop.on-block { border-style: double; border-width: 4px; }
@@ -69,6 +74,7 @@
 
 .row-track { position: relative; height: var(--row-h); border-bottom: 1px solid var(--border); }
 .row-track:last-child { border-bottom: 0; }
+.row-track.is-lane { height: var(--lane-h); }
 .row-track.is-selected { background: rgba(214, 234, 192, .45); }
 
 /* Huecos sin zona: rayado ámbar a lo alto de toda la grilla */
@@ -88,12 +94,29 @@
 }
 .block:hover { background: var(--btn-primary-hover); }
 .block-label { font: 700 11px var(--font-mono); letter-spacing: .02em; white-space: nowrap; }
+
+/* Punto de una jugada con zona propia: rombo relleno de solo lectura sobre su franja; el borde claro lo separa del bloque verde y del hueco ámbar */
+.zone-point {
+  position: absolute; top: 50%; z-index: 2; width: 12px; height: 12px; box-sizing: border-box;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: var(--navy); border: 2px solid var(--surface); border-radius: 2px;
+}
+/* Varios puntos juntos: un solo círculo con el número (el tooltip los lista) */
+.zone-point.is-cluster {
+  width: 18px; height: 18px; transform: translate(-50%, -50%); border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.point-count { font: 800 10px/1 var(--font-mono); color: var(--on-navy); }
 /* Anillos: el ámbar es "sin zona" en esta pantalla, así que no se usa para resaltar. El orden importa: gana el último. */
 /* Resalte cruzado (hover en la cancha): anillo verde oscuro fino; el resto de los bloques se atenúa */
 .block.is-linked { box-shadow: 0 0 0 1px var(--surface), 0 0 0 3px var(--btn-primary-bg); z-index: 1; }
 /* Seleccionado: anillo verde oscuro grueso con separación blanca */
 .block.is-selected { box-shadow: 0 0 0 2px var(--surface), 0 0 0 5px var(--btn-primary-bg); z-index: 2; }
 .block.is-conflict { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--error); z-index: 2; }
+/* Borde del tramo que cortó el tanto señalado: barra lima en su fin (el lima solo va sobre el verde botella del bloque) */
+.block.is-cut-edge::after {
+  content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 4px; background: var(--brand-signature); pointer-events: none;
+}
 .block.is-dimmed { opacity: .4; }
 /* El tramo en edición no se atenúa: la selección tiene que verse siempre */
 .block.is-selected.is-dimmed, .block.is-conflict.is-dimmed { opacity: 1; }
@@ -112,12 +135,18 @@
   .handle { width: 44px; }
 }
 
-.half-line { position: absolute; top: 0; bottom: 0; border-left: 2px dashed var(--text-muted); pointer-events: none; z-index: 1; }
+/* El entretiempo es el límite duro del partido: la línea más fuerte de la grilla, más que cualquier corte por tanto */
+.half-line { position: absolute; top: 0; bottom: 0; margin-left: -1px; border-left: 2px solid var(--text-secondary); pointer-events: none; z-index: 3; }
+/* Corte por tanto: línea fina y tenue, solo junto al rango en edición; el rombo es la señal permanente */
+.cut-line { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1px solid var(--text-muted); pointer-events: none; z-index: 2; }
+.cut-line.is-hot { border-left: 2px solid var(--navy); margin-left: -1px; }
+/* Resalte del punto señalado: anillo, sin cambiar el relleno */
+.zone-point.is-hot { box-shadow: 0 0 0 2px var(--navy); }
 
 /* Hueco bajo el puntero y vista previa del formulario, dentro de la fila (--row = índice de fila) */
 .hover-gap, .preview, .drag-range {
   position: absolute; pointer-events: none; z-index: 1; box-sizing: border-box;
-  top: calc(var(--row) * var(--row-h)); height: var(--row-h);
+  top: var(--row-top); height: var(--row-height);
 }
 .hover-gap { outline: 2px dashed var(--btn-primary-bg); outline-offset: -2px; background: var(--surface-hover); }
 .drag-range { z-index: 2; border: 2px solid var(--navy); border-radius: var(--radius-sm); background: var(--navy-tint); }
@@ -158,7 +187,8 @@
 }
 
 @media (pointer: coarse) {
-  :host { --row-h: 44px; }
+  /* Los tramos de in-goal que ya existen se tocan con el dedo: el carril conserva el alto táctil */
+  :host { --row-h: 44px; --lane-h: 44px; }
 }
 
 @media (max-width: 768px) {

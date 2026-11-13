@@ -30,6 +30,9 @@ import com.ovaltrack.backend.event.domain.dto.event.EventUpdateDTO;
 import com.ovaltrack.backend.event.domain.dto.event.MatchTimelineEventResponseDTO;
 import com.ovaltrack.backend.event.repository.EventRepository;
 import com.ovaltrack.backend.match.repository.MatchRepository;
+import com.ovaltrack.backend.zone.business.EventZoneRuleValidator;
+import com.ovaltrack.backend.zone.business.TramoTrimmer;
+import com.ovaltrack.backend.zone.repository.ZoneAssignmentRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -50,6 +53,9 @@ public class EventService {
 	private final MatchRepository matchRepository;
 	private final MatchSecurityValidator matchSecurityValidator;
 	private final SubstitutionDependencyChecker substitutionDependencyChecker;
+	private final ZoneAssignmentRepository zoneAssignmentRepository;
+	private final EventZoneRuleValidator zoneRuleValidator;
+	private final TramoTrimmer tramoTrimmer;
 
 	public Collection<EventResponseDTO> findEventsByClubId(UUID clubId) {
 		if (clubService.findClubById(clubId) == null) {
@@ -135,6 +141,9 @@ public class EventService {
 		Person aPerson = isSubstitution(aEventType) ? null : resolveEventPlayer(eventRequest.playerId(), match);
 
 		Event result = EventDTOMapper.toEntity(eventRequest, match, aEventType, aPerson);
+		if (Event.ORIGIN_POST_CAPTURE.equals(result.getOrigin())) {
+			validateZoneRule(result);
+		}
 
 		if (isOwnSubstitution(aEventType, eventRequest.teamPossession())) {
 			matchService.validateSubstitution(match, result);
@@ -146,6 +155,7 @@ public class EventService {
 			matchService.recalculateLineup(match);
 		}
 		recalculateMatchScore(match);
+		tramoTrimmer.trimAt(savedEvent);
 		return EventDTOMapper.toResponseDTO(savedEvent);
 	}
 
@@ -256,6 +266,9 @@ public class EventService {
 		applyEventTypeAndAttributes(event, eventRequest);
 		applyPossessionAndPlayer(event, eventRequest);
 		applyTimingFields(event, eventRequest);
+		if (changesZone(eventRequest)) {
+			validateZoneRule(event);
+		}
 		boolean isOwnSubstitution = isOwnSubstitution(event.getEventType(), event.getTeamPossession());
 		if (isOwnSubstitution) {
 			matchService.validateSubstitution(event.getMatch(), event);
@@ -278,6 +291,9 @@ public class EventService {
 			matchService.recalculateLineup(event.getMatch());
 		}
 		recalculateMatchScore(event.getMatch());
+		if (changesZone(eventRequest)) {
+			tramoTrimmer.trimAt(savedEvent);
+		}
 		return EventDTOMapper.toResponseDTO(savedEvent);
 	}
 
@@ -373,6 +389,20 @@ public class EventService {
 			return null;
 		}
 		return event.getPlayer() != null ? event.getPlayer().getId() : null;
+	}
+
+	/** Tipo, atributos, posesión, período y tiempo son lo único que mueve a un evento de zona; nota o jugador no. */
+	private boolean changesZone(EventUpdateDTO request) {
+		return request.eventTypeId() != null || request.attributes() != null || request.teamPossession() != null
+				|| request.period() != null || request.matchTime() != null;
+	}
+
+	/** La regla de zona del tipo solo se exige en el post-partido; la captura en vivo nunca se rechaza. */
+	private void validateZoneRule(Event event) {
+		if (event.getMatch().getStatus() == MatchStatus.FINISHED) {
+			zoneRuleValidator.validateEvent(event,
+					zoneAssignmentRepository.findByMatchIdOrderByPeriodAscStartMinuteAsc(event.getMatch().getId()));
+		}
 	}
 
 	private void applyTimingFields(Event event, EventUpdateDTO request) {

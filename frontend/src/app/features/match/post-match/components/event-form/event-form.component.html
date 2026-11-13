@@ -11,6 +11,7 @@
         {{ t.name }}
       </option>
     </select>
+    <ng-container *ngIf="!placementFieldKey()" [ngTemplateOutlet]="placement"></ng-container>
   </div>
 
   <!-- 2. Equipo que ejecutó la acción (se guarda en teamPossession) -->
@@ -172,6 +173,15 @@
           {{ getAttributeValue(field.key) === true ? (field.trueLabel || 'Sí') : (field.falseLabel || 'No') }}
         </label>
       </div>
+
+      <ng-container *ngIf="field.key === placementFieldKey()" [ngTemplateOutlet]="placement"></ng-container>
     </div>
   </div>
+
+  <!-- La zona la fija el tipo de jugada: se informa dónde queda (sin tocar tramos) -->
+  <ng-template #placement>
+    <div *ngIf="fixedPlacement() as text" class="zone-placement" data-testid="zone-placement">
+      <i class="bi bi-geo-alt me-1" aria-hidden="true"></i>{{ text }}
+    </div>
+  </ng-template>
 </div>

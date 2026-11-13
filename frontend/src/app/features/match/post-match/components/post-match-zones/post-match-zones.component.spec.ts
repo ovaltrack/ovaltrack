@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { By } from '@angular/platform-browser';
-import { signal } from '@angular/core';
+import { WritableSignal, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { of } from 'rxjs';
 import { PostMatchZonesComponent } from './post-match-zones.component';
@@ -43,7 +43,7 @@ describe('PostMatchZonesComponent', () => {
 
   function create(id: string | null = 'match-1'): void {
     TestBed.overrideProvider(PostMatchShellStore, {
-      useValue: { matchId: signal(id ?? ''), match: signal(match) },
+      useValue: { matchId: signal(id ?? ''), match: signal(match), lastSelectedEventId: signal<string | null>(null) },
     });
     fixture = TestBed.createComponent(PostMatchZonesComponent);
     component = fixture.componentInstance;
@@ -142,9 +142,18 @@ describe('PostMatchZonesComponent', () => {
     it('las mayúsculas funcionan igual', () => {
       createLoaded();
 
-      press('N');
+      press('V');
 
-      expect(component.selectedCell()).toEqual({ row: 3, col: 6 });
+      expect(component.selectedCell()).toEqual({ row: 3, col: 4 });
+    });
+
+    it('las letras del in-goal (columnas 1 y 6) no eligen celda: ahí solo hay puntos', () => {
+      createLoaded();
+
+      press('N');
+      press('Q');
+
+      expect(component.selectedCell()).toBeNull();
     });
 
     it('F2-S4. con el foco en un campo de escritura las letras no hacen nada', () => {
@@ -270,13 +279,13 @@ describe('PostMatchZonesComponent', () => {
         queryAll('[data-testid="territory-block"]').forEach(block => expect(block.getAttribute('tabindex')).toBe('-1'));
       });
 
-      it('F3-H1. Enter sobre un hueco precarga franja y rango desde el minuto del cursor', () => {
+      it('F3-H1. Enter sobre un hueco precarga franja y rango desde el minuto del cursor; el cursor arranca en el 22 rival', () => {
         createLoaded([], []);
         tracks().dispatchEvent(new FocusEvent('focus'));
 
         press('Enter', {}, tracks());
 
-        expect(component.selectedCell()).toEqual({ row: 2, col: 6 });
+        expect(component.selectedCell()).toEqual({ row: 2, col: 5 });
       });
 
       it('↓ baja una franja antes de abrir el hueco', () => {
@@ -286,7 +295,17 @@ describe('PostMatchZonesComponent', () => {
         press('ArrowDown', {}, tracks());
         press('Enter', {}, tracks());
 
-        expect(component.selectedCell()).toEqual({ row: 2, col: 5 });
+        expect(component.selectedCell()).toEqual({ row: 2, col: 4 });
+      });
+
+      it('Enter sobre un hueco del in-goal no crea un tramo', () => {
+        createLoaded([], []);
+        tracks().dispatchEvent(new FocusEvent('focus'));
+
+        press('ArrowUp', {}, tracks());
+        press('Enter', {}, tracks());
+
+        expect(component.selectedCell()).toBeNull();
       });
 
       it('F3-S4. las flechas dentro de un campo no mueven la grilla', () => {
@@ -296,7 +315,7 @@ describe('PostMatchZonesComponent', () => {
         press('ArrowDown', {}, query('#zone-start') as HTMLElement);
         press('Enter', {}, tracks());
 
-        expect(component.selectedCell()).toEqual({ row: 2, col: 6 });
+        expect(component.selectedCell()).toEqual({ row: 2, col: 5 });
       });
     });
 
@@ -322,6 +341,16 @@ describe('PostMatchZonesComponent', () => {
       const rules = query('[data-testid="range-rules"]')?.textContent ?? '';
       expect(rules).toContain('Inicio incluido, fin excluido: 20′–25′ y 25′–30′ no se pisan.');
       expect(rules).toContain('El tiempo añadido cuenta como minuto 40 (1T) y 80 (2T).');
+    });
+
+    it('la ayuda dice hasta qué segundo llega el tramo de un try y no menciona la tira de letras', () => {
+      createLoaded();
+
+      query<HTMLButtonElement>('[data-testid="shortcuts-toggle"]')?.click();
+      fixture.detectChanges();
+
+      expect(query('[data-testid="range-rules"]')?.textContent).toContain('con un try a las 5:11, el tramo llega hasta 5:59 (termina en 6′)');
+      expect(query('[data-testid="points-note"]')?.textContent).not.toContain('(T try');
     });
   });
 
@@ -564,14 +593,14 @@ describe('PostMatchZonesComponent', () => {
     const panelOf = (): ZoneAssignmentPanelComponent =>
       fixture.debugElement.query(By.directive(ZoneAssignmentPanelComponent)).componentInstance as ZoneAssignmentPanelComponent;
 
-    /** Clic en la pista de la grilla, en el minuto y la franja (columna de la cancha) indicados. */
+    /** Clic en la pista de la grilla, en el minuto y la franja (columna de la cancha) indicados; las filas no son parejas. */
     function clickTrack(minute: number, col: number): void {
       const rect = (query('[data-testid="territory-tracks"]') as HTMLElement).getBoundingClientRect();
-      const rowIndex = 6 - col;
+      const row = queryAll('[data-testid="territory-row"]')[6 - col].getBoundingClientRect();
       (query('[data-testid="territory-tracks"]') as HTMLElement).dispatchEvent(new MouseEvent('click', {
         bubbles: true,
         clientX: rect.left + ((minute + 0.5) / 80) * rect.width,
-        clientY: rect.top + ((rowIndex + 0.5) / 6) * rect.height
+        clientY: row.top + row.height / 2
       }));
       fixture.detectChanges();
     }
@@ -579,10 +608,39 @@ describe('PostMatchZonesComponent', () => {
     it('F2-H1. clic en una fila dentro de un hueco precarga franja y rango, con lateral Centro', () => {
       createLoaded();
 
-      clickTrack(3, 6);
+      clickTrack(3, 5);
 
       expect([panelOf().period, panelOf().startMinute, panelOf().endMinute]).toEqual([1, 0, 10]);
+      expect(component.selectedCell()).toEqual({ row: 2, col: 5 });
+    });
+
+    it('un clic en un carril de in-goal no precarga ningún tramo', () => {
+      createLoaded();
+
+      clickTrack(3, 6);
+      clickTrack(3, 1);
+
+      expect(component.selectedCell()).toBeNull();
+    });
+
+    it('tocar una celda de in-goal en la cancha no elige franja, pero sí lo hace una del campo', () => {
+      createLoaded();
+
+      cell(2, 6).click();
+      expect(component.selectedCell()).toBeNull();
+
+      cell(2, 4).click();
+      expect(component.selectedCell()).toEqual({ row: 2, col: 4 });
+    });
+
+    it('un tramo de in-goal que ya existe se puede abrir para editarlo', () => {
+      createLoaded([{ ...zone, id: 'ig', startMinute: 4, endMinute: 5, col: 6 }]);
+
+      query<HTMLButtonElement>('[data-testid="territory-block"]')?.click();
+      fixture.detectChanges();
+
       expect(component.selectedCell()).toEqual({ row: 2, col: 6 });
+      expect(query('app-zone-assignment-panel .section-title')?.textContent).toContain('Editar tramo');
     });
 
     it('un clic en otra franja conserva el lateral ya elegido', () => {
@@ -638,6 +696,287 @@ describe('PostMatchZonesComponent', () => {
 
       const counts = queryAll('[data-testid="territory-row-count"]').map(el => el.textContent?.trim());
       expect(counts).toEqual(['0', '0', '0', '2', '0', '0']);
+    });
+  });
+
+  describe('jugadas sin zona y detalle de la celda', () => {
+    const typed = (id: string, period: 1 | 2, minute: number, zoneCell: { row: number; col: number } | null, eventTypeId = 'scrum', eventTypeName = 'Scrum'): MatchTimelineEventResponse =>
+      ({ ...ev(id, period, minute, zoneCell), eventTypeId, eventTypeName });
+    const withUnzoned = [
+      typed('a', 1, 12, { row: 2, col: 3 }),
+      typed('hueco', 1, 35, null),
+      typed('segundo', 2, 50, null, 'tackle', 'Tackle')
+    ];
+    const kpiLink = (): HTMLButtonElement | null => query<HTMLButtonElement>('[data-testid="kpi-unzoned-link"]');
+    const items = (): HTMLElement[] => queryAll('[data-testid="unzoned-item"]');
+    const panel = (): ZoneAssignmentPanelComponent => fixture.debugElement.query(By.directive(ZoneAssignmentPanelComponent)).componentInstance;
+
+    it('el KPI «sin zona» abre la lista: las jugadas en huecos se resumen en una línea y no se listan', () => {
+      createLoaded([zone], withUnzoned);
+
+      kpiLink()?.click();
+      fixture.detectChanges();
+
+      expect(query('[data-testid="unzoned-gaps"]')?.textContent).toContain('2 jugadas en 2 huecos');
+      expect(items().length).toBe(0);
+    });
+
+    it('el enlace del panel abre la misma lista', () => {
+      createLoaded([zone], withUnzoned);
+
+      component.openUnzoned();
+      fixture.detectChanges();
+
+      expect(query('[data-testid="unzoned-title"]')?.textContent).toContain('2 jugadas sin zona');
+    });
+
+    it('«Ver huecos» lleva a «Huecos sin zona» del panel (en móvil abre la hoja)', () => {
+      createLoaded([zone], withUnzoned);
+      kpiLink()?.click();
+      fixture.detectChanges();
+
+      query<HTMLButtonElement>('[data-testid="unzoned-gaps-link"]')?.click();
+      fixture.detectChanges();
+
+      expect(panel().sheetOpen).toBeTrue();
+    });
+
+    it('«Abrir tramo» carga para editar el tramo que no admite la jugada', () => {
+      const forbidden = typed('lineout', 1, 22, null, 'lineout', 'Line-out');
+      createLoaded([{ ...zone, startMinute: 20, endMinute: 25, col: 6 }], [forbidden]);
+      kpiLink()?.click();
+      fixture.detectChanges();
+
+      items()[0].querySelector<HTMLButtonElement>('[data-testid="unzoned-fix"]')?.click();
+      fixture.detectChanges();
+
+      expect(panel().editingId).toBe('z1');
+    });
+
+    it('«Ver en Eventos» deja la jugada seleccionada y navega a la pantalla de Eventos', () => {
+      createLoaded([{ ...zone, startMinute: 20, endMinute: 25, col: 6 }], [typed('lineout', 1, 22, null, 'lineout', 'Line-out')]);
+      const navigate = spyOn(router, 'navigate').and.resolveTo(true);
+      const shell = TestBed.inject(PostMatchShellStore) as unknown as { lastSelectedEventId: WritableSignal<string | null> };
+      kpiLink()?.click();
+      fixture.detectChanges();
+
+      items()[0].querySelector<HTMLButtonElement>('[data-testid="unzoned-event"]')?.click();
+
+      expect(shell.lastSelectedEventId()).toBe('lineout');
+      expect(navigate).toHaveBeenCalledWith(['/post-match', 'match-1']);
+    });
+
+    it('volver cierra la lista y vuelve al detalle de la celda', () => {
+      createLoaded([zone], withUnzoned);
+      kpiLink()?.click();
+      fixture.detectChanges();
+
+      query<HTMLButtonElement>('[data-testid="unzoned-close"]')?.click();
+      fixture.detectChanges();
+
+      expect(query('[data-testid="unzoned-title"]')).toBeNull();
+    });
+
+    it('tocar una celda de la cancha fija su detalle con las jugadas y el origen de la zona', () => {
+      createLoaded([zone], withUnzoned);
+
+      cell(2, 3).click();
+      fixture.detectChanges();
+
+      expect(query('[data-testid="cell-detail-title"]')?.textContent).toContain('C3');
+      expect(queryAll('[data-testid="cell-event"]').length).toBe(1);
+      expect(query('[data-testid="cell-event"]')?.textContent).toContain("Tramo 1T 10'–25'");
+    });
+
+    it('el detalle queda fijo al salir el puntero, y el puntero sobre otra celda lo cambia mientras está encima', () => {
+      createLoaded([zone], withUnzoned);
+      cell(2, 3).click();
+      fixture.detectChanges();
+
+      cell(2, 4).dispatchEvent(new Event('mouseenter'));
+      fixture.detectChanges();
+      expect(query('[data-testid="cell-detail-title"]')?.textContent).toContain('C4');
+
+      cell(2, 4).dispatchEvent(new Event('mouseleave'));
+      fixture.detectChanges();
+      expect(query('[data-testid="cell-detail-title"]')?.textContent).toContain('C3');
+    });
+
+    it('una celda del in-goal también se puede inspeccionar aunque no admita tramos', () => {
+      createLoaded([zone], [typed('p', 1, 12, { row: 2, col: 6 })]);
+
+      cell(2, 6).click();
+      fixture.detectChanges();
+
+      expect(query('[data-testid="cell-detail-title"]')?.textContent).toContain('C6');
+      expect(queryAll('[data-testid="cell-event"]').length).toBe(1);
+    });
+
+    it('en Minutos el detalle lista los tramos de la celda', () => {
+      createLoaded([zone], withUnzoned);
+      (queryAll('[data-testid="mode-filter"]').find(button => button.textContent?.trim() === 'Minutos') as HTMLElement).click();
+      fixture.detectChanges();
+
+      cell(2, 3).click();
+      fixture.detectChanges();
+
+      expect(query('[data-testid="cell-tramo"]')?.textContent?.replace(/\s+/g, ' ').trim()).toBe("1T 10'–25' · 15 min");
+    });
+
+    it('el detalle de Eventos sigue el tipo elegido, igual que el mapa', () => {
+      const mixed = [typed('a', 1, 12, { row: 2, col: 3 }), typed('b', 1, 14, { row: 2, col: 3 }, 'tackle', 'Tackle')];
+      createLoaded([zone], mixed);
+      cell(2, 3).click();
+      fixture.detectChanges();
+      expect(queryAll('[data-testid="cell-event"]').length).toBe(2);
+
+      const select = query<HTMLSelectElement>('[data-testid="type-filter"]') as HTMLSelectElement;
+      select.value = 'scrum';
+      select.dispatchEvent(new Event('change'));
+      fixture.detectChanges();
+
+      expect(queryAll('[data-testid="cell-event"]').length).toBe(1);
+    });
+  });
+
+  describe('filtro por tipo y modo Eventos / Minutos', () => {
+    const typed = (id: string, minute: number, col: number, eventTypeId: string, eventTypeName: string): MatchTimelineEventResponse =>
+      ({ ...ev(id, 1, minute, { row: 2, col }), eventTypeId, eventTypeName });
+    const mixed = [
+      typed('a', 12, 3, 'scrum', 'Scrum'),
+      typed('b', 14, 3, 'tackle', 'Tackle'),
+      typed('c', 16, 4, 'scrum', 'Scrum')
+    ];
+    const fieldCount = (row: number, col: number): string | undefined =>
+      cell(row, col).querySelector('[data-testid="zone-count"]')?.textContent?.trim();
+    const typeSelect = (): HTMLSelectElement => query('[data-testid="type-filter"]') as HTMLSelectElement;
+    const chooseType = (id: string): void => {
+      typeSelect().value = id;
+      typeSelect().dispatchEvent(new Event('change'));
+      fixture.detectChanges();
+    };
+    const clickMode = (label: string): void => {
+      (queryAll('[data-testid="mode-filter"]').find(button => button.textContent?.trim() === label) as HTMLElement).click();
+      fixture.detectChanges();
+    };
+
+    it('tipo y Eventos / Minutos van en el encabezado del mapa; período y posesión quedan en la barra de la pantalla', () => {
+      createLoaded([zone], mixed);
+
+      expect(query('[data-testid="map-header"] [data-testid="type-filter"]')).not.toBeNull();
+      expect(queryAll('[data-testid="map-header"] [data-testid="mode-filter"]').length).toBe(2);
+      expect(query('[data-testid="zone-filters"] [data-testid="type-filter"]')).toBeNull();
+      expect(query('[data-testid="zone-filters"] [data-testid="mode-filter"]')).toBeNull();
+      expect(queryAll('[data-testid="zone-filters"] [data-testid="period-filter"]').length).toBe(3);
+      expect(queryAll('[data-testid="zone-filters"] [data-testid="possession-filter"]').length).toBe(3);
+    });
+
+    it('el encabezado del mapa lleva el título de lo que cuenta la cancha', () => {
+      createLoaded([zone], mixed);
+      expect(query('[data-testid="map-header"]')?.textContent).toContain('Eventos por zona');
+
+      clickMode('Minutos');
+
+      expect(query('[data-testid="map-header"]')?.textContent).toContain('Minutos por zona');
+    });
+
+    it('el tipo elegido afecta solo al mapa: los conteos de la grilla de territorio no cambian', () => {
+      createLoaded([zone], mixed);
+      const rowCounts = (): (string | undefined)[] => queryAll('[data-testid="territory-row-count"]').map(el => el.textContent?.trim());
+      const before = rowCounts();
+
+      chooseType('scrum');
+
+      expect(rowCounts()).toEqual(before);
+      expect([fieldCount(2, 3), fieldCount(2, 4)]).toEqual(['1', '1']);
+    });
+
+    it('el filtro lista solo los tipos que tiene el partido, ordenados', () => {
+      createLoaded([zone], mixed);
+
+      expect(Array.from(typeSelect().options).map(option => option.textContent?.trim())).toEqual(['Todas las jugadas', 'Scrum', 'Tackle']);
+    });
+
+    it('con un tipo elegido la cancha cuenta solo ese tipo', () => {
+      createLoaded([zone], mixed);
+      expect([fieldCount(2, 3), fieldCount(2, 4)]).toEqual(['2', '1']);
+
+      chooseType('scrum');
+
+      expect([fieldCount(2, 3), fieldCount(2, 4)]).toEqual(['1', '1']);
+    });
+
+    it('un tipo recordado que el partido ya no tiene se ignora', () => {
+      createLoaded([zone], mixed);
+
+      component.selectedType.set('maul');
+
+      expect(component.typeFilter()).toBe('ALL');
+    });
+
+    it('en Minutos la cancha suma los minutos de los tramos, con su leyenda', () => {
+      createLoaded([zone], mixed);
+
+      clickMode('Minutos');
+
+      expect(fieldCount(2, 3)).toBe('15');
+      expect(fieldCount(2, 4)).toBeUndefined();
+      expect(query('[data-testid="map-header"]')?.textContent).toContain('Minutos por zona');
+      expect(cell(2, 3).getAttribute('aria-label')).toContain('15 min');
+    });
+
+    it('en Minutos se deshabilita solo el tipo: la posesión y el tiempo siguen activos porque filtran la grilla', () => {
+      createLoaded([zone], mixed);
+
+      clickMode('Minutos');
+
+      expect(typeSelect().disabled).toBeTrue();
+      queryAll('[data-testid="possession-filter"]').forEach(button => expect((button as HTMLButtonElement).disabled).toBeFalse());
+      queryAll('[data-testid="period-filter"]').forEach(button => expect((button as HTMLButtonElement).disabled).toBeFalse());
+    });
+
+    it('en Minutos la posesión sigue filtrando los conteos de la grilla de territorio', () => {
+      createLoaded([zone], [mixed[0], { ...mixed[2], teamPossession: 'OPPONENT' }]);
+      const rowCount = (col: number): string | undefined =>
+        queryAll('[data-testid="territory-row-count"]').map(el => el.textContent?.trim())[6 - col];
+
+      clickMode('Minutos');
+      (queryAll('[data-testid="possession-filter"]').find(button => button.textContent?.trim() === 'Rival') as HTMLElement).click();
+      fixture.detectChanges();
+
+      expect([rowCount(3), rowCount(4)]).toEqual(['0', '1']);
+    });
+
+    it('en Minutos la leyenda del mapa aclara que no se filtra por posesión', () => {
+      createLoaded([zone], mixed);
+      expect(query('[data-testid="heat-legend-note"]')).toBeNull();
+
+      clickMode('Minutos');
+
+      expect(query('[data-testid="heat-legend-note"]')?.textContent?.trim()).toBe('Minutos: no se filtra por posesión');
+    });
+
+    it('en Minutos el tipo elegido no cambia los minutos, y al volver a Eventos se conserva', () => {
+      createLoaded([zone], mixed);
+      chooseType('scrum');
+
+      clickMode('Minutos');
+      expect(fieldCount(2, 3)).toBe('15');
+
+      clickMode('Eventos');
+      expect(typeSelect().disabled).toBeFalse();
+      expect(fieldCount(2, 3)).toBe('1');
+    });
+
+    it('en Minutos el filtro de tiempo recorta los tramos del tiempo elegido', () => {
+      createLoaded([zone, { ...zone, id: 'z2', period: 2, startMinute: 50, endMinute: 60, row: 3, col: 5 }], mixed);
+      clickMode('Minutos');
+
+      component.setPeriodFilter(2);
+      fixture.detectChanges();
+
+      expect(fieldCount(2, 3)).toBeUndefined();
+      expect(fieldCount(3, 5)).toBe('10');
     });
   });
 });

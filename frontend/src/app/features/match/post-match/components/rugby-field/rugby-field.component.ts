@@ -2,10 +2,10 @@ import { CommonModule } from '@angular/common';
 import { Component, ElementRef, computed, inject, input, output, signal } from '@angular/core';
 import { ZONE_GRID_COLS, ZONE_GRID_ROWS, ZoneCellRef, ZoneCellSummary } from '../../../types/zone.types';
 import { CountTweenDirective } from './count-tween.directive';
-import { HEAT_STEPS, heatLevel, heatMix } from '../../utils/zone-heat';
+import { heatScale } from '../../utils/zone-heat';
 import {
   ZONE_COLUMN_METERS, ZONE_FIELD_LENGTH_M, ZONE_FIELD_WIDTH_M, ZONE_ROW_METERS,
-  ZONE_ROW_LETTERS, ZONE_ROW_SHORT_NAMES, describeZone, formatEventCount, rowRangeLabel, shortTeamName, zoneLabel
+  ZONE_ROW_LETTERS, ZONE_ROW_SHORT_NAMES, ZoneCountUnit, describeCount, describeZone, formatEventCount, rowRangeLabel, shortTeamName, zoneLabel
 } from '../../utils/zone-grid';
 
 interface FieldCell extends ZoneCellRef {
@@ -33,11 +33,18 @@ const PX_PER_METER = 10;
 export class RugbyFieldComponent {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
+  /** Cantidad por celda (`eventCount`); lo que cuenta —jugadas o minutos— lo dice `unit`. */
   readonly cells = input<ZoneCellSummary[]>([]);
+  /** Qué cuentan las celdas: jugadas (por defecto) o minutos cubiertos por los tramos. */
+  readonly unit = input<ZoneCountUnit>('events');
+  /** Aclaración bajo la escala de calor (ej. qué filtros no aplican a lo que se cuenta); null no muestra nada. */
+  readonly legendNote = input<string | null>(null);
   readonly selectedCell = input<ZoneCellRef | null>(null);
   readonly ownClubName = input<string>('Mi club');
   readonly opponentName = input<string>('Rival');
   readonly selectable = input<boolean>(true);
+  /** Franjas (columnas) que se leen pero no se eligen: el in-goal solo admite puntos, no tramos. */
+  readonly lockedCols = input<readonly number[]>([]);
   /** Celda recién guardada: hace un pulso breve. */
   readonly pulseCell = input<ZoneCellRef | null>(null);
 
@@ -45,6 +52,8 @@ export class RugbyFieldComponent {
   readonly linkedCell = input<ZoneCellRef | null>(null);
 
   readonly cellSelected = output<ZoneCellRef>();
+  /** Se tocó una celda (también las bloqueadas o en solo lectura): la pantalla fija su detalle. */
+  readonly cellInspected = output<ZoneCellRef>();
   /** Celda bajo el cursor o el foco (null al salir): la página resalta sus tramos. */
   readonly cellHover = output<ZoneCellRef | null>();
 
@@ -82,16 +91,17 @@ export class RugbyFieldComponent {
   private readonly activeCell = signal<ZoneCellRef | null>(null);
   private readonly focusCell = signal<ZoneCellRef | null>(null);
 
-  readonly heatSteps = HEAT_STEPS;
-  readonly heatMix = heatMix;
+  /** Escala relativa al máximo que se está mostrando (jugadas o minutos): los tonos se reparten entre los valores reales. */
+  readonly scale = computed(() => heatScale(this.cells().map(cell => cell.eventCount)));
 
   readonly fieldRows = computed<FieldCell[][]>(() => {
     const counts = new Map(this.cells().map(c => [`${c.row}-${c.col}`, c.eventCount]));
+    const scale = this.scale();
 
     return this.rows.map(row => this.cols.map(col => {
       const count = counts.get(`${row}-${col}`) ?? 0;
-      const level = heatLevel(count);
-      return { row, col, label: zoneLabel({ row, col }), count, countLabel: formatEventCount(count), heat: heatMix(level), heatLevel: level };
+      const level = scale.levelOf(count);
+      return { row, col, label: zoneLabel({ row, col }), count, countLabel: formatEventCount(count), heat: scale.steps[level].mix, heatLevel: level };
     }));
   });
 
@@ -101,13 +111,18 @@ export class RugbyFieldComponent {
     const cell = this.activeCell();
     if (!cell) return 'Pasá el cursor o tocá una zona';
     const count = this.cells().find(c => c.row === cell.row && c.col === cell.col)?.eventCount ?? 0;
-    const events = count === 1 ? '1 evento' : `${count} eventos`;
-    return `${describeZone(cell)} · ${events}`;
+    return `${describeZone(cell)} · ${describeCount(count, this.unit())}`;
   });
+
+  readonly legendTitle = computed(() => this.unit() === 'minutes' ? 'Minutos por zona' : 'Eventos por zona');
 
   readonly gridLabel = computed(() => this.selectable()
     ? 'Cancha: elegí la franja y el lateral del tramo'
     : 'Cancha: eventos por zona');
+
+  isLocked(cell: ZoneCellRef): boolean {
+    return this.lockedCols().includes(cell.col);
+  }
 
   isSelected(cell: ZoneCellRef): boolean {
     const selected = this.selectedCell();
@@ -135,7 +150,8 @@ export class RugbyFieldComponent {
   }
 
   select(cell: ZoneCellRef): void {
-    if (this.selectable()) {
+    this.cellInspected.emit({ row: cell.row, col: cell.col });
+    if (this.selectable() && !this.isLocked(cell)) {
       this.cellSelected.emit({ row: cell.row, col: cell.col });
       return;
     }
@@ -176,8 +192,7 @@ export class RugbyFieldComponent {
   }
 
   ariaLabel(cell: FieldCell): string {
-    const events = cell.count === 1 ? '1 evento' : `${cell.count} eventos`;
-    return `${describeZone(cell)}: ${events}`;
+    return `${describeZone(cell)}: ${describeCount(cell.count, this.unit())}${this.isLocked(cell) ? '. Solo puntos: no admite tramos' : ''}`;
   }
 
   private nextCell(key: string, cell: ZoneCellRef): ZoneCellRef | null {

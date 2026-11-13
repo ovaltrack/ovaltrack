@@ -4,19 +4,26 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import com.ovaltrack.backend.event.domain.EventPossession;
 import com.ovaltrack.backend.zone.domain.ZoneAssignment;
 import com.ovaltrack.backend.zone.domain.ZoneCell;
+import com.ovaltrack.backend.zone.domain.ZoneQuery;
 
 @DisplayName("EventZoneResolver: deriva la zona de un evento a partir de su minuto")
 class EventZoneResolverTest {
 
     private final EventZoneResolver resolver = new EventZoneResolver();
+
+    private Optional<ZoneCell> resolveAt(Integer period, Integer matchTimeSeconds, List<ZoneAssignment> zones) {
+        return resolver.resolve(new ZoneQuery(null, EventPossession.OWN, Map.of(), period, matchTimeSeconds), zones);
+    }
 
     private ZoneAssignment assignment(int period, int startMinute, int endMinute, int row, int col) {
         ZoneAssignment zone = new ZoneAssignment();
@@ -33,7 +40,7 @@ class EventZoneResolverTest {
     void shouldResolveCellWhenEventIsInsideRange() {
         List<ZoneAssignment> zones = List.of(assignment(1, 10, 25, 2, 3));
 
-        Optional<ZoneCell> cell = resolver.resolve(1, 15 * 60, zones);
+        Optional<ZoneCell> cell = resolveAt(1, 15 * 60, zones);
 
         assertEquals(Optional.of(new ZoneCell(2, 3)), cell);
     }
@@ -43,7 +50,7 @@ class EventZoneResolverTest {
     void shouldIncludeStartBoundary() {
         List<ZoneAssignment> zones = List.of(assignment(1, 10, 25, 2, 3));
 
-        assertEquals(Optional.of(new ZoneCell(2, 3)), resolver.resolve(1, 10 * 60, zones));
+        assertEquals(Optional.of(new ZoneCell(2, 3)), resolveAt(1, 10 * 60, zones));
     }
 
     @Test
@@ -53,7 +60,7 @@ class EventZoneResolverTest {
                 assignment(1, 10, 25, 1, 1),
                 assignment(1, 25, 40, 3, 6));
 
-        assertEquals(Optional.of(new ZoneCell(3, 6)), resolver.resolve(1, 25 * 60, zones));
+        assertEquals(Optional.of(new ZoneCell(3, 6)), resolveAt(1, 25 * 60, zones));
     }
 
     @Test
@@ -61,13 +68,13 @@ class EventZoneResolverTest {
     void shouldReturnEmptyWhenNoRangeCoversTheEvent() {
         List<ZoneAssignment> zones = List.of(assignment(1, 10, 25, 2, 3));
 
-        assertTrue(resolver.resolve(1, 30 * 60, zones).isEmpty());
+        assertTrue(resolveAt(1, 30 * 60, zones).isEmpty());
     }
 
     @Test
     @DisplayName("Sin asignaciones, todo evento queda sin zona")
     void shouldReturnEmptyWhenThereAreNoAssignments() {
-        assertTrue(resolver.resolve(1, 15 * 60, List.of()).isEmpty());
+        assertTrue(resolveAt(1, 15 * 60, List.of()).isEmpty());
     }
 
     @Test
@@ -75,7 +82,7 @@ class EventZoneResolverTest {
     void shouldNotMatchAcrossPeriods() {
         List<ZoneAssignment> zones = List.of(assignment(1, 0, 40, 1, 1));
 
-        assertTrue(resolver.resolve(2, 50 * 60, zones).isEmpty());
+        assertTrue(resolveAt(2, 50 * 60, zones).isEmpty());
     }
 
     @Test
@@ -85,7 +92,7 @@ class EventZoneResolverTest {
                 assignment(1, 0, 40, 1, 1),
                 assignment(2, 40, 80, 3, 6));
 
-        assertEquals(Optional.of(new ZoneCell(3, 6)), resolver.resolve(2, 50 * 60, zones));
+        assertEquals(Optional.of(new ZoneCell(3, 6)), resolveAt(2, 50 * 60, zones));
     }
 
     @Test
@@ -93,7 +100,7 @@ class EventZoneResolverTest {
     void shouldReturnEmptyWhenMatchTimeIsNull() {
         List<ZoneAssignment> zones = List.of(assignment(1, 0, 40, 1, 1));
 
-        assertTrue(resolver.resolve(1, null, zones).isEmpty());
+        assertTrue(resolveAt(1, null, zones).isEmpty());
     }
 
     @Nested
@@ -105,7 +112,7 @@ class EventZoneResolverTest {
         void shouldCountFirstHalfAddedTimeInTheLastSegment() {
             List<ZoneAssignment> zones = List.of(assignment(1, 31, 40, 2, 4));
 
-            assertEquals(Optional.of(new ZoneCell(2, 4)), resolver.resolve(1, 43 * 60, zones));
+            assertEquals(Optional.of(new ZoneCell(2, 4)), resolveAt(1, 43 * 60, zones));
         }
 
         @Test
@@ -113,7 +120,7 @@ class EventZoneResolverTest {
         void shouldCountMinuteFortyInTheSegmentEndingAtForty() {
             List<ZoneAssignment> zones = List.of(assignment(1, 31, 40, 2, 4));
 
-            assertEquals(Optional.of(new ZoneCell(2, 4)), resolver.resolve(1, 40 * 60, zones));
+            assertEquals(Optional.of(new ZoneCell(2, 4)), resolveAt(1, 40 * 60, zones));
         }
 
         @Test
@@ -121,7 +128,7 @@ class EventZoneResolverTest {
         void shouldCountSecondHalfAddedTimeInTheLastSegment() {
             List<ZoneAssignment> zones = List.of(assignment(2, 68, 80, 3, 5));
 
-            assertEquals(Optional.of(new ZoneCell(3, 5)), resolver.resolve(2, 84 * 60, zones));
+            assertEquals(Optional.of(new ZoneCell(3, 5)), resolveAt(2, 84 * 60, zones));
         }
 
         @Test
@@ -131,7 +138,7 @@ class EventZoneResolverTest {
                     assignment(1, 31, 40, 2, 4),
                     assignment(1, 0, 31, 1, 1));
 
-            assertEquals(Optional.of(new ZoneCell(2, 4)), resolver.resolve(1, 39 * 60, zones));
+            assertEquals(Optional.of(new ZoneCell(2, 4)), resolveAt(1, 39 * 60, zones));
         }
 
         @Test
@@ -141,7 +148,7 @@ class EventZoneResolverTest {
                     assignment(1, 31, 40, 2, 4),
                     assignment(2, 40, 55, 3, 6));
 
-            assertEquals(Optional.of(new ZoneCell(3, 6)), resolver.resolve(2, 40 * 60, zones));
+            assertEquals(Optional.of(new ZoneCell(3, 6)), resolveAt(2, 40 * 60, zones));
         }
 
         @Test
@@ -149,7 +156,7 @@ class EventZoneResolverTest {
         void shouldLeaveAddedTimeUnzonedWhenLastSegmentDoesNotReachTheEnd() {
             List<ZoneAssignment> zones = List.of(assignment(1, 31, 38, 2, 4));
 
-            assertTrue(resolver.resolve(1, 43 * 60, zones).isEmpty());
+            assertTrue(resolveAt(1, 43 * 60, zones).isEmpty());
         }
 
         @Test
@@ -157,7 +164,7 @@ class EventZoneResolverTest {
         void shouldLeaveAddedTimeUnzonedWhenThePeriodHasNoSegments() {
             List<ZoneAssignment> zones = List.of(assignment(2, 40, 80, 1, 1));
 
-            assertTrue(resolver.resolve(1, 43 * 60, zones).isEmpty());
+            assertTrue(resolveAt(1, 43 * 60, zones).isEmpty());
         }
 
         @Test
@@ -165,8 +172,8 @@ class EventZoneResolverTest {
         void shouldReturnEmptyForOutOfRangeValues() {
             List<ZoneAssignment> zones = List.of(assignment(1, 0, 40, 1, 1), assignment(2, 40, 80, 1, 1));
 
-            assertTrue(resolver.resolve(1, -60, zones).isEmpty());
-            assertTrue(resolver.resolve(3, 43 * 60, zones).isEmpty());
+            assertTrue(resolveAt(1, -60, zones).isEmpty());
+            assertTrue(resolveAt(3, 43 * 60, zones).isEmpty());
         }
 
         @Test
@@ -174,7 +181,7 @@ class EventZoneResolverTest {
         void shouldNeverSpillFirstHalfAddedTimeIntoTheSecondHalf() {
             List<ZoneAssignment> zones = List.of(assignment(2, 40, 80, 3, 6));
 
-            assertTrue(resolver.resolve(1, 43 * 60, zones).isEmpty());
+            assertTrue(resolveAt(1, 43 * 60, zones).isEmpty());
         }
     }
 }

@@ -35,7 +35,8 @@
                  [class.is-selected]="isSelected(cell)"
                  [class.is-linked]="isLinked(cell)"
                  [class.is-pulse]="isPulsing(cell)"
-                 [class.is-readonly]="!selectable()"
+                 [class.is-readonly]="!selectable() || isLocked(cell)"
+                 [attr.aria-disabled]="isLocked(cell) || null"
                  [attr.data-row]="cell.row"
                  [attr.data-col]="cell.col"
                  [attr.aria-selected]="isSelected(cell)"
@@ -101,14 +102,16 @@
         <path d="M104 1 L117 6 L104 11 Z" fill="currentColor" />
       </svg>
     </span>
-    <div class="heat-legend" data-testid="heat-legend" aria-label="Escala de calor: cantidad de eventos por zona">
-      <span class="heat-legend-title">Eventos por zona</span>
+    <div class="heat-legend" data-testid="heat-legend" [attr.aria-label]="'Escala de calor: ' + legendTitle().toLowerCase()">
       <span class="heat-legend-steps">
-        <span *ngFor="let step of heatSteps" class="heat-legend-step">
-          <i class="heat-swatch" [class.is-empty]="step.level === 0" [style.--heat]="heatMix(step.level)" aria-hidden="true"></i>{{ step.label }}
+        <span *ngFor="let step of scale().steps" class="heat-legend-step">
+          <i class="heat-swatch" [class.is-empty]="step.level === 0" [style.--heat]="step.mix" aria-hidden="true"></i>{{ step.label }}
         </span>
       </span>
+      <span *ngIf="legendNote() as note" class="heat-legend-note" data-testid="heat-legend-note">{{ note }}</span>
     </div>
     <span class="reading" data-testid="zone-reading" aria-live="polite">{{ reading() }}</span>
+    <!-- Detalle de la celda señalada (o de las jugadas sin zona): lo aporta la pantalla -->
+    <ng-content select="[fieldDetail]" />
   </figcaption>
 </figure>

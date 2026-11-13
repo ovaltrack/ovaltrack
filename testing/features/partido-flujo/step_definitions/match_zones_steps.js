@@ -127,6 +127,13 @@ Then('la consulta devuelve {int} asignación/asignaciones de zona', function (ca
   assert.equal(this.response.body.assignments.length, cantidad);
 });
 
+Then('la consulta devuelve la asignación fila {int} columna {int} del periodo {int} entre el minuto {int} y el minuto {int}', function (row, col, period, startMinute, endMinute) {
+  const assignments = this.response.body?.assignments;
+  assert.ok(Array.isArray(assignments), 'La respuesta debe incluir la lista "assignments"');
+  const found = assignments.some((a) => a.row === row && a.col === col && a.period === period && a.startMinute === startMinute && a.endMinute === endMinute);
+  assert.ok(found, `No hay una asignación fila ${row} columna ${col} del periodo ${period} entre ${startMinute} y ${endMinute}: ${JSON.stringify(assignments)}`);
+});
+
 Then('el resumen indica {int} evento/eventos en la fila {int} columna {int}', function (cantidad, row, col) {
   const cells = this.response.body?.summary?.cells;
   assert.ok(Array.isArray(cells), 'La respuesta debe incluir "summary.cells"');

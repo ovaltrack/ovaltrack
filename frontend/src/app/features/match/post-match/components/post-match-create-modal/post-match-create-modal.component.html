@@ -17,23 +17,33 @@
 
       <!-- Body -->
       <div class="form-card-body p-4">
-        <app-event-form
-          [showTimeFields]="true"
-          [initialData]="initialData()"
-          [prefillHints]="prefillHints()"
-          [showEnrichmentSlot]="true"
-          [disabled]="isSubmitting()"
-          (formChange)="onFormChange($event)"
-        />
+        <ng-container *ngIf="nextChoices() as choices; else formStep">
+          <p class="next-choices-title">Después de {{ followUpName }}, ¿qué sigue?</p>
+          <div class="next-choices">
+            <button *ngFor="let choice of choices" type="button" class="btn btn-outline" (click)="prefillNext(choice)">
+              {{ choice.label }}
+            </button>
+          </div>
+        </ng-container>
+        <ng-template #formStep>
+          <app-event-form
+            [showTimeFields]="true"
+            [initialData]="initialData()"
+            [prefillHints]="prefillHints()"
+            [showEnrichmentSlot]="true"
+            [disabled]="isSubmitting()"
+            (formChange)="onFormChange($event)"
+          />
+        </ng-template>
       </div>
 
       <!-- Footer -->
       <div class="modal-footer-actions">
         <button type="button" class="btn btn-outline" (click)="onClose()" [disabled]="isSubmitting()">
-          Cancelar
+          {{ closeLabel }}
         </button>
-        <button type="button" 
-                class="btn btn-invite d-flex align-items-center justify-content-center gap-2" 
+        <button *ngIf="!nextChoices()" type="button"
+                class="btn btn-invite d-flex align-items-center justify-content-center gap-2"
                 (click)="save()" 
                 [disabled]="isSubmitting()">
           <span *ngIf="isSubmitting()" class="spinner-border spinner-border-sm"></span>

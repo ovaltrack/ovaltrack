@@ -1,6 +1,6 @@
 import {
   ZONE_COLUMN_METERS, ZONE_FIELD_LENGTH_M, ZONE_FIELD_WIDTH_M, ZONE_ROW_METERS,
-  allZoneCells, columnRangeLabel, describeZone, formatEventCount, rowRangeLabel, shortTeamName, zoneLabel, zoneName
+  IN_GOAL_COLUMNS, columnRangeLabel, describeCount, describeZone, formatEventCount, isInGoalColumn, rowRangeLabel, shortTeamName, zoneLabel, zoneName
 } from './zone-grid';
 
 describe('zone-grid', () => {
@@ -9,6 +9,24 @@ describe('zone-grid', () => {
     expect(ZONE_ROW_METERS).toEqual([15, 40, 15]);
     expect(ZONE_FIELD_LENGTH_M).toBe(120);
     expect(ZONE_FIELD_WIDTH_M).toBe(70);
+  });
+
+  describe('describeCount', () => {
+    it('cuenta eventos en singular y plural', () => {
+      expect(describeCount(0, 'events')).toBe('0 eventos');
+      expect(describeCount(1, 'events')).toBe('1 evento');
+      expect(describeCount(12, 'events')).toBe('12 eventos');
+    });
+
+    it('cuenta minutos abreviados, sin plural', () => {
+      expect(describeCount(1, 'minutes')).toBe('1 min');
+      expect(describeCount(35, 'minutes')).toBe('35 min');
+    });
+  });
+
+  it('el in-goal son las columnas de los extremos: 1 (propio) y 6 (rival)', () => {
+    expect(IN_GOAL_COLUMNS).toEqual([1, 6]);
+    expect([1, 2, 3, 4, 5, 6].filter(isInGoalColumn)).toEqual([1, 6]);
   });
 
   it('las filas respetan las líneas de 15 m desde cada touch', () => {
@@ -35,14 +53,6 @@ describe('zone-grid', () => {
   it('zoneName da el lateral y la franja para tooltips', () => {
     expect(zoneName({ row: 2, col: 4 })).toBe('Centro · Campo rival');
     expect(zoneName({ row: 3, col: 6 })).toBe('Derecha · In-goal rival');
-  });
-
-  it('genera las 18 celdas de la grilla en orden', () => {
-    const cells = allZoneCells();
-
-    expect(cells.length).toBe(18);
-    expect(cells[0]).toEqual({ row: 1, col: 1 });
-    expect(cells[17]).toEqual({ row: 3, col: 6 });
   });
 
   describe('formatEventCount', () => {

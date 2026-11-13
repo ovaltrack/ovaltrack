@@ -5,3 +5,12 @@
 .strip-accent-bar.is-warning {
   background: var(--warning);
 }
+
+/* «Sin zona» con pendientes es un botón: se ve igual que el resto de la tira y se nota que se puede tocar */
+.kpi-link {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 36px; margin: -6px -10px; padding: 6px 10px;
+  border: 0; border-radius: 8px; background: transparent; color: inherit; font: inherit; cursor: pointer;
+}
+.kpi-link:hover { background: var(--surface-hover); }
+.kpi-link:focus-visible { outline: 3px solid var(--navy); outline-offset: 2px; }
+.kpi-link .bi { font-size: 12px; color: var(--text-secondary); }

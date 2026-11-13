@@ -74,6 +74,22 @@
   padding: 0 20px;
 }
 
+/* Paso de elección del evento siguiente */
+.next-choices-title {
+  margin: 0 0 12px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.next-choices {
+  display: grid;
+  gap: 12px;
+}
+
+.next-choices .btn {
+  min-height: 48px;
+}
+
 /* Modo oscuro */
 :host-context([data-theme="dark"]) .header-icon-box {
   background-color: var(--surface-alt);
