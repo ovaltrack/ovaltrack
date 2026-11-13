@@ -1,6 +1,7 @@
-import { Component, input, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { ZoneAssignmentResponse, ZoneCellRef } from '../../../types/zone.types';
 import { CellEventRow, CellTramoRow } from '../../utils/zone-cell-detail';
+import { zoneLabel, zoneName } from '../../utils/zone-grid';
 import { ZoneMapMode } from '../../utils/zone-stats';
 import { UnzonedItem } from '../../utils/zone-unzoned';
 
@@ -14,7 +15,8 @@ export type ZoneDetailView = 'cell' | 'unzoned';
 @Component({
   selector: 'app-zone-cell-detail',
   standalone: true,
-  template: ''
+  templateUrl: './zone-cell-detail.component.html',
+  styleUrl: './zone-cell-detail.component.css'
 })
 export class ZoneCellDetailComponent {
   readonly view = input<ZoneDetailView>('cell');
@@ -23,6 +25,12 @@ export class ZoneCellDetailComponent {
   readonly eventRows = input<CellEventRow[]>([]);
   readonly tramoRows = input<CellTramoRow[]>([]);
   readonly unzoned = input<UnzonedItem[]>([]);
+
+  /** Nombre de la celda señalada, ej. "C5 · Campo rival" (null si no hay). */
+  readonly cellTitle = computed(() => {
+    const cell = this.cell();
+    return cell ? `${zoneLabel(cell)} · ${zoneName(cell)}` : null;
+  });
 
   /** Volver del listado de jugadas sin zona al detalle de la celda. */
   readonly closed = output<void>();

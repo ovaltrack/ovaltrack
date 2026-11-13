@@ -11,7 +11,7 @@
       <button type="button" class="btn-outline" (click)="goBack()">Volver al análisis</button>
     </div>
   } @else {
-    <app-zone-kpi-strip [totalEvents]="totalEvents()" [unzonedEvents]="totalUnzoned()" [coveragePercent]="coveragePercent()" />
+    <app-zone-kpi-strip [totalEvents]="totalEvents()" [unzonedEvents]="totalUnzoned()" [coveragePercent]="coveragePercent()" (unzonedRequested)="openUnzoned()" />
 
     <div class="zones-layout">
       <div class="zones-main">
@@ -59,12 +59,18 @@
                     que los tramos cubren en cada zona: ahí el tipo y la posesión no aplican, porque un tramo no los tiene. Los colores de la cancha
                     se ajustan a los valores que se muestran, y su leyenda dice los rangos reales.
                   </p>
+                  <strong>Jugadas sin zona</strong>
+                  <p data-testid="unzoned-note">
+                    Una jugada queda sin zona si ningún tramo cubre su minuto o si el tramo no admite su tipo. Tocá «sin zona» arriba para ver
+                    cada una con su motivo y llevarla a su arreglo. Tocar una celda de la cancha (también el in-goal) muestra sus jugadas y de dónde sale su zona.
+                  </p>
                   <strong>Rango del tramo</strong>
                   <ul data-testid="range-rules">
                     <li>Inicio incluido, fin excluido: 20′–25′ y 25′–30′ no se pisan.</li>
                     <li>Los minutos son del partido: el 2T va de 40 a 80. El tiempo (1T o 2T) se deduce del rango.</li>
                     <li>Un tramo no puede cruzar el entretiempo: partilo en uno hasta el 40′ y otro desde el 40′.</li>
                     <li>El tiempo añadido cuenta como minuto 40 (1T) y 80 (2T).</li>
+                    <li>Tocar un hueco propone solo el segmento hasta el próximo corte: lo que sigue a un tanto es otro segmento.</li>
                     <li>Un try, un try penal, un Kick H o un drop cierran el tramo: después se reinicia el juego, así que el tramo termina en el minuto de esa jugada.</li>
                   </ul>
                   </div>
@@ -129,12 +135,20 @@
             [pulseCell]="zonesStore.pulseCell()"
             [linkedCell]="linkedCell()"
             (cellSelected)="onCellSelected($event)"
-            (cellHover)="zonesStore.hoverCell.set($event)" />
+            (cellInspected)="onCellInspected($event)"
+            (cellHover)="zonesStore.hoverCell.set($event)">
+            <!-- Detalle al costado de la cancha: las jugadas de la celda o las que no tienen zona -->
+            <app-zone-cell-detail fieldDetail
+              [view]="detailView()" [cell]="shownCell()" [mode]="mapMode()"
+              [eventRows]="detailEventRows()" [tramoRows]="detailTramoRows()" [unzoned]="unzonedItems()"
+              (closed)="closeUnzoned()" (gapRequested)="onUnzonedGap($event)" (tramoRequested)="onUnzonedTramo($event)"
+              (eventRequested)="onUnzonedEvent($event)" />
+          </app-rugby-field>
         </div>
       </div>
 
       <div class="zones-side">
-        <app-zone-assignment-panel [matchId]="matchId()" [(selectedCell)]="selectedCell" />
+        <app-zone-assignment-panel [matchId]="matchId()" [(selectedCell)]="selectedCell" (unzonedRequested)="openUnzoned()" />
       </div>
     </div>
   }

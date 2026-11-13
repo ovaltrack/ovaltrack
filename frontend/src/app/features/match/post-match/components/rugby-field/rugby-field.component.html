@@ -110,5 +110,7 @@
       </span>
     </div>
     <span class="reading" data-testid="zone-reading" aria-live="polite">{{ reading() }}</span>
+    <!-- Detalle de la celda señalada (o de las jugadas sin zona): lo aporta la pantalla -->
+    <ng-content select="[fieldDetail]" />
   </figcaption>
 </figure>

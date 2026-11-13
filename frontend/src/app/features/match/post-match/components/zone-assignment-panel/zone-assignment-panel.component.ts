@@ -6,7 +6,7 @@ import { ToastService } from 'src/app/core/services/toast.service';
 import { MatchZonesStore } from '../../store/match-zones.store';
 import { HALFTIME_SPLIT_MESSAGE, deduceZonePeriod, rangeCrossesHalftime, validateZoneForm } from '../../utils/zone-form.utils';
 import { ZONE_COLUMN_NAMES, ZONE_ROW_NAMES, ZONE_ROW_SHORT_NAMES, columnRangeLabel, zoneLabel } from '../../utils/zone-grid';
-import { describeSegment, eventsLinkedByRange, eventsReleasedByEdit, findOverlap } from '../../utils/zone-stats';
+import { describeSegment, eventsLinkedByRange, eventsReleasedByEdit, findOverlap, unzonedEvents } from '../../utils/zone-stats';
 import { findZoneRuleConflict } from '../../utils/zone-rule';
 import { ListOverflow, OverflowMetrics, overflowCapacity, visibleWithOverflow } from '../../utils/list-overflow';
 import { observeHeight } from '../../utils/observe-height';
@@ -271,7 +271,7 @@ export class ZoneAssignmentPanelComponent implements OnInit, AfterViewInit {
 
   /** Jugadas del partido que no tienen zona, por un hueco o porque su tramo no admite el tipo. */
   get unzonedCount(): number {
-    return 0;
+    return unzonedEvents(this.store.events(), 'ALL').length;
   }
 
   /** Huecos sin zona de ambos tiempos, con los eventos que hoy caen en cada uno. */

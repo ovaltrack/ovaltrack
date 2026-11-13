@@ -148,6 +148,7 @@ export class RugbyFieldComponent {
   }
 
   select(cell: ZoneCellRef): void {
+    this.cellInspected.emit({ row: cell.row, col: cell.col });
     if (this.selectable() && !this.isLocked(cell)) {
       this.cellSelected.emit({ row: cell.row, col: cell.col });
       return;

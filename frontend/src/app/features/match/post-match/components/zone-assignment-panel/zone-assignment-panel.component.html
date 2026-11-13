@@ -128,8 +128,16 @@
         <span class="count-pill" data-testid="gaps-count">{{ gaps.length }}</span>
       </div>
 
-      <p *ngIf="gaps.length === 0" class="match-complete" data-testid="match-complete">
+      <p *ngIf="gaps.length === 0 && unzonedCount === 0" class="match-complete" data-testid="match-complete">
         <i class="bi bi-check-circle-fill"></i> Partido completo
+      </p>
+
+      <!-- Todo el tiempo tiene tramo, pero hay jugadas que quedaron sin zona: no se dice «completo» -->
+      <p *ngIf="gaps.length === 0 && unzonedCount > 0" class="match-complete is-pending" data-testid="time-covered">
+        Tiempo cubierto ·
+        <button type="button" class="pending-link" data-testid="unzoned-link" (click)="unzonedRequested.emit()">
+          {{ unzonedCount }} {{ unzonedCount === 1 ? 'jugada sin zona' : 'jugadas sin zona' }}
+        </button>
       </p>
 
       <!-- Solo entran los huecos completos en el alto disponible; el resto se resume al pie, sin scroll -->

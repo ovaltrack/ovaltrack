@@ -194,5 +194,8 @@ export function zoneCoveragePercent(assignments: RangeLike[]): number {
 
 /** Tramo que contiene el minuto del evento (rango [inicio, fin), con el tiempo añadido en el último segundo); null si cae en un hueco. */
 export function tramoAtEvent(event: Pick<ZoneEvent, 'period' | 'matchTime'>, assignments: ZoneAssignmentResponse[]): ZoneAssignmentResponse | null {
-  return null;
+  const period = event.period as ZonePeriod;
+  const seconds = effectiveMatchTime(period, event.matchTime);
+  return assignments.find(a =>
+    a.period === period && a.startMinute * SECONDS_PER_MINUTE <= seconds && seconds < a.endMinute * SECONDS_PER_MINUTE) ?? null;
 }

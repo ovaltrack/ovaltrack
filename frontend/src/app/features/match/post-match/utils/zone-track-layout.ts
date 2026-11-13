@@ -326,5 +326,9 @@ export function clusterMarks<T extends { left: number }>(marks: T[], trackWidthP
  * siguiente (o al fin del hueco). Un tanto reinicia el juego, así que lo que sigue es otro segmento.
  */
 export function segmentAt(gap: PeriodGap, minute: number, cuts: TramoCutMark[]): MinuteRange {
-  return { start: gap.start, end: gap.end };
+  const inside = cuts.filter(cut => cut.period === gap.period && cut.minute > gap.start && cut.minute < gap.end);
+  return {
+    start: Math.max(gap.start, ...inside.filter(cut => cut.minute <= minute).map(cut => cut.minute)),
+    end: Math.min(gap.end, ...inside.filter(cut => cut.minute > minute).map(cut => cut.minute))
+  };
 }

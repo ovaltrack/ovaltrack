@@ -7,8 +7,19 @@
   <div class="strip-accent-bar" [class.is-warning]="unzonedEvents() > 0"></div>
 
   <div class="kpi-strip-item">
-    <span class="strip-value" data-testid="kpi-unzoned" [class.text-amber]="unzonedEvents() > 0">{{ unzonedEvents() }}</span>
-    <span class="strip-label">sin zona</span>
+    @if (unzonedEvents() > 0) {
+      <!-- Con jugadas sin zona, el número es la entrada a la lista con el motivo de cada una -->
+      <button type="button" class="kpi-link" data-testid="kpi-unzoned-link"
+              [attr.aria-label]="unzonedEvents() === 1 ? 'Ver la jugada sin zona y por qué' : 'Ver las ' + unzonedEvents() + ' jugadas sin zona y por qué'"
+              title="Ver las jugadas sin zona y por qué" (click)="unzonedRequested.emit()">
+        <span class="strip-value text-amber" data-testid="kpi-unzoned">{{ unzonedEvents() }}</span>
+        <span class="strip-label">sin zona</span>
+        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+      </button>
+    } @else {
+      <span class="strip-value" data-testid="kpi-unzoned">{{ unzonedEvents() }}</span>
+      <span class="strip-label">sin zona</span>
+    }
   </div>
 
   <div class="strip-divider"></div>

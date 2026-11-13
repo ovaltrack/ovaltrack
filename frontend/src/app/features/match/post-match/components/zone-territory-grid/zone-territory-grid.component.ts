@@ -7,7 +7,7 @@ import { ZoneEvent, ZonePeriodFilter, eventsInRange } from '../../utils/zone-sta
 import { observeWidth } from '../../utils/observe-width';
 import {
   BlockLayout, PeriodGap, TramoCutMark, TRACK_MINUTES, ZonePoint, allGaps, blockLabel, blockLayout, boundingCuts, clusterMarks, countByFranja, crossedCut,
-  describePoint, gapAtMinute, isInWindow, minuteAtOffset, minuteToPercent, territoryRows, trackWindow
+  describePoint, gapAtMinute, isInWindow, minuteAtOffset, minuteToPercent, segmentAt, territoryRows, trackWindow
 } from '../../utils/zone-track-layout';
 
 /** Tramo o hueco elegido en una fila de la grilla: `col` es la franja (fila de la grilla) sobre la que se hizo clic. */
@@ -462,8 +462,10 @@ export class ZoneTerritoryGridComponent {
     }
     const target = this.targetAt(event);
     if (target) {
-      this.cursor.set({ col: target.col, minute: target.gap.start });
-      this.gapSelected.emit({ period: target.gap.period, startMinute: target.gap.start, endMinute: target.gap.end, col: target.col });
+      // Un tanto reinicia el juego: el toque propone el segmento entre cortes, no el hueco entero
+      const segment = segmentAt(target.gap, target.minute, this.cuts());
+      this.cursor.set({ col: target.col, minute: segment.start });
+      this.gapSelected.emit({ period: target.gap.period, startMinute: segment.start, endMinute: segment.end, col: target.col });
     }
   }
 
@@ -624,7 +626,8 @@ export class ZoneTerritoryGridComponent {
     const stop: NavStop | null = stopAt(rowStops(this.assignments(), cursor.col), cursor.minute);
     if (stop?.kind === 'block') this.segmentSelected.emit(stop.assignment);
     else if (stop?.kind === 'gap' && !isInGoalColumn(cursor.col)) {
-      this.gapSelected.emit({ period: stop.period, startMinute: cursor.minute, endMinute: stop.end, col: cursor.col });
+      const segment = segmentAt({ period: stop.period, start: stop.start, end: stop.end }, cursor.minute, this.cuts());
+      this.gapSelected.emit({ period: stop.period, startMinute: cursor.minute, endMinute: segment.end, col: cursor.col });
     }
   }
 
@@ -663,12 +666,13 @@ export class ZoneTerritoryGridComponent {
    * Franja (por la altura del puntero) y hueco (por el minuto) bajo el puntero; null si ese minuto ya tiene tramo o si
    * la franja es de in-goal, que solo admite puntos: ahí no se crean tramos.
    */
-  private targetAt(event: MouseEvent): { col: number; gap: PeriodGap } | null {
+  private targetAt(event: MouseEvent): { col: number; gap: PeriodGap; minute: number } | null {
     const rect = this.tracks()?.nativeElement.getBoundingClientRect();
     if (!rect || rect.width <= 0 || rect.height <= 0) return null;
 
     const row = territoryRows()[this.rowIndexAt(event.clientY)];
-    const gap = row.inGoal ? null : gapAtMinute(this.assignments(), minuteAtOffset(event.clientX - rect.left, rect.width, this.view()));
-    return gap ? { col: row.col, gap } : null;
+    const minute = minuteAtOffset(event.clientX - rect.left, rect.width, this.view());
+    const gap = row.inGoal ? null : gapAtMinute(this.assignments(), minute);
+    return gap ? { col: row.col, gap, minute } : null;
   }
 }
