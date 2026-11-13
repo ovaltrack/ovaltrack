@@ -2,8 +2,8 @@ import { ZoneAssignmentResponse } from '../../types/zone.types';
 import { ZoneEvent } from './zone-stats';
 import {
   FULL_TRACK, allGaps, blockLabel, blockLayout, isInWindow, trackWindow, countByFranja, gapAtMinute, gapsWithEventCount, isShortBlock,
-  minuteAtOffset, minuteToPercent, suggestNextRange, territoryRows, fixedZoneMarks, describeFixedMark, tramoCuts, crossedCut, findTramoCut,
-  TramoCutMark
+  minuteAtOffset, minuteToPercent, suggestNextRange, territoryRows, zonePoints, describePoint, looseCuts, tramoCuts, crossedCut, findTramoCut,
+  TramoCutMark, ZonePoint
 } from './zone-track-layout';
 import { ZoneRule } from '../../types/event-type.types';
 import { RuleEvent, ZoneRulesByType } from './zone-rule';
@@ -174,56 +174,96 @@ describe('zone-track-layout', () => {
     });
   });
 
-  describe('fixedZoneMarks', () => {
-    const TRY: ZoneRule = { columns: [6], rowFrom: 'zone' };
+  describe('gapsWithEventCount con puntos sin fila', () => {
+    it('un try sin lado todavía no tiene zona: cuenta en el hueco hasta que un tramo le dé la fila', () => {
+      const events = [ev('try', 1, 30, null), ev('con-tramo', 1, 12, { row: 1, col: 6 })];
+
+      expect(gapsWithEventCount([zone('a', 1, 10, 25)], events).map(g => g.eventCount)).toEqual([0, 1, 0]);
+    });
+  });
+
+  describe('zonePoints', () => {
+    const TRY: ZoneRule = { columns: [6], rowFrom: 'zone', closesTramo: true };
+    const TRY_PENALTY: ZoneRule = { columns: [6], rows: [2], closesTramo: true };
+    const KICK: ZoneRule = { columns: [2, 3, 4, 5], rowFrom: 'zone', closesTramo: true };
     const rules: ZoneRulesByType = new Map<string, ZoneRule | null>([
-      ['try', TRY], ['scrum', { columns: [2, 3, 4, 5] }], ['tackle', null]
+      ['try', TRY], ['penaltyTry', TRY_PENALTY], ['kick', KICK], ['scrum', { columns: [2, 3, 4, 5] }], ['tackle', null]
     ]);
     const rev = (id: string, typeId: string, period: 1 | 2, seconds: number, extra: Partial<RuleEvent> = {}): RuleEvent =>
       ({ id, eventTypeId: typeId, eventTypeName: typeId, period, matchTime: seconds, teamPossession: 'OWN', attributes: {}, ...extra });
     const tryAt = (id: string, period: 1 | 2, seconds: number, zoneAttr: string, extra: Partial<RuleEvent> = {}) =>
       rev(id, 'try', period, seconds, { attributes: { zone: zoneAttr }, ...extra });
 
-    it('marca el try en su celda y su minuto con decimales (22:30 -> 22,5)', () => {
-      const [mark] = fixedZoneMarks([tryAt('a', 1, 22 * 60 + 30, 'right')], rules, 'ALL');
+    it('ubica el try en su celda y su minuto con decimales (22:30 -> 22,5), con el corte en el minuto siguiente', () => {
+      const [point] = zonePoints([tryAt('a', 1, 22 * 60 + 30, 'right')], rules, 'ALL');
 
-      expect(mark).toEqual({ eventId: 'a', eventTypeName: 'try', period: 1, cell: { row: 3, col: 6 }, minute: 22.5 });
+      expect(point).toEqual({ eventId: 'a', eventTypeName: 'try', period: 1, col: 6, row: 3, minute: 22.5, cutMinute: 23 });
     });
 
-    it('un try del rival se marca espejado', () => {
-      const [mark] = fixedZoneMarks([tryAt('a', 1, 600, 'left', { teamPossession: 'OPPONENT' })], rules, 'ALL');
+    it('un try del rival se ubica espejado', () => {
+      const [point] = zonePoints([tryAt('a', 1, 600, 'left', { teamPossession: 'OPPONENT' })], rules, 'ALL');
 
-      expect(mark.cell).toEqual({ row: 3, col: 1 });
+      expect([point.col, point.row]).toEqual([1, 3]);
     });
 
-    it('solo marca los eventos cuya zona sale de la regla: no los tipos sin regla ni los que dependen del tramo', () => {
-      const events = [rev('s', 'scrum', 1, 600), rev('t', 'tackle', 1, 600), rev('u', 'desconocido', 1, 600), tryAt('a', 1, 600, 'left')];
+    it('un try sin el atributo de lado también es un punto: tiene columna y la fila queda sin conocer', () => {
+      const [point] = zonePoints([rev('a', 'try', 1, 600)], rules, 'ALL');
 
-      expect(fixedZoneMarks(events, rules, 'ALL').map(m => m.eventId)).toEqual(['a']);
+      expect([point.col, point.row]).toEqual([6, null]);
     });
 
-    it('un try sin el atributo de lado depende del tramo y no se marca', () => {
-      expect(fixedZoneMarks([rev('a', 'try', 1, 600)], rules, 'ALL')).toEqual([]);
+    it('un try sin lado del rival va a la columna 1 sin fila', () => {
+      const [point] = zonePoints([rev('a', 'try', 1, 600, { teamPossession: 'OPPONENT' })], rules, 'ALL');
+
+      expect([point.col, point.row]).toEqual([1, null]);
     });
 
-    it('respeta el filtro de tiempo', () => {
-      const events = [tryAt('a', 1, 600, 'left'), tryAt('b', 2, 3000, 'left')];
+    it('el try penal trae la fila de la regla', () => {
+      const [point] = zonePoints([rev('a', 'penaltyTry', 2, 50 * 60)], rules, 'ALL');
 
-      expect(fixedZoneMarks(events, rules, 1).map(m => m.eventId)).toEqual(['a']);
-      expect(fixedZoneMarks(events, rules, 2).map(m => m.eventId)).toEqual(['b']);
-      expect(fixedZoneMarks(events, rules, 'ALL').map(m => m.eventId)).toEqual(['a', 'b']);
+      expect(point).toEqual({ eventId: 'a', eventTypeName: 'penaltyTry', period: 2, col: 6, row: 2, minute: 50, cutMinute: 51 });
     });
 
-    it('ordena cronológicamente y deja el tiempo añadido en el último segundo del tiempo', () => {
+    it('un tipo de columna fija que no corta es un punto sin corte', () => {
+      const fixedNoCut: ZoneRulesByType = new Map<string, ZoneRule | null>([['entry', { columns: [5], rows: [2] }]]);
+
+      expect(zonePoints([rev('a', 'entry', 1, 600)], fixedNoCut, 'ALL').map(p => p.cutMinute)).toEqual([null]);
+    });
+
+    it('solo son puntos los eventos de columna única: no los tipos de varias columnas ni sin regla', () => {
+      const events = [
+        rev('s', 'scrum', 1, 600), rev('t', 'tackle', 1, 600), rev('u', 'desconocido', 1, 600),
+        rev('k', 'kick', 1, 700, { attributes: { zone: 'left' } }), tryAt('a', 1, 800, 'left')
+      ];
+
+      expect(zonePoints(events, rules, 'ALL').map(p => p.eventId)).toEqual(['a']);
+    });
+
+    it('respeta el filtro de tiempo e ignora los eventos con un tiempo inválido', () => {
+      const events = [tryAt('a', 1, 600, 'left'), tryAt('b', 2, 3000, 'left'), { ...tryAt('c', 1, 900, 'left'), period: 3 }];
+
+      expect(zonePoints(events, rules, 1).map(p => p.eventId)).toEqual(['a']);
+      expect(zonePoints(events, rules, 2).map(p => p.eventId)).toEqual(['b']);
+      expect(zonePoints(events, rules, 'ALL').map(p => p.eventId)).toEqual(['a', 'b']);
+    });
+
+    it('ordena cronológicamente y deja el tiempo añadido en el último segundo del tiempo, con el corte en el 40', () => {
       const events = [tryAt('late', 1, 43 * 60, 'left'), tryAt('early', 1, 5 * 60, 'left')];
-      const marks = fixedZoneMarks(events, rules, 'ALL');
+      const points = zonePoints(events, rules, 'ALL');
 
-      expect(marks.map(m => m.eventId)).toEqual(['early', 'late']);
-      expect(marks[1].minute).toBeCloseTo(40 - 1 / 60, 5);
+      expect(points.map(p => p.eventId)).toEqual(['early', 'late']);
+      expect(points[1].minute).toBeCloseTo(40 - 1 / 60, 5);
+      expect(points[1].cutMinute).toBe(40);
     });
 
-    it('sin eventos no hay marcas', () => {
-      expect(fixedZoneMarks([], rules, 'ALL')).toEqual([]);
+    it('el corte del punto coincide con el de tramoCuts para el mismo evento', () => {
+      const events = [tryAt('a', 1, 22 * 60 + 30, 'left'), tryAt('b', 1, 43 * 60, 'left'), tryAt('c', 2, 50 * 60, 'left')];
+
+      expect(zonePoints(events, rules, 'ALL').map(p => p.cutMinute)).toEqual(tramoCuts(events, rules, 'ALL').map(cut => cut.minute));
+    });
+
+    it('sin eventos no hay puntos', () => {
+      expect(zonePoints([], rules, 'ALL')).toEqual([]);
     });
   });
 
@@ -266,16 +306,47 @@ describe('zone-track-layout', () => {
     });
   });
 
-  describe('describeFixedMark', () => {
-    const mark = (minute: number) => ({ eventId: 'a', eventTypeName: 'Try', period: 1 as const, cell: { row: 3, col: 6 }, minute });
+  describe('describePoint', () => {
+    const point = (extra: Partial<ZonePoint> = {}): ZonePoint =>
+      ({ eventId: 'a', eventTypeName: 'Try', period: 1, col: 6, row: 3, minute: 22.5, cutMinute: 23, ...extra });
 
-    it('describe el tipo, el reloj, la celda y que la zona sale del tipo', () => {
-      expect(describeFixedMark(mark(22.5))).toBe('Try 22:30 · D6 · zona fija por el tipo');
+    it('describe el tipo, el reloj, la celda y dónde termina el tramo', () => {
+      expect(describePoint(point())).toBe('Try 22:30 · D6 · el tramo termina en 23′');
     });
 
     it('rellena con cero y el tiempo añadido queda en el último segundo del tiempo', () => {
-      expect(describeFixedMark(mark(5))).toBe('Try 05:00 · D6 · zona fija por el tipo');
-      expect(describeFixedMark(mark(40 - 1 / 60))).toBe('Try 39:59 · D6 · zona fija por el tipo');
+      expect(describePoint(point({ minute: 5, cutMinute: 6 }))).toBe('Try 05:00 · D6 · el tramo termina en 6′');
+      expect(describePoint(point({ minute: 40 - 1 / 60, cutMinute: 40 }))).toBe('Try 39:59 · D6 · el tramo termina en 40′');
+    });
+
+    it('sin fila conocida nombra la franja y aclara que falta el lateral', () => {
+      expect(describePoint(point({ row: null }))).toBe('Try 22:30 · In-goal rival (sin lateral) · el tramo termina en 23′');
+      expect(describePoint(point({ row: null, col: 1 }))).toBe('Try 22:30 · In-goal propio (sin lateral) · el tramo termina en 23′');
+    });
+
+    it('un punto que no corta no habla del tramo', () => {
+      expect(describePoint(point({ eventTypeName: 'Ingreso', col: 5, row: 2, cutMinute: null }))).toBe('Ingreso 22:30 · C5');
+    });
+  });
+
+  describe('looseCuts', () => {
+    const cut = (eventId: string, minute: number): TramoCutMark => ({ eventId, eventTypeName: 'X', period: 1, minute, label: eventId });
+    const point = (eventId: string): ZonePoint =>
+      ({ eventId, eventTypeName: 'Try', period: 1, col: 6, row: 3, minute: 10, cutMinute: 11 });
+
+    it('deja solo los cortes cuyo evento no es un punto (Kick H, Drop goal)', () => {
+      expect(looseCuts([cut('try', 11), cut('kick', 20), cut('drop', 30)], [point('try')]).map(c => c.eventId)).toEqual(['kick', 'drop']);
+    });
+
+    it('sin puntos todos los cortes quedan sueltos y con todos los cortes como puntos no queda ninguno', () => {
+      const cuts = [cut('a', 11), cut('b', 20)];
+
+      expect(looseCuts(cuts, [])).toEqual(cuts);
+      expect(looseCuts(cuts, [point('a'), point('b')])).toEqual([]);
+    });
+
+    it('conserva el orden de los cortes', () => {
+      expect(looseCuts([cut('b', 20), cut('a', 11)], []).map(c => c.eventId)).toEqual(['b', 'a']);
     });
   });
 

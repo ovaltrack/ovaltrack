@@ -92,6 +92,14 @@ export function isFixedZone(rule: ZoneRule | null | undefined, attributes: Recor
     && (rowFromAttribute(rule, attributes) !== null || onlyValue(rule.rows) !== null);
 }
 
+/**
+ * Columna en la que la regla fija el evento, vista en nuestra cancha (el rival se espeja: 6 -> 1). Null si la regla
+ * deja varias columnas o ninguna. Alcanza para ubicar al evento en su franja aunque no se conozca la fila.
+ */
+export function fixedColumn(rule: ZoneRule | null | undefined, possession: Possession | null | undefined): number | null {
+  throw new Error('fixedColumn: no implementado');
+}
+
 function isContiguous(sortedValues: number[]): boolean {
   return sortedValues[sortedValues.length - 1] - sortedValues[0] === sortedValues.length - 1;
 }

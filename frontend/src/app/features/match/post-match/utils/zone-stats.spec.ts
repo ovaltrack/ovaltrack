@@ -1,5 +1,5 @@
 import {
-  ZoneEvent, NO_ZONE_EVENT_FILTERS, coverageMinutes, effectiveMatchTime, filterEvents, countByCell, describeSegment, eventsInRange, eventsLinkedByRange, eventsReleasedByEdit,
+  ZoneEvent, NO_ZONE_EVENT_FILTERS, coverageMinutes, effectiveMatchTime, eventTypeOptions, filterEvents, minutesByCell, countByCell, describeSegment, eventsInRange, eventsLinkedByRange, eventsReleasedByEdit,
   findGaps, findOverlap, periodRange, sortChronologically, unzonedEvents, zoneCoveragePercent
 } from './zone-stats';
 import { ZoneAssignmentResponse } from '../../types/zone.types';
@@ -175,8 +175,8 @@ describe('zone-stats', () => {
         expect(released.map(e => e.id)).toEqual(['b']);
       });
 
-      it('un evento de zona fija no se libera: su zona no depende del tramo', () => {
-        const withFixed = [...events, { id: 'fija', period: 1 as const, matchTime: 20 * 60, zone: { row: 2, col: 6 }, fixedZone: true }];
+      it('un punto no se libera: su zona no depende del tramo', () => {
+        const withFixed = [...events, { id: 'punto', period: 1 as const, matchTime: 20 * 60, zone: { row: 2, col: 6 }, zonePoint: true }];
 
         const released = eventsReleasedByEdit(
           { period: 1, startMinute: 10, endMinute: 25 },
@@ -219,6 +219,92 @@ describe('zone-stats', () => {
     });
   });
 
+  describe('filtro por tipo sobre el mapa de calor', () => {
+    const typed = (id: string, eventTypeId: string, col: number): ZoneEvent & { eventTypeId: string; teamPossession: 'OWN' } =>
+      ({ id, eventTypeId, teamPossession: 'OWN', period: 1, matchTime: 600, zone: { row: 2, col } });
+    const rows = [typed('a', 'scrum', 3), typed('b', 'scrum', 3), typed('c', 'tackle', 3), typed('d', 'tackle', 4)];
+
+    it('con el tipo elegido el mapa cuenta solo ese tipo', () => {
+      const scrums = filterEvents(rows, { eventTypeId: 'scrum', possession: 'ALL' });
+
+      expect(countByCell(scrums, 'ALL')).toEqual([{ row: 2, col: 3, eventCount: 2 }]);
+    });
+
+    it('con "ALL" el mapa cuenta todos los tipos', () => {
+      expect(countByCell(filterEvents(rows, NO_ZONE_EVENT_FILTERS), 'ALL')).toEqual([
+        { row: 2, col: 3, eventCount: 3 }, { row: 2, col: 4, eventCount: 1 }
+      ]);
+    });
+  });
+
+  describe('eventTypeOptions', () => {
+    const typed = (eventTypeId: string, eventTypeName: string) => ({ eventTypeId, eventTypeName });
+
+    it('lista cada tipo presente una sola vez, ordenado por nombre', () => {
+      const events = [typed('try', 'Try'), typed('scrum', 'Scrum'), typed('try', 'Try'), typed('conv', 'Conversión'), typed('scrum', 'Scrum')];
+
+      expect(eventTypeOptions(events)).toEqual([
+        { id: 'conv', name: 'Conversión' }, { id: 'scrum', name: 'Scrum' }, { id: 'try', name: 'Try' }
+      ]);
+    });
+
+    it('no incluye tipos que no aparecen en el partido y sin eventos no hay opciones', () => {
+      expect(eventTypeOptions([typed('scrum', 'Scrum')]).map(option => option.id)).toEqual(['scrum']);
+      expect(eventTypeOptions([])).toEqual([]);
+    });
+
+    it('ordena con las reglas del español: la tilde no cambia la letra', () => {
+      const events = [typed('b', 'Tackle'), typed('a', 'Ágil'), typed('c', 'Zona')];
+
+      expect(eventTypeOptions(events).map(option => option.name)).toEqual(['Ágil', 'Tackle', 'Zona']);
+    });
+  });
+
+  describe('minutesByCell', () => {
+    const cell = (id: string, period: 1 | 2, startMinute: number, endMinute: number, row: number, col: number): ZoneAssignmentResponse =>
+      ({ id, matchId: 'm', period, startMinute, endMinute, row, col });
+
+    it('suma los minutos de cada tramo en su celda', () => {
+      const zones = [cell('a', 1, 0, 10, 2, 3), cell('b', 1, 10, 15, 1, 4), cell('c', 2, 40, 60, 3, 5)];
+
+      expect(minutesByCell(zones, 'ALL')).toEqual([
+        { row: 1, col: 4, minutes: 5 }, { row: 2, col: 3, minutes: 10 }, { row: 3, col: 5, minutes: 20 }
+      ]);
+    });
+
+    it('varios tramos en la misma celda se acumulan', () => {
+      const zones = [cell('a', 1, 0, 5, 2, 3), cell('b', 1, 10, 13, 2, 3), cell('c', 2, 50, 52, 2, 3)];
+
+      expect(minutesByCell(zones, 'ALL')).toEqual([{ row: 2, col: 3, minutes: 10 }]);
+    });
+
+    it('respeta el filtro de tiempo', () => {
+      const zones = [cell('a', 1, 0, 10, 2, 3), cell('b', 2, 40, 55, 2, 3), cell('c', 2, 60, 70, 1, 1)];
+
+      expect(minutesByCell(zones, 1)).toEqual([{ row: 2, col: 3, minutes: 10 }]);
+      expect(minutesByCell(zones, 2)).toEqual([{ row: 1, col: 1, minutes: 10 }, { row: 2, col: 3, minutes: 15 }]);
+    });
+
+    it('ordena por fila y columna sin importar el orden de llegada', () => {
+      const zones = [cell('a', 1, 0, 5, 3, 1), cell('b', 1, 5, 10, 1, 6), cell('c', 1, 10, 15, 1, 2)];
+
+      expect(minutesByCell(zones, 'ALL').map(c => `${c.row}-${c.col}`)).toEqual(['1-2', '1-6', '3-1']);
+    });
+
+    it('incluye los tramos de in-goal que ya existen', () => {
+      expect(minutesByCell([cell('a', 1, 4, 5, 2, 6)], 'ALL')).toEqual([{ row: 2, col: 6, minutes: 1 }]);
+    });
+
+    it('sin tramos, o sin tramos en el tiempo elegido, no hay celdas', () => {
+      expect(minutesByCell([], 'ALL')).toEqual([]);
+      expect(minutesByCell([cell('a', 2, 40, 50, 2, 3)], 1)).toEqual([]);
+    });
+
+    it('con el partido completo en una celda suma los 80 minutos', () => {
+      expect(minutesByCell([cell('a', 1, 0, 40, 2, 3), cell('b', 2, 40, 80, 2, 3)], 'ALL')).toEqual([{ row: 2, col: 3, minutes: 80 }]);
+    });
+  });
+
   describe('coverageMinutes', () => {
     it('sin tramos no hay minutos con zona', () => {
       expect(coverageMinutes([], 1)).toBe(0);
@@ -250,13 +336,17 @@ describe('zone-stats', () => {
   });
 
   describe('eventsLinkedByRange', () => {
-    const ev = (id: string, minute: number, fixedZone?: boolean): ZoneEvent =>
-      ({ id, period: 1, matchTime: minute * 60, zone: { row: 2, col: 3 }, fixedZone });
+    const ev = (id: string, minute: number, zonePoint?: boolean): ZoneEvent =>
+      ({ id, period: 1, matchTime: minute * 60, zone: { row: 2, col: 3 }, zonePoint });
 
     it('cuenta solo los eventos del rango cuya zona depende del tramo', () => {
-      const linked = eventsLinkedByRange({ period: 1, startMinute: 10, endMinute: 25 }, [ev('a', 12), ev('fija', 15, true), ev('fuera', 30)]);
+      const linked = eventsLinkedByRange({ period: 1, startMinute: 10, endMinute: 25 }, [ev('a', 12), ev('punto', 15, true), ev('fuera', 30)]);
 
       expect(linked.map(e => e.id)).toEqual(['a']);
+    });
+
+    it('un evento con zona de punto no se cuenta, aunque su tipo tenga regla', () => {
+      expect(eventsLinkedByRange({ period: 1, startMinute: 0, endMinute: 40 }, [ev('punto', 15, true)])).toEqual([]);
     });
   });
 });

@@ -181,6 +181,37 @@ export function describeFixedMark(mark: FixedZoneMark): string {
 }
 
 /**
+ * Jugada con zona propia, a dibujar sobre la grilla de territorio en su mm:ss exacto. Alcanza con la columna (los
+ * carriles son franjas): la fila solo se conoce si la fija la regla o el lado del apoyo.
+ */
+export interface ZonePoint {
+  eventId: string;
+  eventTypeName: string;
+  period: ZonePeriod;
+  col: number;
+  row: number | null;
+  /** Minuto acumulado con decimales (22:30 -> 22,5); el tiempo añadido queda en el último segundo del tiempo. */
+  minute: number;
+  /** Minuto en que termina el tramo que lo contiene si el tipo reinicia el juego (Try); null si no corta. */
+  cutMinute: number | null;
+}
+
+/** Eventos cuya columna fija la regla del tipo, en orden cronológico y dentro del tiempo elegido. */
+export function zonePoints(events: RuleEvent[], rules: ZoneRulesByType, filter: ZonePeriodFilter): ZonePoint[] {
+  throw new Error('zonePoints: no implementado');
+}
+
+/** Texto del punto para el tooltip y los lectores de pantalla, ej. "Try 22:30 · D6 · el tramo termina en 23′". */
+export function describePoint(point: ZonePoint): string {
+  throw new Error('describePoint: no implementado');
+}
+
+/** Cortes que no nacen de un punto (Kick H, Drop goal): la grilla los dibuja como línea suelta. */
+export function looseCuts(cuts: TramoCutMark[], points: ZonePoint[]): TramoCutMark[] {
+  throw new Error('looseCuts: no implementado');
+}
+
+/**
  * Corte del territorio: después de un evento que reinicia el juego (Try, Try penal, Kick H, Drop goal) el tramo que lo
  * contiene tiene que terminar en `minute` (el minuto del evento + 1, en minutos acumulados).
  */

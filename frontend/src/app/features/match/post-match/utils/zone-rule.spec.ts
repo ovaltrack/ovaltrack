@@ -1,5 +1,5 @@
 import { ZoneRule } from '../../types/event-type.types';
-import { RuleEvent, RuleRange, ZoneRulesByType, closesTramo, describeZoneRule, findZoneRuleConflict, isFixedZone, placeEventZone } from './zone-rule';
+import { RuleEvent, RuleRange, ZoneRulesByType, closesTramo, describeZoneRule, findZoneRuleConflict, fixedColumn, isFixedZone, placeEventZone } from './zone-rule';
 
 describe('zone-rule', () => {
   const TRY: ZoneRule = { columns: [6], rowFrom: 'zone' };
@@ -220,6 +220,39 @@ describe('zone-rule', () => {
       expect(closesTramo(FIELD_PLAY)).toBeFalse();
       expect(closesTramo(null)).toBeFalse();
       expect(closesTramo(undefined)).toBeFalse();
+    });
+  });
+
+  describe('fixedColumn', () => {
+    it('devuelve la única columna de la regla, con o sin fila fija', () => {
+      expect(fixedColumn(TRY, 'OWN')).toBe(6);
+      expect(fixedColumn(TRY_PENALTY, 'OWN')).toBe(6);
+      expect(fixedColumn(FIXED_COLUMN, 'OWN')).toBe(5);
+    });
+
+    it('para el rival espeja la columna (6 -> 1)', () => {
+      expect(fixedColumn(TRY, 'OPPONENT')).toBe(1);
+      expect(fixedColumn(FIXED_COLUMN, 'OPPONENT')).toBe(2);
+    });
+
+    it('la posesión neutral o desconocida no espeja', () => {
+      expect(fixedColumn(TRY, 'NEUTRAL')).toBe(6);
+      expect(fixedColumn(TRY, null)).toBe(6);
+      expect(fixedColumn(TRY, undefined)).toBe(6);
+    });
+
+    it('no hay columna fija con varias columnas, sin columnas, sin restricción o sin regla', () => {
+      expect(fixedColumn(FIELD_PLAY, 'OWN')).toBeNull();
+      expect(fixedColumn({ columns: [] }, 'OWN')).toBeNull();
+      expect(fixedColumn({ rows: [2] }, 'OWN')).toBeNull();
+      expect(fixedColumn(NO_RESTRICTION, 'OWN')).toBeNull();
+      expect(fixedColumn(null, 'OWN')).toBeNull();
+      expect(fixedColumn(undefined, 'OWN')).toBeNull();
+    });
+
+    it('no depende de los atributos: el try sin lado también tiene columna fija', () => {
+      expect(isFixedZone(TRY, {})).toBeFalse();
+      expect(fixedColumn(TRY, 'OWN')).toBe(6);
     });
   });
 });

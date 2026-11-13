@@ -59,6 +59,8 @@ export type ZonePeriodFilter = 'ALL' | ZonePeriod;
 export type ZoneEvent = Pick<MatchTimelineEventResponse, 'id' | 'period' | 'matchTime' | 'zone'> & {
   /** Su zona sale de la regla del tipo y no de un tramo: ningún cambio de tramos se la quita. */
   fixedZone?: boolean;
+  /** Su zona (fila y columna) la da el propio evento y ningún tramo se la da ni se la quita; reemplaza a `fixedZone`. */
+  zonePoint?: boolean;
 };
 
 const SECONDS_PER_MINUTE = 60;
@@ -132,6 +134,29 @@ export function filterEvents<T extends FilterableEvent>(events: T[], filters: Zo
     (filters.eventTypeId === 'ALL' || event.eventTypeId === filters.eventTypeId) &&
     (filters.possession === 'ALL' || event.teamPossession === filters.possession)
   );
+}
+
+/** Minutos de partido que cubren los tramos en una celda. */
+export interface ZoneCellMinutes {
+  row: number;
+  col: number;
+  minutes: number;
+}
+
+/** Minutos cubiertos por los tramos en cada celda, dentro del tiempo elegido; solo informa las celdas con tramos. */
+export function minutesByCell(assignments: ZoneAssignmentResponse[], filter: ZonePeriodFilter): ZoneCellMinutes[] {
+  throw new Error('minutesByCell: no implementado');
+}
+
+/** Tipo de evento presente en el partido, para las opciones del filtro. */
+export interface EventTypeOption {
+  id: string;
+  name: string;
+}
+
+/** Tipos que aparecen en los eventos, sin repetir y por nombre. */
+export function eventTypeOptions(events: Pick<MatchTimelineEventResponse, 'eventTypeId' | 'eventTypeName'>[]): EventTypeOption[] {
+  throw new Error('eventTypeOptions: no implementado');
 }
 
 /** Minutos de un tiempo que ya tienen un tramo asignado (0–40). */
