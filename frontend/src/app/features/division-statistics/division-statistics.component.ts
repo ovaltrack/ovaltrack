@@ -10,7 +10,8 @@ import {
   DivisionStatisticsErrorKind,
   DivisionStatisticsResponse,
 } from './types/division-statistics.types';
-import { DIVISION_METRICS, DivisionMetricDef, MetricUnit } from './utils/division-metrics';
+import { DIVISION_METRICS, DivisionMetricDef, MetricUnit, isMetricSelection } from './utils/division-metrics';
+import { persistedSignal } from '../../shared/utils/persisted-signal';
 import { ChartSeries, StatLineChartComponent } from './components/stat-line-chart/stat-line-chart.component';
 
 type RangePreset = 'last3' | 'last6' | 'year';
@@ -74,7 +75,11 @@ export class DivisionStatisticsComponent implements OnInit {
   error: DivisionStatisticsErrorKind | null = null;
   data: DivisionStatisticsResponse | null = null;
 
-  selectedMetricIds = new Set<string>(DIVISION_METRICS.filter(m => m.defaultSelected).map(m => m.id));
+  readonly selectedMetricIds = persistedSignal<string[]>(
+    'division-statistics.metrics',
+    DIVISION_METRICS.filter(m => m.defaultSelected).map(m => m.id),
+    { isValid: isMetricSelection },
+  );
 
   labels: string[] = [];
   details: string[] = [];
@@ -128,16 +133,14 @@ export class DivisionStatisticsComponent implements OnInit {
   }
 
   toggleMetric(metricId: string): void {
-    if (this.selectedMetricIds.has(metricId)) {
-      this.selectedMetricIds.delete(metricId);
-    } else {
-      this.selectedMetricIds.add(metricId);
-    }
+    this.selectedMetricIds.update(selected => selected.includes(metricId)
+      ? selected.filter(id => id !== metricId)
+      : [...selected, metricId]);
     this.buildCharts();
   }
 
   isSelected(metricId: string): boolean {
-    return this.selectedMetricIds.has(metricId);
+    return this.selectedMetricIds().includes(metricId);
   }
 
   goBack(): void {
@@ -172,7 +175,7 @@ export class DivisionStatisticsComponent implements OnInit {
   private buildCharts(): void {
     const matches = this.data?.matches ?? [];
     this.charts = this.metrics
-      .filter(metric => this.selectedMetricIds.has(metric.id))
+      .filter(metric => this.isSelected(metric.id))
       .map(metric => ({
         id: metric.id,
         label: metric.label,
