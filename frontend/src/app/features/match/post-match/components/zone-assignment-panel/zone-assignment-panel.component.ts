@@ -10,7 +10,9 @@ import { describeSegment, eventsLinkedByRange, eventsReleasedByEdit, findOverlap
 import { findZoneRuleConflict } from '../../utils/zone-rule';
 import { ListOverflow, OverflowMetrics, overflowCapacity, visibleWithOverflow } from '../../utils/list-overflow';
 import { observeHeight } from '../../utils/observe-height';
-import { GapWithEvents, TRACK_MINUTES, TramoCut, findTramoCut, gapsWithEventCount, suggestNextRange } from '../../utils/zone-track-layout';
+import {
+  GapWithEvents, TRACK_MINUTES, TramoCut, clampToCut, findTramoCut, gapsWithEventCount, kickoffCell, suggestNextRange
+} from '../../utils/zone-track-layout';
 import { ZONE_HALF_MINUTES, ZoneAssignmentRequest, ZoneAssignmentResponse, ZoneCellRef, ZonePeriod } from '../../../types/zone.types';
 
 type RangeField = 'start' | 'end';
@@ -77,6 +79,8 @@ export class ZoneAssignmentPanelComponent implements OnInit, AfterViewInit {
   /** En móvil el formulario es una hoja inferior: compacta (resumen, lateral y Guardar) o expandida con todos los campos. */
   sheetOpen = false;
   serverError: string | null = null;
+  /** Aviso informativo (no es un error) cuando «Hasta» se llevó solo al corte de un tanteo, ej. "Termina en 23′ por el Try 22:30". */
+  cutNotice: string | null = null;
   /** Se intentó guardar sin elegir franja (atajo de teclado): el campo Franja lo marca como error. */
   pickAttempted = false;
 
@@ -108,6 +112,7 @@ export class ZoneAssignmentPanelComponent implements OnInit, AfterViewInit {
     this.serverError = null;
     this.startMinute = range.startMinute;
     this.endMinute = range.endMinute;
+    this.endAtCutIfCrossed();
     this.syncSharedState();
   }
 
@@ -116,6 +121,7 @@ export class ZoneAssignmentPanelComponent implements OnInit, AfterViewInit {
     this.serverError = null;
     this.startMinute = range.startMinute;
     this.endMinute = range.endMinute;
+    this.endAtCutIfCrossed();
     this.syncSharedState();
   }
 
@@ -129,8 +135,16 @@ export class ZoneAssignmentPanelComponent implements OnInit, AfterViewInit {
     else this.sheetOpen = false;
   }
 
+  /** Mientras se escribe: el rango se valida en vivo (incluido el corte) sin reescribir lo que el usuario está tipeando. */
   onRangeChange(): void {
     this.serverError = null;
+    this.cutNotice = null;
+    this.syncSharedState();
+  }
+
+  /** Al confirmar un minuto (salir del campo o Enter): si el rango sigue después de un tanteo, termina en el corte. */
+  confirmRange(): void {
+    this.endAtCutIfCrossed();
     this.syncSharedState();
   }
 
@@ -143,6 +157,7 @@ export class ZoneAssignmentPanelComponent implements OnInit, AfterViewInit {
     if (field === 'start') this.startMinute = next;
     else this.endMinute = next;
     this.serverError = null;
+    this.endAtCutIfCrossed();
     this.syncSharedState();
   }
 
@@ -207,6 +222,18 @@ export class ZoneAssignmentPanelComponent implements OnInit, AfterViewInit {
   endAtCut(minute: number): void {
     this.endMinute = minute;
     this.onRangeChange();
+  }
+
+  /**
+   * Si el rango sigue después de un tanteo, lleva «Hasta» al corte y lo avisa: el sistema ya sabe dónde termina el
+   * tramo, así que no es un error. Un tramo guardado que ya cruza uno (datos viejos) conserva el error y «Terminar en N′»
+   * hasta que se toque su rango.
+   */
+  private endAtCutIfCrossed(): void {
+    const range = this.usableRange();
+    const clamped = range ? clampToCut(range, this.store.cuts()) : null;
+    this.cutNotice = clamped ? `Termina en ${clamped.endMinute}′ por el ${clamped.cut.label}` : null;
+    if (clamped) this.endMinute = clamped.endMinute;
   }
 
   private tramoCut(range: UsableRange | null): TramoCut | null {
@@ -274,6 +301,7 @@ export class ZoneAssignmentPanelComponent implements OnInit, AfterViewInit {
 
   startEdit(zone: ZoneAssignmentResponse): void {
     this.serverError = null;
+    this.cutNotice = null;
     this.editingId = zone.id;
     this.startMinute = zone.startMinute;
     this.endMinute = zone.endMinute;
@@ -385,6 +413,7 @@ export class ZoneAssignmentPanelComponent implements OnInit, AfterViewInit {
     if (target.id === 'zone-start') this.startMinute = typed;
     else this.endMinute = typed;
     this.serverError = null;
+    this.endAtCutIfCrossed();
     this.syncSharedState();
   }
 
@@ -396,12 +425,25 @@ export class ZoneAssignmentPanelComponent implements OnInit, AfterViewInit {
     return startMinute >= 0 && endMinute <= TRACK_MINUTES ? { period, startMinute, endMinute } : null;
   }
 
-  /** Propone los próximos 5 minutos libres (o continúa desde `afterMinute`); sin rango si el partido está completo. */
+  /**
+   * Propone los próximos 5 minutos libres (o continúa desde `afterMinute`); sin rango si el partido está completo.
+   * Al continuar después de guardar, si el hueco empieza en un corte propone también la zona del saque.
+   */
   private applySuggestion(afterMinute?: number): void {
     const range = suggestNextRange(this.store.assignments(), afterMinute, this.store.cuts());
     this.startMinute = range?.start ?? null;
     this.endMinute = range?.end ?? null;
+    this.cutNotice = null;
+    if (afterMinute !== undefined && range) this.proposeKickoffZone(range.start);
     this.syncSharedState();
+  }
+
+  /** Después de un tanteo el juego sigue con un saque: se propone su zona; el analista puede cambiarla. */
+  private proposeKickoffZone(startMinute: number): void {
+    const period = startMinute >= ZONE_HALF_MINUTES ? 2 : 1;
+    const cut = this.store.cuts().find(candidate => candidate.period === period && candidate.minute === startMinute);
+    const cell = cut ? kickoffCell(cut) : null;
+    if (cell) this.selectedCell.set(cell);
   }
 
   /**

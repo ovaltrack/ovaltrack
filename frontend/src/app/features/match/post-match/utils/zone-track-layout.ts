@@ -279,10 +279,17 @@ export interface ClampedRange {
 
 /** El corte que el rango cruza y dónde terminarlo; null si no cruza ninguno. El sistema ya sabe dónde corta: no es un error. */
 export function clampToCut(range: TimedRange, cuts: TramoCutMark[]): ClampedRange | null {
-  throw new Error('no implementado');
+  const cut = crossedCut(range, cuts);
+  return cut ? { endMinute: cut.minute, cut } : null;
 }
+
+/** Lateral que se propone después de un corte: el centro, que es donde cae el saque. */
+const KICKOFF_ROW = 2;
+/** Columnas del saque de centro: el campo propio (3) cuando lo recibimos y el rival (4) cuando sacamos nosotros. */
+const KICKOFF_COLUMN: Partial<Record<Possession, number>> = { OWN: 3, OPPONENT: 4 };
 
 /** Celda donde se propone seguir después del corte: quien recibe el saque juega en su campo (propio: campo propio; rival: campo rival). */
 export function kickoffCell(cut: TramoCutMark): ZoneCellRef | null {
-  throw new Error('no implementado');
+  const col = KICKOFF_COLUMN[cut.possession];
+  return col === undefined ? null : { row: KICKOFF_ROW, col };
 }

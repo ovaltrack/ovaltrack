@@ -840,6 +840,104 @@ describe('ZoneAssignmentPanelComponent', () => {
       expect(query('[data-testid="cut-fix"]')?.textContent?.trim()).toBe('Terminar en 23′');
     });
 
+    it('al confirmar un «Hasta» que sigue después del try, el rango termina en el corte y se avisa sin error', () => {
+      render([], [tryEvent]);
+      withTryRule();
+      selectCell(2, 5);
+      component.startMinute = 20;
+      component.endMinute = 25;
+      component.confirmRange();
+      fixture.detectChanges();
+
+      expect(component.endMinute).toBe(23);
+      expect(query('[data-testid="cut-notice"]')?.textContent?.trim()).toBe('Termina en 23′ por el Try 22:30');
+      expect(rangeError()).toBe('');
+      expect(query('[data-testid="cut-fix"]')).toBeNull();
+      expect(saveButton().disabled).toBeFalse();
+    });
+
+    it('sumar minutos con el botón + también lo lleva al corte', () => {
+      render([], [tryEvent]);
+      withTryRule();
+      selectCell(2, 5);
+      component.startMinute = 20;
+      component.endMinute = 22;
+      component.adjust('end', 3);
+      fixture.detectChanges();
+
+      expect(component.endMinute).toBe(23);
+      expect(query('[data-testid="cut-notice"]')).not.toBeNull();
+    });
+
+    it('precargar un hueco que cruza un try lo deja hasta el corte', () => {
+      render([], [tryEvent]);
+      withTryRule();
+      component.prefill({ startMinute: 20, endMinute: 40 });
+      fixture.detectChanges();
+
+      expect([component.startMinute, component.endMinute]).toEqual([20, 23]);
+      expect(query('[data-testid="cut-notice"]')?.textContent).toContain('Termina en 23′');
+    });
+
+    it('el aviso desaparece al volver a escribir un rango que no cruza nada', () => {
+      render([], [tryEvent]);
+      withTryRule();
+      component.prefill({ startMinute: 20, endMinute: 40 });
+      component.endMinute = 22;
+      component.onRangeChange();
+      fixture.detectChanges();
+
+      expect(query('[data-testid="cut-notice"]')).toBeNull();
+    });
+
+    it('un Kick H errado dentro del rango no es un corte: no avisa ni ajusta', () => {
+      const missedKick: MatchTimelineEventResponse = {
+        id: 'k', eventTypeId: 'kick', eventTypeName: 'Kick H (Penal a palos)', matchTime: 22 * 60 + 30, period: 1, teamPossession: 'OWN',
+        attributes: { wasSuccessful: false }
+      };
+      render([], [missedKick]);
+      store.zoneRules.set(new Map([['kick', { columns: [2, 3, 4, 5], rowFrom: 'zone', closesTramo: true }]]));
+      store.scoringTypes.set(new Map([['kick', {
+        isScoring: true,
+        templateEventFields: [{ key: 'wasSuccessful', label: 'Resultado', type: 'boolean', phase: 'live', required: true, effects: ['scoring'] }]
+      }]]));
+      selectCell(2, 4);
+      component.startMinute = 20;
+      component.endMinute = 25;
+      component.confirmRange();
+      fixture.detectChanges();
+
+      expect(component.endMinute).toBe(25);
+      expect(query('[data-testid="cut-notice"]')).toBeNull();
+      expect(rangeError()).toBe('');
+    });
+
+    it('después de guardar un tramo que termina en un try propio propone el campo propio para seguir', () => {
+      render([], [tryEvent]);
+      withTryRule();
+      selectCell(2, 5);
+      component.startMinute = 20;
+      component.endMinute = 23;
+      component.save();
+
+      http.expectOne(zonesUrl).flush({ ...existingZone, startMinute: 20, endMinute: 23, col: 5 });
+      http.expectOne(zonesUrl).flush({ assignments: [{ ...existingZone, startMinute: 20, endMinute: 23, col: 5 }], summary: { cells: [], unzonedEventCount: 0 } });
+      http.expectOne(eventsUrl).flush([tryEvent]);
+      fixture.detectChanges();
+
+      expect(component.selectedCell()).toEqual({ row: 2, col: 3 });
+      expect(component.startMinute).toBe(23);
+    });
+
+    it('cancelar no propone zona: deja la franja sin elegir', () => {
+      render([{ ...existingZone, startMinute: 0, endMinute: 23, col: 5 }], [tryEvent]);
+      withTryRule();
+      component.cancel();
+      fixture.detectChanges();
+
+      expect(component.selectedCell()).toBeNull();
+    });
+
     it('el asistente propone un rango que termina en el try', () => {
       render([{ ...existingZone, startMinute: 0, endMinute: 20 }], [tryEvent]);
       withTryRule();

@@ -58,7 +58,7 @@
             <button type="button" class="step-btn" aria-label="Restar un minuto a Desde"
                     [disabled]="store.isSaving()" (click)="adjust('start', -1)">−</button>
             <input id="zone-start" type="number" class="form-control" step="1" inputmode="numeric"
-                   [(ngModel)]="startMinute" (ngModelChange)="onRangeChange()" [disabled]="store.isSaving()" />
+                   [(ngModel)]="startMinute" (ngModelChange)="onRangeChange()" (change)="confirmRange()" [disabled]="store.isSaving()" />
             <button type="button" class="step-btn" aria-label="Sumar un minuto a Desde"
                     [disabled]="store.isSaving()" (click)="adjust('start', 1)">+</button>
           </div>
@@ -73,7 +73,7 @@
             <button type="button" class="step-btn" aria-label="Restar un minuto a Hasta"
                     [disabled]="store.isSaving()" (click)="adjust('end', -1)">−</button>
             <input id="zone-end" type="number" class="form-control" step="1" inputmode="numeric"
-                   [(ngModel)]="endMinute" (ngModelChange)="onRangeChange()" [disabled]="store.isSaving()" />
+                   [(ngModel)]="endMinute" (ngModelChange)="onRangeChange()" (change)="confirmRange()" [disabled]="store.isSaving()" />
             <button type="button" class="step-btn" aria-label="Sumar un minuto a Hasta"
                     [disabled]="store.isSaving()" (click)="adjust('end', 1)">+</button>
           </div>
@@ -83,6 +83,7 @@
       <p *ngIf="linkedEventCount !== null" class="preview" data-testid="linked-preview">
         {{ period }}T · se vincularán <strong>{{ linkedEventCount }}</strong> {{ linkedEventCount === 1 ? 'evento' : 'eventos' }}
       </p>
+      <p *ngIf="cutNotice" class="preview" role="status" data-testid="cut-notice">{{ cutNotice }}</p>
       <p *ngIf="releasedEventCount > 0" class="preview preview-warn" data-testid="released-preview">
         {{ releasedEventCount }} {{ releasedEventCount === 1 ? 'evento pasará' : 'eventos pasarán' }} a "Sin zona"
       </p>

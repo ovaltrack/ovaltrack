@@ -1,6 +1,7 @@
 import { MatchTimelineEventResponse } from '../../types/event.types';
 import { BackendEventTypeResponse, ZoneRule } from '../../types/event-type.types';
 import { Possession } from '../../types/live-capture.types';
+import { countsAsScoring } from '../../statistics/calculators/event-rules';
 import { ZONE_GRID_COLS, ZONE_GRID_ROWS, ZoneCellRef, ZonePeriod } from '../../types/zone.types';
 import { ZONE_ROW_LETTERS, zoneLabel } from './zone-grid';
 import { effectiveMatchTime } from './zone-stats';
@@ -97,7 +98,8 @@ export function closesTramo(rule: ZoneRule | null | undefined): boolean {
  * errados no reinician el juego con un saque de centro, así que no cortan. Un tipo ausente del catálogo cuenta como tanteo.
  */
 export function eventClosesTramo(event: RuleEvent, rules: ZoneRulesByType, types: ScoringTypesById): boolean {
-  return closesTramo(rules.get(event.eventTypeId));
+  const type = types.get(event.eventTypeId);
+  return closesTramo(rules.get(event.eventTypeId)) && (!type || countsAsScoring(type, event.attributes));
 }
 
 /** Verdadero si la regla fija fila y columna sin necesitar ningún tramo. */
