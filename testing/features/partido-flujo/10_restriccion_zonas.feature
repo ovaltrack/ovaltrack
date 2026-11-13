@@ -303,9 +303,11 @@ Característica: Restricción de zonas de la cancha según el tipo de evento
     Cuando el entrenador asigna la zona fila 2 columna 6 al periodo 1 entre el minuto 20 y el minuto 25
     Entonces el sistema responde con código 201
 
-  # --- CORTE DE TRAMO: después de un try, un try penal, un Kick H o un drop el juego se reinicia ---
+  # --- CORTE DE TRAMO: después de un try, un try penal, un Kick H convertido o un drop convertido el juego se reinicia ---
   # El tramo que contiene uno de esos eventos tiene que terminar en su minuto (fin = minuto del evento + 1).
-  # Nunca se rechaza el evento: si un try se carga dentro de un tramo, el tramo queda cruzándolo hasta que se corte.
+  # Nunca se rechaza el evento: al guardarlo (alta en vivo o post-partido, o edición) el sistema acorta solo el tramo
+  # que lo contiene y lo que sigue queda como hueco. Crear o editar un tramo que cruza un tanteo sigue dando 409.
+  # Un Kick H o un drop errados no reinician el juego con un saque de centro, así que no cortan.
 
   Escenario: El catálogo indica qué tipos de evento cierran el tramo
     Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
@@ -345,7 +347,7 @@ Característica: Restricción de zonas de la cancha según el tipo de evento
     Cuando el entrenador asigna la zona fila 2 columna 5 al periodo 1 entre el minuto 35 y el minuto 40
     Entonces el sistema responde con código 201
 
-  Escenario: Cargar un try dentro de un tramo nunca se rechaza y el tramo no cambia
+  Escenario: Cargar un try dentro de un tramo nunca se rechaza y acorta el tramo
     Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
     Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
     Y que el partido tiene asignada la zona fila 2 columna 5 en el periodo 1 entre el minuto 20 y el minuto 25
@@ -353,6 +355,7 @@ Característica: Restricción de zonas de la cancha según el tipo de evento
     Entonces el sistema responde con código 200
     Cuando el entrenador consulta las zonas del partido
     Entonces la consulta devuelve 1 asignación de zona
+    Y la consulta devuelve la asignación fila 2 columna 5 del periodo 1 entre el minuto 20 y el minuto 23
 
   Escenario: Cortar en el minuto del try un tramo que lo cruza se acepta
     Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
@@ -394,11 +397,10 @@ Característica: Restricción de zonas de la cancha según el tipo de evento
     Entonces el sistema responde con 409 y "El tramo 1T 20'–25' no puede seguir después del <tipo> (1T 22:30): terminalo en 23'"
 
     Ejemplos:
-      | tipo                   | atributos           |
-      | Try penal              |                     |
-      | Kick H (Penal a palos) | wasSuccessful=true  |
-      | Kick H (Penal a palos) | wasSuccessful=false |
-      | Drop goal              | wasSuccessful=true  |
+      | tipo                   | atributos          |
+      | Try penal              |                    |
+      | Kick H (Penal a palos) | wasSuccessful=true |
+      | Drop goal              | wasSuccessful=true |
 
   Escenario: Ampliar un tramo más allá de un try es rechazado
     Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
@@ -429,3 +431,126 @@ Característica: Restricción de zonas de la cancha según el tipo de evento
       | Try         | OPPONENT | 1440            | 1       | zone=right |
     Cuando el entrenador asigna la zona fila 2 columna 4 al periodo 1 entre el minuto 20 y el minuto 25
     Entonces el sistema responde con 409 y "El tramo 1T 20'–25' no puede seguir después del Try (1T 21:00): terminalo en 22'"
+
+  # --- CORTE AUTOMÁTICO: el tanteo acorta el tramo que lo contiene y lo que sigue queda como hueco ---
+
+  Escenario: El alta de un try acorta el tramo y las jugadas posteriores quedan sin zona
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
+    Y que el partido tiene asignada la zona fila 2 columna 5 en el periodo 1 entre el minuto 20 y el minuto 25
+    Y que se han registrado los siguientes eventos en el partido:
+      | tipo_evento       | posesion | tiempo_segundos | periodo | atributos |
+      | Tackle completado | OWN      | 1260            | 1       |           |
+      | Tackle completado | OWN      | 1440            | 1       |           |
+    Cuando el entrenador agrega post-partido el evento "Try" con atributos "zone=right" para el equipo propio en el minuto 22 del periodo 1
+    Entonces el sistema responde con código 200
+    Cuando el entrenador consulta las zonas del partido
+    Entonces la consulta devuelve la asignación fila 2 columna 5 del periodo 1 entre el minuto 20 y el minuto 23
+    Y el evento "Tackle completado" del minuto 21 del periodo 1 pertenece a la zona fila 2 columna 5
+    Y el evento "Tackle completado" del minuto 24 del periodo 1 queda sin zona
+
+  Escenario: Un try cargado en vivo después de armar los tramos también los acorta y nunca se rechaza
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
+    Y que el partido tiene asignada la zona fila 2 columna 5 en el periodo 1 entre el minuto 20 y el minuto 25
+    Cuando el entrenador registra en vivo el evento "Try" con atributos "zone=center" para el equipo propio en el minuto 22 del periodo 1
+    Entonces el sistema responde con código 200
+    Cuando el entrenador consulta las zonas del partido
+    Entonces la consulta devuelve la asignación fila 2 columna 5 del periodo 1 entre el minuto 20 y el minuto 23
+
+  Escenario: El try del rival también acorta el tramo
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
+    Y que el partido tiene asignada la zona fila 2 columna 2 en el periodo 1 entre el minuto 20 y el minuto 25
+    Cuando el entrenador agrega post-partido el evento "Try" con atributos "zone=left" para el equipo rival en el minuto 22 del periodo 1
+    Entonces el sistema responde con código 200
+    Cuando el entrenador consulta las zonas del partido
+    Entonces la consulta devuelve la asignación fila 2 columna 2 del periodo 1 entre el minuto 20 y el minuto 23
+
+  Escenario: Un try del segundo tiempo acorta el tramo con el tiempo acumulado
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
+    Y que el partido tiene asignada la zona fila 2 columna 4 en el periodo 2 entre el minuto 60 y el minuto 70
+    Cuando el entrenador agrega post-partido el evento "Try" con atributos "zone=right" para el equipo propio en el minuto 65 del periodo 2
+    Entonces el sistema responde con código 200
+    Cuando el entrenador consulta las zonas del partido
+    Entonces la consulta devuelve la asignación fila 2 columna 4 del periodo 2 entre el minuto 60 y el minuto 66
+
+  Escenario: Un try fuera de todo tramo o en un tramo que ya termina ahí no cambia nada
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
+    Y que el partido tiene asignada la zona fila 2 columna 5 en el periodo 1 entre el minuto 20 y el minuto 23
+    Cuando el entrenador agrega post-partido el evento "Try" con atributos "zone=right" para el equipo propio en el minuto 22 del periodo 1
+    Y el entrenador agrega post-partido el evento "Try" con atributos "zone=left" para el equipo propio en el minuto 10 del periodo 1
+    Y el entrenador consulta las zonas del partido
+    Entonces la consulta devuelve 1 asignación de zona
+    Y la consulta devuelve la asignación fila 2 columna 5 del periodo 1 entre el minuto 20 y el minuto 23
+
+  Escenario: Corregir el tiempo de un try hacia un tramo lo acorta
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
+    Y que el partido tiene asignada la zona fila 2 columna 5 en el periodo 1 entre el minuto 20 y el minuto 25
+    Y el entrenador agrega post-partido el evento "Try" con atributos "zone=right" para el equipo propio en el minuto 5 del periodo 1
+    Cuando el entrenador corrige el tiempo del evento "Try" al segundo 1350 del periodo 1
+    Entonces el sistema responde con código 200
+    Cuando el entrenador consulta las zonas del partido
+    Entonces la consulta devuelve la asignación fila 2 columna 5 del periodo 1 entre el minuto 20 y el minuto 23
+
+  Escenario: Eliminar el try no restaura el tramo: lo que sigue queda como hueco
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
+    Y que el partido tiene asignada la zona fila 2 columna 5 en el periodo 1 entre el minuto 20 y el minuto 25
+    Y el entrenador agrega post-partido el evento "Try" con atributos "zone=right" para el equipo propio en el minuto 22 del periodo 1
+    Cuando el entrenador elimina el evento "Try"
+    Y el entrenador consulta las zonas del partido
+    Entonces la consulta devuelve la asignación fila 2 columna 5 del periodo 1 entre el minuto 20 y el minuto 23
+
+  Esquema del escenario: Un tanteo convertido acorta el tramo
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
+    Y que el partido tiene asignada la zona fila 2 columna 4 en el periodo 1 entre el minuto 20 y el minuto 25
+    Cuando el entrenador agrega post-partido el evento "<tipo>" con atributos "<atributos>" para el equipo propio en el minuto 22 del periodo 1
+    Entonces el sistema responde con código 200
+    Cuando el entrenador consulta las zonas del partido
+    Entonces la consulta devuelve la asignación fila 2 columna 4 del periodo 1 entre el minuto 20 y el minuto 23
+
+    Ejemplos:
+      | tipo                   | atributos          |
+      | Try penal              |                    |
+      | Kick H (Penal a palos) | wasSuccessful=true |
+      | Drop goal              | wasSuccessful=true |
+
+  Esquema del escenario: Un tanteo errado no reinicia el juego y no acorta el tramo
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
+    Y que el partido tiene asignada la zona fila 2 columna 4 en el periodo 1 entre el minuto 20 y el minuto 25
+    Cuando el entrenador agrega post-partido el evento "<tipo>" con atributos "wasSuccessful=false" para el equipo propio en el minuto 22 del periodo 1
+    Entonces el sistema responde con código 200
+    Cuando el entrenador consulta las zonas del partido
+    Entonces la consulta devuelve la asignación fila 2 columna 4 del periodo 1 entre el minuto 20 y el minuto 25
+
+    Ejemplos:
+      | tipo                   |
+      | Kick H (Penal a palos) |
+      | Drop goal              |
+
+  Escenario: Un tramo que cruza un tanteo errado se acepta
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
+    Y que se han registrado los siguientes eventos en el partido:
+      | tipo_evento            | posesion | tiempo_segundos | periodo | atributos           |
+      | Kick H (Penal a palos) | OWN      | 1350            | 1       | wasSuccessful=false |
+    Cuando el entrenador asigna la zona fila 2 columna 4 al periodo 1 entre el minuto 20 y el minuto 25
+    Entonces el sistema responde con código 201
+
+  Escenario: Pasar un Kick H de errado a convertido acorta el tramo
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
+    Y que se han registrado los siguientes eventos en el partido:
+      | tipo_evento            | posesion | tiempo_segundos | periodo | atributos           |
+      | Kick H (Penal a palos) | OWN      | 1350            | 1       | wasSuccessful=false |
+    Y que el partido tiene asignada la zona fila 2 columna 4 en el periodo 1 entre el minuto 20 y el minuto 25
+    Cuando el entrenador edita el evento "Kick H (Penal a palos)" cambiándolo a "Kick H (Penal a palos)" con atributos "wasSuccessful=true"
+    Entonces el sistema responde con código 200
+    Cuando el entrenador consulta las zonas del partido
+    Entonces la consulta devuelve la asignación fila 2 columna 4 del periodo 1 entre el minuto 20 y el minuto 23
