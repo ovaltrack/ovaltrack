@@ -54,6 +54,7 @@
                     [class.is-selected]="block.assignment.id === selectedId()"
                     [class.is-conflict]="block.assignment.id === conflictId()"
                     [class.is-cut]="block.crossesCut"
+                    [class.is-cut-edge]="cutEdgeIds().has(block.assignment.id)"
                     [class.is-linked]="isLinked(block.assignment)"
                     [class.is-dimmed]="!!highlightCell() && !isLinked(block.assignment)"
                     [style.left.%]="block.left" [style.width.%]="block.width"
@@ -84,7 +85,7 @@
         </div>
       }
 
-      <!-- Líneas de corte: solo las que toca el rango en edición y la del tanto señalado -->
+      <!-- Líneas de corte: solo las que toca el rango en edición; el rombo señalado resalta el borde del tramo que corta -->
       @for (line of cutLines(); track line.eventId) {
         <span class="cut-line" data-testid="territory-cut" aria-hidden="true"
               [class.is-hot]="isHot([line.eventId])" [style.left.%]="line.left"></span>

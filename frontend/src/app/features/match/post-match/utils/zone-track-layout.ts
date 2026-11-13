@@ -190,11 +190,16 @@ export function zonePoints(events: RuleEvent[], rules: ZoneRulesByType, filter: 
     .sort((a, b) => a.minute - b.minute);
 }
 
-/** Texto del punto para el tooltip y los lectores de pantalla, ej. "Try 22:30 · D6 · el tramo incluye todo el minuto 22 y termina en 23′". */
-export function describePoint(point: ZonePoint): string {
+/**
+ * Texto del punto para el tooltip y los lectores de pantalla, ej. "Try 22:30 · D6 · el tramo incluye todo el minuto 22 y
+ * termina en 23′". Con `tramoEnds` en false (ningún tramo termina en el corte) lo aclara en lugar de nombrar un tramo.
+ */
+export function describePoint(point: ZonePoint, tramoEnds = true): string {
   const where = point.row === null ? `${ZONE_COLUMN_NAMES[point.col - 1]} (sin lateral)` : zoneLabel({ row: point.row, col: point.col });
   // Los tramos son de minutos enteros: el tanto del 22:30 está en el minuto 22, así que su tramo termina en 23′
-  const cut = point.cutMinute === null ? '' : ` · el tramo incluye todo el minuto ${point.cutMinute - 1} y termina en ${point.cutMinute}′`;
+  const cut = point.cutMinute === null ? ''
+    : tramoEnds ? ` · el tramo incluye todo el minuto ${point.cutMinute - 1} y termina en ${point.cutMinute}′`
+      : ` · el corte cae al final del minuto ${point.cutMinute - 1}, pero ningún tramo termina en ${point.cutMinute}′`;
   return `${point.eventTypeName} ${formatMatchTime(Math.round(point.minute * SECONDS_PER_MINUTE))} · ${where}${cut}`;
 }
 
@@ -237,6 +242,14 @@ export function tramoCuts(events: RuleEvent[], rules: ZoneRulesByType, types: Sc
         possession: event.teamPossession
       };
     });
+}
+
+/**
+ * Tramo que termina justo en el corte: el que el tanto cortó. Sin solapes dentro de un tiempo hay como mucho uno; null si
+ * antes del corte hay un hueco o un tramo viejo que lo cruza.
+ */
+export function tramoEndingAt(assignments: ZoneAssignmentResponse[], cut: Pick<TramoCutMark, 'period' | 'minute'>): ZoneAssignmentResponse | null {
+  return assignments.find(assignment => assignment.period === cut.period && assignment.endMinute === cut.minute) ?? null;
 }
 
 /** Primer corte que queda estrictamente adentro del rango: el tramo seguiría después del evento. */

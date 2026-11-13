@@ -7,7 +7,7 @@ import { ZoneEvent, ZonePeriodFilter, eventsInRange } from '../../utils/zone-sta
 import { observeWidth } from '../../utils/observe-width';
 import {
   BlockLayout, PeriodGap, TramoCutMark, TRACK_MINUTES, ZonePoint, allGaps, blockLabel, blockLayout, clusterMarks, countByFranja, crossedCut,
-  describePoint, gapAtMinute, isInWindow, minuteAtOffset, minuteToPercent, segmentAt, territoryRows, touchingCuts, trackWindow
+  describePoint, gapAtMinute, isInWindow, minuteAtOffset, minuteToPercent, segmentAt, territoryRows, touchingCuts, trackWindow, tramoEndingAt
 } from '../../utils/zone-track-layout';
 
 /** Tramo o hueco elegido en una fila de la grilla: `col` es la franja (fila de la grilla) sobre la que se hizo clic. */
@@ -121,7 +121,7 @@ export class ZoneTerritoryGridComponent {
   readonly points = input<ZonePoint[]>([]);
   /**
    * Cortes por try (y tanteos que reinician el juego): el arrastre frena ahí y un tramo que los cruza se marca. Su línea
-   * vertical solo se dibuja al señalar el rombo o junto al rango en edición.
+   * vertical solo se dibuja junto al rango en edición; señalar el rombo resalta el fin del tramo que cortó.
    */
   readonly cuts = input<TramoCutMark[]>([]);
   /** Eventos ya filtrados por posesión: sus conteos por franja aparecen en cada fila. */
@@ -161,7 +161,7 @@ export class ZoneTerritoryGridComponent {
 
   /** Ancho en píxeles del eje: con él se sabe qué puntos quedan a menos de 12 px y se dibujan como uno. */
   private readonly trackWidth = signal(0);
-  /** Eventos señalados con el puntero (un punto o un grupo): su línea de corte se muestra y se resalta. */
+  /** Eventos señalados con el puntero (un punto o un grupo): se resalta el borde del tramo que cortan. */
   private readonly hotEventIds = signal<readonly string[]>([]);
 
   constructor() {
@@ -302,7 +302,8 @@ export class ZoneTerritoryGridComponent {
     });
     const points = this.points().flatMap(point => {
       const left = minuteToPercent(point.minute, this.view());
-      return left < 0 || left > 100 ? [] : [{ col: point.col, eventId: point.eventId, left, aria: describePoint(point) }];
+      const tramoEnds = point.cutMinute === null || tramoEndingAt(this.assignments(), { period: point.period, minute: point.cutMinute }) !== null;
+      return left < 0 || left > 100 ? [] : [{ col: point.col, eventId: point.eventId, left, aria: describePoint(point, tramoEnds) }];
     });
     return territoryRows().map(row => ({
       ...row,
@@ -332,16 +333,23 @@ export class ZoneTerritoryGridComponent {
   });
 
   /**
-   * Líneas de corte a toda altura: solo las de los cortes que toca el rango en edición (para ver dónde frena) y las del
-   * rombo que se señala con el puntero. Con muchos tantos, dibujarlas todas taparía la grilla.
+   * Líneas de corte a toda altura: solo las de los cortes que toca el rango en edición, para ver dónde frena. Señalar un
+   * rombo no dibuja la línea (quedaría pegada a él): resalta el borde del tramo que corta (`cutEdgeIds`).
    */
   readonly cutLines = computed<CutLineView[]>(() => {
     const range = this.activeRange();
-    const shown = new Set([
-      ...(range ? touchingCuts(range, this.cuts()).map(cut => cut.eventId) : []),
-      ...this.hotEventIds()
-    ]);
-    return this.cutViews().filter(cut => shown.has(cut.eventId));
+    if (!range) return [];
+    const touching = new Set(touchingCuts(range, this.cuts()).map(cut => cut.eventId));
+    return this.cutViews().filter(cut => touching.has(cut.eventId));
+  });
+
+  /** Tramos que terminan en el corte del rombo señalado: su borde derecho se resalta para unir el tanto con su corte. */
+  readonly cutEdgeIds = computed(() => {
+    const hot = this.hotEventIds();
+    return new Set(this.cuts()
+      .filter(cut => hot.includes(cut.eventId))
+      .map(cut => tramoEndingAt(this.assignments(), cut)?.id)
+      .filter((id): id is string => id !== undefined));
   });
 
   setHot(eventIds: readonly string[]): void {
