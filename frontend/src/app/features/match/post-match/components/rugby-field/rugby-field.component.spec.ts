@@ -335,4 +335,41 @@ describe('RugbyFieldComponent', () => {
       expect(cellAt(2, 1)?.getAttribute('tabindex')).toBe('0');
     });
   });
+
+  describe('franjas bloqueadas (in-goal solo para puntos)', () => {
+    const selected: ZoneCellRef[] = [];
+
+    beforeEach(() => {
+      selected.length = 0;
+      fixture.componentInstance.cellSelected.subscribe(value => selected.push(value));
+      fixture.componentRef.setInput('lockedCols', [1, 6]);
+      render([]);
+    });
+
+    it('tocar una celda bloqueada no la elige, pero muestra su lectura', () => {
+      cellAt(2, 6)?.click();
+      fixture.detectChanges();
+
+      expect(selected).toEqual([]);
+      expect(reading()).toContain('C6');
+    });
+
+    it('las celdas del campo siguen eligiéndose', () => {
+      cellAt(2, 3)?.click();
+
+      expect(selected).toEqual([{ row: 2, col: 3 }]);
+    });
+
+    it('la celda bloqueada se marca como deshabilitada y lo dice en su etiqueta', () => {
+      expect(cellAt(2, 1)?.getAttribute('aria-disabled')).toBe('true');
+      expect(cellAt(2, 1)?.getAttribute('aria-label')).toContain('Solo puntos: no admite tramos');
+      expect(cellAt(2, 3)?.getAttribute('aria-disabled')).toBeNull();
+    });
+
+    it('Enter sobre una celda bloqueada tampoco la elige', () => {
+      key(cellAt(1, 6), 'Enter');
+
+      expect(selected).toEqual([]);
+    });
+  });
 });

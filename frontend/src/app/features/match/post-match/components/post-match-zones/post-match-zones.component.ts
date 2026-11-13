@@ -5,6 +5,7 @@ import { LayoutService } from 'src/app/core/services/layout.service';
 import { ToastService } from 'src/app/core/services/toast.service';
 import { UserContextService } from 'src/app/core/services/user-context.service';
 import { ZoneAssignmentResponse, ZoneCellRef } from '../../../types/zone.types';
+import { IN_GOAL_COLUMNS, isInGoalColumn } from '../../utils/zone-grid';
 import { MatchZonesStore } from '../../store/match-zones.store';
 import { PostMatchShellStore } from '../../store/post-match-shell.store';
 import { watchCompactLayout } from '../../utils/zone-compact';
@@ -225,8 +226,15 @@ export class PostMatchZonesComponent implements OnInit, OnDestroy {
     this.periodFilter.set(filter);
   }
 
-  /** Tocar una zona de la cancha elige franja y lateral a la vez. */
+  /** Franjas de la cancha que no se eligen para un tramo: el in-goal solo tiene puntos. */
+  readonly lockedCols = IN_GOAL_COLUMNS;
+
+  /** Tocar una zona de la cancha elige franja y lateral a la vez; el in-goal no admite tramos, así que no se elige. */
   onCellSelected(cell: ZoneCellRef): void {
+    if (isInGoalColumn(cell.col)) {
+      this.toastService.info('El in-goal solo tiene puntos: los tramos van de la franja 22 propio a la 22 rival.', 'Zonas');
+      return;
+    }
     this.selectedCell.set(cell);
   }
 

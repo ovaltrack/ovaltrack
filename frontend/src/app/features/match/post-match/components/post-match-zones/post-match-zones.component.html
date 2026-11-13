@@ -49,6 +49,7 @@
                     Un <b>punto</b> (◆) es una jugada que ya sabe dónde ocurrió: un Try queda en el in-goal rival, del lado del apoyo si lo cargaste.
                     Se dibuja en su minuto exacto y de él sale la línea de corte. Un <b>tramo</b> es un rango de minutos que da zona a las jugadas
                     que no tienen una propia; no puede dejar a un Scrum o un Line-out en una zona que su tipo no permite.
+                    El in-goal solo tiene puntos: no se crean tramos ahí (los que ya existían se siguen viendo, editando y borrando).
                   </p>
                   <strong>Rango del tramo</strong>
                   <ul data-testid="range-rules">
@@ -92,6 +93,7 @@
           <app-rugby-field
             [cells]="cellCounts()"
             [selectedCell]="selectedCell()"
+            [lockedCols]="lockedCols"
             [ownClubName]="ownClubName()"
             [opponentName]="opponent()"
             [pulseCell]="zonesStore.pulseCell()"

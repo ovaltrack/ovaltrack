@@ -142,9 +142,18 @@ describe('PostMatchZonesComponent', () => {
     it('las mayúsculas funcionan igual', () => {
       createLoaded();
 
-      press('N');
+      press('V');
 
-      expect(component.selectedCell()).toEqual({ row: 3, col: 6 });
+      expect(component.selectedCell()).toEqual({ row: 3, col: 4 });
+    });
+
+    it('las letras del in-goal (columnas 1 y 6) no eligen celda: ahí solo hay puntos', () => {
+      createLoaded();
+
+      press('N');
+      press('Q');
+
+      expect(component.selectedCell()).toBeNull();
     });
 
     it('F2-S4. con el foco en un campo de escritura las letras no hacen nada', () => {
@@ -270,13 +279,13 @@ describe('PostMatchZonesComponent', () => {
         queryAll('[data-testid="territory-block"]').forEach(block => expect(block.getAttribute('tabindex')).toBe('-1'));
       });
 
-      it('F3-H1. Enter sobre un hueco precarga franja y rango desde el minuto del cursor', () => {
+      it('F3-H1. Enter sobre un hueco precarga franja y rango desde el minuto del cursor; el cursor arranca en el 22 rival', () => {
         createLoaded([], []);
         tracks().dispatchEvent(new FocusEvent('focus'));
 
         press('Enter', {}, tracks());
 
-        expect(component.selectedCell()).toEqual({ row: 2, col: 6 });
+        expect(component.selectedCell()).toEqual({ row: 2, col: 5 });
       });
 
       it('↓ baja una franja antes de abrir el hueco', () => {
@@ -286,7 +295,17 @@ describe('PostMatchZonesComponent', () => {
         press('ArrowDown', {}, tracks());
         press('Enter', {}, tracks());
 
-        expect(component.selectedCell()).toEqual({ row: 2, col: 5 });
+        expect(component.selectedCell()).toEqual({ row: 2, col: 4 });
+      });
+
+      it('Enter sobre un hueco del in-goal no crea un tramo', () => {
+        createLoaded([], []);
+        tracks().dispatchEvent(new FocusEvent('focus'));
+
+        press('ArrowUp', {}, tracks());
+        press('Enter', {}, tracks());
+
+        expect(component.selectedCell()).toBeNull();
       });
 
       it('F3-S4. las flechas dentro de un campo no mueven la grilla', () => {
@@ -296,7 +315,7 @@ describe('PostMatchZonesComponent', () => {
         press('ArrowDown', {}, query('#zone-start') as HTMLElement);
         press('Enter', {}, tracks());
 
-        expect(component.selectedCell()).toEqual({ row: 2, col: 6 });
+        expect(component.selectedCell()).toEqual({ row: 2, col: 5 });
       });
     });
 
@@ -564,14 +583,14 @@ describe('PostMatchZonesComponent', () => {
     const panelOf = (): ZoneAssignmentPanelComponent =>
       fixture.debugElement.query(By.directive(ZoneAssignmentPanelComponent)).componentInstance as ZoneAssignmentPanelComponent;
 
-    /** Clic en la pista de la grilla, en el minuto y la franja (columna de la cancha) indicados. */
+    /** Clic en la pista de la grilla, en el minuto y la franja (columna de la cancha) indicados; las filas no son parejas. */
     function clickTrack(minute: number, col: number): void {
       const rect = (query('[data-testid="territory-tracks"]') as HTMLElement).getBoundingClientRect();
-      const rowIndex = 6 - col;
+      const row = queryAll('[data-testid="territory-row"]')[6 - col].getBoundingClientRect();
       (query('[data-testid="territory-tracks"]') as HTMLElement).dispatchEvent(new MouseEvent('click', {
         bubbles: true,
         clientX: rect.left + ((minute + 0.5) / 80) * rect.width,
-        clientY: rect.top + ((rowIndex + 0.5) / 6) * rect.height
+        clientY: row.top + row.height / 2
       }));
       fixture.detectChanges();
     }
@@ -579,10 +598,39 @@ describe('PostMatchZonesComponent', () => {
     it('F2-H1. clic en una fila dentro de un hueco precarga franja y rango, con lateral Centro', () => {
       createLoaded();
 
-      clickTrack(3, 6);
+      clickTrack(3, 5);
 
       expect([panelOf().period, panelOf().startMinute, panelOf().endMinute]).toEqual([1, 0, 10]);
+      expect(component.selectedCell()).toEqual({ row: 2, col: 5 });
+    });
+
+    it('un clic en un carril de in-goal no precarga ningún tramo', () => {
+      createLoaded();
+
+      clickTrack(3, 6);
+      clickTrack(3, 1);
+
+      expect(component.selectedCell()).toBeNull();
+    });
+
+    it('tocar una celda de in-goal en la cancha no elige franja, pero sí lo hace una del campo', () => {
+      createLoaded();
+
+      cell(2, 6).click();
+      expect(component.selectedCell()).toBeNull();
+
+      cell(2, 4).click();
+      expect(component.selectedCell()).toEqual({ row: 2, col: 4 });
+    });
+
+    it('un tramo de in-goal que ya existe se puede abrir para editarlo', () => {
+      createLoaded([{ ...zone, id: 'ig', startMinute: 4, endMinute: 5, col: 6 }]);
+
+      query<HTMLButtonElement>('[data-testid="territory-block"]')?.click();
+      fixture.detectChanges();
+
       expect(component.selectedCell()).toEqual({ row: 2, col: 6 });
+      expect(query('app-zone-assignment-panel .section-title')?.textContent).toContain('Editar tramo');
     });
 
     it('un clic en otra franja conserva el lateral ya elegido', () => {

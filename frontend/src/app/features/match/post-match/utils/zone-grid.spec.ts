@@ -1,6 +1,6 @@
 import {
   ZONE_COLUMN_METERS, ZONE_FIELD_LENGTH_M, ZONE_FIELD_WIDTH_M, ZONE_ROW_METERS,
-  allZoneCells, columnRangeLabel, describeZone, formatEventCount, rowRangeLabel, shortTeamName, zoneLabel, zoneName
+  IN_GOAL_COLUMNS, allZoneCells, columnRangeLabel, describeZone, formatEventCount, isInGoalColumn, rowRangeLabel, shortTeamName, zoneLabel, zoneName
 } from './zone-grid';
 
 describe('zone-grid', () => {
@@ -9,6 +9,11 @@ describe('zone-grid', () => {
     expect(ZONE_ROW_METERS).toEqual([15, 40, 15]);
     expect(ZONE_FIELD_LENGTH_M).toBe(120);
     expect(ZONE_FIELD_WIDTH_M).toBe(70);
+  });
+
+  it('el in-goal son las columnas de los extremos: 1 (propio) y 6 (rival)', () => {
+    expect(IN_GOAL_COLUMNS).toEqual([1, 6]);
+    expect([1, 2, 3, 4, 5, 6].filter(isInGoalColumn)).toEqual([1, 6]);
   });
 
   it('las filas respetan las líneas de 15 m desde cada touch', () => {

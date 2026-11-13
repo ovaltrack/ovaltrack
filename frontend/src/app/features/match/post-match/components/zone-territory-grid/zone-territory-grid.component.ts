@@ -2,7 +2,7 @@ import { Component, ElementRef, computed, input, output, signal, viewChild } fro
 import { NavStop, rowStops, stepMinute, stepRow, stopAt } from '../../utils/zone-nav';
 import { ZONE_GRID_COLS, ZONE_HALF_MINUTES, ZoneAssignmentResponse, ZoneCellRef, ZonePeriod } from '../../../types/zone.types';
 import { DragRange, dragNewRange, minuteAtPosition, resizeRange } from '../../utils/zone-drag';
-import { ZONE_COLUMN_NAMES, zoneLabel } from '../../utils/zone-grid';
+import { ZONE_COLUMN_NAMES, isInGoalColumn, zoneLabel } from '../../utils/zone-grid';
 import { ZoneEvent, ZonePeriodFilter, eventsInRange } from '../../utils/zone-stats';
 import {
   BlockLayout, PeriodGap, TramoCutMark, TRACK_MINUTES, ZonePoint, allGaps, blockLabel, blockLayout, countByFranja, crossedCut, describePoint, gapAtMinute, isInWindow,
@@ -46,6 +46,7 @@ interface RowView {
   col: number;
   name: string;
   range: string;
+  inGoal: boolean;
   count: number;
   blocks: BlockView[];
   points: PointView[];
@@ -153,6 +154,18 @@ export class ZoneTerritoryGridComponent {
 
   readonly rowCount = territoryRows().length;
 
+  /**
+   * Posición y alto de cada fila (de arriba hacia abajo) para lo que se dibuja encima de la grilla: los carriles de
+   * in-goal son más finos (`--lane-h`) que las franjas del campo (`--row-h`).
+   */
+  readonly rowBoxes = territoryRows().map((row, index, all) => {
+    const lanes = all.slice(0, index).filter(previous => previous.inGoal).length;
+    return {
+      top: `calc(${lanes} * var(--lane-h) + ${index - lanes} * var(--row-h))`,
+      height: row.inGoal ? 'var(--lane-h)' : 'var(--row-h)'
+    };
+  });
+
   /** Tramo de partido que se ve en el eje: los 80 minutos o, en pantalla angosta con 1T/2T, un solo tiempo. */
   readonly view = computed(() => trackWindow(this.periodFilter(), this.compact()));
   /** Con "Todo" en pantalla angosta los bloques son chicos: tocar la grilla elige el tiempo en vez de un hueco. */
@@ -219,6 +232,9 @@ export class ZoneTerritoryGridComponent {
     const stop = stopAt(rowStops(this.assignments(), cursor.col), cursor.minute);
     if (stop?.kind === 'block') {
       return `${franja}: tramo ${zoneLabel(stop.assignment)}, ${stop.assignment.period}T de ${stop.start}′ a ${stop.end}′. Enter para editar`;
+    }
+    if (stop?.kind === 'gap' && isInGoalColumn(cursor.col)) {
+      return `${franja}, minuto ${cursor.minute}: el in-goal solo tiene puntos, no admite tramos nuevos`;
     }
     if (stop?.kind === 'gap') {
       return `${franja}, minuto ${cursor.minute}: hueco sin zona de ${stop.start}′ a ${stop.end}′. Enter para completar desde acá`;
@@ -472,11 +488,12 @@ export class ZoneTerritoryGridComponent {
 
     // El tooltip es `fixed` (la grilla recorta lo que sobresale): se ubica sobre el centro del rango, encima de su fila.
     const rowIndex = this.rows().findIndex(row => row.col === drag.col);
+    const rowTop = this.rowElements()[rowIndex]?.getBoundingClientRect().top ?? rect.top;
     const centerMinute = range ? (range.startMinute + range.endMinute) / 2 : current;
     this.drag.set({
       ...drag, moved: true, range, notice,
       tipX: Math.min(Math.max(rect.left + (minuteToPercent(centerMinute, this.view()) / 100) * rect.width, TIP_EDGE_PX), window.innerWidth - TIP_EDGE_PX),
-      tipY: rect.top + (rect.height / this.rowCount) * rowIndex - TIP_GAP_PX
+      tipY: rowTop - TIP_GAP_PX
     });
 
     const changed = range && (range.startMinute !== drag.range?.startMinute || range.endMinute !== drag.range?.endMinute);
@@ -514,9 +531,9 @@ export class ZoneTerritoryGridComponent {
     return true;
   }
 
-  /** Primera parada de la franja elegida o, sin franja, de la fila de arriba (el in-goal rival). */
+  /** Primera parada de la franja elegida o, sin franja, de la primera fila que admite tramos (el 22 rival). */
   private initialCursor(): GridCursor {
-    const col = this.selectedCol() ?? ZONE_GRID_COLS;
+    const col = this.selectedCol() ?? territoryRows().find(row => !row.inGoal)?.col ?? ZONE_GRID_COLS;
     return { col, minute: rowStops(this.assignments(), col)[0]?.start ?? 0 };
   }
 
@@ -524,7 +541,7 @@ export class ZoneTerritoryGridComponent {
   private activate(cursor: GridCursor): void {
     const stop: NavStop | null = stopAt(rowStops(this.assignments(), cursor.col), cursor.minute);
     if (stop?.kind === 'block') this.segmentSelected.emit(stop.assignment);
-    else if (stop?.kind === 'gap') {
+    else if (stop?.kind === 'gap' && !isInGoalColumn(cursor.col)) {
       this.gapSelected.emit({ period: stop.period, startMinute: cursor.minute, endMinute: stop.end, col: cursor.col });
     }
   }
@@ -549,14 +566,27 @@ export class ZoneTerritoryGridComponent {
     this.periodRequested.emit(minute >= ZONE_HALF_MINUTES ? 2 : 1);
   }
 
-  /** Franja (por la altura del puntero) y hueco (por el minuto) bajo el puntero; null si ese minuto ya tiene tramo. */
+  private rowElements(): HTMLElement[] {
+    return Array.from(this.tracks()?.nativeElement.querySelectorAll<HTMLElement>('.row-track') ?? []);
+  }
+
+  /** Fila bajo la altura del puntero; las alturas no son parejas (el in-goal es más fino), así que se miden las filas. */
+  private rowIndexAt(clientY: number): number {
+    const elements = this.rowElements();
+    const index = elements.findIndex(element => clientY < element.getBoundingClientRect().bottom);
+    return index < 0 ? elements.length - 1 : index;
+  }
+
+  /**
+   * Franja (por la altura del puntero) y hueco (por el minuto) bajo el puntero; null si ese minuto ya tiene tramo o si
+   * la franja es de in-goal, que solo admite puntos: ahí no se crean tramos.
+   */
   private targetAt(event: MouseEvent): { col: number; gap: PeriodGap } | null {
     const rect = this.tracks()?.nativeElement.getBoundingClientRect();
     if (!rect || rect.width <= 0 || rect.height <= 0) return null;
 
-    const rows = territoryRows();
-    const rowIndex = Math.min(Math.max(Math.floor(((event.clientY - rect.top) / rect.height) * rows.length), 0), rows.length - 1);
-    const gap = gapAtMinute(this.assignments(), minuteAtOffset(event.clientX - rect.left, rect.width, this.view()));
-    return gap ? { col: rows[rowIndex].col, gap } : null;
+    const row = territoryRows()[this.rowIndexAt(event.clientY)];
+    const gap = row.inGoal ? null : gapAtMinute(this.assignments(), minuteAtOffset(event.clientX - rect.left, rect.width, this.view()));
+    return gap ? { col: row.col, gap } : null;
   }
 }

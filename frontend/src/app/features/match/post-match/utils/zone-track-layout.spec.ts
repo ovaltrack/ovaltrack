@@ -90,6 +90,10 @@ describe('zone-track-layout', () => {
       expect(rows[5].name).toBe('In-goal propio');
     });
 
+    it('solo las franjas de in-goal son carriles de puntos', () => {
+      expect(territoryRows().map(r => r.inGoal)).toEqual([true, false, false, false, false, true]);
+    });
+
     it('informa los metros de cada franja y "in-goal" para los extremos', () => {
       const rows = territoryRows();
 

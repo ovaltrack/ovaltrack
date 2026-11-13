@@ -1,5 +1,5 @@
 import { ZONE_GRID_COLS, ZONE_HALF_MINUTES, ZoneAssignmentResponse, ZonePeriod } from '../../types/zone.types';
-import { ZONE_COLUMN_NAMES, ZONE_ROW_LETTERS, columnRangeLabel, zoneLabel } from './zone-grid';
+import { ZONE_COLUMN_NAMES, ZONE_ROW_LETTERS, columnRangeLabel, isInGoalColumn, zoneLabel } from './zone-grid';
 import { RuleEvent, ZoneRulesByType, closesTramo, fixedColumn, formatMatchTime, placeEventZone } from './zone-rule';
 import { MinuteRange, ZoneEvent, ZonePeriodFilter, effectiveMatchTime, eventsInRange, findGaps, periodRange } from './zone-stats';
 
@@ -69,6 +69,8 @@ export interface TerritoryRow {
   name: string;
   /** Metros desde la línea de gol propia, o "in-goal". */
   range: string;
+  /** Carril de in-goal: fino y solo para puntos (no se crean tramos ahí). */
+  inGoal: boolean;
 }
 
 /** Filas de arriba hacia abajo: el in-goal rival primero (dirección de ataque) y el propio al final. */
@@ -76,7 +78,8 @@ export function territoryRows(): TerritoryRow[] {
   return Array.from({ length: ZONE_GRID_COLS }, (_, i) => ZONE_GRID_COLS - i).map(col => ({
     col,
     name: ZONE_COLUMN_NAMES[col - 1],
-    range: columnRangeLabel(col) || 'in-goal'
+    range: columnRangeLabel(col) || 'in-goal',
+    inGoal: isInGoalColumn(col)
   }));
 }
 

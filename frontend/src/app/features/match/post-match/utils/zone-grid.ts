@@ -18,7 +18,12 @@ export const ZONE_ROW_NAMES = ['Izquierda', 'Centro', 'Derecha'] as const;
 export const ZONE_ROW_SHORT_NAMES = ['Izq.', 'Centro', 'Der.'] as const;
 export const ZONE_COLUMN_NAMES = ['In-goal propio', '22 propio', 'Campo propio', 'Campo rival', '22 rival', 'In-goal rival'] as const;
 
-const IN_GOAL_COLUMNS = [1, ZONE_GRID_COLS];
+/** Columnas de in-goal (propio y rival): admiten puntos, no tramos nuevos. */
+export const IN_GOAL_COLUMNS: readonly number[] = [1, ZONE_GRID_COLS];
+
+export function isInGoalColumn(col: number): boolean {
+  return IN_GOAL_COLUMNS.includes(col);
+}
 
 /** Etiqueta fija de una zona: letra de fila + número de columna (I1 … D6). */
 export function zoneLabel(cell: ZoneCellRef): string {
@@ -33,7 +38,7 @@ export function rowRangeLabel(row: number): string {
 
 /** Rango en metros de la columna desde la línea de gol propia (0–100 m); vacío para los in-goals. */
 export function columnRangeLabel(col: number): string {
-  if (IN_GOAL_COLUMNS.includes(col)) return '';
+  if (isInGoalColumn(col)) return '';
   const start = ZONE_COLUMN_METERS.slice(1, col - 1).reduce((sum, m) => sum + m, 0);
   return `${start}–${start + ZONE_COLUMN_METERS[col - 1]} m`;
 }

@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ZoneTerritoryGridComponent } from './zone-territory-grid.component';
+import { TerritoryGapSelection, ZoneTerritoryGridComponent } from './zone-territory-grid.component';
 import { TramoCutMark, ZonePoint } from '../../utils/zone-track-layout';
 import { ZoneAssignmentResponse } from '../../../types/zone.types';
 
@@ -160,5 +160,82 @@ describe('ZoneTerritoryGridComponent: cortes por try', () => {
     render([tryCut], [{ id: 'z', matchId: 'm', period: 1, startMinute: 20, endMinute: 23, row: 2, col: 5 }]);
 
     expect(block().classList).not.toContain('is-cut');
+  });
+});
+
+describe('ZoneTerritoryGridComponent: in-goal solo para puntos', () => {
+  let fixture: ComponentFixture<ZoneTerritoryGridComponent>;
+  const selections: TerritoryGapSelection[] = [];
+
+  const tracks = (): HTMLElement => fixture.nativeElement.querySelector('[data-testid="territory-tracks"]');
+  const rowAt = (index: number): HTMLElement => fixture.nativeElement.querySelectorAll('[data-testid="territory-row"]')[index];
+  const rowLabelAt = (index: number): HTMLElement => fixture.nativeElement.querySelectorAll('[data-testid="territory-row-label"]')[index];
+
+  /** Clic a la altura de la fila (las filas no son parejas) y en el minuto indicado. */
+  const clickRow = (index: number, minute: number): void => {
+    const rect = tracks().getBoundingClientRect();
+    const row = rowAt(index).getBoundingClientRect();
+    tracks().dispatchEvent(new MouseEvent('click', {
+      bubbles: true, clientX: rect.left + ((minute + 0.5) / 80) * rect.width, clientY: row.top + row.height / 2
+    }));
+    fixture.detectChanges();
+  };
+
+  beforeEach(async () => {
+    selections.length = 0;
+    await TestBed.configureTestingModule({ imports: [ZoneTerritoryGridComponent] }).compileComponents();
+    fixture = TestBed.createComponent(ZoneTerritoryGridComponent);
+    fixture.componentInstance.gapSelected.subscribe(selection => selections.push(selection));
+    fixture.detectChanges();
+  });
+
+  it('las franjas de in-goal son carriles finos y las del campo no', () => {
+    [0, 5].forEach(index => {
+      expect(rowAt(index).classList).toContain('is-lane');
+      expect(rowLabelAt(index).classList).toContain('is-lane');
+    });
+    [1, 2, 3, 4].forEach(index => expect(rowAt(index).classList).not.toContain('is-lane'));
+  });
+
+  it('el carril explica por qué no admite tramos', () => {
+    expect(rowLabelAt(0).getAttribute('title')).toBe('Solo puntos: el in-goal no admite tramos nuevos');
+    expect(rowLabelAt(2).getAttribute('title')).toBeNull();
+  });
+
+  it('un clic en un hueco del carril de in-goal no propone ningún tramo', () => {
+    clickRow(0, 12);
+    clickRow(5, 12);
+
+    expect(selections).toEqual([]);
+  });
+
+  it('un clic en un hueco de una franja del campo sí propone el tramo', () => {
+    clickRow(1, 12);
+
+    expect(selections).toEqual([{ period: 1, startMinute: 0, endMinute: 40, col: 5 }]);
+  });
+
+  it('un tramo de in-goal que ya existe se sigue dibujando y se puede abrir', () => {
+    const assignment: ZoneAssignmentResponse = { id: 'ig', matchId: 'm', period: 1, startMinute: 4, endMinute: 5, row: 2, col: 6 };
+    const opened: ZoneAssignmentResponse[] = [];
+    fixture.componentInstance.segmentSelected.subscribe(value => opened.push(value));
+    fixture.componentRef.setInput('assignments', [assignment]);
+    fixture.detectChanges();
+
+    const block = rowAt(0).querySelector('[data-testid="territory-block"]') as HTMLButtonElement;
+    block.click();
+
+    expect(opened).toEqual([assignment]);
+  });
+
+  it('el cursor del teclado arranca en el 22 rival y Enter sobre un hueco de in-goal no propone nada', () => {
+    tracks().dispatchEvent(new FocusEvent('focus'));
+    tracks().dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+    tracks().dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    fixture.detectChanges();
+
+    expect(selections).toEqual([]);
+    expect(fixture.nativeElement.querySelector('[data-testid="territory-cursor-status"]').textContent)
+      .toContain('el in-goal solo tiene puntos, no admite tramos nuevos');
   });
 });

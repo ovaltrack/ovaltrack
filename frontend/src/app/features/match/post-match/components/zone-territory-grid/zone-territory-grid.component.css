@@ -2,6 +2,8 @@
   display: block;
   --label-w: 168px;
   --row-h: 36px;
+  /* Carril de in-goal: más fino, solo aloja puntos (y los tramos que ya existían) */
+  --lane-h: 22px;
 }
 
 .territory { display: flex; flex-direction: column; min-width: 0; }
@@ -38,6 +40,9 @@
   border-bottom: 1px solid var(--border);
 }
 .row-label:last-child { border-bottom: 0; }
+.row-label.is-lane { height: var(--lane-h); }
+.row-label.is-lane .row-range { display: none; }
+.row-label.is-lane .row-name { font-weight: 600; color: var(--text-secondary); }
 .row-label.is-selected { background: var(--grass-tint-strong); box-shadow: inset 3px 0 0 var(--btn-primary-bg); }
 .row-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
 .row-name { font-size: 12.5px; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -60,7 +65,7 @@
 .row-label.is-cursor { box-shadow: inset 4px 0 0 var(--navy); background: var(--navy-tint); }
 .cursor-stop, .cursor-minute {
   position: absolute; pointer-events: none; box-sizing: border-box; z-index: 5;
-  top: calc(var(--row) * var(--row-h)); height: var(--row-h);
+  top: var(--row-top); height: var(--row-height);
 }
 .cursor-stop { border: 3px solid var(--navy); border-radius: var(--radius-sm); box-shadow: 0 0 0 1px var(--surface); }
 .cursor-stop.on-block { border-style: double; border-width: 4px; }
@@ -69,6 +74,7 @@
 
 .row-track { position: relative; height: var(--row-h); border-bottom: 1px solid var(--border); }
 .row-track:last-child { border-bottom: 0; }
+.row-track.is-lane { height: var(--lane-h); }
 .row-track.is-selected { background: rgba(214, 234, 192, .45); }
 
 /* Huecos sin zona: rayado ámbar a lo alto de toda la grilla */
@@ -129,7 +135,7 @@
 /* Hueco bajo el puntero y vista previa del formulario, dentro de la fila (--row = índice de fila) */
 .hover-gap, .preview, .drag-range {
   position: absolute; pointer-events: none; z-index: 1; box-sizing: border-box;
-  top: calc(var(--row) * var(--row-h)); height: var(--row-h);
+  top: var(--row-top); height: var(--row-height);
 }
 .hover-gap { outline: 2px dashed var(--btn-primary-bg); outline-offset: -2px; background: var(--surface-hover); }
 .drag-range { z-index: 2; border: 2px solid var(--navy); border-radius: var(--radius-sm); background: var(--navy-tint); }
@@ -170,7 +176,8 @@
 }
 
 @media (pointer: coarse) {
-  :host { --row-h: 44px; }
+  /* Los tramos de in-goal que ya existen se tocan con el dedo: el carril conserva el alto táctil */
+  :host { --row-h: 44px; --lane-h: 44px; }
 }
 
 @media (max-width: 768px) {

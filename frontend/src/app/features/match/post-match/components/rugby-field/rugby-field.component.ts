@@ -38,6 +38,8 @@ export class RugbyFieldComponent {
   readonly ownClubName = input<string>('Mi club');
   readonly opponentName = input<string>('Rival');
   readonly selectable = input<boolean>(true);
+  /** Franjas (columnas) que se leen pero no se eligen: el in-goal solo admite puntos, no tramos. */
+  readonly lockedCols = input<readonly number[]>([]);
   /** Celda recién guardada: hace un pulso breve. */
   readonly pulseCell = input<ZoneCellRef | null>(null);
 
@@ -109,6 +111,10 @@ export class RugbyFieldComponent {
     ? 'Cancha: elegí la franja y el lateral del tramo'
     : 'Cancha: eventos por zona');
 
+  isLocked(cell: ZoneCellRef): boolean {
+    return this.lockedCols().includes(cell.col);
+  }
+
   isSelected(cell: ZoneCellRef): boolean {
     const selected = this.selectedCell();
     return !!selected && selected.row === cell.row && selected.col === cell.col;
@@ -135,7 +141,7 @@ export class RugbyFieldComponent {
   }
 
   select(cell: ZoneCellRef): void {
-    if (this.selectable()) {
+    if (this.selectable() && !this.isLocked(cell)) {
       this.cellSelected.emit({ row: cell.row, col: cell.col });
       return;
     }
@@ -177,7 +183,7 @@ export class RugbyFieldComponent {
 
   ariaLabel(cell: FieldCell): string {
     const events = cell.count === 1 ? '1 evento' : `${cell.count} eventos`;
-    return `${describeZone(cell)}: ${events}`;
+    return `${describeZone(cell)}: ${events}${this.isLocked(cell) ? '. Solo puntos: no admite tramos' : ''}`;
   }
 
   private nextCell(key: string, cell: ZoneCellRef): ZoneCellRef | null {
