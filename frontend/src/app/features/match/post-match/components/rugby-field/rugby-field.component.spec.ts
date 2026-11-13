@@ -406,7 +406,7 @@ describe('RugbyFieldComponent', () => {
       render([{ row: 2, col: 3, eventCount: 1 }]);
 
       expect(cellAt(2, 3)?.getAttribute('aria-label')).toContain('1 evento');
-      expect(fixture.nativeElement.querySelector('[data-testid="heat-legend-title"]').textContent.trim()).toBe('Eventos por zona');
+      expect(fixture.nativeElement.querySelector('[data-testid="heat-legend"]').getAttribute('aria-label')).toBe('Escala de calor: eventos por zona');
     });
 
     it('en minutos habla de minutos', () => {
@@ -418,7 +418,7 @@ describe('RugbyFieldComponent', () => {
 
       expect(cellAt(2, 3)?.getAttribute('aria-label')).toContain('12 min');
       expect(reading()).toContain('12 min');
-      expect(fixture.nativeElement.querySelector('[data-testid="heat-legend-title"]').textContent.trim()).toBe('Minutos por zona');
+      expect(fixture.nativeElement.querySelector('[data-testid="heat-legend"]').getAttribute('aria-label')).toBe('Escala de calor: minutos por zona');
     });
   });
 });

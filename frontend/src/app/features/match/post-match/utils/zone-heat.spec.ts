@@ -1,17 +1,6 @@
-import { HEAT_STEPS, heatLevel, heatMix, heatScale } from './zone-heat';
+import { heatScale } from './zone-heat';
 
 describe('zone-heat', () => {
-  describe('escala fija anterior (hasta que la cancha use la relativa)', () => {
-    it('los cortes coinciden con la leyenda 0 · 1–5 · 6–15 · 16–30 · 30+', () => {
-      expect(HEAT_STEPS.map(step => step.label)).toEqual(['0', '1–5', '6–15', '16–30', '30+']);
-      expect([0, 1, 5, 6, 15, 16, 30, 31, 118].map(heatLevel)).toEqual([0, 1, 1, 2, 2, 3, 3, 4, 4]);
-    });
-
-    it('la mezcla va del ámbar al naranja del nivel 4', () => {
-      expect([0, 1, 2, 3, 4].map(heatMix)).toEqual([0, 0, 1 / 3, 2 / 3, 1]);
-    });
-  });
-
   describe('heatScale: la escala sale de los valores que se muestran', () => {
     const labels = (values: number[]): string[] => heatScale(values).steps.map(step => step.label);
 

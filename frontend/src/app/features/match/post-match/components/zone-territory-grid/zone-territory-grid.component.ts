@@ -1,12 +1,13 @@
-import { Component, ElementRef, computed, input, output, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, NgZone, computed, effect, inject, input, output, signal, viewChild } from '@angular/core';
 import { NavStop, rowStops, stepMinute, stepRow, stopAt } from '../../utils/zone-nav';
 import { ZONE_GRID_COLS, ZONE_HALF_MINUTES, ZoneAssignmentResponse, ZoneCellRef, ZonePeriod } from '../../../types/zone.types';
 import { DragRange, dragNewRange, minuteAtPosition, resizeRange } from '../../utils/zone-drag';
 import { ZONE_COLUMN_NAMES, isInGoalColumn, zoneLabel } from '../../utils/zone-grid';
 import { ZoneEvent, ZonePeriodFilter, eventsInRange } from '../../utils/zone-stats';
+import { observeWidth } from '../../utils/observe-width';
 import {
-  BlockLayout, PeriodGap, TramoCutMark, TRACK_MINUTES, ZonePoint, allGaps, blockLabel, blockLayout, countByFranja, crossedCut, describePoint, gapAtMinute, isInWindow,
-  looseCuts, minuteAtOffset, minuteToPercent, territoryRows, trackWindow
+  BlockLayout, PeriodGap, TramoCutMark, TRACK_MINUTES, ZonePoint, allGaps, blockLabel, blockLayout, boundingCuts, clusterMarks, countByFranja, crossedCut,
+  describePoint, gapAtMinute, isInWindow, minuteAtOffset, minuteToPercent, territoryRows, trackWindow
 } from '../../utils/zone-track-layout';
 
 /** Tramo o hueco elegido en una fila de la grilla: `col` es la franja (fila de la grilla) sobre la que se hizo clic. */
@@ -27,12 +28,27 @@ interface BlockView {
   crossesCut: boolean;
 }
 
-/** Línea de corte: posición en % del eje y su motivo para el tooltip. Si nace de un punto (`pointId`) comparte con él hover y texto. */
+/** Corte del territorio, ya ubicado en el eje: su letra, su texto (el del punto si lo tiene) y dónde cae. */
+interface CutView {
+  eventId: string;
+  left: number;
+  glyph: string;
+  title: string;
+}
+
+/** Una o varias marcas de la tira de tanteo que quedaron juntas: con varias se dibuja el número en lugar de la letra. */
+interface CutMarkGroup {
+  key: string;
+  left: number;
+  label: string;
+  title: string;
+  eventIds: string[];
+}
+
+/** Línea de corte sobre las franjas: solo se dibuja la de los cortes vecinos al rango en edición o la del que se señala. */
 interface CutLineView {
   eventId: string;
   left: number;
-  title: string;
-  pointId: string | null;
 }
 
 /** Punto de solo lectura de una jugada con zona propia: posición horizontal en % del eje y texto para tooltip y lectores. */
@@ -42,6 +58,15 @@ interface PointView {
   aria: string;
 }
 
+/** Uno o varios puntos de una fila que quedaron juntos: con varios se dibuja el número y el tooltip los lista. */
+interface PointGroup {
+  key: string;
+  left: number;
+  count: number;
+  aria: string;
+  eventIds: string[];
+}
+
 interface RowView {
   col: number;
   name: string;
@@ -49,7 +74,7 @@ interface RowView {
   inGoal: boolean;
   count: number;
   blocks: BlockView[];
-  points: PointView[];
+  pointGroups: PointGroup[];
 }
 
 interface Tick {
@@ -143,14 +168,27 @@ export class ZoneTerritoryGridComponent {
   readonly rangeResized = output<{ startMinute: number; endMinute: number }>();
   /** Tramo bajo el cursor o el foco (null al salir): la cancha resalta su celda. */
   readonly segmentHover = output<string | null>();
-  /** Punto bajo el cursor o el foco: él y su línea de corte se resaltan juntos. */
-  readonly hotPointId = signal<string | null>(null);
+  /** Eventos señalados con el puntero (un punto, una marca de la tira o un grupo): su línea de corte se muestra y se resalta. */
+  readonly hotEventIds = signal<readonly string[]>([]);
   /** Con "Todo" en pantalla angosta: el tiempo (1T o 2T) del minuto tocado, para que la página cambie el filtro. */
   readonly periodRequested = output<ZonePeriod>();
   /** Clic en una fila dentro de un hueco: propone ese hueco y esa franja. */
   readonly gapSelected = output<TerritoryGapSelection>();
 
   private readonly tracks = viewChild<ElementRef<HTMLElement>>('tracks');
+  private readonly ngZone = inject(NgZone);
+
+  /** Ancho en píxeles del eje: con él se sabe qué puntos y marcas quedan a menos de 12 px y se dibujan como uno. */
+  private readonly trackWidth = signal(0);
+
+  constructor() {
+    effect(onCleanup => {
+      const element = this.tracks()?.nativeElement;
+      if (!element) return;
+      const stop = observeWidth(element, width => this.ngZone.run(() => this.trackWidth.set(width)));
+      onCleanup(stop);
+    });
+  }
 
   readonly rowCount = territoryRows().length;
 
@@ -287,23 +325,67 @@ export class ZoneTerritoryGridComponent {
       ...row,
       count: counts.get(row.col) ?? 0,
       blocks: blocks.filter(block => block.assignment.col === row.col),
-      points: points.filter(point => point.col === row.col)
+      pointGroups: clusterMarks(points.filter(point => point.col === row.col), this.trackWidth()).map(group => ({
+        key: group.items.map(item => item.eventId).join('+'),
+        left: group.left,
+        count: group.items.length,
+        aria: group.items.length === 1 ? group.items[0].aria : `${group.items.length} jugadas: ${group.items.map(item => item.aria).join('; ')}`,
+        eventIds: group.items.map(item => item.eventId)
+      }))
     }));
   });
 
-  /** Líneas de corte dentro del tramo mostrado, sobre todas las franjas: las de cada punto y las sueltas. */
-  readonly cutLines = computed<CutLineView[]>(() => {
-    const own = this.points().flatMap(point => point.cutMinute === null ? [] : [{
-      eventId: point.eventId, minute: point.cutMinute, title: describePoint(point), pointId: point.eventId
-    }]);
-    const loose = looseCuts(this.cuts(), this.points()).map(cut => ({
-      eventId: cut.eventId, minute: cut.minute, title: `Corte: ${cut.label} · el tramo termina en ${cut.minute}′`, pointId: null
-    }));
-    return [...own, ...loose].flatMap(({ minute, ...line }) => {
-      const left = minuteToPercent(minute, this.view());
-      return left < 0 || left > 100 ? [] : [{ ...line, left }];
+  /** Cortes dentro del tramo mostrado. El texto es el del punto cuando el corte nace de uno (Try); si no, explica el motivo. */
+  private readonly cutViews = computed<CutView[]>(() => {
+    const pointText = new Map(this.points().map(point => [point.eventId, describePoint(point)]));
+    return this.cuts().flatMap(cut => {
+      const left = minuteToPercent(cut.minute, this.view());
+      return left < 0 || left > 100 ? [] : [{
+        eventId: cut.eventId,
+        left,
+        glyph: cut.glyph,
+        title: pointText.get(cut.eventId) ?? `Corte: ${cut.label} · el tramo termina en ${cut.minute}′`
+      }];
     });
   });
+
+  /** Tira de tanteo sobre el eje del tiempo: una letra por corte (T, P, D) y un número si varios quedan juntos. */
+  readonly cutMarks = computed<CutMarkGroup[]>(() =>
+    clusterMarks(this.cutViews(), this.trackWidth()).map(group => ({
+      key: group.items.map(item => item.eventId).join('+'),
+      left: group.left,
+      label: group.items.length === 1 ? group.items[0].glyph : `${group.items.length}`,
+      title: group.items.map(item => item.title).join('\n'),
+      eventIds: group.items.map(item => item.eventId)
+    })));
+
+  /** Rango que se está armando: el que se arrastra o, si no, el del formulario. */
+  private readonly activeRange = computed(() => {
+    const drag = this.drag();
+    return drag?.moved && drag.range ? drag.range : this.previewRange();
+  });
+
+  /**
+   * Líneas de corte a toda altura: solo las de los cortes vecinos al rango en edición (para ver dónde frena) y las del
+   * que se señala con el puntero. Con muchos tantos, dibujarlas todas taparía la grilla.
+   */
+  readonly cutLines = computed<CutLineView[]>(() => {
+    const range = this.activeRange();
+    const shown = new Set([
+      ...(range ? boundingCuts(range, this.cuts()).map(cut => cut.eventId) : []),
+      ...this.hotEventIds()
+    ]);
+    return this.cutViews().filter(cut => shown.has(cut.eventId)).map(({ eventId, left }) => ({ eventId, left }));
+  });
+
+  setHot(eventIds: readonly string[]): void {
+    this.hotEventIds.set(eventIds);
+  }
+
+  isHot(eventIds: readonly string[]): boolean {
+    const hot = this.hotEventIds();
+    return eventIds.some(id => hot.includes(id));
+  }
 
   readonly gaps = computed(() => allGaps(this.assignments()).flatMap(gap => {
     const layout = this.layoutOf({ startMinute: gap.start, endMinute: gap.end });

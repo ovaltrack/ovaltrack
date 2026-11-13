@@ -1,46 +1,64 @@
-/** Niveles de calor de la cancha: escala secuencial de un solo tono en 5 pasos (0 = sin eventos). */
+/** Un nivel de la escala: su rango real («3–5») y su posición 0–1 en la mezcla ámbar → naranja (0 sin relleno). */
 export interface HeatStep {
-  level: number;
-  label: string;
-}
-
-export const HEAT_STEPS: readonly HeatStep[] = [
-  { level: 0, label: '0' },
-  { level: 1, label: '1–5' },
-  { level: 2, label: '6–15' },
-  { level: 3, label: '16–30' },
-  { level: 4, label: '30+' }
-];
-
-const MAX_LEVEL = HEAT_STEPS.length - 1;
-
-/** Nivel 0–4 de una cantidad de eventos, con los cortes de la leyenda: 0 · 1–5 · 6–15 · 16–30 · 30+. */
-export function heatLevel(count: number): number {
-  if (!(count > 0)) return 0;
-  if (count <= 5) return 1;
-  if (count <= 15) return 2;
-  if (count <= 30) return 3;
-  return 4;
-}
-
-/** Posición 0–1 dentro de la escala ámbar → naranja; 0 para los niveles sin relleno. */
-export function heatMix(level: number): number {
-  return level <= 1 ? 0 : Math.min(level - 1, MAX_LEVEL - 1) / (MAX_LEVEL - 1);
-}
-
-/** Un nivel de la escala relativa: su rango real («3–5»), y su posición 0–1 en la mezcla ámbar → naranja. */
-export interface ScaleStep {
   level: number;
   label: string;
   mix: number;
 }
 
-/** Escala de calor ajustada a los valores que se están mostrando: reparte los niveles en cuartiles del máximo actual. */
+/** Escala de calor ajustada a los valores que se muestran: el 0 siempre existe y los demás niveles salen de cuartiles. */
 export interface HeatScale {
-  steps: readonly ScaleStep[];
+  steps: readonly HeatStep[];
   levelOf(count: number): number;
 }
 
+/** Cantidad máxima de niveles con color: cuartiles. */
+const COLOR_LEVELS = 4;
+
+/** Valor que deja `rank` (1-based, por el método de rango más cercano) de los valores ya ordenados. */
+function nearestRank(sorted: readonly number[], fraction: number): number {
+  return sorted[Math.ceil(fraction * sorted.length) - 1];
+}
+
+/** Techos de cada nivel: cada valor distinto si son pocos y, si no, los cuartiles sin repetir. */
+function bandCeilings(sorted: readonly number[]): number[] {
+  const distinct = [...new Set(sorted)];
+  if (distinct.length <= COLOR_LEVELS) return distinct;
+
+  const quartiles = Array.from({ length: COLOR_LEVELS }, (_, i) => nearestRank(sorted, (i + 1) / COLOR_LEVELS));
+  return [...new Set(quartiles)];
+}
+
+/** Posición 0–1 en la mezcla: el nivel 1 es el ámbar claro y el último, el naranja. */
+function mixOf(level: number, levels: number): number {
+  return level <= 1 || levels <= 1 ? 0 : (level - 1) / (levels - 1);
+}
+
+function labelOf(values: readonly number[]): string {
+  const low = values[0];
+  const high = values[values.length - 1];
+  return low === high ? `${low}` : `${low}–${high}`;
+}
+
+/**
+ * Escala relativa al máximo del filtro actual: con 51 jugadas (máximo 10) y con 300 el mapa reparte sus tonos igual, y
+ * la leyenda muestra los rangos que realmente hay. Ignora ceros, negativos y valores inválidos.
+ */
 export function heatScale(values: readonly number[]): HeatScale {
-  throw new Error('no implementado');
+  const sorted = values.filter(value => value > 0).sort((a, b) => a - b);
+  const ceilings = bandCeilings(sorted);
+  const bands = ceilings.map((ceiling, i) =>
+    sorted.filter(value => value <= ceiling && (i === 0 || value > ceilings[i - 1])));
+  const levels = bands.length;
+
+  return {
+    steps: [
+      { level: 0, label: '0', mix: 0 },
+      ...bands.map((band, i) => ({ level: i + 1, label: labelOf(band), mix: mixOf(i + 1, levels) }))
+    ],
+    levelOf: count => {
+      if (!(count > 0)) return 0;
+      const index = ceilings.findIndex(ceiling => count <= ceiling);
+      return index === -1 ? levels : index + 1;
+    }
+  };
 }

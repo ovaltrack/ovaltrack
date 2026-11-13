@@ -231,7 +231,6 @@
   color: var(--text-secondary);
 }
 
-.heat-legend-title { font-family: var(--font-body); font-size: 13px; font-weight: 700; }
 .heat-legend-steps { display: flex; flex-wrap: wrap; gap: 6px 14px; }
 .heat-legend-step { display: inline-flex; align-items: center; gap: 5px; }
 
@@ -243,8 +242,8 @@
   background: color-mix(in srgb, color-mix(in srgb, var(--zone-heat-high) calc(var(--heat, 0) * 100%), var(--zone-heat-low)) var(--zone-heat-mix), var(--pitch-a));
 }
 
-/* "0" sin el verde del césped: la leyenda no sugiere que cero sea un color de calor */
-.heat-swatch.is-empty { background: var(--surface-alt); }
+/* "0" con el verde de la cancha vacía: la celda sin eventos se ve verde y la leyenda tiene que decir lo mismo */
+.heat-swatch.is-empty { background: var(--pitch-a); }
 
 .field-cell.is-readonly { cursor: default; }
 

@@ -771,7 +771,7 @@ describe('PostMatchZonesComponent', () => {
 
       expect(fieldCount(2, 3)).toBe('15');
       expect(fieldCount(2, 4)).toBeUndefined();
-      expect(query('[data-testid="heat-legend-title"]')?.textContent?.trim()).toBe('Minutos por zona');
+      expect(query('[data-testid="map-header"]')?.textContent).toContain('Minutos por zona');
       expect(cell(2, 3).getAttribute('aria-label')).toContain('15 min');
     });
 

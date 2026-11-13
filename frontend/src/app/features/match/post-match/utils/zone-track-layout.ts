@@ -7,9 +7,6 @@ import { MinuteRange, ZoneEvent, ZonePeriodFilter, effectiveMatchTime, eventsInR
 /** Largo del eje horizontal de la grilla de territorio: los 80 minutos del partido, con el 2T a continuación del 1T. */
 export const TRACK_MINUTES = ZONE_HALF_MINUTES * 2;
 
-/** Un bloque de esta duración o menor no entra con la etiqueta completa: muestra solo la letra del lateral. */
-export const SHORT_BLOCK_MINUTES = 2;
-
 /** En pantallas angostas, un bloque de menos de estos minutos no lleva etiqueta: el detalle va en su aria-label y tooltip. */
 export const UNLABELED_BLOCK_MINUTES = 4;
 
@@ -51,17 +48,13 @@ export function blockLayout(range: TimeRange, window: TrackWindow = FULL_TRACK):
   return { left: minuteToPercent(start, window), width: ((end - start) / (window.end - window.start)) * 100 };
 }
 
-export function isShortBlock(range: TimeRange): boolean {
-  return range.endMinute - range.startMinute <= SHORT_BLOCK_MINUTES;
-}
-
 /**
- * Etiqueta del bloque: la celda completa (D5) o, si es muy corto, solo la letra del lateral (D). En pantallas angostas
- * los de menos de 4 minutos no llevan etiqueta.
+ * Etiqueta del bloque: solo la letra del lateral (I, C o D), también en los de 1 minuto: la fila de la grilla ya dice la
+ * franja y el detalle completo va en el tooltip. En pantallas angostas los de menos de 4 minutos no llevan etiqueta.
  */
 export function blockLabel(assignment: ZoneAssignmentResponse, compact = false): string {
   if (compact && assignment.endMinute - assignment.startMinute < UNLABELED_BLOCK_MINUTES) return '';
-  return isShortBlock(assignment) ? ZONE_ROW_LETTERS[assignment.row - 1] : zoneLabel(assignment);
+  return ZONE_ROW_LETTERS[assignment.row - 1];
 }
 
 /** Una fila de la grilla de territorio = una franja de la cancha (columna 1–6). */
@@ -204,12 +197,6 @@ export function describePoint(point: ZonePoint): string {
   return `${point.eventTypeName} ${formatMatchTime(Math.round(point.minute * SECONDS_PER_MINUTE))} · ${where}${cut}`;
 }
 
-/** Cortes que no nacen de un punto (Kick H, Drop goal): la grilla los dibuja como línea suelta. */
-export function looseCuts(cuts: TramoCutMark[], points: ZonePoint[]): TramoCutMark[] {
-  const withPoint = new Set(points.map(point => point.eventId));
-  return cuts.filter(cut => !withPoint.has(cut.eventId));
-}
-
 /**
  * Corte del territorio: después de un evento que reinicia el juego (Try, Try penal, Kick H, Drop goal) el tramo que lo
  * contiene tiene que terminar en `minute` (el minuto del evento + 1, en minutos acumulados).
@@ -297,14 +284,20 @@ export function kickoffCell(cut: TramoCutMark): ZoneCellRef | null {
   return col === undefined ? null : { row: KICKOFF_ROW, col };
 }
 
+const GLYPH_BY_CODE: Readonly<Record<string, string>> = { TRY: 'T', PENALTY_TRY: 'T', PENALTY_KICK: 'P', DROP_GOAL: 'D' };
+
 /** Letra con la que se marca el corte en la tira de tanteo del eje: T (try, try penal), P (Kick H), D (drop goal). */
 export function cutGlyph(code: string | undefined, eventTypeName: string): string {
-  return '';
+  return (code ? GLYPH_BY_CODE[code] : undefined) ?? eventTypeName.charAt(0).toUpperCase();
 }
 
 /** Cortes que rodean al rango (el último que lo precede, los que cruza y el primero que lo sigue), en orden cronológico. */
 export function boundingCuts(range: TimedRange, cuts: TramoCutMark[]): TramoCutMark[] {
-  return [];
+  const sameHalf = cuts.filter(cut => cut.period === range.period);
+  const before = sameHalf.filter(cut => cut.minute <= range.startMinute).sort((a, b) => b.minute - a.minute).slice(0, 1);
+  const inside = sameHalf.filter(cut => cut.minute > range.startMinute && cut.minute < range.endMinute);
+  const after = sameHalf.filter(cut => cut.minute >= range.endMinute).sort((a, b) => a.minute - b.minute).slice(0, 1);
+  return [...before, ...inside, ...after].sort((a, b) => a.minute - b.minute);
 }
 
 /** Marcas que quedaron juntas y se dibujan como una sola; `left` es el promedio de las marcas que agrupa. */
@@ -315,5 +308,15 @@ export interface MarkCluster<T> {
 
 /** Agrupa las marcas (posición en % del eje) que quedan a menos de `minGapPx` píxeles. Sin ancho medido no agrupa. */
 export function clusterMarks<T extends { left: number }>(marks: T[], trackWidthPx: number, minGapPx = 12): MarkCluster<T>[] {
-  return [];
+  const sorted = [...marks].sort((a, b) => a.left - b.left);
+  // Sin ancho medido (todavía no se dibujó) no se sabe qué está cerca: cada marca queda sola.
+  const minGapPercent = trackWidthPx > 0 ? (minGapPx / trackWidthPx) * 100 : 0;
+  const groups = sorted.reduce<T[][]>((acc, mark) => {
+    const current = acc[acc.length - 1];
+    const previous = current?.[current.length - 1];
+    return previous && mark.left - previous.left < minGapPercent
+      ? [...acc.slice(0, -1), [...current, mark]]
+      : [...acc, [mark]];
+  }, []);
+  return groups.map(items => ({ left: items.reduce((sum, item) => sum + item.left, 0) / items.length, items }));
 }

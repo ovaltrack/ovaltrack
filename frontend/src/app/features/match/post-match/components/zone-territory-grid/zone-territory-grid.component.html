@@ -14,6 +14,14 @@
         }
       }
     </div>
+    <!-- Tira de tanteo: dónde hubo un tanto que reinicia el juego. El significado lo da la letra (T, P, D); la línea solo se ve al señalarla o cerca del rango en edición -->
+    <div class="score-strip" data-testid="territory-score-strip">
+      @for (mark of cutMarks(); track mark.key) {
+        <span class="cut-mark" role="img" data-testid="territory-cut-mark" [class.is-group]="mark.eventIds.length > 1" [class.is-hot]="isHot(mark.eventIds)"
+              [style.left.%]="mark.left" [attr.title]="mark.title" [attr.aria-label]="mark.title"
+              (mouseenter)="setHot(mark.eventIds)" (mouseleave)="setHot([])">{{ mark.label }}</span>
+      }
+    </div>
   </div>
 
   <div class="body" [style.--rows]="rowCount" [style.--guide-step]="guideStep()">
@@ -71,20 +79,23 @@
                     [style.left.%]="block.left + block.width" (pointerdown)="onHandleDown($event, block.assignment, 'end')" (click)="$event.stopPropagation()"></span>
             }
           }
-          <!-- Jugadas con zona propia: punto de solo lectura, no es un tramo ni ocupa rango -->
-          @for (point of row.points; track point.eventId) {
-            <span class="zone-point" role="img" data-testid="territory-point" [class.is-hot]="hotPointId() === point.eventId"
-                  [style.left.%]="point.left" [attr.aria-label]="point.aria" [attr.title]="point.aria"
-                  (mouseenter)="hotPointId.set(point.eventId)" (mouseleave)="hotPointId.set(null)"></span>
+          <!-- Jugadas con zona propia: punto de solo lectura, no es un tramo ni ocupa rango; varios juntos se dibujan como uno con el número -->
+          @for (group of row.pointGroups; track group.key) {
+            <span class="zone-point" role="img" data-testid="territory-point" [class.is-cluster]="group.count > 1" [class.is-hot]="isHot(group.eventIds)"
+                  [style.left.%]="group.left" [attr.aria-label]="group.aria" [attr.title]="group.aria"
+                  (mouseenter)="setHot(group.eventIds)" (mouseleave)="setHot([])">
+              @if (group.count > 1) {
+                <span class="point-count">{{ group.count }}</span>
+              }
+            </span>
           }
         </div>
       }
 
-      <!-- Cortes: después de un tanteo el juego se reinicia y el tramo termina ahí; si nace de un punto, comparten texto y resalte -->
-      @for (cut of cutLines(); track cut.eventId) {
-        <span class="cut-line" role="img" data-testid="territory-cut" [class.is-hot]="cut.pointId !== null && hotPointId() === cut.pointId"
-              [style.left.%]="cut.left" [attr.title]="cut.title" [attr.aria-label]="cut.title"
-              (mouseenter)="hotPointId.set(cut.pointId)" (mouseleave)="hotPointId.set(null)"></span>
+      <!-- Líneas de corte: solo las vecinas al rango en edición y la del tanto señalado -->
+      @for (line of cutLines(); track line.eventId) {
+        <span class="cut-line" data-testid="territory-cut" aria-hidden="true"
+              [class.is-hot]="isHot([line.eventId])" [style.left.%]="line.left"></span>
       }
 
       @if (halfMark(); as mark) {

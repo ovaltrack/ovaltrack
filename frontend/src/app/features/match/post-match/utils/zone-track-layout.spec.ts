@@ -530,7 +530,8 @@ describe('zone-track-layout', () => {
       });
 
       it('exactamente a 12 px no se juntan', () => {
-        expect(ids(clusterMarks([mark('a', 20), mark('b', 21.2)], 1000))).toEqual([['a'], ['b']]);
+        // 800 px de ancho: 1 % = 8 px, así que 1,5 % son justo 12 px
+        expect(ids(clusterMarks([mark('a', 20), mark('b', 21.5)], 800))).toEqual([['a'], ['b']]);
       });
 
       it('encadena: tres marcas a 8 px una de otra forman un solo grupo', () => {
@@ -553,9 +554,9 @@ describe('zone-track-layout', () => {
         expect(clusterMarks([], 1000)).toEqual([]);
       });
 
-      it('con menos ancho se juntan más: la misma separación en 300 px es 3 px', () => {
-        expect(ids(clusterMarks([mark('a', 20), mark('b', 24)], 300))).toEqual([['a', 'b']]);
-        expect(ids(clusterMarks([mark('a', 20), mark('b', 24)], 1000))).toEqual([['a'], ['b']]);
+      it('con menos ancho se juntan más: 3 % son 9 px en 300 px y 30 px en 1000 px', () => {
+        expect(ids(clusterMarks([mark('a', 20), mark('b', 23)], 300))).toEqual([['a', 'b']]);
+        expect(ids(clusterMarks([mark('a', 20), mark('b', 23)], 1000))).toEqual([['a'], ['b']]);
       });
     });
 

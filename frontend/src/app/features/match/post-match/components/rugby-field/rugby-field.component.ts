@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, ElementRef, computed, inject, input, output, signal } from '@angular/core';
 import { ZONE_GRID_COLS, ZONE_GRID_ROWS, ZoneCellRef, ZoneCellSummary } from '../../../types/zone.types';
 import { CountTweenDirective } from './count-tween.directive';
-import { HEAT_STEPS, heatLevel, heatMix } from '../../utils/zone-heat';
+import { heatScale } from '../../utils/zone-heat';
 import {
   ZONE_COLUMN_METERS, ZONE_FIELD_LENGTH_M, ZONE_FIELD_WIDTH_M, ZONE_ROW_METERS,
   ZONE_ROW_LETTERS, ZONE_ROW_SHORT_NAMES, ZoneCountUnit, describeCount, describeZone, formatEventCount, rowRangeLabel, shortTeamName, zoneLabel
@@ -87,16 +87,17 @@ export class RugbyFieldComponent {
   private readonly activeCell = signal<ZoneCellRef | null>(null);
   private readonly focusCell = signal<ZoneCellRef | null>(null);
 
-  readonly heatSteps = HEAT_STEPS;
-  readonly heatMix = heatMix;
+  /** Escala relativa al máximo que se está mostrando (jugadas o minutos): los tonos se reparten entre los valores reales. */
+  readonly scale = computed(() => heatScale(this.cells().map(cell => cell.eventCount)));
 
   readonly fieldRows = computed<FieldCell[][]>(() => {
     const counts = new Map(this.cells().map(c => [`${c.row}-${c.col}`, c.eventCount]));
+    const scale = this.scale();
 
     return this.rows.map(row => this.cols.map(col => {
       const count = counts.get(`${row}-${col}`) ?? 0;
-      const level = heatLevel(count);
-      return { row, col, label: zoneLabel({ row, col }), count, countLabel: formatEventCount(count), heat: heatMix(level), heatLevel: level };
+      const level = scale.levelOf(count);
+      return { row, col, label: zoneLabel({ row, col }), count, countLabel: formatEventCount(count), heat: scale.steps[level].mix, heatLevel: level };
     }));
   });
 

@@ -108,17 +108,21 @@ export class PostMatchZonesComponent implements OnInit, OnDestroy {
   /** En Minutos la cancha cuenta tramos, que no tienen tipo ni posesión: esos filtros no aplican. */
   readonly eventFiltersApply = computed(() => this.mapMode() === 'EVENTS');
 
-  /** Eventos según el tipo y la posesión elegidos; el tiempo lo aplican por separado la cancha y la grilla. */
-  readonly filteredEvents = computed(() =>
+  /** Eventos de la grilla de territorio: solo siguen la posesión; el tipo de jugada cambia únicamente el mapa de la cancha. */
+  readonly gridEvents = computed(() =>
+    filterEvents(this.zonesStore.events(), eventFiltersFor(this.mapMode(), 'ALL', this.possessionFilter())));
+
+  /** Eventos del mapa de la cancha: la posesión y además el tipo de jugada elegido; el tiempo lo aplica `countByCell`. */
+  readonly mapEvents = computed(() =>
     filterEvents(this.zonesStore.events(), eventFiltersFor(this.mapMode(), this.typeFilter(), this.possessionFilter())));
 
   /** Puntos (jugadas con zona propia) del tiempo y la posesión elegidos: la grilla los dibuja sobre su franja. */
-  readonly points = computed(() => zonePoints(this.filteredEvents(), this.zonesStore.zoneRules(), this.periodFilter()));
+  readonly points = computed(() => zonePoints(this.gridEvents(), this.zonesStore.zoneRules(), this.periodFilter()));
 
   // Todo se deriva de los eventos que ya traen su zona (una sola fuente de verdad) y, en Minutos, de los tramos.
   readonly cellCounts = computed<ZoneCellSummary[]>(() => this.mapMode() === 'MINUTES'
     ? minutesByCell(this.zonesStore.assignments(), this.periodFilter()).map(({ row, col, minutes }) => ({ row, col, eventCount: minutes }))
-    : countByCell(this.filteredEvents(), this.periodFilter()));
+    : countByCell(this.mapEvents(), this.periodFilter()));
 
   // Indicadores del partido completo: no dependen de los filtros de la pantalla.
   readonly totalEvents = computed(() => this.zonesStore.events().length);
