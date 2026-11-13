@@ -2,6 +2,7 @@ import { MatchTimelineEventResponse } from '../../types/event.types';
 import { ZoneAssignmentResponse } from '../../types/zone.types';
 import { describeZoneRule, formatMatchTime, ZoneRulesByType } from './zone-rule';
 import { describeSegment, effectiveMatchTime, tramoAtEvent } from './zone-stats';
+import { gapAtMinute } from './zone-track-layout';
 
 /** Por qué una jugada no tiene zona: sin tiempo de partido, ningún tramo cubre su minuto, o el tramo no admite su tipo. */
 export type UnzonedReason = 'NO_TIME' | 'GAP' | 'FORBIDDEN';
@@ -70,4 +71,35 @@ export function unzonedWithReason(events: UnzonedSource[], assignments: ZoneAssi
     .filter(event => !event.zone)
     .sort((a, b) => order(a) - order(b) || a.matchTime - b.matchTime)
     .map(event => toItem(event, assignments, rules));
+}
+
+/** Jugadas sin zona que caen en un hueco: cuántas son y en cuántos huecos distintos. */
+export interface GapGroup {
+  events: number;
+  gaps: number;
+}
+
+/** Las jugadas sin zona separadas por motivo: las de hueco se resumen, porque ya están en «Huecos sin zona». */
+export interface UnzonedGroups {
+  inGaps: GapGroup;
+  /** Lo que los huecos no explican (celda prohibida o sin tiempo), en el mismo orden. */
+  listed: UnzonedItem[];
+}
+
+/** Separa las jugadas en huecos (se cuentan, con sus huecos distintos) de las que se listan una por una. */
+export function groupUnzoned(items: UnzonedItem[], assignments: ZoneAssignmentResponse[]): UnzonedGroups {
+  const inGaps = items.filter(item => item.reason === 'GAP');
+  const gapKeys = new Set(inGaps.flatMap(item => {
+    const gap = item.minute === null ? null : gapAtMinute(assignments, item.minute);
+    return gap ? [`${gap.period}-${gap.start}`] : [];
+  }));
+  return {
+    inGaps: { events: inGaps.length, gaps: gapKeys.size },
+    listed: items.filter(item => item.reason !== 'GAP')
+  };
+}
+
+/** Resumen de las jugadas en huecos, ej. "22 jugadas en 3 huecos". */
+export function describeGapGroup({ events, gaps }: GapGroup): string {
+  return `${events} ${events === 1 ? 'jugada' : 'jugadas'} en ${gaps} ${gaps === 1 ? 'hueco' : 'huecos'}`;
 }

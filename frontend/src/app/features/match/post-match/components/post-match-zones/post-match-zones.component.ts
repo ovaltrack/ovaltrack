@@ -11,7 +11,7 @@ import { PostMatchShellStore } from '../../store/post-match-shell.store';
 import { watchCompactLayout } from '../../utils/zone-compact';
 import { segmentAt, zonePoints } from '../../utils/zone-track-layout';
 import { cellEventRows, cellTramoRows } from '../../utils/zone-cell-detail';
-import { UnzonedItem, unzonedWithReason } from '../../utils/zone-unzoned';
+import { groupUnzoned, unzonedWithReason } from '../../utils/zone-unzoned';
 import { LoadingGate } from '../../../../../shared/utils/loading-gate';
 import { ZoneDeepLinkTarget, resolveZoneDeepLink } from '../../utils/zone-deep-link';
 import { ZONE_SHORTCUT_HELP, isSaveShortcut, isTypingTarget, shortcutCell } from '../../utils/zone-shortcuts';
@@ -139,6 +139,8 @@ export class PostMatchZonesComponent implements OnInit, OnDestroy {
   /** Las jugadas sin zona del partido con su motivo: alimentan el KPI, el enlace del panel y la lista del detalle. */
   readonly unzonedItems = computed(() => unzonedWithReason(this.zonesStore.events(), this.zonesStore.assignments(), this.zonesStore.zoneRules()));
   readonly totalUnzoned = computed(() => this.unzonedItems().length);
+  /** Las de hueco se resumen (ya están en «Huecos sin zona»); el detalle lista solo celda prohibida y sin tiempo. */
+  readonly unzonedGroups = computed(() => groupUnzoned(this.unzonedItems(), this.zonesStore.assignments()));
   readonly coveragePercent = computed(() => zoneCoveragePercent(this.zonesStore.assignments()));
 
   /** Celda que se tocó en la cancha: su detalle queda fijo hasta que se toque otra. */
@@ -307,11 +309,9 @@ export class PostMatchZonesComponent implements OnInit, OnDestroy {
     this.detailView.set('cell');
   }
 
-  /** Completar el hueco de una jugada sin tramo: precarga el segmento (entre cortes) que contiene su minuto. */
-  onUnzonedGap(item: UnzonedItem): void {
-    const panel = this.panel();
-    const target = item.minute === null ? null : resolveZoneDeepLink({ minuto: String(item.minute) }, this.zonesStore.assignments());
-    if (panel && target) this.applyDeepLink(panel, target);
+  /** Las jugadas en huecos se completan desde «Huecos sin zona» del panel. */
+  onUnzonedGaps(): void {
+    this.panel()?.showGaps();
   }
 
   /** Abrir el tramo que no admite la jugada para corregirlo. */

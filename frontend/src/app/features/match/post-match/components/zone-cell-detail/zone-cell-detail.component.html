@@ -2,14 +2,22 @@
   <section class="cell-detail" data-testid="unzoned-detail" aria-label="Jugadas sin zona">
     <header class="detail-head">
       <h3 class="detail-title" data-testid="unzoned-title">
-        {{ unzoned().length }} {{ unzoned().length === 1 ? 'jugada sin zona' : 'jugadas sin zona' }}
+        {{ unzonedTotal() }} {{ unzonedTotal() === 1 ? 'jugada sin zona' : 'jugadas sin zona' }}
       </h3>
       <button type="button" class="detail-close" data-testid="unzoned-close" (click)="closed.emit()">Volver</button>
     </header>
 
-    @if (unzoned().length === 0) {
+    <!-- Las jugadas en huecos ya están en «Huecos sin zona» del panel: acá van en una sola línea -->
+    @if (gapSummary(); as summary) {
+      <p class="detail-gaps" data-testid="unzoned-gaps">
+        {{ summary }} ·
+        <button type="button" class="detail-action" data-testid="unzoned-gaps-link" (click)="gapsRequested.emit()">Ver huecos</button>
+      </p>
+    }
+
+    @if (unzonedTotal() === 0) {
       <p class="detail-empty" data-testid="unzoned-empty">Todas las jugadas tienen zona.</p>
-    } @else {
+    } @else if (unzoned().length > 0) {
       <ul class="detail-list" data-testid="unzoned-list">
         @for (item of unzoned(); track item.event.id) {
           <li class="detail-item" data-testid="unzoned-item">
@@ -20,9 +28,7 @@
             </p>
             <p class="item-reason">{{ item.reasonText }}</p>
             <div class="item-actions">
-              @if (item.reason === 'GAP') {
-                <button type="button" class="detail-action" data-testid="unzoned-fix" (click)="gapRequested.emit(item)">Completar hueco</button>
-              } @else if (item.reason === 'FORBIDDEN' && item.tramo) {
+              @if (item.reason === 'FORBIDDEN' && item.tramo) {
                 <button type="button" class="detail-action" data-testid="unzoned-fix" (click)="tramoRequested.emit(item.tramo)">Abrir tramo</button>
               }
               <button type="button" class="detail-action detail-action--quiet" data-testid="unzoned-event"

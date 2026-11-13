@@ -133,6 +133,16 @@ export class ZoneAssignmentPanelComponent implements OnInit, AfterViewInit {
   }
 
   /** Cerrar la hoja inferior equivale a Esc: deselecciona (como Cancelar) y, sin nada elegido, solo la compacta. */
+  /** Lleva a «Huecos sin zona»: en móvil abre la hoja con «Más opciones»; el primer hueco queda a la vista y con el foco. */
+  showGaps(): void {
+    this.sheetOpen = true;
+    setTimeout(() => {
+      const first = this.gapsRegion?.nativeElement.querySelector<HTMLElement>('.gap-item');
+      first?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      first?.focus({ preventScroll: true });
+    });
+  }
+
   closeSheet(): void {
     if (this.hasSelection()) this.cancel();
     else this.sheetOpen = false;

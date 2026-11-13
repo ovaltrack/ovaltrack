@@ -60,8 +60,8 @@
                   </p>
                   <strong>Jugadas sin zona</strong>
                   <p data-testid="unzoned-note">
-                    Una jugada queda sin zona si ningún tramo cubre su minuto o si el tramo no admite su tipo. Tocá «sin zona» arriba para ver
-                    cada una con su motivo y llevarla a su arreglo. Tocar una celda de la cancha (también el in-goal) muestra sus jugadas y de dónde sale su zona.
+                    Una jugada queda sin zona si ningún tramo cubre su minuto o si el tramo no admite su tipo. Tocá «sin zona» arriba: las que caen
+                    en huecos van en una línea que lleva a «Huecos sin zona», y el resto aparece una por una con su motivo y su arreglo. Tocar una celda de la cancha (también el in-goal) muestra sus jugadas y de dónde sale su zona.
                   </p>
                   <strong>Rango del tramo</strong>
                   <ul data-testid="range-rules">
@@ -141,8 +141,9 @@
             <!-- Detalle al costado de la cancha: las jugadas de la celda o las que no tienen zona -->
             <app-zone-cell-detail fieldDetail
               [view]="detailView()" [cell]="shownCell()" [mode]="mapMode()"
-              [eventRows]="detailEventRows()" [tramoRows]="detailTramoRows()" [unzoned]="unzonedItems()"
-              (closed)="closeUnzoned()" (gapRequested)="onUnzonedGap($event)" (tramoRequested)="onUnzonedTramo($event)"
+              [eventRows]="detailEventRows()" [tramoRows]="detailTramoRows()"
+              [unzoned]="unzonedGroups().listed" [inGaps]="unzonedGroups().inGaps"
+              (closed)="closeUnzoned()" (gapsRequested)="onUnzonedGaps()" (tramoRequested)="onUnzonedTramo($event)"
               (eventRequested)="onUnzonedEvent($event)" />
           </app-rugby-field>
         </div>
