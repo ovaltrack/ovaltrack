@@ -804,6 +804,57 @@ describe('ZoneAssignmentPanelComponent', () => {
     });
   });
 
+  describe('tiempo cubierto con jugadas sin zona', () => {
+    const full: ZoneAssignmentResponse[] = [
+      { ...existingZone, id: 'p1', startMinute: 0, endMinute: 40 },
+      { ...existingZone, id: 'p2', period: 2, startMinute: 40, endMinute: 80 }
+    ];
+    const zoned = (id: string): MatchTimelineEventResponse => ({ ...ev(id, 1, 10), zone: { row: 2, col: 3 } });
+
+    it('sin huecos y todas las jugadas con zona dice «Partido completo»', () => {
+      render(full, [zoned('a')]);
+
+      expect(query('[data-testid="match-complete"]')?.textContent).toContain('Partido completo');
+      expect(query('[data-testid="time-covered"]')).toBeNull();
+    });
+
+    it('sin huecos pero con jugadas sin zona no dice «Partido completo»: dice cuántas quedan', () => {
+      render(full, [ev('a', 1, 10), ev('b', 1, 12), zoned('c')]);
+
+      expect(query('[data-testid="match-complete"]')).toBeNull();
+      expect(query('[data-testid="time-covered"]')?.textContent?.replace(/\s+/g, ' ')).toContain('Tiempo cubierto · 2 jugadas sin zona');
+    });
+
+    it('con una sola jugada va en singular', () => {
+      render(full, [ev('a', 1, 10)]);
+
+      expect(query('[data-testid="time-covered"]')?.textContent).toContain('1 jugada sin zona');
+    });
+
+    it('el número es un enlace que pide la lista', () => {
+      render(full, [ev('a', 1, 10)]);
+      let requested = 0;
+      component.unzonedRequested.subscribe(() => requested++);
+
+      query<HTMLButtonElement>('[data-testid="unzoned-link"]')?.click();
+
+      expect(requested).toBe(1);
+    });
+
+    it('con huecos sigue mostrando la lista de huecos y no el mensaje de tiempo cubierto', () => {
+      render([{ ...existingZone, startMinute: 0, endMinute: 10 }], [ev('a', 1, 30)]);
+
+      expect(query('[data-testid="time-covered"]')).toBeNull();
+      expect(query('[data-testid="match-complete"]')).toBeNull();
+    });
+
+    it('cuenta todas las jugadas sin zona del partido, también las que caen en un tramo que no las admite', () => {
+      render(full, [ev('a', 1, 10), ev('b', 2, 50)]);
+
+      expect(component.unzonedCount).toBe(2);
+    });
+  });
+
   describe('corte por try', () => {
     const tryEvent: MatchTimelineEventResponse = {
       id: 'try', eventTypeId: 'try', eventTypeName: 'Try', matchTime: 22 * 60 + 30, period: 1, teamPossession: 'OWN',

@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 
 /** Franja de indicadores de Zonas: eventos del partido, los que siguen sin zona y el tiempo ya zonificado. Presentacional. */
 @Component({
@@ -12,4 +12,6 @@ export class ZoneKpiStripComponent {
   readonly unzonedEvents = input<number>(0);
   /** Porcentaje (0–100) de los 80 minutos que ya tienen un tramo asignado. */
   readonly coveragePercent = input<number>(0);
+  /** Se tocó «sin zona»: la pantalla muestra esas jugadas con su motivo. */
+  readonly unzonedRequested = output<void>();
 }

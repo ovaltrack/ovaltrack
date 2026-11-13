@@ -28,19 +28,19 @@ describe('zone-deep-link', () => {
     });
 
     it('?minuto= dentro de un hueco lo precarga', () => {
-      expect(resolveZoneDeepLink({ minuto: '5' }, tramos)).toEqual({ kind: 'gap', gap: { period: 1, start: 0, end: 10 } });
-      expect(resolveZoneDeepLink({ minuto: '70' }, tramos)).toEqual({ kind: 'gap', gap: { period: 2, start: 60, end: 80 } });
+      expect(resolveZoneDeepLink({ minuto: '5' }, tramos)).toEqual({ kind: 'gap', gap: { period: 1, start: 0, end: 10 }, minute: 5 });
+      expect(resolveZoneDeepLink({ minuto: '70' }, tramos)).toEqual({ kind: 'gap', gap: { period: 2, start: 60, end: 80 }, minute: 70 });
     });
 
     it('?minuto= ya dentro de un tramo abre ese tramo; el fin es exclusivo', () => {
       expect(resolveZoneDeepLink({ minuto: '10' }, tramos)).toEqual({ kind: 'segment', segment: tramos[0] });
       expect(resolveZoneDeepLink({ minuto: '24' }, tramos)).toEqual({ kind: 'segment', segment: tramos[0] });
-      expect(resolveZoneDeepLink({ minuto: '25' }, tramos)).toEqual({ kind: 'gap', gap: { period: 1, start: 25, end: 40 } });
+      expect(resolveZoneDeepLink({ minuto: '25' }, tramos)).toEqual({ kind: 'gap', gap: { period: 1, start: 25, end: 40 }, minute: 25 });
     });
 
     it('sin tramos el hueco es todo el tiempo (el 0 y el 79 son válidos)', () => {
-      expect(resolveZoneDeepLink({ minuto: '0' }, [])).toEqual({ kind: 'gap', gap: { period: 1, start: 0, end: 40 } });
-      expect(resolveZoneDeepLink({ minuto: '79' }, [])).toEqual({ kind: 'gap', gap: { period: 2, start: 40, end: 80 } });
+      expect(resolveZoneDeepLink({ minuto: '0' }, [])).toEqual({ kind: 'gap', gap: { period: 1, start: 0, end: 40 }, minute: 0 });
+      expect(resolveZoneDeepLink({ minuto: '79' }, [])).toEqual({ kind: 'gap', gap: { period: 2, start: 40, end: 80 }, minute: 79 });
     });
 
     it('?minuto= no numérico, negativo, decimal o fuera de 0–79 es inválido', () => {

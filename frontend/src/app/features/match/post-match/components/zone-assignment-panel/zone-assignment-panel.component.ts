@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, DestroyRef, ElementRef, Input, NgZone, OnInit, ViewChild, inject, model } from '@angular/core';
+import { AfterViewInit, Component, DestroyRef, ElementRef, Input, NgZone, OnInit, ViewChild, inject, model, output } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ToastService } from 'src/app/core/services/toast.service';
@@ -63,6 +63,9 @@ export class ZoneAssignmentPanelComponent implements OnInit, AfterViewInit {
 
   /** Zona elegida en la grilla o la cancha (enlace bidireccional con la página). */
   readonly selectedCell = model<ZoneCellRef | null>(null);
+
+  /** Se tocó «jugadas sin zona» cuando el tiempo ya está cubierto: la pantalla las lista. */
+  readonly unzonedRequested = output<void>();
 
   readonly laterals = ZONE_ROW_NAMES.map((name, index) => ({ row: index + 1, name, short: ZONE_ROW_SHORT_NAMES[index] }));
   /** Alto libre para la lista de huecos; null cuando el panel no tiene alto acotado (una columna, hoja móvil). */
@@ -264,6 +267,11 @@ export class ZoneAssignmentPanelComponent implements OnInit, AfterViewInit {
     const original = this.editingId ? this.store.assignments().find(a => a.id === this.editingId) : undefined;
     const range = this.usableRange();
     return original && range ? eventsReleasedByEdit(original, range, this.store.zoneEvents()).length : 0;
+  }
+
+  /** Jugadas del partido que no tienen zona, por un hueco o porque su tramo no admite el tipo. */
+  get unzonedCount(): number {
+    return 0;
   }
 
   /** Huecos sin zona de ambos tiempos, con los eventos que hoy caen en cada uno. */

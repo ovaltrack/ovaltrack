@@ -293,3 +293,52 @@ describe('ZoneTerritoryGridComponent: in-goal solo para puntos', () => {
       .toContain('el in-goal solo tiene puntos, no admite tramos nuevos');
   });
 });
+
+describe('ZoneTerritoryGridComponent: un toque propone el segmento entre cortes', () => {
+  let fixture: ComponentFixture<ZoneTerritoryGridComponent>;
+  const selections: TerritoryGapSelection[] = [];
+  const tryCut: TramoCutMark = { eventId: 'a', eventTypeName: 'Try', period: 1, minute: 23, label: 'Try 22:30', possession: 'OWN', glyph: 'T' };
+
+  const tracks = (): HTMLElement => fixture.nativeElement.querySelector('[data-testid="territory-tracks"]');
+  const rowAt = (index: number): HTMLElement => fixture.nativeElement.querySelectorAll('[data-testid="territory-row"]')[index];
+
+  /** Clic en el minuto indicado sobre la fila de la franja 3 (campo propio). */
+  const clickAt = (minute: number): void => {
+    const rect = tracks().getBoundingClientRect();
+    const row = rowAt(3).getBoundingClientRect();
+    tracks().dispatchEvent(new MouseEvent('click', {
+      bubbles: true, clientX: rect.left + ((minute + 0.5) / 80) * rect.width, clientY: row.top + row.height / 2
+    }));
+    fixture.detectChanges();
+  };
+
+  beforeEach(async () => {
+    selections.length = 0;
+    await TestBed.configureTestingModule({ imports: [ZoneTerritoryGridComponent] }).compileComponents();
+    fixture = TestBed.createComponent(ZoneTerritoryGridComponent);
+    fixture.componentInstance.gapSelected.subscribe(selection => selections.push(selection));
+    fixture.componentRef.setInput('cuts', [tryCut]);
+    fixture.detectChanges();
+  });
+
+  it('un toque antes del corte propone desde el inicio del hueco hasta el corte', () => {
+    clickAt(10);
+
+    expect(selections).toEqual([{ period: 1, startMinute: 0, endMinute: 23, col: 3 }]);
+  });
+
+  it('un toque después del corte propone desde el corte hasta el fin del hueco', () => {
+    clickAt(30);
+
+    expect(selections).toEqual([{ period: 1, startMinute: 23, endMinute: 40, col: 3 }]);
+  });
+
+  it('sin cortes propone todo el hueco, como antes', () => {
+    fixture.componentRef.setInput('cuts', []);
+    fixture.detectChanges();
+
+    clickAt(30);
+
+    expect(selections).toEqual([{ period: 1, startMinute: 0, endMinute: 40, col: 3 }]);
+  });
+});

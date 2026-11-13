@@ -257,6 +257,11 @@ export class PostMatchZonesComponent implements OnInit, OnDestroy {
     this.mapMode.set(mode);
   }
 
+  /** Muestra al costado de la cancha las jugadas sin zona con su motivo. */
+  openUnzoned(): void {
+    // pendiente: Fase 2c frontend
+  }
+
   setPeriodFilter(filter: ZonePeriodFilter): void {
     this.periodFilter.set(filter);
   }

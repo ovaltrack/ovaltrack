@@ -320,3 +320,11 @@ export function clusterMarks<T extends { left: number }>(marks: T[], trackWidthP
   }, []);
   return groups.map(items => ({ left: items.reduce((sum, item) => sum + item.left, 0) / items.length, items }));
 }
+
+/**
+ * Segmento de un hueco que corresponde a un toque en `minute`: va del corte anterior (o del inicio del hueco) al corte
+ * siguiente (o al fin del hueco). Un tanto reinicia el juego, así que lo que sigue es otro segmento.
+ */
+export function segmentAt(gap: PeriodGap, minute: number, cuts: TramoCutMark[]): MinuteRange {
+  return { start: gap.start, end: gap.end };
+}

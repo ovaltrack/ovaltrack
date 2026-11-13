@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { By } from '@angular/platform-browser';
-import { signal } from '@angular/core';
+import { WritableSignal, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { of } from 'rxjs';
 import { PostMatchZonesComponent } from './post-match-zones.component';
@@ -43,7 +43,7 @@ describe('PostMatchZonesComponent', () => {
 
   function create(id: string | null = 'match-1'): void {
     TestBed.overrideProvider(PostMatchShellStore, {
-      useValue: { matchId: signal(id ?? ''), match: signal(match) },
+      useValue: { matchId: signal(id ?? ''), match: signal(match), lastSelectedEventId: signal<string | null>(null) },
     });
     fixture = TestBed.createComponent(PostMatchZonesComponent);
     component = fixture.componentInstance;
@@ -686,6 +686,162 @@ describe('PostMatchZonesComponent', () => {
 
       const counts = queryAll('[data-testid="territory-row-count"]').map(el => el.textContent?.trim());
       expect(counts).toEqual(['0', '0', '0', '2', '0', '0']);
+    });
+  });
+
+  describe('jugadas sin zona y detalle de la celda', () => {
+    const typed = (id: string, period: 1 | 2, minute: number, zoneCell: { row: number; col: number } | null, eventTypeId = 'scrum', eventTypeName = 'Scrum'): MatchTimelineEventResponse =>
+      ({ ...ev(id, period, minute, zoneCell), eventTypeId, eventTypeName });
+    const withUnzoned = [
+      typed('a', 1, 12, { row: 2, col: 3 }),
+      typed('hueco', 1, 35, null),
+      typed('segundo', 2, 50, null, 'tackle', 'Tackle')
+    ];
+    const kpiLink = (): HTMLButtonElement | null => query<HTMLButtonElement>('[data-testid="kpi-unzoned-link"]');
+    const items = (): HTMLElement[] => queryAll('[data-testid="unzoned-item"]');
+    const panel = (): ZoneAssignmentPanelComponent => fixture.debugElement.query(By.directive(ZoneAssignmentPanelComponent)).componentInstance;
+
+    it('el KPI «sin zona» abre la lista con el motivo de cada jugada, en orden cronológico', () => {
+      createLoaded([zone], withUnzoned);
+
+      kpiLink()?.click();
+      fixture.detectChanges();
+
+      expect(items().length).toBe(2);
+      expect(items()[0].textContent).toContain('1T 35:00');
+      expect(items()[0].textContent).toContain('Ningún tramo cubre este minuto');
+      expect(items()[1].textContent).toContain('2T 50:00');
+    });
+
+    it('el enlace del panel abre la misma lista', () => {
+      createLoaded([zone], withUnzoned);
+
+      component.openUnzoned();
+      fixture.detectChanges();
+
+      expect(query('[data-testid="unzoned-title"]')?.textContent).toContain('2 jugadas sin zona');
+    });
+
+    it('«Completar hueco» precarga el hueco de la jugada en el formulario', () => {
+      createLoaded([zone], withUnzoned);
+      kpiLink()?.click();
+      fixture.detectChanges();
+
+      items()[0].querySelector<HTMLButtonElement>('[data-testid="unzoned-fix"]')?.click();
+      fixture.detectChanges();
+
+      expect([panel().startMinute, panel().endMinute]).toEqual([25, 40]);
+    });
+
+    it('un hueco que cruza un tanto se completa solo hasta el corte que lo separa de la jugada', () => {
+      const tryEvent: MatchTimelineEventResponse = { ...typed('try', 1, 22, null, 'try', 'Try'), matchTime: 22 * 60 + 30, attributes: { zone: 'right' } };
+      createLoaded([], [tryEvent, typed('despues', 1, 30, null)]);
+      TestBed.inject(MatchZonesStore).zoneRules.set(new Map([['try', { columns: [6], rowFrom: 'zone', closesTramo: true }]]));
+      fixture.detectChanges();
+      kpiLink()?.click();
+      fixture.detectChanges();
+
+      items().find(item => item.textContent?.includes('1T 30:00'))?.querySelector<HTMLButtonElement>('[data-testid="unzoned-fix"]')?.click();
+      fixture.detectChanges();
+
+      expect([panel().startMinute, panel().endMinute]).toEqual([23, 40]);
+    });
+
+    it('«Abrir tramo» carga para editar el tramo que no admite la jugada', () => {
+      const forbidden = typed('lineout', 1, 22, null, 'lineout', 'Line-out');
+      createLoaded([{ ...zone, startMinute: 20, endMinute: 25, col: 6 }], [forbidden]);
+      kpiLink()?.click();
+      fixture.detectChanges();
+
+      items()[0].querySelector<HTMLButtonElement>('[data-testid="unzoned-fix"]')?.click();
+      fixture.detectChanges();
+
+      expect(panel().editingId).toBe('z1');
+    });
+
+    it('«Ver en Eventos» deja la jugada seleccionada y navega a la pantalla de Eventos', () => {
+      createLoaded([zone], withUnzoned);
+      const navigate = spyOn(router, 'navigate').and.resolveTo(true);
+      const shell = TestBed.inject(PostMatchShellStore) as unknown as { lastSelectedEventId: WritableSignal<string | null> };
+      kpiLink()?.click();
+      fixture.detectChanges();
+
+      items()[0].querySelector<HTMLButtonElement>('[data-testid="unzoned-event"]')?.click();
+
+      expect(shell.lastSelectedEventId()).toBe('hueco');
+      expect(navigate).toHaveBeenCalledWith(['/post-match', 'match-1']);
+    });
+
+    it('volver cierra la lista y vuelve al detalle de la celda', () => {
+      createLoaded([zone], withUnzoned);
+      kpiLink()?.click();
+      fixture.detectChanges();
+
+      query<HTMLButtonElement>('[data-testid="unzoned-close"]')?.click();
+      fixture.detectChanges();
+
+      expect(query('[data-testid="unzoned-title"]')).toBeNull();
+    });
+
+    it('tocar una celda de la cancha fija su detalle con las jugadas y el origen de la zona', () => {
+      createLoaded([zone], withUnzoned);
+
+      cell(2, 3).click();
+      fixture.detectChanges();
+
+      expect(query('[data-testid="cell-detail-title"]')?.textContent).toContain('C3');
+      expect(queryAll('[data-testid="cell-event"]').length).toBe(1);
+      expect(query('[data-testid="cell-event"]')?.textContent).toContain("Tramo 1T 10'–25'");
+    });
+
+    it('el detalle queda fijo al salir el puntero, y el puntero sobre otra celda lo cambia mientras está encima', () => {
+      createLoaded([zone], withUnzoned);
+      cell(2, 3).click();
+      fixture.detectChanges();
+
+      cell(2, 4).dispatchEvent(new Event('mouseenter'));
+      fixture.detectChanges();
+      expect(query('[data-testid="cell-detail-title"]')?.textContent).toContain('C4');
+
+      cell(2, 4).dispatchEvent(new Event('mouseleave'));
+      fixture.detectChanges();
+      expect(query('[data-testid="cell-detail-title"]')?.textContent).toContain('C3');
+    });
+
+    it('una celda del in-goal también se puede inspeccionar aunque no admita tramos', () => {
+      createLoaded([zone], [typed('p', 1, 12, { row: 2, col: 6 })]);
+
+      cell(2, 6).click();
+      fixture.detectChanges();
+
+      expect(query('[data-testid="cell-detail-title"]')?.textContent).toContain('C6');
+      expect(queryAll('[data-testid="cell-event"]').length).toBe(1);
+    });
+
+    it('en Minutos el detalle lista los tramos de la celda', () => {
+      createLoaded([zone], withUnzoned);
+      (queryAll('[data-testid="mode-filter"]').find(button => button.textContent?.trim() === 'Minutos') as HTMLElement).click();
+      fixture.detectChanges();
+
+      cell(2, 3).click();
+      fixture.detectChanges();
+
+      expect(query('[data-testid="cell-tramo"]')?.textContent?.replace(/\s+/g, ' ').trim()).toBe("1T 10'–25' · 15 min");
+    });
+
+    it('el detalle de Eventos sigue el tipo elegido, igual que el mapa', () => {
+      const mixed = [typed('a', 1, 12, { row: 2, col: 3 }), typed('b', 1, 14, { row: 2, col: 3 }, 'tackle', 'Tackle')];
+      createLoaded([zone], mixed);
+      cell(2, 3).click();
+      fixture.detectChanges();
+      expect(queryAll('[data-testid="cell-event"]').length).toBe(2);
+
+      const select = query<HTMLSelectElement>('[data-testid="type-filter"]') as HTMLSelectElement;
+      select.value = 'scrum';
+      select.dispatchEvent(new Event('change'));
+      fixture.detectChanges();
+
+      expect(queryAll('[data-testid="cell-event"]').length).toBe(1);
     });
   });
 

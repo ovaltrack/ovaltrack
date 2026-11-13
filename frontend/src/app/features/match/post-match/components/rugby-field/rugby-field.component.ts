@@ -50,6 +50,8 @@ export class RugbyFieldComponent {
   readonly linkedCell = input<ZoneCellRef | null>(null);
 
   readonly cellSelected = output<ZoneCellRef>();
+  /** Se tocó una celda (también las bloqueadas o en solo lectura): la pantalla fija su detalle. */
+  readonly cellInspected = output<ZoneCellRef>();
   /** Celda bajo el cursor o el foco (null al salir): la página resalta sus tramos. */
   readonly cellHover = output<ZoneCellRef | null>();
 

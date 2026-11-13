@@ -248,6 +248,58 @@ describe('RugbyFieldComponent', () => {
     });
   });
 
+  describe('detalle de la celda tocada', () => {
+    const inspected = (): ZoneCellRef[] => {
+      const cells: ZoneCellRef[] = [];
+      fixture.componentInstance.cellInspected.subscribe(cell => cells.push(cell));
+      return cells;
+    };
+
+    it('tocar una celda elegible avisa que se la inspecciona y que se la eligió', () => {
+      render([]);
+      const cells = inspected();
+      const selected: ZoneCellRef[] = [];
+      fixture.componentInstance.cellSelected.subscribe(cell => selected.push(cell));
+
+      cellAt(2, 3)?.click();
+
+      expect(cells).toEqual([{ row: 2, col: 3 }]);
+      expect(selected).toEqual([{ row: 2, col: 3 }]);
+    });
+
+    it('una celda bloqueada (in-goal) también se inspecciona aunque no se elija', () => {
+      fixture.componentRef.setInput('lockedCols', [1, 6]);
+      render([]);
+      const cells = inspected();
+      const selected: ZoneCellRef[] = [];
+      fixture.componentInstance.cellSelected.subscribe(cell => selected.push(cell));
+
+      cellAt(2, 6)?.click();
+
+      expect(cells).toEqual([{ row: 2, col: 6 }]);
+      expect(selected).toEqual([]);
+    });
+
+    it('en solo lectura también se inspecciona', () => {
+      fixture.componentRef.setInput('selectable', false);
+      render([]);
+      const cells = inspected();
+
+      cellAt(1, 2)?.click();
+
+      expect(cells).toEqual([{ row: 1, col: 2 }]);
+    });
+
+    it('Enter en una celda con el teclado la inspecciona igual que el toque', () => {
+      render([]);
+      const cells = inspected();
+
+      key(cellAt(3, 4), 'Enter');
+
+      expect(cells).toEqual([{ row: 3, col: 4 }]);
+    });
+  });
+
   describe('vínculo con la grilla de territorio', () => {
     it('avisa la celda bajo el cursor y cuándo se va', () => {
       render([]);

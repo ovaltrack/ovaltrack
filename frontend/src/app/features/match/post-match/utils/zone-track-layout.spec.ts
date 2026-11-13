@@ -3,7 +3,7 @@ import { ZoneEvent } from './zone-stats';
 import {
   FULL_TRACK, allGaps, blockLabel, blockLayout, isInWindow, trackWindow, countByFranja, gapAtMinute, gapsWithEventCount,
   minuteAtOffset, minuteToPercent, suggestNextRange, territoryRows, zonePoints, describePoint, tramoCuts, crossedCut, findTramoCut,
-  TramoCutMark, ZonePoint, clampToCut, kickoffCell, cutGlyph, boundingCuts, clusterMarks
+  TramoCutMark, ZonePoint, clampToCut, kickoffCell, cutGlyph, boundingCuts, clusterMarks, segmentAt
 } from './zone-track-layout';
 import { TemplateField, ZoneRule } from '../../types/event-type.types';
 import { RuleEvent, ScoringTypesById, ZoneRulesByType } from './zone-rule';
@@ -517,6 +517,34 @@ describe('zone-track-layout', () => {
 
       it('los devuelve en orden cronológico', () => {
         expect(minutes({ period: 1, startMinute: 20, endMinute: 25 }, [at(30), at(12)])).toEqual([12, 30]);
+      });
+    });
+
+    describe('segmentAt', () => {
+      const gap = { period: 1 as const, start: 20, end: 40 };
+
+      it('sin cortes adentro es todo el hueco', () => {
+        expect(segmentAt(gap, 30, [])).toEqual({ start: 20, end: 40 });
+      });
+
+      it('un toque antes del corte propone desde el inicio del hueco hasta el corte', () => {
+        expect(segmentAt(gap, 21, [cut(23)])).toEqual({ start: 20, end: 23 });
+      });
+
+      it('un toque después del corte propone desde el corte hasta el fin del hueco', () => {
+        expect(segmentAt(gap, 30, [cut(23)])).toEqual({ start: 23, end: 40 });
+      });
+
+      it('un toque justo en el minuto del corte ya es el segmento siguiente', () => {
+        expect(segmentAt(gap, 23, [cut(23)])).toEqual({ start: 23, end: 40 });
+      });
+
+      it('entre dos cortes propone solo ese segmento', () => {
+        expect(segmentAt(gap, 27, [cut(23), cut(31)])).toEqual({ start: 23, end: 31 });
+      });
+
+      it('ignora los cortes de otro tiempo y los que caen fuera del hueco', () => {
+        expect(segmentAt(gap, 30, [cut(23, 'Try 22:30', 2), cut(10), cut(40)])).toEqual({ start: 20, end: 40 });
       });
     });
 
