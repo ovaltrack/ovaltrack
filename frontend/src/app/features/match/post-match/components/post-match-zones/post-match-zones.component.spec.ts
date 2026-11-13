@@ -343,13 +343,13 @@ describe('PostMatchZonesComponent', () => {
       expect(rules).toContain('El tiempo añadido cuenta como minuto 40 (1T) y 80 (2T).');
     });
 
-    it('la ayuda explica por qué un try a las 5:11 corta el tramo en 6′ y no menciona la tira de letras', () => {
+    it('la ayuda dice hasta qué segundo llega el tramo de un try y no menciona la tira de letras', () => {
       createLoaded();
 
       query<HTMLButtonElement>('[data-testid="shortcuts-toggle"]')?.click();
       fixture.detectChanges();
 
-      expect(query('[data-testid="range-rules"]')?.textContent).toContain('un try a las 5:11 entra en el minuto 5, así que su tramo termina en 6′ y no en 5′');
+      expect(query('[data-testid="range-rules"]')?.textContent).toContain('con un try a las 5:11, el tramo llega hasta 5:59 (termina en 6′)');
       expect(query('[data-testid="points-note"]')?.textContent).not.toContain('(T try');
     });
   });

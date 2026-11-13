@@ -901,7 +901,7 @@ describe('ZoneAssignmentPanelComponent', () => {
       fixture.detectChanges();
 
       expect(component.endMinute).toBe(23);
-      expect(query('[data-testid="cut-notice"]')?.textContent?.trim()).toBe('Termina en 23′ por el Try 22:30');
+      expect(query('[data-testid="cut-notice"]')?.textContent?.trim()).toBe('El tramo llega hasta 22:59 (termina en 23′) por el Try 22:30');
       expect(rangeError()).toBe('');
       expect(query('[data-testid="cut-fix"]')).toBeNull();
       expect(saveButton().disabled).toBeFalse();
@@ -927,7 +927,7 @@ describe('ZoneAssignmentPanelComponent', () => {
       fixture.detectChanges();
 
       expect([component.startMinute, component.endMinute]).toEqual([20, 23]);
-      expect(query('[data-testid="cut-notice"]')?.textContent).toContain('Termina en 23′');
+      expect(query('[data-testid="cut-notice"]')?.textContent).toContain('llega hasta 22:59 (termina en 23′)');
     });
 
     it('el aviso desaparece al volver a escribir un rango que no cruza nada', () => {

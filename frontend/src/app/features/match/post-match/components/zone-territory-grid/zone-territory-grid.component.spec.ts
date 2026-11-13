@@ -61,8 +61,8 @@ describe('ZoneTerritoryGridComponent: puntos de zona', () => {
     render([point('a')]);
 
     const [element] = allPoints();
-    expect(element.getAttribute('aria-label')).toBe('Try 22:30 · D6 · el tramo incluye todo el minuto 22 y termina en 23′');
-    expect(element.getAttribute('title')).toBe('Try 22:30 · D6 · el tramo incluye todo el minuto 22 y termina en 23′');
+    expect(element.getAttribute('aria-label')).toBe('Try 22:30 · D6 · el tramo llega hasta 22:59 (termina en 23′)');
+    expect(element.getAttribute('title')).toBe('Try 22:30 · D6 · el tramo llega hasta 22:59 (termina en 23′)');
   });
 
   it('no es un tramo: no se puede seleccionar ni agrega bloques', () => {
@@ -122,7 +122,7 @@ describe('ZoneTerritoryGridComponent: puntos de zona', () => {
     it('sin un tramo que termine en el corte, el tooltip del punto lo dice', () => {
       render([point('a')], [tryCut]);
 
-      expect(allPoints()[0].getAttribute('title')).toBe('Try 22:30 · D6 · el corte cae al final del minuto 22, pero ningún tramo termina en 23′');
+      expect(allPoints()[0].getAttribute('title')).toBe('Try 22:30 · D6 · ningún tramo llega hasta 22:59 (terminaría en 23′)');
     });
 
     it('con un rango en edición solo se ven los cortes que toca, no los lejanos ni los vecinos', () => {

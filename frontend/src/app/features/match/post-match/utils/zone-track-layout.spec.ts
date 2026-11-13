@@ -3,7 +3,7 @@ import { ZoneEvent } from './zone-stats';
 import {
   FULL_TRACK, allGaps, blockLabel, blockLayout, isInWindow, trackWindow, countByFranja, gapAtMinute, gapsWithEventCount,
   minuteAtOffset, minuteToPercent, suggestNextRange, territoryRows, zonePoints, describePoint, tramoCuts, crossedCut, findTramoCut,
-  TramoCutMark, ZonePoint, clampToCut, kickoffCell, touchingCuts, tramoEndingAt, clusterMarks, segmentAt
+  TramoCutMark, ZonePoint, clampToCut, kickoffCell, touchingCuts, tramoEndingAt, cutReach, clusterMarks, segmentAt
 } from './zone-track-layout';
 import { TemplateField, ZoneRule } from '../../types/event-type.types';
 import { RuleEvent, ScoringTypesById, ZoneRulesByType } from './zone-rule';
@@ -303,27 +303,27 @@ describe('zone-track-layout', () => {
     const point = (extra: Partial<ZonePoint> = {}): ZonePoint =>
       ({ eventId: 'a', eventTypeName: 'Try', period: 1, col: 6, row: 3, minute: 22.5, cutMinute: 23, ...extra });
 
-    it('describe el tipo, el reloj, la celda y por qué el tramo termina en el minuto siguiente', () => {
-      expect(describePoint(point())).toBe('Try 22:30 · D6 · el tramo incluye todo el minuto 22 y termina en 23′');
+    it('describe el tipo, el reloj, la celda y hasta qué segundo llega el tramo', () => {
+      expect(describePoint(point())).toBe('Try 22:30 · D6 · el tramo llega hasta 22:59 (termina en 23′)');
     });
 
-    it('un try a las 5:11 explica que su tramo incluye el minuto 5 entero y termina en 6′', () => {
-      expect(describePoint(point({ minute: 5 + 11 / 60, cutMinute: 6 }))).toBe('Try 05:11 · D6 · el tramo incluye todo el minuto 5 y termina en 6′');
+    it('un try a las 5:11 dice que su tramo llega hasta 5:59, con el 6′ como dato secundario', () => {
+      expect(describePoint(point({ minute: 5 + 11 / 60, cutMinute: 6 }))).toBe('Try 05:11 · D6 · el tramo llega hasta 05:59 (termina en 6′)');
     });
 
     it('rellena con cero y el tiempo añadido queda en el último segundo del tiempo', () => {
-      expect(describePoint(point({ minute: 5, cutMinute: 6 }))).toBe('Try 05:00 · D6 · el tramo incluye todo el minuto 5 y termina en 6′');
-      expect(describePoint(point({ minute: 40 - 1 / 60, cutMinute: 40 }))).toBe('Try 39:59 · D6 · el tramo incluye todo el minuto 39 y termina en 40′');
+      expect(describePoint(point({ minute: 5, cutMinute: 6 }))).toBe('Try 05:00 · D6 · el tramo llega hasta 05:59 (termina en 6′)');
+      expect(describePoint(point({ minute: 40 - 1 / 60, cutMinute: 40 }))).toBe('Try 39:59 · D6 · el tramo llega hasta 39:59 (termina en 40′)');
     });
 
     it('sin fila conocida nombra la franja y aclara que falta el lateral', () => {
-      expect(describePoint(point({ row: null }))).toBe('Try 22:30 · In-goal rival (sin lateral) · el tramo incluye todo el minuto 22 y termina en 23′');
-      expect(describePoint(point({ row: null, col: 1 }))).toBe('Try 22:30 · In-goal propio (sin lateral) · el tramo incluye todo el minuto 22 y termina en 23′');
+      expect(describePoint(point({ row: null }))).toBe('Try 22:30 · In-goal rival (sin lateral) · el tramo llega hasta 22:59 (termina en 23′)');
+      expect(describePoint(point({ row: null, col: 1 }))).toBe('Try 22:30 · In-goal propio (sin lateral) · el tramo llega hasta 22:59 (termina en 23′)');
     });
 
     it('sin un tramo que termine en el corte lo dice, sin dejar de explicar el minuto', () => {
       expect(describePoint(point({ minute: 5 + 11 / 60, cutMinute: 6 }), false))
-        .toBe('Try 05:11 · D6 · el corte cae al final del minuto 5, pero ningún tramo termina en 6′');
+        .toBe('Try 05:11 · D6 · ningún tramo llega hasta 05:59 (terminaría en 6′)');
     });
 
     it('un punto que no corta no habla del tramo', () => {
@@ -506,6 +506,17 @@ describe('zone-track-layout', () => {
 
       it('los devuelve en orden cronológico', () => {
         expect(minutes({ period: 1, startMinute: 20, endMinute: 30 }, [at(28), at(21)])).toEqual([21, 28]);
+      });
+    });
+
+    describe('cutReach', () => {
+      it('dice el último segundo que cubre el tramo y deja el minuto de fin entre paréntesis', () => {
+        expect(cutReach(26)).toBe('llega hasta 25:59 (termina en 26′)');
+        expect(cutReach(6)).toBe('llega hasta 05:59 (termina en 6′)');
+      });
+
+      it('en el 2T usa el reloj acumulado del partido', () => {
+        expect(cutReach(66)).toBe('llega hasta 65:59 (termina en 66′)');
       });
     });
 
