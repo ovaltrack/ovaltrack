@@ -941,14 +941,35 @@ describe('PostMatchZonesComponent', () => {
       expect(cell(2, 3).getAttribute('aria-label')).toContain('15 min');
     });
 
-    it('en Minutos se deshabilitan los filtros de tipo y posesión y el de tiempo sigue activo', () => {
+    it('en Minutos se deshabilita solo el tipo: la posesión y el tiempo siguen activos porque filtran la grilla', () => {
       createLoaded([zone], mixed);
 
       clickMode('Minutos');
 
       expect(typeSelect().disabled).toBeTrue();
-      queryAll('[data-testid="possession-filter"]').forEach(button => expect((button as HTMLButtonElement).disabled).toBeTrue());
+      queryAll('[data-testid="possession-filter"]').forEach(button => expect((button as HTMLButtonElement).disabled).toBeFalse());
       queryAll('[data-testid="period-filter"]').forEach(button => expect((button as HTMLButtonElement).disabled).toBeFalse());
+    });
+
+    it('en Minutos la posesión sigue filtrando los conteos de la grilla de territorio', () => {
+      createLoaded([zone], [mixed[0], { ...mixed[2], teamPossession: 'OPPONENT' }]);
+      const rowCount = (col: number): string | undefined =>
+        queryAll('[data-testid="territory-row-count"]').map(el => el.textContent?.trim())[6 - col];
+
+      clickMode('Minutos');
+      (queryAll('[data-testid="possession-filter"]').find(button => button.textContent?.trim() === 'Rival') as HTMLElement).click();
+      fixture.detectChanges();
+
+      expect([rowCount(3), rowCount(4)]).toEqual(['0', '1']);
+    });
+
+    it('en Minutos la leyenda del mapa aclara que no se filtra por posesión', () => {
+      createLoaded([zone], mixed);
+      expect(query('[data-testid="heat-legend-note"]')).toBeNull();
+
+      clickMode('Minutos');
+
+      expect(query('[data-testid="heat-legend-note"]')?.textContent?.trim()).toBe('Minutos: no se filtra por posesión');
     });
 
     it('en Minutos el tipo elegido no cambia los minutos, y al volver a Eventos se conserva', () => {
