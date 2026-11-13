@@ -31,6 +31,7 @@ import com.ovaltrack.backend.event.domain.dto.event.MatchTimelineEventResponseDT
 import com.ovaltrack.backend.event.repository.EventRepository;
 import com.ovaltrack.backend.match.repository.MatchRepository;
 import com.ovaltrack.backend.zone.business.EventZoneRuleValidator;
+import com.ovaltrack.backend.zone.business.TramoTrimmer;
 import com.ovaltrack.backend.zone.repository.ZoneAssignmentRepository;
 
 import jakarta.transaction.Transactional;
@@ -54,6 +55,7 @@ public class EventService {
 	private final SubstitutionDependencyChecker substitutionDependencyChecker;
 	private final ZoneAssignmentRepository zoneAssignmentRepository;
 	private final EventZoneRuleValidator zoneRuleValidator;
+	private final TramoTrimmer tramoTrimmer;
 
 	public Collection<EventResponseDTO> findEventsByClubId(UUID clubId) {
 		if (clubService.findClubById(clubId) == null) {
@@ -153,6 +155,7 @@ public class EventService {
 			matchService.recalculateLineup(match);
 		}
 		recalculateMatchScore(match);
+		tramoTrimmer.trimAt(savedEvent);
 		return EventDTOMapper.toResponseDTO(savedEvent);
 	}
 
@@ -288,6 +291,9 @@ public class EventService {
 			matchService.recalculateLineup(event.getMatch());
 		}
 		recalculateMatchScore(event.getMatch());
+		if (changesZone(eventRequest)) {
+			tramoTrimmer.trimAt(savedEvent);
+		}
 		return EventDTOMapper.toResponseDTO(savedEvent);
 	}
 

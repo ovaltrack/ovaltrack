@@ -1,6 +1,9 @@
 package com.ovaltrack.backend.zone.business;
 
+import com.ovaltrack.backend.event.business.EventRules;
 import com.ovaltrack.backend.event.domain.Event;
+import com.ovaltrack.backend.zone.domain.ZoneQuery;
+import com.ovaltrack.backend.zone.domain.ZoneRule;
 
 /**
  * Regla única de qué eventos cortan un tramo y dónde: después de un tanteo el juego se reinicia con un saque, así que
@@ -14,11 +17,12 @@ public final class TramoCuts {
 
     /** El evento cierra el tramo: su tipo lo declara en la regla de zona y el tanteo cuenta (un Kick H errado no corta). */
     public static boolean closes(Event event) {
-        throw new UnsupportedOperationException("pendiente: Fase 2a backend");
+        ZoneRule rule = ZoneQuery.of(event).rule();
+        return rule != null && rule.cutsTramo() && EventRules.countsAsScoring(event.getEventType(), event.getAttributes());
     }
 
     /** Minuto en que termina el tramo que contiene al evento (el tiempo añadido cuenta como el último segundo del tiempo). */
     public static int endMinute(Event event) {
-        throw new UnsupportedOperationException("pendiente: Fase 2a backend");
+        return ZoneGrid.effectiveSeconds(event.getPeriod(), event.getMatchTime()) / ZoneGrid.SECONDS_PER_MINUTE + 1;
     }
 }

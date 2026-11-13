@@ -153,7 +153,7 @@ Característica: Restricción de zonas de la cancha según el tipo de evento
     Y que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
     Y que el partido tiene asignada la zona fila 2 columna 3 en el periodo 1 entre el minuto 0 y el minuto 40
     Y el entrenador agrega post-partido el evento "Try" con atributos "zone=center" para el equipo propio en el minuto 10 del periodo 1
-    Y el entrenador agrega post-partido el evento "Tackle completado" para el equipo propio en el minuto 12 del periodo 1
+    Y el entrenador agrega post-partido el evento "Tackle completado" para el equipo propio en el minuto 8 del periodo 1
     Cuando el entrenador consulta las zonas del partido
     Entonces el resumen indica 1 evento en la fila 2 columna 6
     Y el resumen indica 1 evento en la fila 2 columna 3
