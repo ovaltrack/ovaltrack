@@ -4278,46 +4278,32 @@ SET player_id = NULL
 WHERE event_type_id IN (SELECT id FROM event_types WHERE code = 'SUBSTITUTION');
 
 -- =========================================
--- CORTE DE TRAMOS POR TRY, TRY PENAL, KICK H O DROP GOAL
+-- CORTE DE TRAMOS POR TRY, TRY PENAL, KICK H O DROP GOAL CONVERTIDOS
 -- =========================================
--- Después de esos eventos el juego se reinicia, así que el tramo que los contiene termina en su minuto
--- (fin = minuto del evento + 1; el tiempo añadido cuenta como el último minuto del tiempo). Los tramos de arriba se
--- cargaron antes de esa regla: acá se parten en cada corte y las partes conservan la celda, así la cobertura y la
--- zona de las jugadas no cambian. Idempotente: un tramo que ya termina en su corte no se toca.
+-- Después de esos tanteos el juego se reinicia, así que el tramo que los contiene termina en su minuto
+-- (fin = minuto del evento + 1; el tiempo añadido cuenta como el último minuto del tiempo). Un Kick H o un drop errados
+-- no cuentan. Los tramos de arriba se cargaron antes de esa regla: acá terminan en el primer corte que cruzan y lo que
+-- sigue queda como hueco, igual que cuando el backend guarda el tanteo (TramoTrimmer): después del saque el territorio
+-- es otro, así que no se copia la zona. Idempotente: un tramo que ya termina en su corte no se toca.
 WITH cuts AS (
     SELECT DISTINCT e.match_id, e.period, LEAST(e.match_time, e.period * 2400 - 1) / 60 + 1 AS minute
     FROM events e
     JOIN event_types et ON et.id = e.event_type_id
     WHERE e.active AND e.period IN (1, 2) AND e.match_time IS NOT NULL
       AND (et.zone_rule ->> 'closesTramo')::boolean IS TRUE
+      AND et.is_scoring
+      AND NOT EXISTS (
+          SELECT 1 FROM jsonb_array_elements(et.template_event_fields) AS field
+          WHERE field -> 'effects' ? 'scoring' AND e.attributes ->> (field ->> 'key') = 'false')
 ),
-crossing AS (
-    SELECT DISTINCT z.*
+first_cut AS (
+    SELECT z.id, MIN(c.minute) AS minute
     FROM match_zone_assignments z
     JOIN cuts c ON c.match_id = z.match_id AND c.period = z.period
                AND z.start_minute < c.minute AND c.minute < z.end_minute
-),
-bounds AS (
-    SELECT z.id, z.match_id, z.period, z.zone_row, z.zone_col, b.minute
-    FROM crossing z
-    CROSS JOIN LATERAL (
-        SELECT z.start_minute AS minute
-        UNION
-        SELECT c.minute FROM cuts c
-        WHERE c.match_id = z.match_id AND c.period = z.period AND z.start_minute < c.minute AND c.minute < z.end_minute
-        UNION
-        SELECT z.end_minute
-    ) b
-),
-pieces AS (
-    SELECT match_id, period, zone_row, zone_col, minute AS start_minute,
-           LEAD(minute) OVER (PARTITION BY id ORDER BY minute) AS end_minute
-    FROM bounds
-),
-removed AS (
-    DELETE FROM match_zone_assignments WHERE id IN (SELECT id FROM crossing)
+    GROUP BY z.id
 )
-INSERT INTO match_zone_assignments (id, match_id, period, start_minute, end_minute, zone_row, zone_col)
-SELECT gen_random_uuid(), match_id, period, start_minute, end_minute, zone_row, zone_col
-FROM pieces
-WHERE end_minute IS NOT NULL;
+UPDATE match_zone_assignments z
+SET end_minute = f.minute
+FROM first_cut f
+WHERE z.id = f.id;
