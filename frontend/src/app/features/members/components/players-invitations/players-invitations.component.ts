@@ -14,13 +14,17 @@ import {
   statusDetail,
 } from './player-status';
 import { oneOf, persistedSignal } from '../../../../shared/utils/persisted-signal';
+import { AuthService } from '../../../auth/services/auth.service';
+import { PersonResponse } from '../../../person/types/person.types';
+import { canEditPersonData } from '../../types/members.types';
+import { PersonEditDialogComponent } from '../person-edit-dialog/person-edit-dialog.component';
 
 type LoadState = 'loading' | 'ready' | 'error';
 
-/** Jugadores del club con el estado de su cuenta y la acción de invitar o reenviar. */
 @Component({
   selector: 'app-players-invitations',
   standalone: true,
+  imports: [PersonEditDialogComponent],
   templateUrl: './players-invitations.component.html',
   styleUrl: './players-invitations.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -29,6 +33,7 @@ export class PlayersInvitationsComponent {
   private readonly invitationService = inject(InvitationService);
   private readonly toast = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly authService = inject(AuthService);
 
   readonly STATUS = PLAYER_STATUS_META;
   readonly FILTERS = PLAYER_FILTERS;
@@ -37,12 +42,12 @@ export class PlayersInvitationsComponent {
 
   readonly state = signal<LoadState>('loading');
   readonly players = signal<ClubPlayer[]>([]);
+  readonly editingPersonId = signal<string | null>(null);
+  readonly canEditPlayers = computed(() => canEditPersonData(this.authService.effectiveRole(), 'PLAYER'));
   readonly search = signal('');
-  /** Filtro recordado en la pestaña (recarga o volver a la pantalla); se borra al cerrar sesión. */
   readonly filter = persistedSignal<PlayerFilter>('members.players.filter', 'ALL', {
     isValid: oneOf(this.FILTERS.map(f => f.key)),
   });
-  /** Jugadores con un envío en curso: su botón queda bloqueado para evitar envíos repetidos. */
   readonly sending = signal<ReadonlySet<string>>(new Set());
 
   readonly counts = computed(() => {
@@ -104,10 +109,16 @@ export class PlayersInvitationsComponent {
         },
         error: (error: HttpErrorResponse) => {
           this.toast.error(error.error?.message ?? 'Intentá de nuevo en unos minutos.', 'No se pudo enviar la invitación');
-          // Un 409 indica que el estado cambió (p. ej. ya creó su cuenta): se refresca la tabla
           if (error.status === 409) this.load();
         },
       });
+  }
+
+  onPersonSaved(person: PersonResponse): void {
+    this.players.update(list => list.map(player => player.personId === person.id
+      ? { ...player, firstName: person.firstName, lastName: person.lastName, contactEmail: person.contactEmail }
+      : player));
+    this.editingPersonId.set(null);
   }
 
   private setSending(personId: string, sending: boolean): void {

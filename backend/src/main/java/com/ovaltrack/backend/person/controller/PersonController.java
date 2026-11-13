@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -101,8 +102,9 @@ public class PersonController {
         @ApiResponse(responseCode = "409", description = "The request is invalid or the person cannot be saved because of a business or data-integrity conflict.")
     })
     @PostMapping
-    public ResponseEntity<Object> savePerson(@Valid @RequestBody PersonCreationDTO request) {
-        return ResponseEntity.ok(personService.savePerson(request));
+    public ResponseEntity<Object> savePerson(@Valid @RequestBody PersonCreationDTO request,
+                                             Authentication authentication) {
+        return ResponseEntity.ok(personService.savePerson(request, authentication));
     }
 
     @Operation(
@@ -118,12 +120,14 @@ public class PersonController {
     )
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Person updated successfully."),
+        @ApiResponse(responseCode = "403", description = "The authenticated user cannot edit this person (other club, or a coach editing a non-player)."),
         @ApiResponse(responseCode = "409", description = "The person cannot be updated because of a business or data-integrity conflict.")
     })
     @PutMapping("/{personId}")
     public ResponseEntity<Object> updatePerson(@PathVariable UUID personId,
-                                               @Valid @RequestBody PersonUpdateDTO request) {
-        return ResponseEntity.ok(personService.updatePerson(personId, request));
+                                               @Valid @RequestBody PersonUpdateDTO request,
+                                               Authentication authentication) {
+        return ResponseEntity.ok(personService.updatePerson(personId, request, authentication));
     }
 
     @Operation(

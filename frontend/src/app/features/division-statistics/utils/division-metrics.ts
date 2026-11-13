@@ -125,3 +125,8 @@ export function formatMetricValue(value: number, unit: MetricUnit): string {
   }
   return `${value}`;
 }
+
+export function isMetricSelection(value: unknown): value is string[] {
+  const knownIds = new Set(DIVISION_METRICS.map(metric => metric.id));
+  return Array.isArray(value) && value.every(id => typeof id === 'string' && knownIds.has(id));
+}

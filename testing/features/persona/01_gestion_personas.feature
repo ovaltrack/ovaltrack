@@ -59,6 +59,24 @@ Característica: Gestión de personas
     Cuando cambia el email de la persona "persona.temporal@test.com" por "jugador.uno@test.com"
     Entonces el sistema responde con 409 y "El email de contacto ya está registrado por otra persona"
 
+  # --- PERMISOS DE EDICIÓN ---
+  # El ADMIN_CLUB edita a cualquier persona de su club; un COACH_ANALYST, solo a jugadores de las divisiones que entrena.
+
+  Escenario: El entrenador edita los datos de un jugador de su división
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Cuando guarda sin cambios los datos de la persona con email "jugador.dos@test.com"
+    Entonces el sistema responde con 200
+
+  Escenario: El entrenador no puede editar los datos del administrador del club
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Cuando guarda sin cambios los datos de la persona con email "admin_puerto@test.com"
+    Entonces el sistema responde con 403
+
+  Escenario: El administrador de otro club no puede editar los datos de un jugador ajeno
+    Dado que el administrador del club con email "admin_multiclub@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Cuando guarda sin cambios los datos de la persona con email "jugador.dos@test.com"
+    Entonces el sistema responde con 403
+
   # --- ELIMINACIÓN ---
 
   Escenario: El administrador de club elimina una persona

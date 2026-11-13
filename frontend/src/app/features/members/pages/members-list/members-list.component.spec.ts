@@ -1,7 +1,10 @@
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { MembersService } from '../../services/members.service';
-import { Member } from '../../types/members.types';
+import { Member, UserRole } from '../../types/members.types';
+import { AuthService } from '../../../auth/services/auth.service';
+import { PersonService } from '../../../../services/person.service';
 import { MembersListComponent } from './members-list.component';
 
 const member = (overrides: Partial<Member>): Member => ({
@@ -17,13 +20,19 @@ const MEMBERS: Member[] = [
 
 describe('MembersListComponent (tabla de miembros)', () => {
   let fixture: ComponentFixture<MembersListComponent>;
+  const viewerRole = signal<UserRole | null>('ADMIN_CLUB');
   const text = (selector: string) => (fixture.nativeElement as HTMLElement).querySelector(selector)?.textContent?.trim();
   const all = (selector: string) => Array.from((fixture.nativeElement as HTMLElement).querySelectorAll(selector));
 
   beforeEach(async () => {
+    viewerRole.set('ADMIN_CLUB');
     await TestBed.configureTestingModule({
       imports: [MembersListComponent],
-      providers: [{ provide: MembersService, useValue: { getMembers: () => of(MEMBERS) } }]
+      providers: [
+        { provide: MembersService, useValue: { getMembers: () => of(MEMBERS) } },
+        { provide: AuthService, useValue: { effectiveRole: viewerRole } },
+        { provide: PersonService, useValue: { getPersonById: () => of(), updatePerson: () => of() } },
+      ]
     }).compileComponents();
     fixture = TestBed.createComponent(MembersListComponent);
     fixture.componentInstance.setStatusFilter('ALL');
@@ -58,5 +67,34 @@ describe('MembersListComponent (tabla de miembros)', () => {
     fixture.componentInstance.setStatusFilter('ACTIVE');
     fixture.detectChanges();
     expect(text('.members-foot span')).toBe('Mostrando 2 de 3');
+  });
+
+  describe('editar datos de una persona', () => {
+    const rowsWithEdit = () => MEMBERS.filter(m => fixture.componentInstance.canEditData(m)).map(m => m.id);
+
+    it('el administrador del club puede editar a todos, incluidos entrenadores y administradores', () => {
+      expect(rowsWithEdit()).toEqual(['admin', 'coach', 'baja']);
+    });
+
+    it('el entrenador solo puede editar a los jugadores', () => {
+      viewerRole.set('COACH_ANALYST');
+
+      expect(rowsWithEdit()).toEqual(['baja']);
+    });
+
+    it('el menú de acciones ofrece "Editar datos" y abre el diálogo con la persona', () => {
+      const coach = MEMBERS[1];
+      fixture.componentInstance.toggleActionsMenu(coach.id, new Event('click'));
+      fixture.detectChanges();
+
+      const editButton = all('.actions-menu .action-opt').find(button => button.textContent?.includes('Editar datos')) as HTMLButtonElement;
+      editButton.click();
+
+      expect(fixture.componentInstance.editingPersonId()).toBe(coach.personId ?? null);
+    });
+
+    it('sin persona asociada no se ofrece editar', () => {
+      expect(fixture.componentInstance.canEditData(member({ personId: undefined }))).toBeFalse();
+    });
   });
 });

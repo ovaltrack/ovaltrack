@@ -1,0 +1,59 @@
+<dialog #dialog class="dialog" aria-labelledby="person-edit-title" (cancel)="onEscape($event)">
+  <h2 id="person-edit-title">Editar datos</h2>
+
+  @if (loading()) {
+    <p class="status" role="status">
+      <span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Cargando datos…
+    </p>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <div class="fields">
+        <div class="field">
+          <label class="form-label" for="person-edit-first-name">Nombre</label>
+          <input id="person-edit-first-name" class="form-control" formControlName="firstName" autocomplete="given-name"
+            [class.is-invalid]="isInvalid('firstName')" />
+          @if (isInvalid('firstName')) { <span class="field-error">El nombre es obligatorio.</span> }
+        </div>
+
+        <div class="field">
+          <label class="form-label" for="person-edit-last-name">Apellido</label>
+          <input id="person-edit-last-name" class="form-control" formControlName="lastName" autocomplete="family-name"
+            [class.is-invalid]="isInvalid('lastName')" />
+          @if (isInvalid('lastName')) { <span class="field-error">El apellido es obligatorio.</span> }
+        </div>
+
+        <div class="field">
+          <label class="form-label" for="person-edit-birth-date">Fecha de nacimiento</label>
+          <input id="person-edit-birth-date" class="form-control" type="date" formControlName="birthDate" />
+        </div>
+
+        <div class="field">
+          <label class="form-label" for="person-edit-email">Correo de contacto</label>
+          <input id="person-edit-email" class="form-control" type="email" formControlName="contactEmail" autocomplete="email"
+            [class.is-invalid]="isInvalid('contactEmail')" />
+          @if (isInvalid('contactEmail')) { <span class="field-error">El correo no tiene un formato válido.</span> }
+        </div>
+
+        <div class="field">
+          <label class="form-label" for="person-edit-phone">Teléfono de contacto</label>
+          <input id="person-edit-phone" class="form-control" type="tel" formControlName="contactPhone" autocomplete="tel" />
+        </div>
+      </div>
+
+      @if (errorMessage(); as message) {
+        <p class="error" role="alert">{{ message }}</p>
+      }
+
+      <div class="actions">
+        <button type="button" class="btn btn-outline" [disabled]="saving()" (click)="cancel.emit()">Cancelar</button>
+        <button type="submit" class="btn btn-invite" [disabled]="saving()">
+          @if (saving()) {
+            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Guardando…
+          } @else {
+            Guardar
+          }
+        </button>
+      </div>
+    </form>
+  }
+</dialog>

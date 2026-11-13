@@ -294,6 +294,15 @@
                     openMenu()?.memberId === member.id
                   ) {
                     <div class="actions-menu">
+                      @if (canEditData(member)) {
+                        <button
+                          class="action-opt"
+                          type="button"
+                          (click)="editData(member, $event)"
+                        >
+                          <i class="bi bi-pencil" aria-hidden="true"></i> Editar datos
+                        </button>
+                      }
                       @if (member.active) {
                         <button
                           class="action-opt danger"
@@ -347,3 +356,9 @@
     (save)="saveAllChanges()"
   ></app-batch-action-bar>
 }
+
+<app-person-edit-dialog
+  [personId]="editingPersonId()"
+  (saved)="onPersonSaved($event)"
+  (cancel)="editingPersonId.set(null)"
+/>

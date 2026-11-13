@@ -63,7 +63,7 @@ public class BootstrapAdminRunner implements ApplicationRunner {
         Person person = new Person();
         person.setContactEmail(adminEmail);
         PersonResponseDTO personResponse = this.personService
-                .savePerson(new PersonCreationDTO("administrador", "ovaltrack", null, adminEmail, "0123456789"));
+                .savePerson(new PersonCreationDTO("administrador", "ovaltrack", null, adminEmail, "0123456789"), null);
         person.setId(personResponse.id());
         person.setFirstName(personResponse.firstName());
         person.setLastName(personResponse.lastName());

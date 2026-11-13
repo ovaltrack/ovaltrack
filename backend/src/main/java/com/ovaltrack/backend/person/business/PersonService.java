@@ -10,6 +10,7 @@ import com.ovaltrack.backend.person.repository.PersonRepository;
 import com.ovaltrack.backend.club.domain.Club;
 import com.ovaltrack.backend.club.business.ClubService;
 import jakarta.transaction.Transactional;
+import org.springframework.security.core.Authentication;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,10 +24,13 @@ public class PersonService {
 
     private final PersonRepository personRepository;
     private final ClubService clubService;
+    private final PersonSecurityValidator personSecurityValidator;
 
-    public PersonService(PersonRepository personRepository, ClubService clubService) {
+    public PersonService(PersonRepository personRepository, ClubService clubService,
+                         PersonSecurityValidator personSecurityValidator) {
         this.personRepository = personRepository;
         this.clubService = clubService;
+        this.personSecurityValidator = personSecurityValidator;
     }
 
     public Collection<PersonResponseDTO> findAllPersons() {
@@ -56,13 +60,14 @@ public class PersonService {
     }
 
     @Transactional
-    public PersonResponseDTO savePerson(PersonCreationDTO request) {
+    public PersonResponseDTO savePerson(PersonCreationDTO request, Authentication authentication) {
         if (request.contactEmail() != null && !request.contactEmail().isBlank()
                 && personRepository.existsByContactEmail(request.contactEmail())) {
             throw new BusinessException("El email de contacto ya se encuentra registrado");
         }
 
         Person person = PersonDTOMapper.toEntity(request);
+        person.setClub(clubService.findClubEntityForAuthenticatedUser(authentication));
         person = personRepository.save(person);
         return PersonDTOMapper.toResponseDTO(person);
     }
@@ -137,11 +142,12 @@ public class PersonService {
     }
 
     @Transactional
-    public PersonResponseDTO updatePerson(UUID personId, PersonUpdateDTO request) {
+    public PersonResponseDTO updatePerson(UUID personId, PersonUpdateDTO request, Authentication authentication) {
         Person person = findPersonEntityById(personId);
         if (person == null) {
             throw new BusinessException("Persona no encontrada");
         }
+        personSecurityValidator.validateCanEditPerson(person, authentication);
 
         if (request.contactEmail() != null && !request.contactEmail().isBlank()
                 && !request.contactEmail().equalsIgnoreCase(person.getContactEmail())

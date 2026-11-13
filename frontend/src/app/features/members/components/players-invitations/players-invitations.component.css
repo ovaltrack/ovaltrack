@@ -187,6 +187,10 @@
   white-space: nowrap;
 }
 
+.pi-action .pi-btn + .pi-btn {
+  margin-left: 8px;
+}
+
 .pi-btn {
   display: inline-flex;
   gap: 8px;
@@ -243,7 +247,6 @@
     flex-basis: 100%;
   }
 
-  /* Filtros en una fila que se desliza, igual que en Cuentas y Partidos */
   .pi-filters {
     flex-wrap: nowrap;
     overflow-x: auto;
@@ -269,7 +272,6 @@
 
   .pi-table tr {
     display: grid;
-    /* División y estado comparten fila; jugador y acción van a todo el ancho */
     grid-template-columns: auto minmax(0, 1fr);
     align-items: start;
     gap: 10px;

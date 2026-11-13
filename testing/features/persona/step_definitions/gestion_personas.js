@@ -1,5 +1,6 @@
 import { When, Then } from '@cucumber/cucumber';
 import assert from 'node:assert/strict';
+import { getOvalTrackAdminToken } from '../../support/auth_helper.js';
 import { findClubIdByName } from '../../support/club_helper.js';
 import { makeHttpRequest } from '../../support/httpRequest.js';
 import { findDivisionId } from '../../support/match_helper.js';
@@ -23,6 +24,13 @@ const updatePerson = (person, changes, token) => {
   const { firstName, lastName, birthDate, contactEmail, contactPhone } = person;
   return makeHttpRequest('PUT', `person/${person.id}`, { firstName, lastName, birthDate, contactEmail, contactPhone, ...changes }, token);
 };
+
+// <==================== Permisos de edición ====================>
+
+When('guarda sin cambios los datos de la persona con email {string}', async function (email) {
+  const person = await findPersonByEmail(email, await getOvalTrackAdminToken());
+  this.response = await updatePerson(person, {}, this.token);
+});
 
 // <==================== Alta y consulta ====================>
 
