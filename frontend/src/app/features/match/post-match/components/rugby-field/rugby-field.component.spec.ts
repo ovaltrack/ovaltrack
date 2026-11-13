@@ -203,20 +203,48 @@ describe('RugbyFieldComponent', () => {
     });
   });
 
-  describe('escala de calor', () => {
+  describe('escala de calor relativa', () => {
     const legend = (): HTMLElement | null => fixture.nativeElement.querySelector('[data-testid="heat-legend"]');
+    const legendText = (): string | undefined => legend()?.textContent?.replace(/\s+/g, ' ').trim();
+    const counts = (values: number[]) => values.map((eventCount, index) => ({ row: (index % 3) + 1, col: Math.floor(index / 3) + 1, eventCount }));
 
-    it('muestra la leyenda con los cortes 0 · 1–5 · 6–15 · 16–30 · 30+', () => {
+    it('sin eventos la leyenda solo muestra el 0', () => {
       render([]);
 
-      expect(legend()?.textContent?.replace(/\s+/g, ' ')).toContain('0 1–5 6–15 16–30 30+');
+      expect(legendText()).toContain('0');
+      expect(legendText()).not.toContain('–');
     });
 
-    it('la posición en la escala depende del nivel, no del máximo del partido', () => {
-      render([{ row: 1, col: 1, eventCount: 3 }, { row: 2, col: 2, eventCount: 118 }]);
+    it('muestra los rangos reales del máximo actual, no cortes fijos', () => {
+      render(counts([1, 1, 2, 2, 3, 4, 5, 6, 7, 8, 10]));
 
-      expect(cellAt(1, 1)?.style.getPropertyValue('--heat')).toBe('0');
-      expect(cellAt(2, 2)?.style.getPropertyValue('--heat')).toBe('1');
+      expect(legendText()).toContain('0 1–2 3–4 5–7 8–10');
+    });
+
+    it('un 10 y un 1 ya no caen en el mismo tono', () => {
+      render(counts([1, 1, 2, 2, 3, 4, 5, 6, 7, 8, 10]));
+
+      expect(cellAt(1, 1)?.style.getPropertyValue('--heat')).not.toBe(cellAt(3, 4)?.style.getPropertyValue('--heat'));
+    });
+
+    it('con un solo tipo de jugada (todas las celdas en 1) el mapa tiene un solo nivel', () => {
+      render(counts([1, 1, 1]));
+
+      expect(legendText()).toContain('0 1');
+      expect(legendText()).not.toContain('–');
+    });
+
+    it('en Minutos la escala también sigue a los valores', () => {
+      fixture.componentRef.setInput('unit', 'minutes');
+      render(counts([12, 20, 25, 31, 40, 55, 60, 80, 120, 300]));
+
+      expect(legendText()).toContain('12–25 31–40 55–80 120–300');
+    });
+
+    it('el 0 de la leyenda se dibuja con el verde de la cancha vacía', () => {
+      render([]);
+
+      expect(legend()?.querySelector('.heat-swatch.is-empty')).not.toBeNull();
     });
   });
 

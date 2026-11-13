@@ -1,9 +1,9 @@
 import { ZoneAssignmentResponse } from '../../types/zone.types';
 import { ZoneEvent } from './zone-stats';
 import {
-  FULL_TRACK, allGaps, blockLabel, blockLayout, isInWindow, trackWindow, countByFranja, gapAtMinute, gapsWithEventCount, isShortBlock,
-  minuteAtOffset, minuteToPercent, suggestNextRange, territoryRows, zonePoints, describePoint, looseCuts, tramoCuts, crossedCut, findTramoCut,
-  TramoCutMark, ZonePoint, clampToCut, kickoffCell
+  FULL_TRACK, allGaps, blockLabel, blockLayout, isInWindow, trackWindow, countByFranja, gapAtMinute, gapsWithEventCount,
+  minuteAtOffset, minuteToPercent, suggestNextRange, territoryRows, zonePoints, describePoint, tramoCuts, crossedCut, findTramoCut,
+  TramoCutMark, ZonePoint, clampToCut, kickoffCell, cutGlyph, boundingCuts, clusterMarks
 } from './zone-track-layout';
 import { TemplateField, ZoneRule } from '../../types/event-type.types';
 import { RuleEvent, ScoringTypesById, ZoneRulesByType } from './zone-rule';
@@ -56,28 +56,17 @@ describe('zone-track-layout', () => {
     });
   });
 
-  describe('bloques cortos', () => {
-    it('de 1 o 2 minutos son cortos; de 3 o más, no', () => {
-      expect(isShortBlock({ startMinute: 10, endMinute: 11 })).toBeTrue();
-      expect(isShortBlock({ startMinute: 10, endMinute: 12 })).toBeTrue();
-      expect(isShortBlock({ startMinute: 10, endMinute: 13 })).toBeFalse();
-    });
-
-    it('la etiqueta es la celda completa, o solo la letra del lateral si es corto', () => {
-      expect(blockLabel(zone('a', 1, 10, 25, 3, 5))).toBe('D5');
+  describe('etiqueta del bloque', () => {
+    it('es siempre la letra del lateral, sea largo o corto: la fila de la grilla ya dice la franja', () => {
+      expect(blockLabel(zone('a', 1, 10, 25, 3, 5))).toBe('D');
       expect(blockLabel(zone('b', 1, 10, 11, 3, 5))).toBe('D');
       expect(blockLabel(zone('c', 1, 10, 12, 1, 2))).toBe('I');
+      expect(blockLabel(zone('d', 1, 10, 40, 2, 4))).toBe('C');
     });
-  });
 
-  describe('etiqueta en pantalla angosta', () => {
-    it('los bloques de menos de 4 minutos no llevan etiqueta; los de 4 o más, la celda', () => {
+    it('en pantalla angosta los bloques de menos de 4 minutos no llevan etiqueta; los de 4 o más, la letra', () => {
       expect(blockLabel(zone('a', 1, 10, 13), true)).toBe('');
-      expect(blockLabel(zone('b', 1, 10, 14), true)).toBe('C3');
-    });
-
-    it('en pantalla ancha no cambia: el corto muestra la letra del lateral', () => {
-      expect(blockLabel(zone('a', 1, 10, 12))).toBe('C');
+      expect(blockLabel(zone('b', 1, 10, 14), true)).toBe('C');
     });
   });
 
@@ -333,27 +322,6 @@ describe('zone-track-layout', () => {
     });
   });
 
-  describe('looseCuts', () => {
-    const cut = (eventId: string, minute: number): TramoCutMark => ({ eventId, eventTypeName: 'X', period: 1, minute, label: eventId, possession: 'OWN' });
-    const point = (eventId: string): ZonePoint =>
-      ({ eventId, eventTypeName: 'Try', period: 1, col: 6, row: 3, minute: 10, cutMinute: 11 });
-
-    it('deja solo los cortes cuyo evento no es un punto (Kick H, Drop goal)', () => {
-      expect(looseCuts([cut('try', 11), cut('kick', 20), cut('drop', 30)], [point('try')]).map(c => c.eventId)).toEqual(['kick', 'drop']);
-    });
-
-    it('sin puntos todos los cortes quedan sueltos y con todos los cortes como puntos no queda ninguno', () => {
-      const cuts = [cut('a', 11), cut('b', 20)];
-
-      expect(looseCuts(cuts, [])).toEqual(cuts);
-      expect(looseCuts(cuts, [point('a'), point('b')])).toEqual([]);
-    });
-
-    it('conserva el orden de los cortes', () => {
-      expect(looseCuts([cut('b', 20), cut('a', 11)], []).map(c => c.eventId)).toEqual(['b', 'a']);
-    });
-  });
-
   describe('cortes por try', () => {
     const TRY: ZoneRule = { columns: [6], rowFrom: 'zone', closesTramo: true };
     const KICK: ZoneRule = { columns: [2, 3, 4, 5], rowFrom: 'zone', closesTramo: true };
@@ -363,8 +331,8 @@ describe('zone-track-layout', () => {
     /** Campo «Resultado» del Kick H y el drop: si vale false el tanteo no suma y no reinicia el juego. */
     const RESULT: TemplateField = { key: 'wasSuccessful', label: 'Resultado', type: 'boolean', phase: 'live', required: true, effects: ['scoring'] };
     const types: ScoringTypesById = new Map([
-      ['try', { isScoring: true, templateEventFields: [] }],
-      ['kick', { isScoring: true, templateEventFields: [RESULT] }],
+      ['try', { isScoring: true, templateEventFields: [], code: 'TRY' }],
+      ['kick', { isScoring: true, templateEventFields: [RESULT], code: 'PENALTY_KICK' }],
       ['scrum', { isScoring: false, templateEventFields: [] }],
       ['tackle', { isScoring: false, templateEventFields: [] }]
     ]);
@@ -374,12 +342,12 @@ describe('zone-track-layout', () => {
     const kickAt = (id: string, seconds: number, wasSuccessful: boolean | undefined) =>
       rev(id, 'kick', 'Kick H (Penal a palos)', 1, seconds, { attributes: wasSuccessful === undefined ? {} : { wasSuccessful } });
     const cut = (minute: number, label = 'Try 22:30', period: 1 | 2 = 1, possession: TramoCutMark['possession'] = 'OWN'): TramoCutMark =>
-      ({ eventId: 'x', eventTypeName: 'Try', period, minute, label, possession });
+      ({ eventId: 'x', eventTypeName: 'Try', period, minute, label, possession, glyph: 'T' });
 
     describe('tramoCuts', () => {
       it('el try corta en el minuto siguiente al suyo y se describe con su reloj', () => {
         expect(tramoCuts([tryAt('a', 1, 22 * 60 + 30)], rules, types, 'ALL'))
-          .toEqual([{ eventId: 'a', eventTypeName: 'Try', period: 1, minute: 23, label: 'Try 22:30', possession: 'OWN' }]);
+          .toEqual([{ eventId: 'a', eventTypeName: 'Try', period: 1, minute: 23, label: 'Try 22:30', possession: 'OWN', glyph: 'T' }]);
       });
 
       it('cortan los tipos que lo declaran, también del rival; no los demás', () => {
@@ -498,6 +466,96 @@ describe('zone-track-layout', () => {
 
       it('con posesión neutral no se sabe quién saca y no propone nada', () => {
         expect(kickoffCell(cut(23, 'Try 22:30', 1, 'NEUTRAL'))).toBeNull();
+      });
+    });
+
+    describe('cutGlyph', () => {
+      it('T para el try y el try penal, P para el Kick H y D para el drop goal, según el código del catálogo', () => {
+        expect([
+          cutGlyph('TRY', 'Try'), cutGlyph('PENALTY_TRY', 'Try penal'), cutGlyph('PENALTY_KICK', 'Kick H (Penal a palos)'), cutGlyph('DROP_GOAL', 'Drop goal')
+        ]).toEqual(['T', 'T', 'P', 'D']);
+      });
+
+      it('un código desconocido o ausente usa la inicial del nombre', () => {
+        expect([cutGlyph('OTRO', 'Salida'), cutGlyph(undefined, 'penal')]).toEqual(['S', 'P']);
+      });
+    });
+
+    describe('tramoCuts: la letra de la tira', () => {
+      it('sale del código del tipo en el catálogo', () => {
+        const events = [tryAt('a', 1, 600), kickAt('b', 900, true)];
+
+        expect(tramoCuts(events, rules, types, 'ALL').map(c => c.glyph)).toEqual(['T', 'P']);
+      });
+    });
+
+    describe('boundingCuts', () => {
+      const at = (minute: number, period: 1 | 2 = 1): TramoCutMark => cut(minute, `Try ${minute}`, period);
+      const minutes = (range: { period: 1 | 2; startMinute: number; endMinute: number }, cuts: TramoCutMark[]): number[] =>
+        boundingCuts(range, cuts).map(c => c.minute);
+
+      it('devuelve el corte anterior y el siguiente al rango, no los lejanos', () => {
+        expect(minutes({ period: 1, startMinute: 20, endMinute: 25 }, [at(5), at(12), at(30), at(38)])).toEqual([12, 30]);
+      });
+
+      it('un corte justo en el borde del rango cuenta como vecino', () => {
+        expect(minutes({ period: 1, startMinute: 20, endMinute: 25 }, [at(20), at(25)])).toEqual([20, 25]);
+      });
+
+      it('incluye los cortes que el rango cruza (tramos viejos que siguen después de un tanto)', () => {
+        expect(minutes({ period: 1, startMinute: 20, endMinute: 30 }, [at(10), at(22), at(26), at(35)])).toEqual([10, 22, 26, 35]);
+      });
+
+      it('ignora los cortes del otro tiempo', () => {
+        expect(minutes({ period: 2, startMinute: 50, endMinute: 55 }, [at(23), at(60, 2)])).toEqual([60]);
+      });
+
+      it('sin cortes o sin vecinos de un lado devuelve solo lo que hay', () => {
+        expect(minutes({ period: 1, startMinute: 0, endMinute: 5 }, [])).toEqual([]);
+        expect(minutes({ period: 1, startMinute: 0, endMinute: 5 }, [at(12)])).toEqual([12]);
+      });
+
+      it('los devuelve en orden cronológico', () => {
+        expect(minutes({ period: 1, startMinute: 20, endMinute: 25 }, [at(30), at(12)])).toEqual([12, 30]);
+      });
+    });
+
+    describe('clusterMarks', () => {
+      const mark = (id: string, left: number): { id: string; left: number } => ({ id, left });
+      const ids = (clusters: { items: { id: string }[] }[]): string[][] => clusters.map(c => c.items.map(item => item.id));
+
+      it('junta las marcas a menos de 12 px y deja separadas las demás', () => {
+        // 1000 px de ancho: 1 % = 10 px
+        expect(ids(clusterMarks([mark('a', 20), mark('b', 20.5), mark('c', 40)], 1000))).toEqual([['a', 'b'], ['c']]);
+      });
+
+      it('exactamente a 12 px no se juntan', () => {
+        expect(ids(clusterMarks([mark('a', 20), mark('b', 21.2)], 1000))).toEqual([['a'], ['b']]);
+      });
+
+      it('encadena: tres marcas a 8 px una de otra forman un solo grupo', () => {
+        expect(ids(clusterMarks([mark('a', 10), mark('b', 10.8), mark('c', 11.6)], 1000))).toEqual([['a', 'b', 'c']]);
+      });
+
+      it('la posición del grupo es el promedio de sus marcas', () => {
+        expect(clusterMarks([mark('a', 20), mark('b', 21)], 1000)[0].left).toBe(20.5);
+      });
+
+      it('ordena por posición aunque lleguen desordenadas', () => {
+        expect(ids(clusterMarks([mark('c', 60), mark('a', 10), mark('b', 30)], 1000))).toEqual([['a'], ['b'], ['c']]);
+      });
+
+      it('sin ancho medido no agrupa nada', () => {
+        expect(ids(clusterMarks([mark('a', 20), mark('b', 20.01)], 0))).toEqual([['a'], ['b']]);
+      });
+
+      it('sin marcas no hay grupos', () => {
+        expect(clusterMarks([], 1000)).toEqual([]);
+      });
+
+      it('con menos ancho se juntan más: la misma separación en 300 px es 3 px', () => {
+        expect(ids(clusterMarks([mark('a', 20), mark('b', 24)], 300))).toEqual([['a', 'b']]);
+        expect(ids(clusterMarks([mark('a', 20), mark('b', 24)], 1000))).toEqual([['a'], ['b']]);
       });
     });
 

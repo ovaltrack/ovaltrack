@@ -223,6 +223,8 @@ export interface TramoCutMark {
   label: string;
   /** Quién ejecutó el tanteo: define quién saca después (el que lo recibe). */
   possession: Possession;
+  /** Letra de la tira de tanteo del eje: T (try), P (Kick H), D (drop). */
+  glyph: string;
 }
 
 /** El primer corte que un rango deja adentro y el mismo mensaje que el 409 del backend. */
@@ -246,7 +248,8 @@ export function tramoCuts(events: RuleEvent[], rules: ZoneRulesByType, types: Sc
         period,
         minute: cutMinuteOf(effectiveMatchTime(period, event.matchTime)),
         label: `${event.eventTypeName} ${formatMatchTime(event.matchTime)}`,
-        possession: event.teamPossession
+        possession: event.teamPossession,
+        glyph: cutGlyph(types.get(event.eventTypeId)?.code, event.eventTypeName)
       };
     });
 }
@@ -292,4 +295,25 @@ const KICKOFF_COLUMN: Partial<Record<Possession, number>> = { OWN: 3, OPPONENT: 
 export function kickoffCell(cut: TramoCutMark): ZoneCellRef | null {
   const col = KICKOFF_COLUMN[cut.possession];
   return col === undefined ? null : { row: KICKOFF_ROW, col };
+}
+
+/** Letra con la que se marca el corte en la tira de tanteo del eje: T (try, try penal), P (Kick H), D (drop goal). */
+export function cutGlyph(code: string | undefined, eventTypeName: string): string {
+  return '';
+}
+
+/** Cortes que rodean al rango (el último que lo precede, los que cruza y el primero que lo sigue), en orden cronológico. */
+export function boundingCuts(range: TimedRange, cuts: TramoCutMark[]): TramoCutMark[] {
+  return [];
+}
+
+/** Marcas que quedaron juntas y se dibujan como una sola; `left` es el promedio de las marcas que agrupa. */
+export interface MarkCluster<T> {
+  left: number;
+  items: T[];
+}
+
+/** Agrupa las marcas (posición en % del eje) que quedan a menos de `minGapPx` píxeles. Sin ancho medido no agrupa. */
+export function clusterMarks<T extends { left: number }>(marks: T[], trackWidthPx: number, minGapPx = 12): MarkCluster<T>[] {
+  return [];
 }

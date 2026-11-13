@@ -27,3 +27,20 @@ export function heatLevel(count: number): number {
 export function heatMix(level: number): number {
   return level <= 1 ? 0 : Math.min(level - 1, MAX_LEVEL - 1) / (MAX_LEVEL - 1);
 }
+
+/** Un nivel de la escala relativa: su rango real («3–5»), y su posición 0–1 en la mezcla ámbar → naranja. */
+export interface ScaleStep {
+  level: number;
+  label: string;
+  mix: number;
+}
+
+/** Escala de calor ajustada a los valores que se están mostrando: reparte los niveles en cuartiles del máximo actual. */
+export interface HeatScale {
+  steps: readonly ScaleStep[];
+  levelOf(count: number): number;
+}
+
+export function heatScale(values: readonly number[]): HeatScale {
+  throw new Error('no implementado');
+}

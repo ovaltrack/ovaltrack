@@ -14,7 +14,7 @@ export type RuleEvent = Pick<MatchTimelineEventResponse,
 export type ZoneRulesByType = ReadonlyMap<string, ZoneRule | null | undefined>;
 
 /** De cada tipo del catálogo, lo que decide si un evento puntúa (`isScoring` y el campo con efecto `scoring`). */
-export type ScoringTypesById = ReadonlyMap<string, Pick<BackendEventTypeResponse, 'isScoring' | 'templateEventFields'>>;
+export type ScoringTypesById = ReadonlyMap<string, Pick<BackendEventTypeResponse, 'isScoring' | 'templateEventFields'> & { code?: string }>;
 
 /** Tramo propuesto (nuevo o editado) que se quiere comprobar contra los eventos que contiene. */
 export interface RuleRange {

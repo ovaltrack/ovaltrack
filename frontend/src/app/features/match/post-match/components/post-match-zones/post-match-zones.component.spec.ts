@@ -710,6 +710,37 @@ describe('PostMatchZonesComponent', () => {
       fixture.detectChanges();
     };
 
+    it('tipo y Eventos / Minutos van en el encabezado del mapa; período y posesión quedan en la barra de la pantalla', () => {
+      createLoaded([zone], mixed);
+
+      expect(query('[data-testid="map-header"] [data-testid="type-filter"]')).not.toBeNull();
+      expect(queryAll('[data-testid="map-header"] [data-testid="mode-filter"]').length).toBe(2);
+      expect(query('[data-testid="zone-filters"] [data-testid="type-filter"]')).toBeNull();
+      expect(query('[data-testid="zone-filters"] [data-testid="mode-filter"]')).toBeNull();
+      expect(queryAll('[data-testid="zone-filters"] [data-testid="period-filter"]').length).toBe(3);
+      expect(queryAll('[data-testid="zone-filters"] [data-testid="possession-filter"]').length).toBe(3);
+    });
+
+    it('el encabezado del mapa lleva el título de lo que cuenta la cancha', () => {
+      createLoaded([zone], mixed);
+      expect(query('[data-testid="map-header"]')?.textContent).toContain('Eventos por zona');
+
+      clickMode('Minutos');
+
+      expect(query('[data-testid="map-header"]')?.textContent).toContain('Minutos por zona');
+    });
+
+    it('el tipo elegido afecta solo al mapa: los conteos de la grilla de territorio no cambian', () => {
+      createLoaded([zone], mixed);
+      const rowCounts = (): (string | undefined)[] => queryAll('[data-testid="territory-row-count"]').map(el => el.textContent?.trim());
+      const before = rowCounts();
+
+      chooseType('scrum');
+
+      expect(rowCounts()).toEqual(before);
+      expect([fieldCount(2, 3), fieldCount(2, 4)]).toEqual(['1', '1']);
+    });
+
     it('el filtro lista solo los tipos que tiene el partido, ordenados', () => {
       createLoaded([zone], mixed);
 
