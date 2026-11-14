@@ -155,10 +155,14 @@ export function teamBars(id: string, title: string, items: TeamBarItem[], colorV
   };
 }
 
-/** Sin ninguna barra que dibujar: todo sin dato o, en cantidades, todo en cero. */
+/**
+ * Sin nada que dibujar: ningún valor o, en categorías de cantidades, todo en cero (no hay nada que comparar). Una
+ * secuencia en el tiempo (columnas) en cero sí es un dato: ninguna tarjeta en cinco partidos.
+ */
 export function isEmptyBars(chart: BarChart): boolean {
   const values = present(chart.groups.flatMap(group => group.values.map(value => value.value)));
-  return values.length === 0 || (chart.unit === 'count' && values.every(value => value <= 0));
+  const allZero = chart.unit === 'count' && chart.orientation === 'horizontal' && values.every(value => value <= 0);
+  return values.length === 0 || allZero;
 }
 
 /** Las columnas muestran su valor encima solo mientras entren sin pisarse. */

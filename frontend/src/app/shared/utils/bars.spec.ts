@@ -134,6 +134,14 @@ describe('isEmptyBars', () => {
     expect(isEmptyBars(versusBars('c', 'C', [{ label: 'L', ownValue: 0, opponentValue: 0 }], names))).toBeTrue();
   });
 
+  it('una secuencia en cero (columnas) es un dato: ninguna tarjeta en el rango no es «sin datos»', () => {
+    const quiet = versusBars('e', 'E', [{ label: 'L', ownValue: 0, opponentValue: 0 }], names, { orientation: 'vertical' });
+    const unknown = versusBars('f', 'F', [{ label: 'L', ownValue: null, opponentValue: null }], names, { orientation: 'vertical' });
+
+    expect(isEmptyBars(quiet)).toBeFalse();
+    expect(isEmptyBars(unknown)).toBeTrue();
+  });
+
   it('un porcentaje en cero es un dato, no un gráfico vacío', () => {
     expect(isEmptyBars(versusBars('d', 'D', [{ label: 'L', ownValue: 0, opponentValue: null }], names, { unit: 'percent' }))).toBeFalse();
   });
