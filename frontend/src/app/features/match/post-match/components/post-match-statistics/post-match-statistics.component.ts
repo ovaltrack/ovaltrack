@@ -9,9 +9,11 @@ import { EventService } from '../../../services/event.service';
 import { RosterService } from '../../../services/roster.service';
 import { LiveCaptureService } from '../../../services/live-capture.service';
 import { StatisticCalculationService } from '../../../statistics/services/statistic-calculation.service';
+import { StatisticApiService } from '../../../statistics/services/statistic-api.service';
 import { BackendEventResponse } from '../../../types/event.types';
 import { LiveCaptureEventType } from '../../../types/event-type.types';
-import { MatchStatistics, PlayerStatistic, PlayerStatistics } from '../../../statistics/types/statistic.types';
+import { AdvancedMatchStatistics, MatchStatistics, PlayerStatistic, PlayerStatistics } from '../../../statistics/types/statistic.types';
+import { AdvancedSection, presentAdvancedStatistics } from '../../../statistics/presentation/advanced-presentation';
 import { RosterPlayerInfo } from '../../../statistics/calculators';
 import {
   formatMetric,
@@ -49,6 +51,7 @@ export class PostMatchStatisticsComponent implements OnInit, OnDestroy {
   private readonly eventService = inject(EventService);
   private readonly liveCaptureService = inject(LiveCaptureService);
   private readonly statisticService = inject(StatisticCalculationService);
+  private readonly statisticApi = inject(StatisticApiService);
   private readonly userContext = inject(UserContextService);
 
   readonly matchId = signal<string>('');
@@ -66,6 +69,12 @@ export class PostMatchStatisticsComponent implements OnInit, OnDestroy {
   private readonly events = signal<BackendEventResponse[]>([]);
   private readonly eventTypes = signal<LiveCaptureEventType[]>([]);
   private readonly roster = signal<RosterPlayerInfo[]>([]);
+  /**
+   * Estadísticas de segundo nivel del backend (posesiones, zona roja, etc.). Se piden una vez al entrar: los eventos
+   * se editan en otra pantalla. `null` si no se pudieron obtener; el resto de la página se muestra igual.
+   */
+  private readonly advanced = signal<AdvancedMatchStatistics | null>(null);
+  readonly advancedUnavailable = signal(false);
 
   /** Eventos de tipos activos: los de tipos dados de baja no se muestran ni cuentan. */
   private readonly visibleEvents = computed(() => {
@@ -86,6 +95,13 @@ export class PostMatchStatisticsComponent implements OnInit, OnDestroy {
     const types = this.eventTypes();
     if (types.length === 0) return null;
     return this.statisticService.computeMatchStatistics(this.visibleEvents(), types, 'full', this.selectedPeriod());
+  });
+
+  /** Bloques de segundo nivel del período elegido (el backend informa 1T, 2T y el partido completo). */
+  readonly advancedSections = computed<AdvancedSection[]>(() => {
+    const period = this.selectedPeriod() ?? null;
+    const stats = this.advanced()?.periods.find(candidate => candidate.period === period);
+    return stats ? presentAdvancedStatistics(stats) : [];
   });
 
   readonly scoreLines = computed<StatLine[]>(() => scoringLines(this.stats()?.groups ?? []));
@@ -199,6 +215,8 @@ export class PostMatchStatisticsComponent implements OnInit, OnDestroy {
         this.loadEvents(matchId),
         this.loadEventTypes(),
       ]);
+      // Después de los eventos: loadEvents primero sincroniza lo capturado en este dispositivo.
+      await this.loadAdvanced(matchId);
 
       this.events.set(events);
       this.roster.set(await this.loadRoster(matchId));
@@ -219,6 +237,17 @@ export class PostMatchStatisticsComponent implements OnInit, OnDestroy {
       await firstValueFrom(this.liveCaptureService.syncPendingEvents(matchId));
     } catch { /* no bloqueante: se envían en la próxima sincronización */ }
     return firstValueFrom(this.eventService.getByMatch(matchId));
+  }
+
+  private async loadAdvanced(matchId: string): Promise<void> {
+    try {
+      this.advanced.set(await firstValueFrom(this.statisticApi.getAdvancedStatistics(matchId)));
+      this.advancedUnavailable.set(false);
+    } catch (err) {
+      console.error('Error al cargar las estadísticas avanzadas del partido:', err);
+      this.advanced.set(null);
+      this.advancedUnavailable.set(true);
+    }
   }
 
   /**

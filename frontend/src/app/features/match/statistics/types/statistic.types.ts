@@ -171,3 +171,55 @@ export interface PlayerStatistics {
   columns: PlayerStatColumn[];
   players: PlayerStatistic[];
 }
+
+/** Respuesta de `GET /statistics/match/{id}/advanced`: estadísticas de segundo nivel calculadas en el backend. */
+export interface AdvancedMatchStatistics {
+  matchId: UUID;
+  /** Primer tiempo, segundo tiempo y partido completo (`period` null). */
+  periods: AdvancedPeriodStatistics[];
+}
+
+export interface AdvancedTeamCount {
+  own: number;
+  opponent: number;
+}
+
+/** `null` cuando no hay datos para calcular la tasa. */
+export interface AdvancedTeamRate {
+  own: number | null;
+  opponent: number | null;
+}
+
+/** Fila de una distribución; `key` es un valor de `PossessionOutcome` o `PossessionSource` del backend. */
+export interface CategoryCount extends AdvancedTeamCount {
+  key: string;
+}
+
+export interface AdvancedPeriodStatistics {
+  period: number | null;
+  possessions: AdvancedTeamCount;
+  pointsPerPossession: AdvancedTeamRate;
+  possessionOutcomes: CategoryCount[];
+  trySources: CategoryCount[];
+  turnoverPossessions: AdvancedTeamCount;
+  pointsFromTurnovers: AdvancedTeamCount;
+  redZone: {
+    /** `false` si el período no tiene tramos de zona cargados. */
+    available: boolean;
+    visits: AdvancedTeamCount;
+    points: AdvancedTeamCount;
+    pointsPerVisit: AdvancedTeamRate;
+  };
+  penaltiesByTerritory: {
+    ownHalf: AdvancedTeamCount;
+    opponentHalf: AdvancedTeamCount;
+    withoutZone: AdvancedTeamCount;
+  };
+  /** Bloques de 10 minutos de partido acumulados, `[fromMinute, toMinute)`. */
+  scoreByBlock: (AdvancedTeamCount & { fromMinute: number; toMinute: number })[];
+  sinBin: {
+    yellowCards: AdvancedTeamCount;
+    pointsFor: AdvancedTeamCount;
+    pointsAgainst: AdvancedTeamCount;
+  };
+}

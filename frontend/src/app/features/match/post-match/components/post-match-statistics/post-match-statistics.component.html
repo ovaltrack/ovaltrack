@@ -110,6 +110,58 @@
             </section>
           }
 
+          <!-- Segundo nivel: lo calcula el backend con la secuencia de eventos y los tramos de zona -->
+          @if (advancedUnavailable()) {
+            <section class="form-card detail-card">
+              <div class="form-card-header detail-header">
+                <h2 class="form-card-title"><i class="bi bi-speedometer2"></i> Análisis del juego</h2>
+              </div>
+              <div class="form-card-body">
+                <p class="form-card-subtitle">No se pudo obtener el análisis del juego. Volvé a abrir la pantalla para reintentar.</p>
+              </div>
+            </section>
+          }
+          @for (section of advancedSections(); track section.id) {
+            <section class="form-card detail-card">
+              <div class="form-card-header detail-header">
+                <h2 class="form-card-title"><i class="bi bi-speedometer2"></i> {{ section.title }}</h2>
+                <div class="legend" aria-hidden="true">
+                  <span class="dot dot--own"></span><span>{{ ownClubName() }}</span>
+                  <span class="dot dot--opp"></span><span>{{ opponent() }}</span>
+                </div>
+              </div>
+              <div class="form-card-body">
+                @if (section.emptyMessage) {
+                  <p class="form-card-subtitle">{{ section.emptyMessage }}</p>
+                } @else {
+                  <div class="metric-table">
+                    @for (row of section.lines; track row.label) {
+                      @if (section.bars) {
+                        <div class="compare-row">
+                          <strong class="text-own" [class.zero]="row.ownValue === 0">{{ row.own }}</strong>
+                          <div class="compare-row__mid">
+                            <span class="compare-row__label">{{ row.label }}</span>
+                            <div class="bar bar--thin">
+                              <div class="bar__fill bar__fill--own" [style.width.%]="barWidth(row.ownValue, row.opponentValue)"></div>
+                              <div class="bar__fill bar__fill--opp" [style.width.%]="100 - barWidth(row.ownValue, row.opponentValue)"></div>
+                            </div>
+                          </div>
+                          <strong class="text-opp" [class.zero]="row.opponentValue === 0">{{ row.opponent }}</strong>
+                        </div>
+                      } @else {
+                        <div class="compare-row compare-row--plain">
+                          <strong class="text-own" [class.zero]="row.ownValue === 0">{{ row.own }}</strong>
+                          <span class="compare-row__label">{{ row.label }}</span>
+                          <strong class="text-opp" [class.zero]="row.opponentValue === 0">{{ row.opponent }}</strong>
+                        </div>
+                      }
+                    }
+                  </div>
+                }
+              </div>
+            </section>
+          }
+
           @for (section of detailSections(); track section.name) {
             <section class="form-card detail-card">
               <div class="form-card-header detail-header">
