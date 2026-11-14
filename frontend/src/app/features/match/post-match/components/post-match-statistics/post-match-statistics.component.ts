@@ -30,6 +30,8 @@ import { oneOf, persistedSignal } from '../../../../../shared/utils/persisted-si
 
 export type StatsPeriodFilter = 'ALL' | 1 | 2;
 export type StatsTab = 'team' | 'players';
+/** Qué tarjetas muestra la pestaña Equipo: todo, solo el análisis (indicadores y segundo nivel) o solo las mediciones. */
+export type StatsContent = 'all' | 'analysis' | 'measurements';
 
 interface StatTile { label: string; value: string; empty: boolean; }
 interface StatGroup { title: string; icon: string; tiles: StatTile[]; }
@@ -65,6 +67,12 @@ export class PostMatchStatisticsComponent implements OnInit, OnDestroy {
   /** Se recuerda por partido en la pestaña: la clave se asigna al conocer el partido (ngOnInit). */
   readonly period = persistedSignal<StatsPeriodFilter>(null, 'ALL', { isValid: oneOf<StatsPeriodFilter>(['ALL', 1, 2]) });
   readonly selectedPlayerId = signal<string | null>(null);
+  /** Preferencia de vista: la misma en todos los partidos. */
+  readonly content = persistedSignal<StatsContent>('post-match.statistics.content', 'all', {
+    isValid: oneOf<StatsContent>(['all', 'analysis', 'measurements']),
+  });
+  readonly showAnalysis = computed(() => this.content() !== 'measurements');
+  readonly showMeasurements = computed(() => this.content() !== 'analysis');
 
   private readonly events = signal<BackendEventResponse[]>([]);
   private readonly eventTypes = signal<LiveCaptureEventType[]>([]);
@@ -196,6 +204,10 @@ export class PostMatchStatisticsComponent implements OnInit, OnDestroy {
 
   selectPlayer(playerId: string): void {
     this.selectedPlayerId.set(playerId);
+  }
+
+  setContent(content: StatsContent): void {
+    this.content.set(content);
   }
 
   switchTab(tab: StatsTab): void {
