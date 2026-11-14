@@ -5,6 +5,7 @@ import {
   MetricComparison,
   MetricKey,
   PlayerActionCount,
+  PlayerMetrics,
   PlayerMatchSummary,
   PlayerZoneMap,
 } from '../types/player-stats-api.types';
@@ -35,9 +36,9 @@ const METRIC_LABELS: Record<MetricKey, { label: string; hint: string }> = {
   tacklesMade: { label: 'Tackles completados', hint: 'por partido' },
   tackleEffectiveness: { label: 'Efectividad de tackle', hint: 'completados / intentados' },
   goalKickingEffectiveness: { label: 'Pateo a palos', hint: 'conversiones y penales convertidos' },
-  turnoversWon: { label: 'Turnovers ganados', hint: 'por partido' },
+  // El turnover no pide jugador en la carga: solo cuentan los que el analista le asignó.
+  turnoversWon: { label: 'Turnovers ganados', hint: 'por partido · solo los cargados con jugador' },
   penaltiesConceded: { label: 'Penales cometidos', hint: 'por partido · menos es mejor' },
-  handlingErrors: { label: 'Errores de manejo', hint: 'por partido · menos es mejor' },
 };
 
 const VERDICT_ICONS: Record<ComparisonVerdict, string> = {
@@ -69,6 +70,14 @@ export function formatMetricValue(value: number | null, format: MetricComparison
   if (value === null) return '—';
   if (format === 'PERCENT') return `${Math.round(value)} %`;
   return formatDecimal(value);
+}
+
+/** Detalle del KPI de tackles: efectividad con un decimal, como en la comparación y el resto de las estadísticas. */
+export function tackleDetail(metrics: Pick<PlayerMetrics, 'tacklesMade' | 'tacklesMissed'>): string {
+  const attempts = metrics.tacklesMade + metrics.tacklesMissed;
+  return attempts === 0
+    ? 'Sin tackles registrados'
+    : `${formatDecimal((metrics.tacklesMade / attempts) * 100)} % de ${attempts} intentados`;
 }
 
 export function formatDecimal(value: number): string {

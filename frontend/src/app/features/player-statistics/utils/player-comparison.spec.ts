@@ -2,6 +2,7 @@ import {
   comparisonTone,
   formatMetricValue,
   matchResult,
+  tackleDetail,
   toActionGroups,
   toComparisonRows,
   topZones,
@@ -19,6 +20,12 @@ const comparison = (overrides: Partial<MetricComparison>): MetricComparison => (
 });
 
 describe('player-comparison', () => {
+  it('tackleDetail: efectividad con un decimal, como el resto de las estadísticas', () => {
+    expect(tackleDetail({ tacklesMade: 2, tacklesMissed: 1 })).toBe('66,7 % de 3 intentados');
+    expect(tackleDetail({ tacklesMade: 3, tacklesMissed: 1 })).toBe('75 % de 4 intentados');
+    expect(tackleDetail({ tacklesMade: 0, tacklesMissed: 0 })).toBe('Sin tackles registrados');
+  });
+
   it('estar por encima es bueno salvo en métricas donde menos es mejor', () => {
     expect(comparisonTone({ verdict: 'ABOVE', higherIsBetter: true })).toBe('good');
     expect(comparisonTone({ verdict: 'ABOVE', higherIsBetter: false })).toBe('bad');

@@ -118,7 +118,7 @@ Then('la lista de partidos del jugador incluye el partido con {int} puntos y {in
 
 Then('cada métrica comparada tiene un veredicto coherente con sus valores', function () {
   const { comparisons } = this.response.body;
-  assert.equal(comparisons.length, 8);
+  assert.equal(comparisons.length, 7);
   for (const { key, playerValue, squadValue, verdict } of comparisons) {
     if (playerValue === null || squadValue === null) {
       assert.equal(verdict, 'NO_DATA', `Veredicto de "${key}" sin datos`);
