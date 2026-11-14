@@ -13,6 +13,11 @@ import {
 import { DIVISION_METRICS, DivisionMetricDef, MetricUnit, isMetricSelection } from './utils/division-metrics';
 import { persistedSignal } from '../../shared/utils/persisted-signal';
 import { ChartSeries, StatLineChartComponent } from './components/stat-line-chart/stat-line-chart.component';
+import { metricTotals } from './utils/division-totals';
+import { DonutChart } from '../../shared/utils/donut';
+import { DonutGridComponent } from '../../shared/components/donut-grid/donut-grid.component';
+import { ViewModeToggleComponent } from '../../shared/components/view-mode-toggle/view-mode-toggle.component';
+import { statsViewModeSignal } from '../../shared/components/view-mode-toggle/view-mode';
 
 type RangePreset = 'last3' | 'last6' | 'year';
 
@@ -51,7 +56,7 @@ function toIsoDate(date: Date): string {
 @Component({
   selector: 'app-division-statistics',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, StatLineChartComponent],
+  imports: [CommonModule, FormsModule, RouterLink, StatLineChartComponent, DonutGridComponent, ViewModeToggleComponent],
   templateUrl: './division-statistics.component.html',
   styleUrl: './division-statistics.component.css',
 })
@@ -81,9 +86,13 @@ export class DivisionStatisticsComponent implements OnInit {
     { isValid: isMetricSelection },
   );
 
+  /** Evolución (líneas partido a partido, lo de siempre) o totales del rango (donas). */
+  readonly viewMode = statsViewModeSignal('division-statistics.view');
+
   labels: string[] = [];
   details: string[] = [];
   charts: MetricChart[] = [];
+  totals: DonutChart[] = [];
   kpis: Kpi[] = [];
   rows: MatchRow[] = [];
 
@@ -174,8 +183,9 @@ export class DivisionStatisticsComponent implements OnInit {
 
   private buildCharts(): void {
     const matches = this.data?.matches ?? [];
-    this.charts = this.metrics
-      .filter(metric => this.isSelected(metric.id))
+    const selected = this.metrics.filter(metric => this.isSelected(metric.id));
+    this.totals = selected.flatMap(metric => metricTotals(metric, matches.map(match => match.statistics)));
+    this.charts = selected
       .map(metric => ({
         id: metric.id,
         label: metric.label,

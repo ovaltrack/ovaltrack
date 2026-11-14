@@ -53,7 +53,11 @@
       </section>
 
       <section class="ds-card">
-        <h2 class="ds-section-title">Métricas a graficar</h2>
+        <div class="ds-card-head">
+          <h2 class="ds-section-title">Métricas a graficar</h2>
+          <app-view-mode-toggle [(mode)]="viewMode" [compact]="true"
+            listLabel="Evolución" listIcon="bi-graph-up" chartLabel="Totales" chartIcon="bi-pie-chart" />
+        </div>
         <div class="ds-metric-picker">
           @for (metric of metrics; track metric.id) {
             <button type="button" class="ds-chip" [class.ds-chip-active]="isSelected(metric.id)"
@@ -66,6 +70,15 @@
 
       @if (charts.length === 0) {
         <section class="ds-card ds-empty">Elegí al menos una métrica para ver los gráficos.</section>
+      } @else if (viewMode() === 'chart') {
+        <section class="ds-card">
+          <h3 class="ds-chart-title">Totales del rango</h3>
+          <p class="ds-hint">
+            Suma de los {{ data.matches.length }} partidos del rango. En los porcentajes, promedio por partido
+            (sin contar los partidos sin dato).
+          </p>
+          <app-donut-grid [charts]="totals" />
+        </section>
       } @else {
         <section class="ds-charts">
           @for (chart of charts; track chart.id) {
