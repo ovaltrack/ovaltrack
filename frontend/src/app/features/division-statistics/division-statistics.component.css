@@ -47,6 +47,8 @@
 .ds-card-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; margin-bottom: 12px; }
 .ds-card-head .ds-section-title { margin: 0; }
 .ds-hint { margin: 0 0 18px; font-size: 0.85rem; line-height: 1.4; color: var(--text-muted); }
+/* Nota suelta entre tarjetas: la separación la da el gap de la página */
+.ds-hint--page { margin: 0; }
 .ds-metric-picker { display: flex; flex-wrap: wrap; gap: 8px; }
 
 .ds-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 16px; }

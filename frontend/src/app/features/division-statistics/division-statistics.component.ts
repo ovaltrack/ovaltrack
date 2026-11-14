@@ -13,7 +13,10 @@ import {
 import { DIVISION_METRICS, DivisionMetricDef, MetricUnit, isMetricSelection } from './utils/division-metrics';
 import { persistedSignal } from '../../shared/utils/persisted-signal';
 import { ChartSeries, StatLineChartComponent } from './components/stat-line-chart/stat-line-chart.component';
+import { StatColumnsComponent } from '../../shared/components/stat-columns/stat-columns.component';
+import { matchBars } from './utils/division-bars';
 import { metricTotals } from './utils/division-totals';
+import { BarChart } from '../../shared/utils/bars';
 import { DonutChart } from '../../shared/utils/donut';
 import { DonutGridComponent } from '../../shared/components/donut-grid/donut-grid.component';
 import { ViewModeToggleComponent } from '../../shared/components/view-mode-toggle/view-mode-toggle.component';
@@ -56,7 +59,7 @@ function toIsoDate(date: Date): string {
 @Component({
   selector: 'app-division-statistics',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, StatLineChartComponent, DonutGridComponent, ViewModeToggleComponent],
+  imports: [CommonModule, FormsModule, RouterLink, StatLineChartComponent, StatColumnsComponent, DonutGridComponent, ViewModeToggleComponent],
   templateUrl: './division-statistics.component.html',
   styleUrl: './division-statistics.component.css',
 })
@@ -88,16 +91,18 @@ export class DivisionStatisticsComponent implements OnInit {
 
   /** Evolución (líneas partido a partido, lo de siempre) o totales del rango (donas). */
   readonly viewMode = statsViewModeSignal('division-statistics.view');
-  /** La división nombra sus vistas por lo que muestran: líneas por partido o totales del rango. */
+  /** La división nombra sus vistas por lo que muestran: líneas, totales del rango o una columna por partido. */
   readonly viewOptions: readonly ViewModeOption[] = [
     { mode: 'list', label: 'Evolución', icon: 'bi-graph-up' },
     { mode: 'chart', label: 'Totales', icon: 'bi-pie-chart' },
+    { mode: 'bars', label: 'Por partido', icon: 'bi-bar-chart' },
   ];
 
   labels: string[] = [];
   details: string[] = [];
   charts: MetricChart[] = [];
   totals: DonutChart[] = [];
+  matchColumns: BarChart[] = [];
   kpis: Kpi[] = [];
   rows: MatchRow[] = [];
 
@@ -190,6 +195,7 @@ export class DivisionStatisticsComponent implements OnInit {
     const matches = this.data?.matches ?? [];
     const selected = this.metrics.filter(metric => this.isSelected(metric.id));
     this.totals = selected.flatMap(metric => metricTotals(metric, matches.map(match => match.statistics)));
+    this.matchColumns = selected.map(metric => matchBars(metric, matches.map(match => match.statistics), this.labels, this.details));
     this.charts = selected
       .map(metric => ({
         id: metric.id,

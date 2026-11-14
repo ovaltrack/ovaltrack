@@ -78,6 +78,19 @@
           </p>
           <app-donut-grid [charts]="totals" />
         </section>
+      } @else if (viewMode() === 'bars') {
+        <p class="ds-hint ds-hint--page">
+          Un grupo de columnas por partido, en orden de fecha, con los mismos colores que las líneas. Los partidos
+          sin dato no tienen columna; el rival de cada uno está en la tabla de abajo.
+        </p>
+        <section class="ds-charts">
+          @for (chart of matchColumns; track chart.id) {
+            <article class="ds-card ds-chart-card">
+              <h3 class="ds-chart-title">{{ chart.title }}</h3>
+              <app-stat-columns [chart]="chart" />
+            </article>
+          }
+        </section>
       } @else {
         <section class="ds-charts">
           @for (chart of charts; track chart.id) {
