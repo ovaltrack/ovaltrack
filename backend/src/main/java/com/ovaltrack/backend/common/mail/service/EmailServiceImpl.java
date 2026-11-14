@@ -1,93 +1,54 @@
 package com.ovaltrack.backend.common.mail.service;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.MailAuthenticationException;
-import org.springframework.mail.MailException;
-import org.springframework.mail.MailSendException;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import com.ovaltrack.backend.common.config.exceptions.BusinessException;
 import com.ovaltrack.backend.common.mail.dto.EmailDTO;
+import com.ovaltrack.backend.common.mail.dto.OutgoingMail;
+import com.ovaltrack.backend.common.mail.transport.MailTransport;
 import com.ovaltrack.backend.person.domain.Person;
 
 import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
+import lombok.RequiredArgsConstructor;
 
+/**
+ * Arma el contenido de cada correo con Thymeleaf y delega el envío en el {@link MailTransport} activo.
+ * Si el envío falla, deja pasar la {@link com.ovaltrack.backend.common.config.exceptions.MailDeliveryException}.
+ */
 @Service
+@RequiredArgsConstructor
 public class EmailServiceImpl implements EmailService {
 
-    private final JavaMailSender javaMailSender;
+    private final MailTransport transport;
     private final TemplateEngine templateEngine;
+
     @Value("${invitation.url}")
     private String url;
     @Value("${password-reset.url}")
     private String passwordResetUrl;
 
-    public EmailServiceImpl(final JavaMailSender javaMailSender, final TemplateEngine templateEngine) {
-        this.javaMailSender = javaMailSender;
-        this.templateEngine = templateEngine;
-    }
-
     @Override
     public void sendEmail(EmailDTO email) throws MessagingException {
-        try {
-            MimeMessage message = javaMailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF8");
-            helper.setTo(email.getTo());
-            helper.setSubject(email.getSubject());
-            // helper.setText(email.getContent());
-            Context context = new Context();
-            context.setVariable("message", email.getContent());
-
-            String contentHTML = templateEngine.process("email", context);
-
-            helper.setText(contentHTML, true);
-            javaMailSender.send(message);
-
-        } catch (MailAuthenticationException e) {
-            throw new BusinessException(
-                    "Error de Autentificacion, credenciales del email.properties invalidas: " + e.getMessage());
-        } catch (MailSendException e) {
-            throw new BusinessException("Error al enviar el email: " + e.getMessage());
-        } catch (MailException e) {
-            throw new BusinessException("Error al enviar el correo: " + e.getMessage());
-        }
+        Context context = new Context();
+        context.setVariable("message", email.getContent());
+        transport.send(new OutgoingMail(email.getTo(), null, email.getSubject(), render("email", context)));
     }
 
     @Override
     public void sendInvitation(Person person, String token) throws MessagingException {
-        try {
-            if (token == null)
-                throw new BusinessException("El token vino nulo");
-            if (person == null ||
-                    person.getContactEmail() == null)
-                throw new BusinessException("La persona vino nula");
+        if (token == null)
+            throw new BusinessException("El token vino nulo");
+        if (person == null || person.getContactEmail() == null)
+            throw new BusinessException("La persona vino nula");
 
-            MimeMessage message = javaMailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF8");
-            helper.setTo(person.getContactEmail());
-            helper.setSubject("Unite a Ovaltrack!");
-            Context context = setVariables(person, token);
-
-            String contentHTML = templateEngine.process("email", context);
-
-            helper.setText(contentHTML, true);
-            javaMailSender.send(message);
-
-        } catch (MailAuthenticationException e) {
-            throw new BusinessException(
-                    "Error de Autentificacion, credenciales del email.properties invalidas: " + e.getMessage());
-        } catch (MailSendException e) {
-            throw new BusinessException("Error al enviar el email: " + e.getMessage());
-        } catch (MailException e) {
-            throw new BusinessException("Error al enviar el correo: " + e.getMessage());
-        } catch (Exception e) {
-            throw new BusinessException("Error al enviar el correo" + e.getMessage());
-        }
+        transport.send(new OutgoingMail(
+                person.getContactEmail(),
+                fullName(person),
+                "Unite a Ovaltrack!",
+                render("email", setVariables(person, token))));
     }
 
     @Override
@@ -97,42 +58,41 @@ public class EmailServiceImpl implements EmailService {
             throw new BusinessException("El destinatario vino vacío");
         if (rawToken == null || rawToken.isBlank())
             throw new BusinessException("El token vino vacío");
-        try {
-            MimeMessage message = javaMailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF8");
-            helper.setTo(to);
-            helper.setSubject("Restablecé tu contraseña de OvalTrack");
 
-            Context context = new Context();
-            context.setVariable("userName", userName);
-            context.setVariable("userEmail", to);
-            context.setVariable("expiresIn", expiresIn);
-            context.setVariable("urlReset", String.format("%s?token=%s", this.passwordResetUrl, rawToken));
+        Context context = new Context();
+        context.setVariable("userName", userName);
+        context.setVariable("userEmail", to);
+        context.setVariable("expiresIn", expiresIn);
+        context.setVariable("urlReset", String.format("%s?token=%s", this.passwordResetUrl, rawToken));
 
-            helper.setText(templateEngine.process("password-reset", context), true);
-            javaMailSender.send(message);
-        } catch (MailException e) {
-            throw new BusinessException("Error al enviar el correo: " + e.getMessage());
-        }
+        transport.send(new OutgoingMail(
+                to,
+                userName,
+                "Restablecé tu contraseña de OvalTrack",
+                render("password-reset", context)));
     }
 
     private Context setVariables(Person person, String token) {
-        if (person == null)
-            throw new IllegalArgumentException("Persona vino nula");
-        if (token == null || token.isBlank())
+        if (token.isBlank())
             throw new IllegalArgumentException("El token vino nula o vacia");
-        
-        String userName = person.getFirstName() + " " + person.getLastName();
+
         Context context = new Context();
-        context.setVariable("userName", userName);
+        context.setVariable("userName", fullName(person));
         context.setVariable("clubName", person.getClub().getName());
         context.setVariable("userEmail", person.getContactEmail());
         context.setVariable("urlInvitation", getUrlInvitationWithToken(token));
         return context;
     }
 
+    private String fullName(Person person) {
+        return person.getFirstName() + " " + person.getLastName();
+    }
+
     private String getUrlInvitationWithToken(String token) {
         return String.format("%s?%s=%s", this.url, "token", token);
     }
 
+    private String render(String template, Context context) {
+        return templateEngine.process(template, context);
+    }
 }
