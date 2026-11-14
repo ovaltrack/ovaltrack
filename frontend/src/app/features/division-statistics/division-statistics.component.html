@@ -55,8 +55,7 @@
       <section class="ds-card">
         <div class="ds-card-head">
           <h2 class="ds-section-title">Métricas a graficar</h2>
-          <app-view-mode-toggle [(mode)]="viewMode" [compact]="true"
-            listLabel="Evolución" listIcon="bi-graph-up" chartLabel="Totales" chartIcon="bi-pie-chart" />
+          <app-view-mode-toggle [(mode)]="viewMode" [options]="viewOptions" [compact]="true" />
         </div>
         <div class="ds-metric-picker">
           @for (metric of metrics; track metric.id) {

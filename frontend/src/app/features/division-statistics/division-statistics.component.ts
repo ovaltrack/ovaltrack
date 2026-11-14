@@ -17,7 +17,7 @@ import { metricTotals } from './utils/division-totals';
 import { DonutChart } from '../../shared/utils/donut';
 import { DonutGridComponent } from '../../shared/components/donut-grid/donut-grid.component';
 import { ViewModeToggleComponent } from '../../shared/components/view-mode-toggle/view-mode-toggle.component';
-import { statsViewModeSignal } from '../../shared/components/view-mode-toggle/view-mode';
+import { ViewModeOption, statsViewModeSignal } from '../../shared/components/view-mode-toggle/view-mode';
 
 type RangePreset = 'last3' | 'last6' | 'year';
 
@@ -88,6 +88,11 @@ export class DivisionStatisticsComponent implements OnInit {
 
   /** Evolución (líneas partido a partido, lo de siempre) o totales del rango (donas). */
   readonly viewMode = statsViewModeSignal('division-statistics.view');
+  /** La división nombra sus vistas por lo que muestran: líneas por partido o totales del rango. */
+  readonly viewOptions: readonly ViewModeOption[] = [
+    { mode: 'list', label: 'Evolución', icon: 'bi-graph-up' },
+    { mode: 'chart', label: 'Totales', icon: 'bi-pie-chart' },
+  ];
 
   labels: string[] = [];
   details: string[] = [];

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, input, model } from '@angular/core';
-import { StatsViewMode } from './view-mode';
+import { STATS_VIEW_OPTIONS, StatsViewMode, ViewModeOption } from './view-mode';
 
-/** Botón para cambiar cómo se ven las estadísticas de la pantalla (lista o gráficos). Se usa con `[(mode)]`. */
+/** Botón para cambiar cómo se ven las estadísticas de la pantalla (lista, donas o barras). Se usa con `[(mode)]`. */
 @Component({
   selector: 'app-view-mode-toggle',
   standalone: true,
@@ -11,10 +11,7 @@ import { StatsViewMode } from './view-mode';
 })
 export class ViewModeToggleComponent {
   readonly mode = model.required<StatsViewMode>();
-  readonly listLabel = input('Lista');
-  readonly listIcon = input('bi-list-ul');
-  readonly chartLabel = input('Gráficos');
-  readonly chartIcon = input('bi-pie-chart');
+  readonly options = input<readonly ViewModeOption[]>(STATS_VIEW_OPTIONS);
   /** En celular muestra solo los íconos (para barras de filtros con poco lugar). */
   readonly compact = input(false);
 }

@@ -1,10 +1,8 @@
 <div class="view-toggle" [class.view-toggle--compact]="compact()" role="group" aria-label="Visualización">
-  <button type="button" class="view-pill" [class.active]="mode() === 'list'" [attr.aria-pressed]="mode() === 'list'"
-          [attr.aria-label]="listLabel()" (click)="mode.set('list')">
-    <i class="bi {{ listIcon() }}" aria-hidden="true"></i><span class="view-pill__text">{{ listLabel() }}</span>
-  </button>
-  <button type="button" class="view-pill" [class.active]="mode() === 'chart'" [attr.aria-pressed]="mode() === 'chart'"
-          [attr.aria-label]="chartLabel()" (click)="mode.set('chart')">
-    <i class="bi {{ chartIcon() }}" aria-hidden="true"></i><span class="view-pill__text">{{ chartLabel() }}</span>
-  </button>
+  @for (option of options(); track option.mode) {
+    <button type="button" class="view-pill" [class.active]="mode() === option.mode" [attr.aria-pressed]="mode() === option.mode"
+            [attr.aria-label]="option.label" (click)="mode.set(option.mode)">
+      <i class="bi {{ option.icon }}" aria-hidden="true"></i><span class="view-pill__text">{{ option.label }}</span>
+    </button>
+  }
 </div>
