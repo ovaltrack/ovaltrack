@@ -3,10 +3,6 @@
   <!-- 1. HUD integrado (§3.2): marca, estado del período, partido y controles -->
   <header class="hud-bar">
     <div class="hud-bar__brand">
-      <img
-        class="brand-logo"
-        [src]="currentTheme() === 'light' ? 'assets/brand/OvalTrack-fondo-claro.png' : 'assets/brand/OvalTrack-fondo-oscuro.png'"
-        alt="OvalTrack" />
       <span class="badge-tech">
         <i class="ti ti-clock-pause" aria-hidden="true"></i>
         Entretiempo
@@ -37,7 +33,7 @@
 
       <button
         type="button"
-        class="icon-button"
+        class="icon-button theme-button"
         (click)="toggleTheme()"
         [title]="currentTheme() === 'light' ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'"
         [attr.aria-label]="currentTheme() === 'light' ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'">
