@@ -13,7 +13,8 @@ import { FollowUpChoice, LiveCaptureEventType, PossessionAfter, TemplateField } 
 import { LocalMatchEvent } from '../types/event.types';
 import { MatchRosterPlayer } from '../types/roster.types';
 import {
-  Team, countsAsScoring, followUpChoices, liveFields, opposite, possessionRule, resolveActor, scoringTeam,
+  Team, countsAsScoring, followUpChoices, isJerseyNumberField, liveFields, opposite, possessionRule, resolveActor,
+  scoringTeam,
 } from '../statistics/calculators/event-rules';
 import { LiveCaptureService } from '../services/live-capture.service';
 import { MatchService } from '../services/match.service';
@@ -1115,9 +1116,7 @@ export class CargaEnVivoComponent implements OnInit, OnDestroy {
   }
 
   private isPlayerField(field: TemplateField): boolean {
-    return field.key === 'playerOutNumber'
-      || field.key === 'playerInNumber'
-      || field.key === 'playerNumber';
+    return isJerseyNumberField(field);
   }
 
   substitutionPlayers(field: TemplateField): SlotView[] {

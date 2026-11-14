@@ -14,7 +14,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ovaltrack.backend.statistic.business.StatisticService;
+import com.ovaltrack.backend.statistic.business.advanced.AdvancedStatisticService;
 import com.ovaltrack.backend.statistic.business.player.PlayerStatisticService;
+import com.ovaltrack.backend.statistic.domain.dto.AdvancedMatchStatisticsDTO;
 import com.ovaltrack.backend.statistic.domain.dto.PlayerMatchStatisticsDTO;
 import com.ovaltrack.backend.statistic.domain.dto.PlayerStatisticsDTO;
 import com.ovaltrack.backend.statistic.domain.dto.DivisionStatisticsDTO;
@@ -34,6 +36,7 @@ public class StatisticController {
 
     private final StatisticService statisticService;
     private final PlayerStatisticService playerStatisticService;
+    private final AdvancedStatisticService advancedStatisticService;
 
     @Operation(
         summary = "Get period statistics for a match",
@@ -51,6 +54,25 @@ public class StatisticController {
             @RequestParam(required = false, defaultValue = "1") Integer period,
             Authentication authentication) {
         return ResponseEntity.ok(statisticService.calculatePeriodStatistics(matchId, period, authentication));
+    }
+
+    @Operation(
+        summary = "Get the second-level statistics of a finished match",
+        description = "Returns possessions, try sources, red-zone efficiency, penalties by territory, points by "
+            + "10-minute block and yellow-card impact for the first half, the second half and the whole match (period null)."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Statistics returned successfully."),
+        @ApiResponse(responseCode = "403", description = "The user has no access to the division of the match."),
+        @ApiResponse(responseCode = "404", description = "Match not found."),
+        @ApiResponse(responseCode = "409", description = "The match is not finished.")
+    })
+    @GetMapping("/match/{matchId}/advanced")
+    @PreAuthorize("hasAnyRole('ADMIN_CLUB', 'COACH_ANALYST', 'ADMIN_OVALTRACK')")
+    public ResponseEntity<AdvancedMatchStatisticsDTO> getAdvancedMatchStatistics(
+            @PathVariable UUID matchId,
+            Authentication authentication) {
+        return ResponseEntity.ok(advancedStatisticService.calculate(matchId, authentication));
     }
 
     @Operation(

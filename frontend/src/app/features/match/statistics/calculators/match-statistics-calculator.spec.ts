@@ -119,6 +119,25 @@ describe('computeMatchStatistics', () => {
     expect(distance?.kind === 'number' && distance.average).toEqual({ own: 30, opponent: null });
   });
 
+  it('no suma ni promedia los números de camiseta de un cambio', () => {
+    const substitution = buildEventType({
+      id: 'substitution', code: 'SUBSTITUTION', name: 'Cambio', groupName: 'Neutro', actor: 'CHOOSE', statView: ['basic'],
+      templateEventFields: [
+        { key: 'playerOutNumber', label: 'Jugador que sale', type: 'number', phase: 'live', required: true, min: 1 },
+        { key: 'playerInNumber', label: 'Jugador que entra', type: 'number', phase: 'live', required: true, min: 1 },
+      ],
+    });
+    const changes = [
+      event({ eventTypeId: 'substitution', teamPossession: 'OWN', attributes: { playerOutNumber: 4, playerInNumber: 16 } }),
+      event({ eventTypeId: 'substitution', teamPossession: 'OWN', attributes: { playerOutNumber: 6, playerInNumber: 17 } }),
+    ];
+
+    const stat = typeStat(computeMatchStatistics(changes, [substitution], 'full'), 'SUBSTITUTION');
+
+    expect(stat?.count).toEqual({ own: 2, opponent: 0 });
+    expect(stat?.fields).toEqual([]);
+  });
+
   it('un tipo dado de baja solo aparece si tiene eventos', () => {
     const retired = buildEventType({ id: 'retired', code: 'RETIRED', name: 'Viejo', groupName: 'Neutro', isActive: false, statView: ['basic'] });
 
@@ -129,11 +148,5 @@ describe('computeMatchStatistics', () => {
 
     expect(typeStat(withoutEvents, 'RETIRED')).toBeUndefined();
     expect(typeStat(withEvents, 'RETIRED')?.count).toEqual({ own: 1, opponent: 0 });
-  });
-
-  it('no calcula las métricas combinadas deshabilitadas (tackles y turnovers)', () => {
-    for (const view of ['basic', 'intermediate', 'full'] as const) {
-      expect(computeMatchStatistics(events, types, view).derived).withContext(view).toEqual([]);
-    }
   });
 });

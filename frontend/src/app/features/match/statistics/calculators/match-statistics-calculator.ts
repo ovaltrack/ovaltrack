@@ -11,7 +11,7 @@ import {
   StatView,
   TeamValue,
 } from '../types/statistic.types';
-import { countsAsScoring, eventTeam, scoringTeam, Team } from './event-rules';
+import { countsAsScoring, eventTeam, isJerseyNumberField, scoringTeam, Team } from './event-rules';
 import { computeDerivedMetrics } from './derived-metrics';
 import { computeOwnPossessionPercentage } from './possession-calculator';
 import { fieldsInView, isScoringField, isTypeInView } from './stat-view';
@@ -127,7 +127,8 @@ interface TypeAccumulator {
 
 function typeAccumulator(type: LiveCaptureEventType, view: StatView): TypeAccumulator {
   const fields = fieldsInView(type, view)
-    .filter(field => !isScoringField(field))
+    // El campo de efecto scoring ya está en convertidos; un número de camiseta no es una cantidad.
+    .filter(field => !isScoringField(field) && !isJerseyNumberField(field))
     .map(fieldAccumulator)
     .filter((accumulator): accumulator is FieldAccumulator => accumulator !== null);
 

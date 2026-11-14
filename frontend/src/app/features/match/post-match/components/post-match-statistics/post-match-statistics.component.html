@@ -33,6 +33,16 @@
         <i class="bi bi-people"></i><span>Jugadores</span>
       </button>
     </div>
+
+    <!-- En Equipo, elegir qué tarjetas ver: análisis (indicadores y segundo nivel), mediciones o todo -->
+    @if (activeTab() === 'team') {
+      <span class="filter-divider" aria-hidden="true"></span>
+      <div class="filter-group" role="group" aria-label="Tarjetas">
+        <button type="button" class="filter-pill" [class.active]="content() === 'all'" [attr.aria-pressed]="content() === 'all'" (click)="setContent('all')">Todo</button>
+        <button type="button" class="filter-pill" [class.active]="content() === 'analysis'" [attr.aria-pressed]="content() === 'analysis'" (click)="setContent('analysis')">Análisis</button>
+        <button type="button" class="filter-pill" [class.active]="content() === 'measurements'" [attr.aria-pressed]="content() === 'measurements'" (click)="setContent('measurements')">Mediciones</button>
+      </div>
+    }
   </div>
 
   @if (stats(); as s) {
@@ -53,8 +63,9 @@
               </div>
               <div class="scoreboard__center">
                 <div class="possession-labels">
-                  <span class="text-own">Posesión {{ s.ownPossessionPercentage }}%</span>
-                  <span class="text-opp">{{ opponentPossession() }}% Posesión</span>
+                  <span class="text-own">{{ s.ownPossessionPercentage }}%</span>
+                  <span class="possession-caption">Posesión (tiempo de juego)</span>
+                  <span class="text-opp">{{ opponentPossession() }}%</span>
                 </div>
                 <div class="bar" role="progressbar" [attr.aria-valuenow]="s.ownPossessionPercentage" aria-valuemin="0" aria-valuemax="100">
                   <div class="bar__fill bar__fill--own" [style.width.%]="s.ownPossessionPercentage"></div>
@@ -87,7 +98,7 @@
 
         <!-- Detalle por grupo del catálogo (todos los campos, live y post) -->
         <div class="detail-grid">
-          @if (s.derived.length > 0) {
+          @if (showAnalysis() && s.derived.length > 0) {
             <section class="form-card detail-card">
               <div class="form-card-header detail-header">
                 <h2 class="form-card-title"><i class="bi bi-speedometer2"></i> Indicadores</h2>
@@ -110,7 +121,60 @@
             </section>
           }
 
-          @for (section of detailSections(); track section.name) {
+          <!-- Segundo nivel: lo calcula el backend con la secuencia de eventos y los tramos de zona -->
+          @if (showAnalysis() && advancedUnavailable()) {
+            <section class="form-card detail-card">
+              <div class="form-card-header detail-header">
+                <h2 class="form-card-title"><i class="bi bi-speedometer2"></i> Análisis del juego</h2>
+              </div>
+              <div class="form-card-body">
+                <p class="form-card-subtitle">No se pudo obtener el análisis del juego. Volvé a abrir la pantalla para reintentar.</p>
+              </div>
+            </section>
+          }
+          @for (section of showAnalysis() ? advancedSections() : []; track section.id) {
+            <section class="form-card detail-card">
+              <div class="form-card-header detail-header">
+                <h2 class="form-card-title"><i class="bi bi-speedometer2"></i> {{ section.title }}</h2>
+                <div class="legend" aria-hidden="true">
+                  <span class="dot dot--own"></span><span>{{ ownClubName() }}</span>
+                  <span class="dot dot--opp"></span><span>{{ opponent() }}</span>
+                </div>
+              </div>
+              <div class="form-card-body">
+                <p class="form-card-subtitle advanced-hint">{{ section.hint }}</p>
+                @if (section.emptyMessage) {
+                  <p class="form-card-subtitle">{{ section.emptyMessage }}</p>
+                } @else {
+                  <div class="metric-table">
+                    @for (row of section.lines; track row.label) {
+                      @if (section.bars) {
+                        <div class="compare-row">
+                          <strong class="text-own" [class.zero]="row.ownValue === 0">{{ row.own }}</strong>
+                          <div class="compare-row__mid">
+                            <span class="compare-row__label">{{ row.label }}</span>
+                            <div class="bar bar--thin">
+                              <div class="bar__fill bar__fill--own" [style.width.%]="barWidth(row.ownValue, row.opponentValue)"></div>
+                              <div class="bar__fill bar__fill--opp" [style.width.%]="100 - barWidth(row.ownValue, row.opponentValue)"></div>
+                            </div>
+                          </div>
+                          <strong class="text-opp" [class.zero]="row.opponentValue === 0">{{ row.opponent }}</strong>
+                        </div>
+                      } @else {
+                        <div class="compare-row compare-row--plain">
+                          <strong class="text-own" [class.zero]="row.ownValue === 0">{{ row.own }}</strong>
+                          <span class="compare-row__label">{{ row.label }}</span>
+                          <strong class="text-opp" [class.zero]="row.opponentValue === 0">{{ row.opponent }}</strong>
+                        </div>
+                      }
+                    }
+                  </div>
+                }
+              </div>
+            </section>
+          }
+
+          @for (section of showMeasurements() ? detailSections() : []; track section.name) {
             <section class="form-card detail-card">
               <div class="form-card-header detail-header">
                 <h2 class="form-card-title"><i class="bi bi-bar-chart"></i> {{ section.name }}</h2>

@@ -16,13 +16,12 @@ public record PlayerMetricsDTO(
     int dropGoals,
     int penaltiesConceded,
     int turnoversWon,
-    int handlingErrors,
     int yellowCards,
     int redCards,
     /** Total de eventos del jugador, de cualquier tipo. */
     int actions
 ) {
-    public static final PlayerMetricsDTO EMPTY = new PlayerMetricsDTO(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    public static final PlayerMetricsDTO EMPTY = new PlayerMetricsDTO(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
     public PlayerMetricsDTO plus(PlayerMetricsDTO other) {
         return new PlayerMetricsDTO(
@@ -37,7 +36,6 @@ public record PlayerMetricsDTO(
             dropGoals + other.dropGoals,
             penaltiesConceded + other.penaltiesConceded,
             turnoversWon + other.turnoversWon,
-            handlingErrors + other.handlingErrors,
             yellowCards + other.yellowCards,
             redCards + other.redCards,
             actions + other.actions);

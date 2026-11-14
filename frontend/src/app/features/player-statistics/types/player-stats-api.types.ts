@@ -13,7 +13,6 @@ export interface PlayerMetrics {
   dropGoals: number;
   penaltiesConceded: number;
   turnoversWon: number;
-  handlingErrors: number;
   yellowCards: number;
   redCards: number;
   /** Total de eventos del jugador, de cualquier tipo. */
@@ -27,8 +26,7 @@ export type MetricKey =
   | 'tackleEffectiveness'
   | 'goalKickingEffectiveness'
   | 'turnoversWon'
-  | 'penaltiesConceded'
-  | 'handlingErrors';
+  | 'penaltiesConceded';
 
 export type MetricFormat = 'PER_MATCH' | 'PERCENT';
 export type ComparisonVerdict = 'ABOVE' | 'EQUAL' | 'BELOW' | 'NO_DATA';

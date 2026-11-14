@@ -6,80 +6,52 @@ import org.springframework.stereotype.Component;
 
 import com.ovaltrack.backend.event.domain.Event;
 import com.ovaltrack.backend.event.domain.EventPossession;
+import com.ovaltrack.backend.statistic.business.advanced.PlayRules;
 import com.ovaltrack.backend.statistic.domain.dto.PeriodStatisticDTO;
 
 /**
  * Estrategia encargada de calcular el tanteador y conteo de anotaciones (tries, conversiones, penales y drops).
+ *
+ * <p>Usa las mismas reglas que el marcador: el tipo se identifica por su {@code code}, los puntos salen del catálogo,
+ * un pateo con {@code wasSuccessful = false} no suma ni cuenta como convertido, y los puntos se acreditan al equipo
+ * que anota (un evento NEUTRAL sin jugador no suma a nadie). El try penal cuenta como try.
  */
 @Component
 public class ScoreStatisticStrategy implements PeriodStatisticStrategy {
 
     @Override
     public void calculate(Collection<Event> periodEvents, PeriodStatisticDTO.Builder builder) {
-        int ownScore = 0;
-        int opponentScore = 0;
-        int ownTries = 0;
-        int opponentTries = 0;
-        int ownConversions = 0;
-        int opponentConversions = 0;
-        int ownPenalties = 0;
-        int opponentPenalties = 0;
-        int ownDropGoals = 0;
-        int opponentDropGoals = 0;
+        TeamCounter score = new TeamCounter();
+        TeamCounter tries = new TeamCounter();
+        TeamCounter conversions = new TeamCounter();
+        TeamCounter penalties = new TeamCounter();
+        TeamCounter dropGoals = new TeamCounter();
 
         for (Event event : periodEvents) {
-            EventPossession possession = event.getTeamPossession();
-
-            switch (event.getEventTypeName()) {
-                case "Try" -> {
-                    if (possession == EventPossession.OWN) {
-                        ownTries++;
-                        ownScore += 5;
-                    } else {
-                        opponentTries++;
-                        opponentScore += 5;
-                    }
-                }
-                case "Conversión", "Conversion" -> {
-                    if (possession == EventPossession.OWN) {
-                        ownConversions++;
-                        ownScore += 2;
-                    } else {
-                        opponentConversions++;
-                        opponentScore += 2;
-                    }
-                }
-                case "Penal a los palos" -> {
-                    if (possession == EventPossession.OWN) {
-                        ownPenalties++;
-                        ownScore += 3;
-                    } else {
-                        opponentPenalties++;
-                        opponentScore += 3;
-                    }
-                }
-                case "Drop gol" -> {
-                    if (possession == EventPossession.OWN) {
-                        ownDropGoals++;
-                        ownScore += 3;
-                    } else {
-                        opponentDropGoals++;
-                        opponentScore += 3;
-                    }
-                }
-                default -> {}
+            int points = PlayRules.points(event);
+            EventPossession team = PlayRules.scoringTeam(event);
+            if (points == 0 || team == null) {
+                continue;
+            }
+            score.add(team, points);
+            switch (PlayRules.code(event)) {
+                case "TRY", "PENALTY_TRY" -> tries.add(team, 1);
+                case "CONVERSION" -> conversions.add(team, 1);
+                case "PENALTY_KICK" -> penalties.add(team, 1);
+                case "DROP_GOAL" -> dropGoals.add(team, 1);
+                default -> { }
             }
         }
 
-        builder.ownScore(ownScore)
-               .opponentScore(opponentScore)
-               .ownTries(ownTries)
-               .opponentTries(opponentTries)
-               .ownConversions(ownConversions)
-               .opponentConversions(opponentConversions)
-               .ownPenalties(ownPenalties)
-               .opponentPenalties(opponentPenalties)
-               .ownDropGoals(ownDropGoals)
-               .opponentDropGoals(opponentDropGoals);
+        builder.ownScore(score.own)
+               .opponentScore(score.opponent)
+               .ownTries(tries.own)
+               .opponentTries(tries.opponent)
+               .ownConversions(conversions.own)
+               .opponentConversions(conversions.opponent)
+               .ownPenalties(penalties.own)
+               .opponentPenalties(penalties.opponent)
+               .ownDropGoals(dropGoals.own)
+               .opponentDropGoals(dropGoals.opponent);
     }
 }

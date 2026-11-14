@@ -14,12 +14,11 @@ import { PlayerActionsCardComponent } from './components/player-actions-card/pla
 import {
   PlayerMatchStatisticsResponse,
   PlayerMatchSummary,
-  PlayerMetrics,
   PlayerStatisticsQuery,
   PlayerStatisticsResponse,
 } from './types/player-stats-api.types';
 import { MatchResult, PlayerKpi } from './types/player-statistics.types';
-import { formatDecimal, matchResult, toActionGroups, toComparisonRows } from './utils/player-comparison';
+import { formatDecimal, matchResult, tackleDetail, toActionGroups, toComparisonRows } from './utils/player-comparison';
 
 /** Carga con estado explícito: la pantalla distingue cargando, listo y error sin banderas sueltas. */
 type Load<T> = { status: 'loading' } | { status: 'ready'; data: T } | { status: 'error'; message: string };
@@ -31,11 +30,6 @@ const RESULT_WORDS: Record<MatchResult, string> = { win: 'Ganado', loss: 'Perdid
 
 function initialsOf(fullName: string): string {
   return fullName.split(' ').filter(Boolean).slice(0, 2).map(part => part[0].toUpperCase()).join('');
-}
-
-function tackleDetail(metrics: PlayerMetrics): string {
-  const attempts = metrics.tacklesMade + metrics.tacklesMissed;
-  return attempts === 0 ? 'Sin tackles registrados' : `${Math.round((metrics.tacklesMade / attempts) * 100)} % de ${attempts} intentados`;
 }
 
 /**
@@ -149,7 +143,7 @@ export class PlayerStatisticsComponent {
       { label: 'Puntos', value: `${match.metrics.points}`, detail: 'Conseguidos por el jugador' },
       { label: 'Tries', value: `${match.metrics.tries}`, detail: 'Apoyados' },
       { label: 'Tackles', value: `${match.metrics.tacklesMade}`, detail: tackleDetail(match.metrics) },
-      { label: 'Turnovers', value: `${match.metrics.turnoversWon}`, detail: 'Ganados' },
+      { label: 'Turnovers', value: `${match.metrics.turnoversWon}`, detail: 'Ganados (solo los cargados con jugador)' },
       { label: 'Acciones', value: `${match.metrics.actions}`, detail: 'Eventos con el jugador' },
     ];
   });

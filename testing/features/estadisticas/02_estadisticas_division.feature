@@ -23,6 +23,29 @@ Característica: Estadísticas de una división
       | opponentScore | 5     |
       | ownTries      | 2     |
 
+  Escenario: Las estadísticas de la división reconocen los tipos del catálogo y los pateos errados
+    Dado que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
+    Y que se han registrado los siguientes eventos en el partido:
+      | tipo_evento            | posesion | tiempo_segundos | periodo | atributos           |
+      | Try penal              | OWN      | 300             | 1       |                     |
+      | Kick H (Penal a palos) | OWN      | 900             | 1       | wasSuccessful=true  |
+      | Conversión             | OWN      | 1200            | 1       | wasSuccessful=false |
+      | Drop goal              | OPPONENT | 1500            | 1       | wasSuccessful=true  |
+      | Penal / Infracción     | OPPONENT | 1800            | 1       |                     |
+      | Tarjeta Amarilla       | OWN      | 2100            | 1       |                     |
+    Cuando consulta las estadísticas de la division "Primera" del día del partido
+    Entonces el sistema responde con 200
+    Y las estadísticas del partido de la división incluyen:
+      | campo                     | valor |
+      | ownScore                  | 10    |
+      | opponentScore             | 3     |
+      | ownTries                  | 1     |
+      | ownPenalties              | 1     |
+      | ownConversions            | 0     |
+      | opponentDropGoals         | 1     |
+      | opponentPenaltiesConceded | 1     |
+      | ownYellowCards            | 1     |
+
   Escenario: Un rango que no contiene la fecha del partido lo excluye
     Dado que existe un partido finalizado para la división "Primera" contra "Bigornia Club"
     Cuando consulta las estadísticas de la division "Primera" del día siguiente al partido

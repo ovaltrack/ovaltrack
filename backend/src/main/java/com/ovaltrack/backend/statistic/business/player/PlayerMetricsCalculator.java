@@ -33,7 +33,7 @@ public class PlayerMetricsCalculator {
     public PlayerMetricsDTO metrics(Collection<Event> playerEvents) {
         int points = 0, tries = 0, tacklesMade = 0, tacklesMissed = 0;
         int conversionsMade = 0, conversionAttempts = 0, penaltyKicksMade = 0, penaltyKickAttempts = 0;
-        int dropGoals = 0, penaltiesConceded = 0, turnoversWon = 0, handlingErrors = 0, yellowCards = 0, redCards = 0;
+        int dropGoals = 0, penaltiesConceded = 0, turnoversWon = 0, yellowCards = 0, redCards = 0;
 
         for (Event event : playerEvents) {
             EventType type = event.getEventType();
@@ -61,7 +61,6 @@ public class PlayerMetricsCalculator {
                 }
                 case "PENALTY_CONCEDED" -> penaltiesConceded++;
                 case "TURNOVER_WON" -> turnoversWon++;
-                case "HANDLING_ERROR" -> handlingErrors++;
                 case "YELLOW_CARD" -> yellowCards++;
                 case "RED_CARD" -> redCards++;
                 default -> { }
@@ -69,7 +68,7 @@ public class PlayerMetricsCalculator {
         }
 
         return new PlayerMetricsDTO(points, tries, tacklesMade, tacklesMissed, conversionsMade, conversionAttempts,
-                penaltyKicksMade, penaltyKickAttempts, dropGoals, penaltiesConceded, turnoversWon, handlingErrors,
+                penaltyKicksMade, penaltyKickAttempts, dropGoals, penaltiesConceded, turnoversWon,
                 yellowCards, redCards, playerEvents.size());
     }
 
@@ -116,7 +115,6 @@ public class PlayerMetricsCalculator {
                 squad.conversionsMade() + squad.penaltyKicksMade(), squad.conversionAttempts() + squad.penaltyKickAttempts()));
         result.add(perMatch("turnoversWon", PlayerMetricsDTO::turnoversWon, true, player, playerAppearances, squad, squadAppearances));
         result.add(perMatch("penaltiesConceded", PlayerMetricsDTO::penaltiesConceded, false, player, playerAppearances, squad, squadAppearances));
-        result.add(perMatch("handlingErrors", PlayerMetricsDTO::handlingErrors, false, player, playerAppearances, squad, squadAppearances));
         return result;
     }
 

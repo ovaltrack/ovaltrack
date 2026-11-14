@@ -1,6 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { ToastService } from '../../../../core/services/toast.service';
 import { InvitationService } from '../../../invitation/service/invitation.service';
@@ -24,7 +25,7 @@ type LoadState = 'loading' | 'ready' | 'error';
 @Component({
   selector: 'app-players-invitations',
   standalone: true,
-  imports: [PersonEditDialogComponent],
+  imports: [PersonEditDialogComponent, RouterLink],
   templateUrl: './players-invitations.component.html',
   styleUrl: './players-invitations.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
