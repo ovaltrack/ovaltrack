@@ -138,6 +138,7 @@ Si algo no coincide, **el código manda**. Corregir el doc cuando se detecte:
 - Responder en español. Commits en español siguiendo el estilo existente (`feat:`, `update(...)`, `refactor(...)`).
 - Antes de proponer cambios, verificar en el código que clases/archivos/endpoints citados existan.
 - Cambios mínimos y enfocados; no crear archivos de documentación salvo que se pidan.
+- Subagentes (herramienta Agent): lanzarlos siempre con `model: "sonnet"` y `effort: "medium"`, salvo que se pida otra cosa.
 
 ## 12. Zonas de cancha (post-partido)
 
