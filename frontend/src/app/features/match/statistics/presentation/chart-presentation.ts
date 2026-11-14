@@ -88,7 +88,7 @@ export function possessionDonut(ownPercentage: number, names: VersusNames): Donu
     { ownValue: ownPercentage, opponentValue: opponentPercentage, own: `${ownPercentage}%`, opponent: `${opponentPercentage}%` },
     names
   );
-  return { ...chart, center: { value: `${ownPercentage}%`, label: 'propia' } };
+  return { ...chart, center: { value: `${ownPercentage}%`, label: 'propia' }, showPercent: false };
 }
 
 /** Puntos de cada equipo repartidos por tipo de tanto (try, conversión, penal, drop). */

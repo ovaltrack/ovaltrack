@@ -26,6 +26,8 @@ export interface DonutChart {
   center: { value: string; label: string };
   /** `share` reparte un total entre categorías; `gauge` muestra un porcentaje sobre 100. */
   variant: 'share' | 'gauge';
+  /** `false` oculta el porcentaje de la leyenda cuando el valor ya es un porcentaje (p. ej. la posesión). */
+  showPercent?: boolean;
 }
 
 /** Porción lista para dibujar con `stroke-dasharray` y `stroke-dashoffset`. */

@@ -54,6 +54,11 @@ describe('scoreCharts', () => {
     expect(charts[0].slices.map(slice => slice.value)).toEqual([61.5, 38.5]);
   });
 
+  it('no repite el porcentaje en la leyenda de la posesión: el valor ya lo es', () => {
+    expect(charts[0].showPercent).toBeFalse();
+    expect(charts[1].showPercent).toBeUndefined();
+  });
+
   it('reparte los puntos de cada equipo por tipo de tanto, solo del equipo que tiene puntos', () => {
     const own = charts.find(chart => chart.id === 'points-own');
     const rival = charts.find(chart => chart.id === 'points-rival');

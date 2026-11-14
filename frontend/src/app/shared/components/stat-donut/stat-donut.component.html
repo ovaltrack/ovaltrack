@@ -1,5 +1,5 @@
 <figure class="donut">
-  <figcaption class="donut__title">{{ chart().title }}</figcaption>
+  <figcaption class="donut__title" [attr.title]="chart().title">{{ chart().title }}</figcaption>
 
   <div class="donut__body">
     <div class="donut__ring" role="img" [attr.aria-label]="description()">
@@ -27,11 +27,13 @@
     @if (showLegend()) {
       <ul class="donut__legend" aria-hidden="true">
         @for (segment of segments(); track segment.label) {
-          <li class="donut__item">
+          <li class="donut__item" [class.donut__item--no-percent]="chart().showPercent === false">
             <span class="donut__swatch" [style.background]="segment.color"></span>
             <span class="donut__label" [attr.title]="segment.label">{{ segment.label }}</span>
             <strong class="donut__amount">{{ segment.display ?? segment.value }}</strong>
-            <span class="donut__percent">{{ segment.percent }} %</span>
+            @if (chart().showPercent !== false) {
+              <span class="donut__percent">{{ segment.percent }} %</span>
+            }
           </li>
         }
       </ul>
