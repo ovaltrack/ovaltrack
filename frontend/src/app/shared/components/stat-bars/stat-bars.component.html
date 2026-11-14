@@ -1,11 +1,13 @@
 @if (isEmpty()) {
   <p class="bars__empty">Sin datos</p>
 } @else {
-  <div class="bars" [class.bars--single]="single()" role="img" [attr.aria-label]="description()">
+  <div class="bars" [class.bars--single]="single()" [class.bars--bare]="bare()" role="img" [attr.aria-label]="description()">
     <ul class="bars__rows">
       @for (row of rows(); track row.label) {
         <li class="bars__row">
-          <span class="bars__label">{{ row.label }}</span>
+          @if (row.label) {
+            <span class="bars__label">{{ row.label }}</span>
+          }
           <div class="bars__lines">
             @for (line of row.lines; track line.series) {
               <div class="bars__line">

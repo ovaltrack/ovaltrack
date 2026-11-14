@@ -15,6 +15,7 @@ export interface BarValue {
 
 /** Una categoría (barras horizontales) o un partido o bloque de tiempo (columnas). */
 export interface BarGroup {
+  /** Vacía cuando el título del gráfico ya nombra la única fila (una cantidad de propio contra rival). */
   label: string;
   /** Texto largo para el `title` de una columna (p. ej. fecha y rival). */
   detail?: string;
@@ -69,7 +70,7 @@ const PERCENT_MAX = 100;
 const MIN_COUNT_MAX = 4;
 const NO_VALUE = '—';
 
-const rounded = (value: number): number => Math.round(value * 10) / 10;
+const oneDecimal = (value: number): number => Math.round(value * 10) / 10;
 
 const present = (values: (number | null)[]): number[] => values.filter((value): value is number => value !== null);
 
@@ -90,7 +91,7 @@ const formatAxis = (value: number, unit: BarUnit): string => (unit === 'percent'
 /** Marcas del eje: cero, la mitad y el máximo. */
 export function scaleTicks(chart: Pick<BarChart, 'max' | 'unit'>): ScaleTick[] {
   return [0, 0.5, 1].map(ratio => {
-    const value = rounded(chart.max * ratio);
+    const value = oneDecimal(chart.max * ratio);
     return { value, label: formatAxis(value, chart.unit), percent: ratio * 100 };
   });
 }
@@ -103,7 +104,7 @@ export function barPercent(value: number | null, max: number): number {
 
 const defaultDisplay = (value: number | null, unit: BarUnit): string => {
   if (value === null) return NO_VALUE;
-  return unit === 'percent' ? `${rounded(value)}%` : `${value}`;
+  return unit === 'percent' ? `${oneDecimal(value)}%` : `${value}`;
 };
 
 function barValue(series: string, value: number | null, display: string | undefined, unit: BarUnit, colorVar: string): BarValue {
@@ -165,16 +166,19 @@ export function showsColumnValues(chart: BarChart): boolean {
   return chart.groups.reduce((total, group) => total + group.values.length, 0) <= MAX_LABELED_COLUMN_VALUES;
 }
 
+/** Un grupo en texto: «categoría valor» con una serie, «categoría: serie valor, serie valor» con varias; sin etiqueta, solo los valores. */
+function describeGroup(group: BarGroup): string {
+  const single = group.values.length === 1;
+  const values = single ? group.values[0].display : group.values.map(value => `${value.series} ${value.display}`).join(', ');
+  if (!group.label) return values;
+  return single ? `${group.label} ${values}` : `${group.label}: ${values}`;
+}
+
 /** Texto para lectores de pantalla: las barras son un dibujo y sus valores visibles se ocultan para no repetirlos. */
 export function describeBars(chart: BarChart): string {
   const heading = chart.team ? `${chart.title} de ${chart.team.name}` : chart.title;
   if (isEmptyBars(chart)) return `${heading}: sin datos`;
 
   const scale = chart.unit === 'percent' ? ' (de 0 a 100 %)' : '';
-  const parts = chart.groups.map(group =>
-    group.values.length === 1
-      ? `${group.label} ${group.values[0].display}`
-      : `${group.label}: ${group.values.map(value => `${value.series} ${value.display}`).join(', ')}`
-  );
-  return `${heading}${scale}: ${parts.join('; ')}`;
+  return `${heading}${scale}: ${chart.groups.map(describeGroup).join('; ')}`;
 }

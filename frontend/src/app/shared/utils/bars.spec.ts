@@ -171,6 +171,12 @@ describe('describeBars', () => {
     expect(describeBars(chart)).toBe('Pateo: Conversiones 2 de 3; Penales 1');
   });
 
+  it('sin etiqueta de grupo escribe solo los valores: el título ya nombra la fila', () => {
+    const chart = versusBars('v', 'Visitas', [{ label: '', ownValue: 3, opponentValue: 1 }], names);
+
+    expect(describeBars(chart)).toBe('Visitas: Puerto Madryn 3, Rival 1');
+  });
+
   it('dice «sin datos» si no hay nada que dibujar', () => {
     expect(describeBars(versusBars('e', 'Penales', [], names))).toBe('Penales: sin datos');
   });

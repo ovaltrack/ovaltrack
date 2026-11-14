@@ -45,6 +45,10 @@
   .bars__row { grid-template-columns: var(--label-col) minmax(0, 1fr); align-items: center; column-gap: 16px; }
   .bars__axis { display: grid; grid-template-columns: var(--label-col) minmax(0, 1fr); column-gap: 16px; }
   .bars__axis-spacer { display: block; }
+  /* Sin etiquetas no hay columna para ellas: ni en las filas ni en el eje */
+  .bars--bare .bars__row { grid-template-columns: minmax(0, 1fr); }
+  .bars--bare .bars__axis { display: block; }
+  .bars--bare .bars__axis-spacer { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

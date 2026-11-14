@@ -20,6 +20,8 @@ export class StatBarsComponent {
   readonly description = computed(() => describeBars(this.chart()));
   /** Una sola serie por categoría (acciones de un jugador): barras un poco más gruesas. */
   readonly single = computed(() => this.chart().groups.every(group => group.values.length === 1));
+  /** Ninguna fila lleva etiqueta (el título del gráfico ya la nombra): las barras ocupan todo el ancho. */
+  readonly bare = computed(() => this.chart().groups.every(group => !group.label));
   readonly rows = computed(() => {
     const { groups, max } = this.chart();
     return groups.map(group => ({
