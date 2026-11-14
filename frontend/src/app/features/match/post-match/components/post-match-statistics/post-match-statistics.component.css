@@ -8,6 +8,8 @@
   display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; padding: 8px 12px;
   background: var(--surface-toolbar); border: 1px solid var(--border-sport-subtle);
   border-radius: var(--radius-lg);
+  position: sticky; top: calc(var(--navbar-h) + 8px); z-index: 20;
+  box-shadow: var(--shadow-navbar);
 }
 .filter-group { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
 .filter-divider { width: 1px; height: 22px; background: var(--border-sport-subtle); }
@@ -15,7 +17,7 @@
   display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px;
   background: var(--surface); border: 1px solid var(--border-strong);
   border-radius: var(--radius-pill); cursor: pointer;
-  font: 700 13.5px var(--font-body); color: var(--text-primary);
+  font: 700 13.5px var(--font-body); color: var(--text-primary); 
   transition: background-color .15s ease;
 }
 .filter-pill:hover { background: var(--surface-alt); }
@@ -221,6 +223,15 @@
   .roster-card { height: 360px; }
   .player-detail { height: auto; min-height: 420px; }
   .player-detail .player-body { overflow: visible; }
+}
+
+/* Celular: la barra fija ocupa poco alto (Equipo/Jugadores solo con ícono, el jugador en su propia fila) */
+@media (max-width: 480px) {
+  .stats-toolbar { gap: 8px; padding: 6px 8px; }
+  .stats-toolbar .filter-divider { display: none; }
+  .stats-toolbar .filter-pill { padding: 0 14px; }
+  .stats-toolbar .filter-pill .bi + span { display: none; }
+  .player-picker { flex: 1 1 100%; min-width: 0; }
 }
 
 @media (max-width: 768px) {
