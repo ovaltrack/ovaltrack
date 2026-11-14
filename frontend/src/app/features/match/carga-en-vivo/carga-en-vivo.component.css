@@ -58,7 +58,8 @@
 
 	width: 100vw;
 	max-width: 100%;
-	height: 100dvh;
+	/* Debajo de la barra global compacta: la pantalla entera menos la barra */
+	height: calc(100dvh - var(--navbar-h));
 	font-family: var(--font-body);
 	background: var(--bg);
 	color: var(--text);
@@ -141,6 +142,15 @@
 	grid-row: 1;
 	justify-content: center;
 }
+
+/* En escritorio y tablet el contenedor no existe para el layout: marcador, reloj y período quedan en fila */
+.live-capture__match {
+	display: contents;
+}
+
+.live-capture__score { order: 1; }
+.live-capture__clock { order: 2; }
+.live-capture__period { order: 3; }
 
 .live-capture__score {
 	font-family: var(--font-body);
@@ -267,6 +277,7 @@
 }
 
 .btn--outline {
+	position: relative;
 	display: inline-flex;
 	align-items: center;
 	gap: calc(8px * var(--ot-live-scale));
@@ -692,8 +703,8 @@
 	outline-offset: calc(2px * var(--ot-live-scale));
 }
 
-/* Tablet y escritorio angosto: el marcador pasa a una segunda fila del encabezado */
-@media (min-width: 769px) and (max-width: 1279px) {
+/* Tablet (también vertical) y escritorio angosto: el marcador pasa a una segunda fila del encabezado */
+@media (min-width: 601px) and (max-width: 1599px) {
 	.live-capture__header {
 		grid-template-columns: auto minmax(0, 1fr);
 		row-gap: calc(8px * var(--ot-live-scale));
@@ -724,8 +735,8 @@
 	}
 }
 
-/* Pantallas bajas (iPad mini horizontal): catálogo más compacto para que entren las 5 categorías sin scroll */
-@media (min-width: 769px) and (max-height: 820px) {
+/* Pantallas bajas (iPad mini horizontal, notebooks de 900 px de alto): catálogo más compacto para que entren las 5 categorías sin scroll */
+@media (min-width: 601px) and (max-height: 920px) {
 	.event-catalog,
 	.event-catalog--own,
 	.event-catalog--away {
@@ -749,55 +760,6 @@
 }
 
 @media (max-width: 768px) {
-	.live-capture__header {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-		grid-template-rows: auto auto;
-		align-items: center;
-	}
-
-	.live-capture__nav {
-		justify-content: flex-start;
-		grid-column: 1;
-		grid-row: 1;
-	}
-
-	.live-capture__scoreboard {
-		position: static;
-		transform: none;
-		width: auto;
-		grid-column: 2;
-		grid-row: 1;
-		justify-content: center;
-    }
-
-	.live-capture__score {
-		min-width: 0;
-		text-align: center;
-		font-size: var(--ot-size-body-lg);
-		line-height: 1.25;
-	}
-
-	.live-capture__clock {
-		flex: 0 0 auto;
-	}
-
-	.live-capture__actions {
-		width: 100%;
-		grid-column: 1 / -1;
-		grid-row: 2;
-		justify-content: stretch;
-		gap: calc(6px * var(--ot-live-scale));
-	}
-
-	.live-capture__actions .btn--outline {
-		flex: 1 1 0;
-		justify-content: center;
-		min-width: 0;
-		padding: calc(8px * var(--ot-live-scale)) calc(12px * var(--ot-live-scale));
-		font-size: calc(12px * var(--ot-live-scale));
-	}
-
 	.live-capture__body {
 		grid-template-columns: minmax(0, 1fr);
 		grid-template-rows: auto minmax(0, 1fr) auto auto;
@@ -836,6 +798,165 @@
 	.icon-btn {
 		min-width: 44px;
 		min-height: 44px;
+	}
+}
+
+/* Tablet vertical: "Estadísticas" y "Deshacer" quedan solo con ícono para que la fila de botones entre */
+@media (max-width: 900px) {
+	.live-capture__btn--collapsible {
+		justify-content: center;
+		min-width: var(--ot-touch-target-min);
+		padding-inline: 0;
+	}
+
+	.live-capture__btn--collapsible .live-capture__btn-label {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		white-space: nowrap;
+	}
+}
+
+/* Celular vertical: fila 1 = marcador y período + reloj; fila 2 = controles a todo el ancho */
+@media (max-width: 600px) {
+	.live-capture__header {
+		grid-template-columns: minmax(0, 1fr) auto;
+		grid-template-areas:
+			"score score"
+			"nav actions";
+		gap: calc(8px * var(--ot-live-scale));
+		padding: calc(8px * var(--ot-live-scale)) calc(12px * var(--ot-live-scale));
+	}
+
+	.live-capture__scoreboard {
+		grid-area: score;
+		justify-content: space-between;
+		gap: calc(10px * var(--ot-live-scale));
+	}
+
+	.live-capture__match {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 2px;
+		min-width: 0;
+	}
+
+	.live-capture__score {
+		font-size: var(--ot-size-body-lg);
+		line-height: 1.2;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		max-width: 100%;
+	}
+
+	.live-capture__period {
+		height: auto;
+		padding: 0;
+		background: none;
+		font-size: calc(12px * var(--ot-live-scale));
+		color: var(--text-muted);
+	}
+
+	.live-capture__clock {
+		flex: none;
+		padding-left: calc(12px * var(--ot-live-scale));
+	}
+
+	.live-capture__clock-time {
+		font-size: calc(22px * var(--ot-live-scale));
+	}
+
+	.live-capture__nav {
+		grid-area: nav;
+		gap: 6px;
+	}
+
+	.live-capture__actions {
+		grid-area: actions;
+		gap: 6px;
+	}
+
+	/* "Partidos" también queda solo con ícono; el período sigue con texto porque es la acción principal */
+	.live-capture__nav .btn--outline {
+		justify-content: center;
+		min-width: var(--ot-touch-target-min);
+		padding-inline: 0;
+	}
+
+	.live-capture__nav .live-capture__btn-label {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		white-space: nowrap;
+	}
+
+	.live-capture__actions .btn--outline:not(.live-capture__btn--collapsible) {
+		padding-inline: calc(10px * var(--ot-live-scale));
+		font-size: calc(13px * var(--ot-live-scale));
+	}
+
+	/* El tema también está en el menú de usuario de la barra global */
+	.live-capture__theme {
+		display: none;
+	}
+}
+
+/* Celular horizontal (pantalla baja): todo el encabezado en una sola fila compacta */
+@media (min-width: 601px) and (max-height: 500px) {
+	.live-capture__header {
+		grid-template-columns: auto minmax(0, 1fr) auto;
+		row-gap: 0;
+		padding-block: calc(6px * var(--ot-live-scale));
+	}
+
+	.live-capture__nav { grid-column: 1; grid-row: 1; }
+	.live-capture__actions { grid-column: 3; grid-row: 1; }
+
+	.live-capture__scoreboard {
+		grid-column: 2;
+		grid-row: 1;
+		gap: calc(10px * var(--ot-live-scale));
+	}
+
+	.live-capture__period,
+	.live-capture__theme {
+		display: none;
+	}
+
+	.live-capture__nav .btn--outline {
+		justify-content: center;
+		min-width: var(--ot-touch-target-min);
+		padding-inline: 0;
+	}
+
+	.live-capture__nav .live-capture__btn-label {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		white-space: nowrap;
+	}
+
+	.event-catalog,
+	.event-catalog--own,
+	.event-catalog--away {
+		padding: calc(10px * var(--ot-live-scale)) var(--ot-margin-screen);
+		gap: calc(8px * var(--ot-live-scale));
+	}
+
+	.event-chip {
+		padding-block: calc(4px * var(--ot-live-scale));
+		font-size: calc(14px * var(--ot-live-scale));
+	}
+
+	.possession-bar {
+		padding-block: calc(6px * var(--ot-live-scale));
 	}
 }
 

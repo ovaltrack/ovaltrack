@@ -12,22 +12,27 @@
                 (click)="goToMatchSelection()"
                 [attr.aria-label]="'Ir a seleccion de partidos'">
                 <i class="ti ti-chevron-left" aria-hidden="true"></i>
-                Partidos
+                <span class="live-capture__btn-label">Partidos</span>
             </button>
             <button
                 type="button"
-                class="btn btn--outline"
+                class="btn btn--outline live-capture__btn--collapsible"
                 (click)="openCurrentStatisticsModal()"
                 [attr.aria-label]="'Abrir estadísticas tácticas'">
-                Estadísticas
+                <i class="ti ti-chart-bar" aria-hidden="true"></i>
+                <span class="live-capture__btn-label">Estadísticas</span>
             </button>
         </div>
         <div class="live-capture__scoreboard">
-            <span class="live-capture__score">
+            <!-- Marcador y período: en escritorio se reparten alrededor del reloj; en celular van apilados a la izquierda -->
+            <div class="live-capture__match">
+                <span class="live-capture__score">
                 {{ homeTeam }}
                 <span class="live-capture__score-value"><span class="live-capture__score-own">{{ scoreboard.home }}</span><span class="live-capture__score-sep" aria-hidden="true">–</span><span class="live-capture__score-rival">{{ scoreboard.away }}</span></span>
                 {{ awayTeam }}
             </span>
+            <span class="live-capture__period">{{ periodLabel }}</span>
+            </div>
 
             <div class="live-capture__clock">
                 <span class="live-capture__clock-time">{{ gameClock }}</span>
@@ -40,9 +45,7 @@
                     [disabled]="!isStarted || isHalftime">
                     <i [class]="pausaIcon" aria-hidden="true"></i>
                 </button>
-
             </div>
-            <span class="live-capture__period">{{ periodLabel }}</span>
         </div>
 
         <div class="live-capture__actions">
@@ -55,13 +58,14 @@
                 [disabled]="isStartingMatch">
                 {{ periodLabelAction }}
             </button>
-            <button type="button" class="btn btn--outline"
+            <button type="button" class="btn btn--outline live-capture__btn--collapsible"
                 (click)="undoLastEvent()"
-                [disabled]="!isStarted">
+                [disabled]="!isStarted"
+                aria-label="Deshacer último evento">
                 <i class="ti ti-arrow-back-up" aria-hidden="true"></i>
-                Deshacer
+                <span class="live-capture__btn-label">Deshacer</span>
             </button>
-            <button type="button" class="icon-btn"
+            <button type="button" class="icon-btn live-capture__theme"
                 (click)="toggleTheme()"
                 [attr.aria-label]="theme() === 'light' ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'">
                 <i [class]="theme() === 'light' ? 'ti ti-moon' : 'ti ti-sun'"
