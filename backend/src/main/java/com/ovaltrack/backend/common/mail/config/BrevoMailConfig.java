@@ -12,7 +12,7 @@ import org.springframework.web.client.RestClient;
 
 /** Cliente HTTP de Brevo con timeouts; solo con {@code ovaltrack.mail.provider=brevo}. */
 @Configuration
-@ConditionalOnProperty(prefix = "ovaltrack.mail", name = "provider", havingValue = "brevo")
+@ConditionalOnProperty(prefix = "ovaltrack.mail", name = "provider", havingValue = "brevo", matchIfMissing = true)
 public class BrevoMailConfig {
 
     private static final Duration DEFAULT_CONNECT_TIMEOUT = Duration.ofSeconds(5);

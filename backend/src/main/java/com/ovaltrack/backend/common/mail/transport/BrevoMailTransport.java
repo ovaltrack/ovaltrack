@@ -21,7 +21,7 @@ import com.ovaltrack.backend.common.mail.dto.OutgoingMail;
  * Nunca loguea la API key ni el contenido del correo.
  */
 @Component
-@ConditionalOnProperty(prefix = "ovaltrack.mail", name = "provider", havingValue = "brevo")
+@ConditionalOnProperty(prefix = "ovaltrack.mail", name = "provider", havingValue = "brevo", matchIfMissing = true)
 public class BrevoMailTransport implements MailTransport {
 
     static final String SEND_PATH = "/smtp/email";

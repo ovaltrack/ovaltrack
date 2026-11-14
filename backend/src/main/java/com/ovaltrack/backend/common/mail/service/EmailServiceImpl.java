@@ -11,7 +11,6 @@ import com.ovaltrack.backend.common.mail.dto.OutgoingMail;
 import com.ovaltrack.backend.common.mail.transport.MailTransport;
 import com.ovaltrack.backend.person.domain.Person;
 
-import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -31,14 +30,14 @@ public class EmailServiceImpl implements EmailService {
     private String passwordResetUrl;
 
     @Override
-    public void sendEmail(EmailDTO email) throws MessagingException {
+    public void sendEmail(EmailDTO email) {
         Context context = new Context();
         context.setVariable("message", email.getContent());
         transport.send(new OutgoingMail(email.getTo(), null, email.getSubject(), render("email", context)));
     }
 
     @Override
-    public void sendInvitation(Person person, String token) throws MessagingException {
+    public void sendInvitation(Person person, String token) {
         if (token == null)
             throw new BusinessException("El token vino nulo");
         if (person == null || person.getContactEmail() == null)
@@ -52,8 +51,7 @@ public class EmailServiceImpl implements EmailService {
     }
 
     @Override
-    public void sendPasswordReset(String to, String userName, String rawToken, String expiresIn)
-            throws MessagingException {
+    public void sendPasswordReset(String to, String userName, String rawToken, String expiresIn) {
         if (to == null || to.isBlank())
             throw new BusinessException("El destinatario vino vacío");
         if (rawToken == null || rawToken.isBlank())
