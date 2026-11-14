@@ -201,8 +201,8 @@ export function gaugeDonut(id: string, title: string, percent: number | null, co
   };
 }
 
-/** Asocia la dona a un equipo (línea con su color debajo del título). */
-export function withTeam(chart: DonutChart, name: string, colorVar: string): DonutChart {
+/** Asocia el gráfico (dona o barras) a un equipo: línea con su color debajo del título. */
+export function withTeam<T extends { team?: DonutTeam }>(chart: T, name: string, colorVar: string): T {
   return { ...chart, team: { name, color: `var(${colorVar})` } };
 }
 
