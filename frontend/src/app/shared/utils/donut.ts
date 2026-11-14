@@ -16,9 +16,18 @@ export interface DonutSliceInput {
   muted?: boolean;
 }
 
+/** Equipo al que pertenece una dona de reparto o de avance: se muestra en su propia línea, con su color. */
+export interface DonutTeam {
+  name: string;
+  /** Color CSS del equipo (`var(--…)`). */
+  color: string;
+}
+
 export interface DonutChart {
   id: string;
   title: string;
+  /** Solo en las donas de un único equipo; las de propio contra rival nombran a ambos en la leyenda. */
+  team?: DonutTeam;
   slices: DonutSlice[];
   /** Valor que equivale al círculo completo: la suma en las de reparto, 100 en las de avance. */
   max: number;
@@ -192,12 +201,18 @@ export function gaugeDonut(id: string, title: string, percent: number | null, co
   };
 }
 
+/** Asocia la dona a un equipo (línea con su color debajo del título). */
+export function withTeam(chart: DonutChart, name: string, colorVar: string): DonutChart {
+  return { ...chart, team: { name, color: `var(${colorVar})` } };
+}
+
 /** Texto para lectores de pantalla: el anillo es un dibujo y la leyenda se oculta para no repetir. */
 export function describeDonut(chart: DonutChart): string {
-  if (isEmptyDonut(chart)) return `${chart.title}: sin datos`;
-  if (chart.variant === 'gauge') return `${chart.title}: ${chart.center.value}`;
+  const heading = chart.team ? `${chart.title} de ${chart.team.name}` : chart.title;
+  if (isEmptyDonut(chart)) return `${heading}: sin datos`;
+  if (chart.variant === 'gauge') return `${heading}: ${chart.center.value}`;
 
   const percents = slicePercents(chart.slices, chart.max);
   const parts = chart.slices.map((slice, index) => `${slice.label} ${slice.display ?? slice.value} (${percents[index]} %)`);
-  return `${chart.title}: ${parts.join(', ')}`;
+  return `${heading}: ${parts.join(', ')}`;
 }

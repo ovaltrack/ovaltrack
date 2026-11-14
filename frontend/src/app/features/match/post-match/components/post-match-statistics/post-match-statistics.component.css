@@ -98,6 +98,10 @@
   min-height: 0;
 }
 
+/* En gráficos las tarjetas crecen con sus donas (no se recortan ni scrollean) y las de una fila igualan su alto */
+.detail-grid--chart { align-items: stretch; }
+.detail-card--chart { height: auto; min-height: 440px; }
+
 .detail-header { 
   display: flex; 
   align-items: center; 

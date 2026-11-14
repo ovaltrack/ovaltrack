@@ -63,7 +63,9 @@ describe('scoreCharts', () => {
     const own = charts.find(chart => chart.id === 'points-own');
     const rival = charts.find(chart => chart.id === 'points-rival');
     expect(own?.slices.map(slice => [slice.label, slice.value])).toEqual([['Try', 15], ['Conversión', 4]]);
-    expect(own?.title).toBe('Puntos · Club');
+    expect(own?.title).toBe('Puntos');
+    expect(own?.team).toEqual({ name: 'Club', color: 'var(--btn-primary-bg)' });
+    expect(rival?.team?.name).toBe('Rival');
     expect(rival?.slices.map(slice => [slice.label, slice.value])).toEqual([['Try', 5]]);
   });
 
@@ -89,6 +91,8 @@ describe('indicatorCard', () => {
   it('grafica un anillo por equipo en los porcentajes, aunque uno no tenga dato', () => {
     const card = indicatorCard([metric({ id: 'tackle-effectiveness', label: 'Efectividad de tackle' })], names);
     expect(card.charts.map(chart => chart.id)).toEqual(['tackle-effectiveness-own', 'tackle-effectiveness-rival']);
+    expect(card.charts.map(chart => chart.team?.name)).toEqual(['Club', 'Rival']);
+    expect(card.charts[0].title).toBe('Efectividad de tackle');
     expect(card.charts[1].center.value).toBe('—');
     expect(card.rest).toEqual([]);
   });

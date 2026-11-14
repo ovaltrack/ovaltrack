@@ -1,6 +1,7 @@
 :host { display: block; min-width: 0; }
 
+/* Sin row-gap: cada dona ocupa 4 filas compartidas (ver stat-donut) y se separa de la siguiente con su padding inferior */
 .donut-grid {
-  display: grid; gap: 20px 16px;
+  display: grid; column-gap: 16px; margin-bottom: -20px;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
 }

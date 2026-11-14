@@ -10,6 +10,7 @@ import {
   slicePercents,
   teamTones,
   versusDonut,
+  withTeam,
 } from './donut';
 
 const slice = (label: string, value: number): DonutSlice => ({ label, value, color: 'red' });
@@ -154,6 +155,19 @@ describe('gaugeDonut', () => {
     const chart = gaugeDonut('a', 'A', null, '--x');
     expect(isEmptyDonut(chart)).toBeTrue();
     expect(chart.center.value).toBe('—');
+  });
+});
+
+describe('withTeam', () => {
+  it('asocia la dona al equipo con su color, sin modificar la original', () => {
+    const chart = gaugeDonut('p', 'Posesión', 50, '--x');
+    const owned = withTeam(chart, 'Club', '--btn-primary-bg');
+    expect(owned.team).toEqual({ name: 'Club', color: 'var(--btn-primary-bg)' });
+    expect(chart.team).toBeUndefined();
+  });
+
+  it('el texto para lectores de pantalla nombra al equipo', () => {
+    expect(describeDonut(withTeam(gaugeDonut('p', 'Tackles', 70, '--x'), 'Club', '--y'))).toBe('Tackles de Club: 70%');
   });
 });
 

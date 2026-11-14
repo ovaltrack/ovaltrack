@@ -32,6 +32,7 @@ import {
   scoringLines,
   StatLine,
 } from '../../../statistics/presentation/stat-presentation';
+import { shortTeamName } from '../../utils/zone-grid';
 import { PostMatchShellStore } from '../../store/post-match-shell.store';
 import { LoadingGate } from '../../../../../shared/utils/loading-gate';
 import { RugbyBallLoaderComponent } from '../../../../../shared/components/rugby-ball-loader/rugby-ball-loader.component';
@@ -136,7 +137,11 @@ export class PostMatchStatisticsComponent implements OnInit, OnDestroy {
       .filter(group => group.hasData)
   );
 
-  private readonly teamNames = computed(() => ({ own: this.ownClubName(), opponent: this.opponent() }));
+  /** En las donas los equipos van con nombre corto («Puerto Madryn», sin «Rugby Club»): los completos ya están en la tarjeta. */
+  private readonly teamNames = computed(() => ({
+    own: shortTeamName(this.ownClubName()),
+    opponent: shortTeamName(this.opponent()),
+  }));
 
   /** Vista de gráficos: se calculan a partir de lo ya presentado, solo cuando se muestran. */
   readonly scoreCharts = computed<DonutChart[]>(() => {

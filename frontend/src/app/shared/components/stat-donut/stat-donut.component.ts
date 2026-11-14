@@ -11,6 +11,7 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
   templateUrl: './stat-donut.component.html',
   styleUrl: './stat-donut.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { role: 'group', '[attr.aria-label]': 'chart().title' },
 })
 export class StatDonutComponent {
   readonly chart = input.required<DonutChart>();

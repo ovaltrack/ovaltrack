@@ -7,6 +7,7 @@ import {
   isEmptyDonut,
   shareDonut,
   versusDonut,
+  withTeam,
 } from '../../../../shared/utils/donut';
 import {
   DerivedMetric,
@@ -60,14 +61,18 @@ function teamShares(id: string, title: string, items: TeamItem[], names: VersusN
     { key: 'rival', name: names.opponent, colorVar: RIVAL_COLOR_VAR, value: (item: TeamItem) => item.opponent },
   ];
   return sides
-    .map(side => shareDonut(
-      `${id}-${side.key}`,
-      `${title} · ${side.name}`,
-      items
-        .map(item => ({ label: item.label, value: side.value(item), muted: item.muted }))
-        .filter(slice => slice.value > 0),
-      side.colorVar,
-      maxSlices
+    .map(side => withTeam(
+      shareDonut(
+        `${id}-${side.key}`,
+        title,
+        items
+          .map(item => ({ label: item.label, value: side.value(item), muted: item.muted }))
+          .filter(slice => slice.value > 0),
+        side.colorVar,
+        maxSlices
+      ),
+      side.name,
+      side.colorVar
     ))
     .filter(chart => !isEmptyDonut(chart));
 }
@@ -122,8 +127,8 @@ export function indicatorCard(derived: DerivedMetric[], names: VersusNames): Cha
   const gauged = derived.filter(metric => metric.format === 'percent' && (metric.value.own !== null || metric.value.opponent !== null));
   return {
     charts: gauged.flatMap(metric => [
-      gaugeDonut(`${metric.id}-own`, `${metric.label} · ${names.own}`, metric.value.own, OWN_COLOR_VAR),
-      gaugeDonut(`${metric.id}-rival`, `${metric.label} · ${names.opponent}`, metric.value.opponent, RIVAL_COLOR_VAR),
+      withTeam(gaugeDonut(`${metric.id}-own`, metric.label, metric.value.own, OWN_COLOR_VAR), names.own, OWN_COLOR_VAR),
+      withTeam(gaugeDonut(`${metric.id}-rival`, metric.label, metric.value.opponent, RIVAL_COLOR_VAR), names.opponent, RIVAL_COLOR_VAR),
     ]),
     rest: derived.filter(metric => !gauged.includes(metric)).map(metricLine),
   };

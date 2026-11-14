@@ -1,17 +1,26 @@
-:host { display: block; min-width: 0; }
+/*
+ * La dona es una subgrid de 4 filas (título, equipo, anillo, leyenda) dentro de la grilla de donas: en una misma
+ * fila todas comparten el alto de cada fila, así los anillos quedan a la misma altura aunque un título ocupe más
+ * líneas y nada se recorta. Sin soporte de subgrid se apila igual, solo que sin alinear entre donas.
+ */
+:host { display: grid; grid-row: span 4; grid-template-rows: subgrid; row-gap: 0; min-width: 0; }
 
-.donut { margin: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-
-/* Siempre ocupa 2 líneas: así los anillos de una grilla arrancan a la misma altura aunque un título sea más largo */
 .donut__title {
-  box-sizing: content-box; min-height: 2.6em; padding-bottom: 6px; border-bottom: 2px solid var(--border-sport-subtle);
+  grid-row: 1; margin: 0; overflow-wrap: anywhere;
   font: 800 12px/1.3 var(--font-head); text-transform: uppercase; letter-spacing: .06em;
   color: var(--text-secondary);
-  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
 }
 
-.donut__body { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 16px; min-width: 0; }
+.donut__team {
+  grid-row: 2; display: flex; align-items: center; gap: 6px; min-width: 0; margin: 4px 0 0;
+  font: 600 12.5px var(--font-body); color: var(--text-primary);
+}
+.donut__team-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+.donut__figure {
+  grid-row: 3; display: flex; justify-content: center; margin-top: 8px; padding-top: 12px;
+  border-top: 2px solid var(--border-sport-subtle);
+}
 .donut__ring { position: relative; flex: none; width: clamp(92px, 26vw, 120px); aspect-ratio: 1; }
 .donut__svg { display: block; width: 100%; height: 100%; }
 .donut__track, .donut__slice { fill: none; stroke-width: 16; }
@@ -26,21 +35,22 @@
 .donut__value--empty { color: var(--text-muted); }
 .donut__caption { font: 600 10.5px var(--font-body); color: var(--text-muted); }
 
-.donut__legend {
-  list-style: none; margin: 0; padding: 0; flex: 1 1 120px; min-width: 0;
-  display: flex; flex-direction: column; gap: 6px;
-}
+/* El padding inferior es la separación con la fila de donas siguiente (la grilla no usa row-gap) */
+.donut__foot { grid-row: 4; min-width: 0; padding: 12px 0 20px; }
+
+.donut__legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .donut__item {
-  display: grid; grid-template-columns: 10px minmax(0, 1fr) auto auto; align-items: center; gap: 8px;
-  font: 600 13px var(--font-body); color: var(--text-secondary);
+  display: grid; grid-template-columns: 10px minmax(0, 1fr) auto auto; align-items: start; gap: 8px;
+  font: 600 13px/1.3 var(--font-body); color: var(--text-secondary);
 }
 .donut__item--no-percent { grid-template-columns: 10px minmax(0, 1fr) auto; }
-.donut__swatch { width: 10px; height: 10px; border-radius: 50%; }
-.donut__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.donut__amount { font: 700 14px var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-primary); }
-.donut__percent { min-width: 40px; text-align: right; font: 500 12px var(--font-mono); color: var(--text-muted); }
+.donut__swatch { flex: none; width: 10px; height: 10px; margin-top: 3px; border-radius: 50%; }
+.donut__team .donut__swatch { margin-top: 0; }
+.donut__label { overflow-wrap: anywhere; }
+.donut__amount { font: 700 14px/1.3 var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-primary); }
+.donut__percent { min-width: 40px; text-align: right; font: 500 12px/1.5 var(--font-mono); color: var(--text-muted); }
 
-.donut__empty { margin: 0; font: 500 13px var(--font-body); color: var(--text-muted); }
+.donut__empty { margin: 0; text-align: center; font: 500 13px var(--font-body); color: var(--text-muted); }
 
 @media (prefers-reduced-motion: reduce) {
   .donut__slice { transition: none; }
