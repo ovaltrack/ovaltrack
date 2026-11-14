@@ -1,0 +1,42 @@
+<figure class="donut">
+  <figcaption class="donut__title">{{ chart().title }}</figcaption>
+
+  <div class="donut__body">
+    <div class="donut__ring" role="img" [attr.aria-label]="description()">
+      <svg class="donut__svg" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+        <circle class="donut__track" cx="60" cy="60" [attr.r]="radius" />
+        @for (segment of segments(); track segment.label) {
+          @if (segment.dash > 0) {
+            <circle class="donut__slice" cx="60" cy="60" [attr.r]="radius" transform="rotate(-90 60 60)"
+              [attr.stroke]="segment.color"
+              [attr.stroke-dasharray]="segment.dash + ' ' + segment.gap"
+              [attr.stroke-dashoffset]="-segment.offset">
+              <title>{{ segment.label }}: {{ segment.display ?? segment.value }} ({{ segment.percent }} %)</title>
+            </circle>
+          }
+        }
+      </svg>
+      <div class="donut__center">
+        <span class="donut__value" [class.donut__value--empty]="isEmpty()">{{ isEmpty() && chart().variant === 'share' ? '—' : chart().center.value }}</span>
+        @if (chart().center.label && !isEmpty()) {
+          <span class="donut__caption">{{ chart().center.label }}</span>
+        }
+      </div>
+    </div>
+
+    @if (showLegend()) {
+      <ul class="donut__legend" aria-hidden="true">
+        @for (segment of segments(); track segment.label) {
+          <li class="donut__item">
+            <span class="donut__swatch" [style.background]="segment.color"></span>
+            <span class="donut__label" [attr.title]="segment.label">{{ segment.label }}</span>
+            <strong class="donut__amount">{{ segment.display ?? segment.value }}</strong>
+            <span class="donut__percent">{{ segment.percent }} %</span>
+          </li>
+        }
+      </ul>
+    } @else if (isEmpty()) {
+      <p class="donut__empty">Sin datos</p>
+    }
+  </div>
+</figure>

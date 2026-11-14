@@ -1,0 +1,10 @@
+<div class="view-toggle" [class.view-toggle--compact]="compact()" role="group" aria-label="Visualización">
+  <button type="button" class="view-pill" [class.active]="mode() === 'list'" [attr.aria-pressed]="mode() === 'list'"
+          [attr.aria-label]="listLabel()" (click)="mode.set('list')">
+    <i class="bi {{ listIcon() }}" aria-hidden="true"></i><span class="view-pill__text">{{ listLabel() }}</span>
+  </button>
+  <button type="button" class="view-pill" [class.active]="mode() === 'chart'" [attr.aria-pressed]="mode() === 'chart'"
+          [attr.aria-label]="chartLabel()" (click)="mode.set('chart')">
+    <i class="bi {{ chartIcon() }}" aria-hidden="true"></i><span class="view-pill__text">{{ chartLabel() }}</span>
+  </button>
+</div>

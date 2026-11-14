@@ -1,0 +1,44 @@
+:host { display: block; min-width: 0; }
+
+.donut { margin: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+
+.donut__title {
+  padding-bottom: 6px; border-bottom: 2px solid var(--border-sport-subtle);
+  font: 800 12px var(--font-head); text-transform: uppercase; letter-spacing: .06em;
+  color: var(--text-secondary);
+}
+
+.donut__body { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 16px; min-width: 0; }
+
+.donut__ring { position: relative; flex: none; width: clamp(92px, 26vw, 120px); aspect-ratio: 1; }
+.donut__svg { display: block; width: 100%; height: 100%; }
+.donut__track, .donut__slice { fill: none; stroke-width: 16; }
+.donut__track { stroke: color-mix(in srgb, var(--border-strong) 30%, var(--surface)); }
+.donut__slice { transition: stroke-dasharray .3s ease, stroke-dashoffset .3s ease; }
+
+.donut__center {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  pointer-events: none; text-align: center;
+}
+.donut__value { font: 700 18px/1.1 var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-primary); }
+.donut__value--empty { color: var(--text-muted); }
+.donut__caption { font: 600 10.5px var(--font-body); color: var(--text-muted); }
+
+.donut__legend {
+  list-style: none; margin: 0; padding: 0; flex: 1 1 120px; min-width: 0;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.donut__item {
+  display: grid; grid-template-columns: 10px minmax(0, 1fr) auto auto; align-items: center; gap: 8px;
+  font: 600 13px var(--font-body); color: var(--text-secondary);
+}
+.donut__swatch { width: 10px; height: 10px; border-radius: 50%; }
+.donut__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.donut__amount { font: 700 14px var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-primary); }
+.donut__percent { min-width: 40px; text-align: right; font: 500 12px var(--font-mono); color: var(--text-muted); }
+
+.donut__empty { margin: 0; font: 500 13px var(--font-body); color: var(--text-muted); }
+
+@media (prefers-reduced-motion: reduce) {
+  .donut__slice { transition: none; }
+}
