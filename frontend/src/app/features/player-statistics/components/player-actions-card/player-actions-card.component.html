@@ -6,6 +6,8 @@
   <div class="form-card-body">
     @if (groups().length === 0) {
       <p class="empty">No hay acciones registradas con este jugador.</p>
+    } @else if (viewMode() === 'chart') {
+      <app-donut-grid [charts]="charts()" />
     } @else {
       <div class="groups">
         @for (group of groups(); track group.title) {
