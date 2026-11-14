@@ -38,6 +38,7 @@
 
 /* ---------- Scoreboard ---------- */
 .scoreboard { display: grid; grid-template-columns: 1fr minmax(240px, 2fr) 1fr; align-items: center; gap: 24px; }
+.scoreboard--chart { grid-template-columns: 1fr 1fr; }
 .scoreboard__team { display: flex; flex-direction: column; gap: 4px; }
 .scoreboard__team--away { align-items: flex-end; text-align: right; }
 .scoreboard__name { font: 700 14px var(--font-body); color: var(--text-secondary); }

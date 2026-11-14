@@ -43,6 +43,9 @@
         <button type="button" class="filter-pill" [class.active]="content() === 'measurements'" [attr.aria-pressed]="content() === 'measurements'" (click)="setContent('measurements')">Mediciones</button>
       </div>
     }
+
+    <span class="filter-divider" aria-hidden="true"></span>
+    <app-view-mode-toggle [(mode)]="viewMode" [compact]="true" />
   </div>
 
   @if (stats(); as s) {
@@ -56,11 +59,12 @@
             <h2 class="form-card-title">Marcador y posesión</h2>
           </div>
           <div class="form-card-body">
-            <div class="scoreboard">
+            <div class="scoreboard" [class.scoreboard--chart]="viewMode() === 'chart'">
               <div class="scoreboard__team">
                 <span class="scoreboard__name">{{ ownClubName() }}</span>
                 <span class="scoreboard__score scoreboard__score--own">{{ s.score.own }}</span>
               </div>
+              @if (viewMode() === 'list') {
               <div class="scoreboard__center">
                 <div class="possession-labels">
                   <span class="text-own">{{ s.ownPossessionPercentage }}%</span>
@@ -72,12 +76,14 @@
                   <div class="bar__fill bar__fill--opp" [style.width.%]="opponentPossession()"></div>
                 </div>
               </div>
+              }
               <div class="scoreboard__team scoreboard__team--away">
                 <span class="scoreboard__name">{{ opponent() }}</span>
                 <span class="scoreboard__score scoreboard__score--opp">{{ s.score.opponent }}</span>
               </div>
             </div>
 
+            @if (viewMode() === 'list') {
             <div class="compare-list">
               @for (row of scoreLines(); track row.label) {
                 <div class="compare-row">
@@ -93,6 +99,9 @@
                 </div>
               }
             </div>
+            } @else {
+              <app-donut-grid [charts]="scoreCharts()" />
+            }
           </div>
         </section>
 
@@ -108,6 +117,7 @@
                 </div>
               </div>
               <div class="form-card-body">
+                @if (viewMode() === 'list') {
                 <div class="metric-table">
                   @for (metric of s.derived; track metric.id) {
                     <div class="compare-row compare-row--plain" [attr.title]="metric.status?.label">
@@ -117,6 +127,9 @@
                     </div>
                   }
                 </div>
+                } @else {
+                  <ng-container *ngTemplateOutlet="chartCard; context: { $implicit: indicatorCard() }" />
+                }
               </div>
             </section>
           }
@@ -145,6 +158,8 @@
                 <p class="form-card-subtitle advanced-hint">{{ section.hint }}</p>
                 @if (section.emptyMessage) {
                   <p class="form-card-subtitle">{{ section.emptyMessage }}</p>
+                } @else if (viewMode() === 'chart') {
+                  <ng-container *ngTemplateOutlet="chartCard; context: { $implicit: advancedCards()[section.id] }" />
                 } @else {
                   <div class="metric-table">
                     @for (row of section.lines; track row.label) {
@@ -185,6 +200,9 @@
               </div>
 
               <div class="form-card-body">
+                @if (viewMode() === 'chart') {
+                  <ng-container *ngTemplateOutlet="chartCard; context: { $implicit: detailCards()[section.name] }" />
+                } @else {
                 <div class="metric-table">
                   @for (type of section.types; track type.eventTypeId) {
                     @for (line of type.lines; track line.label) {
@@ -216,6 +234,7 @@
                       }
                     </div>
                   }
+                }
                 }
               </div>
             </section>
@@ -281,18 +300,15 @@
               @if (!p.hasActivity) {
                 <p class="note"><i class="bi bi-info-circle"></i> Sin acciones registradas para este jugador en {{ periodLabel().toLowerCase() }}.</p>
               }
-              @for (group of selectedPlayerGroups(); track group.title) {
-                <div class="stat-group">
-                  <h4 class="breakdown__title"><i class="bi {{ group.icon }}"></i> {{ group.title }}</h4>
-                  <div class="stat-grid">
-                    @for (tile of group.tiles; track tile.label) {
-                      <div class="stat-tile">
-                        <span class="stat-tile__label">{{ tile.label }}</span>
-                        <span class="stat-tile__value" [class.zero]="tile.empty">{{ tile.value }}</span>
-                      </div>
-                    }
-                  </div>
-                </div>
+              @if (viewMode() === 'list') {
+                @for (group of selectedPlayerGroups(); track group.title) {
+                  <ng-container *ngTemplateOutlet="statGroup; context: { $implicit: group }" />
+                }
+              } @else {
+                @if (selectedPlayerPoints(); as points) {
+                  <ng-container *ngTemplateOutlet="statGroup; context: { $implicit: points }" />
+                }
+                <app-donut-grid [charts]="selectedPlayerCharts()" />
               }
             </div>
           } @else {
@@ -306,4 +322,34 @@
     }
   }
 }
+
+<!-- Vista de gráficos de una tarjeta: donas y, debajo, lo que no es parte de un total (tasas, promedios, saldos) -->
+<ng-template #chartCard let-card>
+  <app-donut-grid [charts]="card.charts" />
+  @if (card.rest.length > 0) {
+    <div class="metric-table">
+      @for (line of card.rest; track line.label) {
+        <div class="compare-row compare-row--plain">
+          <strong class="text-own" [class.zero]="line.ownValue === 0">{{ line.own }}</strong>
+          <span class="compare-row__label">{{ line.label }}</span>
+          <strong class="text-opp" [class.zero]="line.opponentValue === 0">{{ line.opponent }}</strong>
+        </div>
+      }
+    </div>
+  }
+</ng-template>
+
+<ng-template #statGroup let-group>
+  <div class="stat-group">
+    <h4 class="breakdown__title"><i class="bi {{ group.icon }}"></i> {{ group.title }}</h4>
+    <div class="stat-grid">
+      @for (tile of group.tiles; track tile.label) {
+        <div class="stat-tile">
+          <span class="stat-tile__label">{{ tile.label }}</span>
+          <span class="stat-tile__value" [class.zero]="tile.empty">{{ tile.value }}</span>
+        </div>
+      }
+    </div>
+  </div>
+</ng-template>
 </section>

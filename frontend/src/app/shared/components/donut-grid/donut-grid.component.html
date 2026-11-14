@@ -1,0 +1,7 @@
+@if (charts().length > 0) {
+  <div class="donut-grid">
+    @for (chart of charts(); track chart.id) {
+      <app-stat-donut [chart]="chart" />
+    }
+  </div>
+}

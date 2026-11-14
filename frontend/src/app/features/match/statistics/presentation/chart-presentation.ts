@@ -1,0 +1,177 @@
+import {
+  DonutChart,
+  OWN_COLOR_VAR,
+  RIVAL_COLOR_VAR,
+  VersusNames,
+  gaugeDonut,
+  isEmptyDonut,
+  shareDonut,
+  versusDonut,
+} from '../../../../shared/utils/donut';
+import {
+  DerivedMetric,
+  EventTypeStatGroup,
+  MatchStatistics,
+  PlayerStatColumn,
+  PlayerStatistic,
+} from '../types/statistic.types';
+import { AdvancedSection } from './advanced-presentation';
+import {
+  GroupStatPresentation,
+  PENDING_LABEL,
+  StatLine,
+  formatMetric,
+  formatPlayerValue,
+} from './stat-presentation';
+
+/**
+ * Qué se grafica como dona: lo que es parte de un total (categorías de un campo, finales de posesión, puntos por
+ * tipo de tanto), una cantidad de propio contra rival y los porcentajes. Lo que no es parte de un total (tasas,
+ * promedios, saldos) queda como fila en `rest`, así ningún dato desaparece al cambiar de visualización.
+ */
+export interface ChartCard {
+  charts: DonutChart[];
+  rest: StatLine[];
+}
+
+/** Las secciones avanzadas más largas (bloques de 10') tienen 8 categorías: nunca se agrupan en «Otros». */
+const ADVANCED_MAX_SLICES = 8;
+
+interface TeamItem {
+  label: string;
+  own: number;
+  opponent: number;
+  /** Relleno como «Sin completar»: va en neutro. */
+  muted?: boolean;
+}
+
+const hasData = (line: StatLine): boolean => line.ownValue + line.opponentValue > 0;
+
+const toItems = (lines: StatLine[]): TeamItem[] =>
+  lines.map(line => ({ label: line.label, own: line.ownValue, opponent: line.opponentValue, muted: line.label === PENDING_LABEL }));
+
+/** Porcentaje de posesión del rival, con un decimal (el complemento de la propia). */
+export const opponentPossessionOf = (own: number): number => Math.max(0, Math.round((100 - own) * 10) / 10);
+
+/** Una dona de reparto para cada equipo que tenga datos: el reparto de un equipo no se compara con el del otro. */
+function teamShares(id: string, title: string, items: TeamItem[], names: VersusNames, maxSlices?: number): DonutChart[] {
+  const sides = [
+    { key: 'own', name: names.own, colorVar: OWN_COLOR_VAR, value: (item: TeamItem) => item.own },
+    { key: 'rival', name: names.opponent, colorVar: RIVAL_COLOR_VAR, value: (item: TeamItem) => item.opponent },
+  ];
+  return sides
+    .map(side => shareDonut(
+      `${id}-${side.key}`,
+      `${title} · ${side.name}`,
+      items
+        .map(item => ({ label: item.label, value: side.value(item), muted: item.muted }))
+        .filter(slice => slice.value > 0),
+      side.colorVar,
+      maxSlices
+    ))
+    .filter(chart => !isEmptyDonut(chart));
+}
+
+/** Una dona versus por cada línea con datos; las demás (0 contra 0) siguen como fila. */
+function versusCharts(prefix: string, lines: StatLine[], names: VersusNames): ChartCard {
+  return {
+    charts: lines.filter(hasData).map(line => versusDonut(`${prefix}-${line.label}`, line.label, line, names)),
+    rest: lines.filter(line => !hasData(line)),
+  };
+}
+
+export function possessionDonut(ownPercentage: number, names: VersusNames): DonutChart {
+  const opponentPercentage = opponentPossessionOf(ownPercentage);
+  const chart = versusDonut(
+    'possession',
+    'Posesión',
+    { ownValue: ownPercentage, opponentValue: opponentPercentage, own: `${ownPercentage}%`, opponent: `${opponentPercentage}%` },
+    names
+  );
+  return { ...chart, center: { value: `${ownPercentage}%`, label: 'propia' } };
+}
+
+/** Puntos de cada equipo repartidos por tipo de tanto (try, conversión, penal, drop). */
+export function pointsDonuts(groups: EventTypeStatGroup[], names: VersusNames): DonutChart[] {
+  const items = groups
+    .flatMap(group => group.types)
+    .filter(type => type.isScoring)
+    .map(type => ({ label: type.name, own: type.points?.own ?? 0, opponent: type.points?.opponent ?? 0 }));
+  return teamShares('points', 'Puntos', items, names);
+}
+
+/** Tarjeta «Marcador y posesión»: posesión, puntos por tipo de tanto y cada tanto propio contra rival. */
+export function scoreCharts(stats: MatchStatistics, scoring: StatLine[], names: VersusNames): DonutChart[] {
+  return [
+    possessionDonut(stats.ownPossessionPercentage, names),
+    ...pointsDonuts(stats.groups, names),
+    ...versusCharts('score', scoring, names).charts,
+  ];
+}
+
+const metricLine = (metric: DerivedMetric): StatLine => ({
+  label: metric.label,
+  own: formatMetric(metric.value.own, metric.format),
+  opponent: formatMetric(metric.value.opponent, metric.format),
+  ownValue: metric.value.own ?? 0,
+  opponentValue: metric.value.opponent ?? 0,
+});
+
+/** Tarjeta «Indicadores»: los porcentajes son anillos de avance por equipo; los saldos quedan como fila. */
+export function indicatorCard(derived: DerivedMetric[], names: VersusNames): ChartCard {
+  const gauged = derived.filter(metric => metric.format === 'percent' && (metric.value.own !== null || metric.value.opponent !== null));
+  return {
+    charts: gauged.flatMap(metric => [
+      gaugeDonut(`${metric.id}-own`, `${metric.label} · ${names.own}`, metric.value.own, OWN_COLOR_VAR),
+      gaugeDonut(`${metric.id}-rival`, `${metric.label} · ${names.opponent}`, metric.value.opponent, RIVAL_COLOR_VAR),
+    ]),
+    rest: derived.filter(metric => !gauged.includes(metric)).map(metricLine),
+  };
+}
+
+/** Bloque de segundo nivel: repartos por equipo, cantidades propio-rival y, como fila, las tasas. */
+export function advancedCard(section: AdvancedSection, names: VersusNames): ChartCard {
+  const distribution = teamShares(section.id, section.title, toItems(section.distribution), names, ADVANCED_MAX_SLICES);
+  const counts = versusCharts(section.id, section.counts, names);
+  const charted = new Set([...(distribution.length > 0 ? section.distribution : []), ...section.counts.filter(hasData)]);
+  return {
+    charts: [...distribution, ...counts.charts],
+    rest: section.lines.filter(line => !charted.has(line)),
+  };
+}
+
+/** Área del catálogo: cada tipo es una dona versus y cada desglose, un reparto por equipo; totales y promedios, filas. */
+export function measurementCard(section: GroupStatPresentation, names: VersusNames): ChartCard {
+  const mains = versusCharts(section.name, section.types.map(type => type.main), names);
+  return {
+    charts: [
+      ...mains.charts,
+      ...section.types.flatMap(type => type.breakdowns.flatMap(breakdown =>
+        teamShares(`${type.eventTypeId}-${breakdown.title}`, `${type.name} · ${breakdown.title}`, toItems(breakdown.lines), names)
+      )),
+    ],
+    rest: [...mains.rest, ...section.types.flatMap(type => type.extra)],
+  };
+}
+
+/** Acciones de un jugador: una dona por grupo del catálogo con las acciones que registró. */
+export function playerActionCharts(columns: PlayerStatColumn[], player: PlayerStatistic): DonutChart[] {
+  const groups = columns.reduce<Map<string, PlayerStatColumn[]>>(
+    (result, column) => result.set(column.groupName, [...(result.get(column.groupName) ?? []), column]),
+    new Map()
+  );
+  return Array.from(groups, ([groupName, groupColumns]) =>
+    shareDonut(
+      `player-${groupName}`,
+      groupName,
+      groupColumns
+        .filter(column => (player.values[column.eventTypeId]?.count ?? 0) > 0)
+        .map(column => ({
+          label: column.label,
+          value: player.values[column.eventTypeId].count,
+          display: formatPlayerValue(column, player.values[column.eventTypeId]),
+        })),
+      OWN_COLOR_VAR
+    )
+  ).filter(chart => !isEmptyDonut(chart));
+}

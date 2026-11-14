@@ -1,0 +1,6 @@
+:host { display: block; min-width: 0; }
+
+.donut-grid {
+  display: grid; gap: 20px 16px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+}
