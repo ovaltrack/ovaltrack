@@ -1,0 +1,52 @@
+:host { display: block; min-width: 0; }
+
+/*
+ * Ancho de la columna del valor y separación con la barra: el eje usa los mismos números para que sus marcas caigan
+ * sobre el largo real de las barras. En un contenedor angosto la etiqueta va arriba; desde 520 px, a la izquierda.
+ */
+.bars { container-type: inline-size; --value-col: 72px; --line-gap: 10px; --label-col: minmax(120px, 34%); }
+
+.bars__rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.bars__row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; }
+.bars__label { font: 600 13px/1.3 var(--font-body); color: var(--text-secondary); overflow-wrap: anywhere; }
+
+.bars__lines { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.bars__line { display: grid; grid-template-columns: minmax(0, 1fr) var(--value-col); align-items: center; column-gap: var(--line-gap); }
+
+/* Carril con una línea fina en la mitad del eje; la barra queda encima */
+.bars__track {
+  height: 14px; overflow: hidden; border-radius: var(--radius-sm);
+  background-color: color-mix(in srgb, var(--border-strong) 30%, var(--surface));
+  background-image: linear-gradient(var(--border-sport-subtle), var(--border-sport-subtle));
+  background-size: 1px 100%; background-position: 50% 0; background-repeat: no-repeat;
+}
+.bars--single .bars__track { height: 18px; }
+.bars__fill { height: 100%; min-width: 2px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; transition: width .3s ease; }
+
+.bars__value {
+  text-align: right; white-space: nowrap;
+  font: 700 14px/1.2 var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-primary);
+}
+.bars__value--muted { font-weight: 500; color: var(--text-muted); }
+
+.bars__axis { margin-top: 8px; }
+.bars__axis-spacer { display: none; }
+.bars__ticks { position: relative; height: 16px; margin-right: calc(var(--value-col) + var(--line-gap)); }
+.bars__tick {
+  position: absolute; top: 0; transform: translateX(-50%);
+  font: 500 11px/1.4 var(--font-mono); color: var(--text-muted);
+}
+.bars__tick:first-child { transform: none; }
+.bars__tick:last-child { transform: translateX(-100%); }
+
+.bars__empty { margin: 0; text-align: center; font: 500 13px var(--font-body); color: var(--text-muted); }
+
+@container (min-width: 520px) {
+  .bars__row { grid-template-columns: var(--label-col) minmax(0, 1fr); align-items: center; column-gap: 16px; }
+  .bars__axis { display: grid; grid-template-columns: var(--label-col) minmax(0, 1fr); column-gap: 16px; }
+  .bars__axis-spacer { display: block; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bars__fill { transition: none; }
+}

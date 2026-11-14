@@ -1,0 +1,24 @@
+@if (charts().length > 0) {
+  <div class="bar-grid">
+    @for (chart of charts(); track chart.id) {
+      <section class="bar-card" [class.bar-card--wide]="chart.orientation === 'vertical'" [attr.aria-label]="chart.title">
+        <h4 class="bar-card__title">{{ chart.title }}</h4>
+
+        @if (chart.team; as team) {
+          <p class="bar-card__team">
+            <span class="bar-card__swatch" [style.background]="team.color"></span>
+            <span class="bar-card__team-name" [attr.title]="team.name">{{ team.name }}</span>
+          </p>
+        }
+
+        <div class="bar-card__body">
+          @if (chart.orientation === 'vertical') {
+            <app-stat-columns [chart]="chart" />
+          } @else {
+            <app-stat-bars [chart]="chart" />
+          }
+        </div>
+      </section>
+    }
+  </div>
+}

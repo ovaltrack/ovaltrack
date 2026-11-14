@@ -1,0 +1,53 @@
+@if (isEmpty()) {
+  <p class="cols__empty">Sin datos</p>
+} @else {
+  <div class="cols" role="img" [attr.aria-label]="description()">
+    @if (chart().legend; as legend) {
+      <ul class="cols__legend">
+        @for (item of legend; track item.label) {
+          <li class="cols__legend-item">
+            <span class="cols__swatch" [style.background]="item.color"></span>{{ item.label }}
+          </li>
+        }
+      </ul>
+    }
+
+    <div class="cols__plot">
+      <div class="cols__yaxis">
+        @for (tick of ticks(); track tick.percent) {
+          <span class="cols__ytick" [style.bottom.%]="tick.percent">{{ tick.label }}</span>
+        }
+      </div>
+
+      <div class="cols__area">
+        @for (tick of ticks(); track tick.percent) {
+          <span class="cols__grid" [style.bottom.%]="tick.percent"></span>
+        }
+        <div class="cols__groups">
+          @for (group of groups(); track $index) {
+            <div class="cols__group" [attr.title]="group.title">
+              @for (column of group.columns; track $index) {
+                <div class="cols__col" [class.cols__col--none]="!column.drawn"
+                     [style.height.%]="column.height" [style.background]="column.drawn ? column.color : null">
+                  @if (showValues()) {
+                    <span class="cols__value" [class.cols__value--muted]="column.muted">{{ column.display }}</span>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="cols__xaxis">
+        @for (group of groups(); track $index) {
+          <span class="cols__xlabel">
+            @if (group.showLabel) {
+              <span class="cols__xtext">{{ group.label }}</span>
+            }
+          </span>
+        }
+      </div>
+    </div>
+  </div>
+}
