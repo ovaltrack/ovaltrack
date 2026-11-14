@@ -313,7 +313,7 @@ Barra superior **sólida, blanca (`--surface`), sin efecto vidrio**, de ancho co
 - **Módulos por rol** (catálogo único `core/navigation/navigation-modules.ts`; un módulo sin `route` no se muestra): Admin de club → Inicio, Partidos, Divisiones, Club, Miembros · Entrenador/Analista → Inicio, Partidos, Divisiones (Reportes cuando exista su ruta) · Jugador → Inicio, Estadísticas (Partidos cuando exista su ruta) · Admin OvalTrack → Inicio, Administración. La pantalla actual se resalta con el tinte de selección (`--grass-tint-strong`, `#e6efe3`, con texto botella; `aria-current="page"`).
 - **Estados, solo cuando hacen falta:** *Partido en vivo* (`LiveMatchSource`, lee Dexie; solo el partido que captura este dispositivo, división + marcador, lleva a `/live-capture/:id` o a `/halftime`; el jugador no lo ve). *Sincronización* (`SyncStatusSource` → `LocalSyncStatusSource`; icono + texto o contador; desaparece si todo está sincronizado). Cuenta en Dexie, con `liveQuery`, los cambios sin enviar (eventos pendientes + transiciones de partido; los rechazados por el servidor no cuentan), combina la conexión (`ConnectivityService`) y "Sincronizar ahora" reutiliza `SyncManagerService.synchronizeAll()` sin cambiar el orden de envío.
 - **Menú de usuario** (`UserMenuComponent`): avatar con iniciales y color del rol; identidad (nombre, correo, rol, club); estado de sincronización con "Sincronizar ahora"; apariencia claro/oscuro; "Cerrar sesión" al final, separado y en rojo. Cerrar sesión siempre abre un modal bloqueante (`LogoutConfirmDialogComponent`, `<dialog>` nativo), porque sin conexión no se puede volver a entrar. Sin cambios pendientes es una confirmación simple («Cancelar» / «Cerrar sesión») que recuerda que hace falta conexión para volver. Con cambios sin enviar: sin conexión no se puede volver a iniciar sesión, así que la acción principal es «Seguir conectado» y «Cerrar sesión igual» queda en rojo secundario; con conexión, la principal es «Sincronizar y cerrar sesión» (cierra solo si se envió todo) junto a «Cancelar» y «Cerrar sin enviar». En celular el menú es una hoja inferior.
-- **Modo por ruta** (`data.navbar` en `app.routes.ts`, resuelto por `NavbarModeService`): `default`, `compact` (post-partido, 56px) y `hidden` (captura en vivo y entretiempo, sin navbar para evitar toques accidentales).
+- **Modo por ruta** (`data.navbar` en `app.routes.ts`, resuelto por `NavbarModeService`): `default`, `compact` (post-partido, captura en vivo y entretiempo; 56px, sin barra inferior en celular) y `hidden` (hoy sin uso). Dentro de la captura en vivo de un partido no se muestra su propia píldora de *Partido en vivo*.
 - **Responsive:**
 
 | Ancho | Barra | Módulos | Estados |
@@ -370,7 +370,8 @@ Barra superior **sólida, blanca (`--surface`), sin efecto vidrio**, de ancho co
 ### 4.6 Captura en Vivo (`/live-capture/:matchId`)
 - **Entorno Especializado de Cancha:** Interfaz de alto contraste, táctil (hit-target mínimo de 48px), optimizada para tablets en tiempo real.
 - **Marcador e Instrumentos:** Cronómetro, marcador y rótulos en `JetBrains Mono`; el resto de la pantalla en `Inter`, como el sistema de diseño.
-- **Aislamiento:** No incluye la barra de navegación estándar para maximizar el área de control e impedir clics accidentales durante el juego.
+- **Navegación:** Usa la barra global en modo compacto (logo → Inicio, módulos, sincronización y menú de usuario), igual que el resto de la app; el área de control ocupa el resto del viewport (`calc(100dvh - var(--navbar-h))`).
+- **Encabezado responsive:** una fila desde 1600 px; dos filas (botones arriba, marcador abajo) entre 601 y 1599 px, con «Estadísticas» y «Deshacer» solo con ícono hasta 900 px; en celular vertical, marcador y reloj arriba y controles abajo (el tema queda en el menú de usuario); en celular horizontal, una fila compacta.
 
 ---
 
@@ -446,7 +447,7 @@ Reglas de uso:
 - **Botones de jugadas:** radio 12 px, en Inter; en oscuro borde `rgba(255,255,255,.16)` y sombra para recortarse sobre el fondo de posesión, y en claro borde `rgba(0,0,0,.08)` con sombra `inset 0 1px 0 rgba(255,255,255,.18), 0 4px 10px rgba(16,24,16,.14)`. El relleno sigue saliendo de `eventVariant()` (rotación por posición, igual en claro y oscuro: en el catálogo actual cada jugada de Puntuación tiene su color). Esos rellenos (`#57AD16`, `#C6403A`, `#F5821F`, `#7952B3`) conservan los colores de siempre; el verde y el naranja dan menos de 4,5 : 1 con texto blanco. Tarjeta amarilla y roja llevan un chip con el color de la tarjeta (por `event.code`).
 - **Rótulos de categoría:** JetBrains Mono en mayúsculas, sin indicador de color.
 - **Pausa:** el fondo «respira» entre el color de la posesión y el cal liso. En claro lo hace la animación `live-capture-pause-pulse-light`; en oscuro el pulso original no mezcla (ver §5.9).
-- La pantalla sigue a pantalla completa, sin navbar (§6, regla 5).
+- La pantalla ocupa el viewport debajo de la navbar compacta (§6, regla 5).
 
 ### 5.6 Jugadas por categoría (post-partido)
 
@@ -520,7 +521,7 @@ Mínimos: 4,5 : 1 para texto y 3 : 1 para bordes de controles.
    - Rojo destructivo (tokens `--error`, `--error-tint` y `--error-border`): Reservado para eliminar o cerrar sesión.
 3. **Mantener la consistencia de elevación:** Toda tarjeta, tabla o contenedor de datos debe tener borde de `2px` con radio redondeado (`16px` o `20px`) y sombra de elevación profunda.
 4. **Las acciones de una vista viven en la barra de esa vista:** el encabezado común solo contiene lo que vale para todas las vistas (volver, etiqueta, título, marcador, hora y selector de vistas), para que quede en las mismas coordenadas en todas.
-5. **No alterar ni forzar contenedores en Carga en Vivo ni Entretiempo:** Dichas pantallas (`/live-capture/:matchId` y `/live-capture/:matchId/halftime`) son instrumentos tácticos especializados para tablet en tiempo real; deben mantenerse a pantalla completa y están exentas de `.layout-container`.
+5. **No alterar ni forzar contenedores en Carga en Vivo ni Entretiempo:** Dichas pantallas (`/live-capture/:matchId` y `/live-capture/:matchId/halftime`) son instrumentos tácticos especializados para tablet en tiempo real; ocupan todo el viewport debajo de la navbar compacta y están exentas de `.layout-container`.
 6. **Tema único:** Carga en Vivo y Entretiempo leen y cambian el mismo `ThemeService` que el navbar y el menú de usuario. Su botón de tema cambia el modo claro/oscuro de toda la app, y la elección se conserva (clave `ovaltrack_theme`).
 7. **Uso obligatorio de `.layout-container.page`:** Toda nueva pantalla o flujo de gestión debe construirse dentro de `.layout-container.page` para garantizar alineación pixel-perfect con la Navbar.
 8. **El lima solo sobre verde botella:** `--brand-signature` va únicamente sobre `#204b22` o `#163618` (tablero de Inicio, «En vivo», emblemas, check de «Posesión propia»). Nunca sobre fondo claro ni gris; en claro `--grass` es botella (§1.2).
@@ -582,7 +583,7 @@ El sistema de interfaz de OvalTrack implementa una arquitectura de layout fluida
   - `LayoutService` activa automáticamente la clase `.layout-wide` en `.app-shell`, expandiendo simultáneamente la Navbar y el contenido a `1560px` con alineación vertical milimétrica.
 * **Vistas Especializadas Exentas (Pantalla Completa):**
   - Captura en vivo (`/live-capture/:matchId`) y Resumen táctico de entretiempo (`/live-capture/:matchId/halftime`).
-  - Declaran `data: { navbar: 'hidden' }`, ocultan la Navbar y no consumen `.layout-container`, operando al 100% del viewport en tablets.
+  - Declaran `data: { navbar: 'compact' }`: muestran la Navbar compacta y no consumen `.layout-container`; el resto del viewport es suyo.
 
 ---
 

@@ -7,7 +7,8 @@
 :host {
   display: block;
   width: 100%;
-  height: 100vh;
+  /* Debajo de la barra global compacta */
+  height: calc(100dvh - var(--navbar-h));
 }
 
 .halftime-page {
@@ -22,7 +23,8 @@
   --positive: var(--grass-deep);
 
   width: 100%;
-  height: 100vh;
+  /* Debajo de la barra global compacta */
+  height: calc(100dvh - var(--navbar-h));
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -55,11 +57,6 @@
   display: flex;
   align-items: center;
   gap: 14px;
-}
-
-.brand-logo {
-  height: 38px;
-  width: auto;
 }
 
 .match-heading {
@@ -713,5 +710,69 @@
   .scoreboard__center {
     grid-column: 1 / -1;
     grid-row: 2;
+  }
+}
+
+/* ==========================================================================
+   Responsive (celular): encabezado apilado y centrado, pestañas a todo el
+   ancho y acciones una debajo de la otra (la principal arriba)
+   ========================================================================== */
+@media (max-width: 600px) {
+  .halftime-page {
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .hud-bar {
+    gap: 8px;
+  }
+
+  .hud-bar__brand {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .match-heading {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px 8px;
+    font-size: 20px;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .hud-bar__actions {
+    width: 100%;
+  }
+
+  /* El tema también está en el menú de usuario de la barra global */
+  .theme-button {
+    display: none;
+  }
+
+  .segmented {
+    flex: 1 1 100%;
+  }
+
+  .segment {
+    flex: 1 1 0;
+    justify-content: center;
+  }
+
+  .scoreboard {
+    gap: 12px;
+    padding: 14px 16px;
+  }
+
+  .actions-bar {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .action-button {
+    width: 100%;
+    justify-content: center;
   }
 }

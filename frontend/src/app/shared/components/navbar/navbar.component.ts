@@ -45,10 +45,16 @@ export class NavbarComponent {
   readonly themeToggleLabel = computed(() =>
     this.themeService.theme() === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro');
 
-  /** El jugador no captura partidos: no ve el acceso al partido en vivo. */
-  readonly liveMatch = computed(() =>
-    this.currentUser()?.role === 'PLAYER' ? null : this.liveMatchSource.liveMatch()
-  );
+  /**
+   * El jugador no captura partidos: no ve el acceso al partido en vivo.
+   * Tampoco se muestra dentro de la carga en vivo (o el entretiempo) de ese mismo partido: llevaría a la misma pantalla.
+   */
+  readonly liveMatch = computed(() => {
+    if (this.currentUser()?.role === 'PLAYER') return null;
+    const match = this.liveMatchSource.liveMatch();
+    if (match && this.currentUrl().startsWith(`/live-capture/${match.matchId}`)) return null;
+    return match;
+  });
 
   /** En login y registro la barra solo ofrece volver al inicio: la página ya tiene sus propios accesos. */
   readonly isAuthPage = computed(() => this.currentUrl().startsWith('/auth'));

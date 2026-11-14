@@ -47,7 +47,8 @@ export const routes: Routes = [
         data: {
             roles: ['ADMIN_OVALTRACK', 'ADMIN_CLUB', 'COACH_ANALYST'],
             preload: true,
-            navbar: 'hidden'
+            // Barra global compacta: logo → Inicio y módulos, igual que el resto de la app
+            navbar: 'compact'
         },
         loadComponent: () =>
             import('./features/match/halftime-summary/halftime-summary.component').then(
@@ -61,7 +62,8 @@ export const routes: Routes = [
         data: {
             roles: ['ADMIN_OVALTRACK', 'ADMIN_CLUB', 'COACH_ANALYST'],
             preload: true,
-            navbar: 'hidden'
+            // Barra global compacta: logo → Inicio y módulos, igual que el resto de la app
+            navbar: 'compact'
         },
         loadComponent: () =>
             import('./features/match/carga-en-vivo/carga-en-vivo.component').then(
