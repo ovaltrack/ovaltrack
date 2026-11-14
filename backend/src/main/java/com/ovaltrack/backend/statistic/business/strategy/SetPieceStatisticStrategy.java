@@ -11,6 +11,7 @@ import com.ovaltrack.backend.event.domain.EventPossession;
 import com.ovaltrack.backend.event.domain.EventType;
 import com.ovaltrack.backend.event.domain.PossessionAfter;
 import com.ovaltrack.backend.event.domain.TemplateField;
+import com.ovaltrack.backend.statistic.business.advanced.PlayRules;
 import com.ovaltrack.backend.statistic.domain.dto.PeriodStatisticDTO;
 
 /**
@@ -26,7 +27,8 @@ import com.ovaltrack.backend.statistic.domain.dto.PeriodStatisticDTO;
 @Component
 public class SetPieceStatisticStrategy implements PeriodStatisticStrategy {
 
-    private static final String SCRUM = "Scrum";
+    private static final String SCRUM = "SCRUM";
+    private static final String LINEOUT = "LINEOUT";
 
     @Override
     public void calculate(Collection<Event> periodEvents, PeriodStatisticDTO.Builder builder) {
@@ -38,9 +40,9 @@ public class SetPieceStatisticStrategy implements PeriodStatisticStrategy {
         int ownLineoutsLost = 0;
 
         for (Event event : periodEvents) {
-            String name = event.getEventTypeName();
-            boolean isScrum = SCRUM.equals(name);
-            boolean isLineout = "Line-out".equals(name) || "Line".equals(name);
+            String code = PlayRules.code(event);
+            boolean isScrum = SCRUM.equals(code);
+            boolean isLineout = LINEOUT.equals(code);
             if (!isScrum && !isLineout) {
                 continue;
             }

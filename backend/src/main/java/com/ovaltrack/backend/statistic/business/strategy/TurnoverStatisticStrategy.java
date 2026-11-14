@@ -5,31 +5,26 @@ import java.util.Collection;
 import org.springframework.stereotype.Component;
 
 import com.ovaltrack.backend.event.domain.Event;
-import com.ovaltrack.backend.event.domain.EventPossession;
+import com.ovaltrack.backend.statistic.business.advanced.PlayRules;
 import com.ovaltrack.backend.statistic.domain.dto.PeriodStatisticDTO;
 
 /**
- * Estrategia encargada de calcular los turnovers ganados y perdidos.
+ * Estrategia encargada de calcular los turnovers ganados y perdidos. {@code TURNOVER_WON} se acredita al equipo que
+ * gana la pelota, así que el que gana el rival es uno perdido por el propio; los NEUTRAL no cuentan.
  */
 @Component
 public class TurnoverStatisticStrategy implements PeriodStatisticStrategy {
 
     @Override
     public void calculate(Collection<Event> periodEvents, PeriodStatisticDTO.Builder builder) {
-        int ownTurnoversWon = 0;
-        int ownTurnoversLost = 0;
-
+        TeamCounter won = new TeamCounter();
         for (Event event : periodEvents) {
-            if ("Turnover".equals(event.getEventTypeName())) {
-                if (event.getTeamPossession() == EventPossession.OWN) {
-                    ownTurnoversWon++;
-                } else {
-                    ownTurnoversLost++;
-                }
+            if ("TURNOVER_WON".equals(PlayRules.code(event))) {
+                won.add(event.getTeamPossession(), 1);
             }
         }
 
-        builder.ownTurnoversWon(ownTurnoversWon)
-               .ownTurnoversLost(ownTurnoversLost);
+        builder.ownTurnoversWon(won.own)
+               .ownTurnoversLost(won.opponent);
     }
 }

@@ -6,11 +6,12 @@ import org.springframework.stereotype.Component;
 
 import com.ovaltrack.backend.event.domain.Event;
 import com.ovaltrack.backend.event.domain.EventPossession;
+import com.ovaltrack.backend.statistic.business.advanced.PlayRules;
 import com.ovaltrack.backend.statistic.business.util.StatisticMathUtils;
 import com.ovaltrack.backend.statistic.domain.dto.PeriodStatisticDTO;
 
 /**
- * Estrategia encargada de calcular tackles completados, fallados y efectividad porcentual.
+ * Estrategia encargada de calcular tackles completados, fallados y efectividad porcentual (por {@code code} del catálogo).
  */
 @Component
 public class TackleStatisticStrategy implements PeriodStatisticStrategy {
@@ -25,9 +26,9 @@ public class TackleStatisticStrategy implements PeriodStatisticStrategy {
                 continue;
             }
 
-            if ("Tackle completado".equals(event.getEventTypeName())) {
+            if ("TACKLE_MADE".equals(PlayRules.code(event))) {
                 ownTacklesCompleted++;
-            } else if ("Tackle fallado".equals(event.getEventTypeName())) {
+            } else if ("TACKLE_MISSED".equals(PlayRules.code(event))) {
                 ownTacklesMissed++;
             }
         }

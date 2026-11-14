@@ -13,20 +13,21 @@ import com.ovaltrack.backend.event.domain.PossessionAfter;
 import com.ovaltrack.backend.event.domain.TemplateField;
 
 /**
+ * Reglas compartidas por las estadísticas del backend (segundo nivel y estrategias por período).
  * Reglas de quién tiene la pelota y a quién se le acreditan los puntos, las mismas que usa la carga en vivo
  * ({@code event-rules.ts} y {@code derivePossession}). {@code teamPossession} guarda el equipo que ejecutó el evento.
  */
-final class PlayRules {
+public final class PlayRules {
 
     private PlayRules() {
     }
 
-    static EventPossession opposite(EventPossession team) {
+    public static EventPossession opposite(EventPossession team) {
         return team == EventPossession.OWN ? EventPossession.OPPONENT : EventPossession.OWN;
     }
 
     /** Equipo que ejecutó el evento; null si es neutral. */
-    static EventPossession actor(Event event) {
+    public static EventPossession actor(Event event) {
         EventPossession team = event.getTeamPossession();
         return team == EventPossession.OWN || team == EventPossession.OPPONENT ? team : null;
     }
@@ -82,7 +83,7 @@ final class PlayRules {
     }
 
     /** Puntos que suma el evento (0 si no suma o el intento falló). */
-    static int points(Event event) {
+    public static int points(Event event) {
         EventType type = event.getEventType();
         if (type == null || type.getPoints() == null || !EventRules.countsAsScoring(type, event.getAttributes())) {
             return 0;
@@ -91,7 +92,7 @@ final class PlayRules {
     }
 
     /** Equipo al que se le suman los puntos: la misma regla que el marcador (un NEUTRAL con jugador es propio). */
-    static EventPossession scoringTeam(Event event) {
+    public static EventPossession scoringTeam(Event event) {
         if (event.getTeamPossession() == EventPossession.OPPONENT) {
             return EventPossession.OPPONENT;
         }
@@ -101,12 +102,12 @@ final class PlayRules {
         return null;
     }
 
-    static String code(Event event) {
+    public static String code(Event event) {
         return event.getEventType() == null || event.getEventType().getCode() == null ? "" : event.getEventType().getCode();
     }
 
     /** Valor del campo select del evento, o null. */
-    static String option(Event event, String key) {
+    public static String option(Event event, String key) {
         Object value = event.getAttributes() == null ? null : event.getAttributes().get(key);
         return value == null ? null : String.valueOf(value);
     }
