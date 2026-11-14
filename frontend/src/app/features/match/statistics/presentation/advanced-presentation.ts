@@ -5,6 +5,8 @@ import { StatLine } from './stat-presentation';
 export interface AdvancedSection {
   id: string;
   title: string;
+  /** Cómo leer el bloque: qué mide y qué indica un valor alto o bajo. */
+  hint: string;
   lines: StatLine[];
   /** Las filas comparan cantidades del mismo tipo: se muestran con barra. */
   bars: boolean;
@@ -60,9 +62,25 @@ const categoryLines = (categories: CategoryCount[], labels: Record<string, strin
     .map(category => countLine(labels[category.key] ?? category.key, category))
     .filter(hasData);
 
+export const ADVANCED_HINTS: Record<string, string> = {
+  possessions: 'Cada posesión es un tramo en el que un equipo tuvo la pelota sin perderla. Más puntos por posesión '
+    + 'indican un mejor aprovechamiento de la pelota; los finales muestran cómo se termina perdiendo.',
+  'try-sources': 'Cómo empezó la jugada de cada try: la última formación o reinicio antes del try o, si no hubo, '
+    + 'cómo se ganó la pelota. Muestra de dónde sale el juego que termina en try.',
+  turnovers: 'Posesiones que empezaron recuperando la pelota y los puntos hechos en ellas. Muestra cuánto se '
+    + 'castigan los errores del rival.',
+  'red-zone': 'Visitas a la 22 rival según los tramos de zona y los puntos hechos mientras duraron. Más puntos por '
+    + 'visita indican más eficacia cerca del ingoal.',
+  discipline: 'Un penal en campo propio suele costar puntos; en campo rival, terreno. Las amarillas muestran los '
+    + 'puntos a favor y en contra mientras el equipo jugó con uno menos.',
+  'score-blocks': 'Puntos de cada equipo cada 10 minutos de juego. Sirve para ver en qué momentos se anota o se '
+    + 'baja el rendimiento.',
+};
+
 const section = (id: string, title: string, lines: StatLine[], bars: boolean, emptyMessage: string): AdvancedSection => ({
   id,
   title,
+  hint: ADVANCED_HINTS[id],
   lines,
   bars,
   emptyMessage: lines.some(hasData) ? null : emptyMessage,
@@ -92,7 +110,7 @@ export function presentAdvancedStatistics(stats: AdvancedPeriodStatistics): Adva
         countLine('Puntos', redZone.points),
         rateLine('Puntos por visita', redZone.pointsPerVisit),
       ], false, 'Sin visitas a la 22 rival.')
-      : { id: 'red-zone', title: 'Zona roja (22 rival)', lines: [], bars: false,
+      : { id: 'red-zone', title: 'Zona roja (22 rival)', hint: ADVANCED_HINTS['red-zone'], lines: [], bars: false,
         emptyMessage: 'Cargá los tramos de zona del período para ver la zona roja.' },
     section('discipline', 'Disciplina', [
       countLine('Penales en campo propio', penalties.ownHalf),

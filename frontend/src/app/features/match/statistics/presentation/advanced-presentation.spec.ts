@@ -83,6 +83,12 @@ describe('presentAdvancedStatistics', () => {
     expect(withMissing).toContain('Penales sin zona');
   });
 
+  it('cada bloque explica cómo leerlo', () => {
+    for (const section of presentAdvancedStatistics(stats())) {
+      expect(section.hint).withContext(section.id).toBeTruthy();
+    }
+  });
+
   it('puntos cada 10 minutos: un renglón por bloque, aunque esté vacío', () => {
     expect(sectionOf('score-blocks')?.lines.map(line => line.label)).toEqual(["0'–10'", "10'–20'"]);
   });
