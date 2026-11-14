@@ -720,3 +720,41 @@ Dos piezas del CSS global (los íconos y la hoja de Bootstrap) **no se editan a 
 - **Comprobación en el build:** `npm run build` (lo que usan `Dockerfile.pwa` y Vercel) corre `scripts/check-icons.mjs` y `build-bootstrap-subset.mjs --check` y falla, con la lista, si una pantalla usa un ícono o una clase de Bootstrap que el archivo generado no tiene. `ng serve` (`./ds up`) no corre esas comprobaciones: un ícono o una clase faltante se vería sin estilo en desarrollo, así que hay que regenerar antes de commitear.
 - **Fondos fijos:** `body` conserva `background-attachment: fixed` (en iOS el `fixed` ya se comporta como `scroll`: pasarlo a un seudoelemento fijo cambiaría lo que se ve ahí). `.halftime-page` no lo usa: su fondo ocupa justo el viewport.
 - **Presupuesto:** el bundle inicial pesa unos 750 kB contra un presupuesto de 1 MB; ninguna optimización tocó `angular.json` más que la hoja de Bootstrap.
+
+---
+
+## 11. Visualizaciones de estadísticas (Lista / Gráficos)
+
+Las pantallas de estadísticas ofrecen dos formas de ver los mismos datos: **Lista** (las filas de siempre) y **Gráficos** (donas SVG). No hay datos distintos en cada vista: los gráficos se derivan de lo que la pantalla ya calcula y presenta, sin recalcular estadísticas.
+
+### 11.1 Selector (`app-view-mode-toggle`)
+- **Un control por pantalla**, que cambia todas sus tarjetas a la vez. Se usa con `[(mode)]="viewMode"`, donde `viewMode = statsViewModeSignal(clave)` (`shared/components/view-mode-toggle/view-mode.ts`): `'list'` por defecto, guardado en `sessionStorage` con `persistedSignal` (un valor guardado que ya no existe se descarta).
+- **Ubicación:** post-partido (`post-match.statistics.view`), al final de la barra de filtros fija, en Equipo y Jugadores; jugador (`player-statistics.view`), al extremo derecho de la barra de vista (General y Por partido); división (`division-statistics.view`), en el encabezado de la tarjeta «Métricas a graficar», con las etiquetas **Evolución** (líneas, `bi-graph-up`) y **Totales** (donas, `bi-pie-chart`).
+- **Aspecto:** dos píldoras de 44 px con el mismo estilo que `.filter-pill`; la activa usa `--grass-tint-strong` con borde y texto `--btn-primary-bg` (en oscuro, `--grass`). Con `compact`, hasta 480 px muestra solo los íconos (cada botón conserva su `aria-label`).
+
+### 11.2 Qué se grafica como dona
+Una torta representa **partes de un total**; lo demás no se fuerza a torta.
+| Dato | Gráfico |
+|---|---|
+| Categorías que suman un total (campos select y boolean, finales de posesión, orígenes de try, puntos por tipo de tanto, acciones de un grupo, bloques de 10') | Reparto: una dona por equipo (`shareDonut`) |
+| Una cantidad de propio contra rival (posesión, tries, cada tanto) | Dona de dos porciones (`versusDonut`) |
+| Un porcentaje (indicadores, efectividades, promedio del rango) | Anillo de avance sobre 100 (`gaugeDonut`) |
+| Tasas, promedios, saldos y comparaciones entre magnitudes distintas (p. ej. jugador contra promedio del plantel) | Siguen como **fila** (`rest`) o como el gráfico que ya tenían: nada desaparece al cambiar de vista |
+
+Los adaptadores son funciones puras con spec: `features/match/statistics/presentation/chart-presentation.ts`, `toActionDonuts` (`player-statistics/utils/player-comparison.ts`) y `division-statistics/utils/division-totals.ts`.
+
+### 11.3 Color
+- **Sin colores nuevos.** Propio = `--btn-primary-bg`, rival = `--team-rival`. El reparto de un solo equipo usa una **rampa de 8 tonos** de su color, mezclada con la superficie de la tarjeta (`color-mix(in srgb, var(--btn-primary-bg) N%, var(--surface))`), así sigue el tema claro y el oscuro. «Otros» y «Sin completar» van en `--border-strong`; el carril del anillo es una mezcla de `--border-strong` y `--surface`.
+- **Excepción:** el dashboard de división usa los colores de serie de `division-metrics.ts`, los mismos de las líneas de Evolución, para que la leyenda sea coherente entre las dos vistas.
+- Hasta 6 porciones por dona (8 en los repartos de segundo nivel, que incluyen los bloques de 10'); las más chicas se juntan en «Otros».
+
+### 11.4 Dona (`app-stat-donut`) y grilla (`app-donut-grid`)
+- La dona es una **subgrid de 4 filas** (título, equipo, anillo, leyenda) dentro de la grilla: en una misma fila todos los anillos arrancan a la misma altura aunque un título del catálogo ocupe más líneas. Los títulos **no se truncan**; la leyenda va debajo del anillo, a todo el ancho, y sus etiquetas pasan a una segunda línea en vez de cortarse (en celular no hay tooltip).
+- El **equipo** va en una línea propia, con su color, y con nombre corto (`shortTeamName`: «Puerto Madryn», sin «Rugby Club»). Los nombres completos quedan en el scoreboard y en las leyendas de cada tarjeta.
+- Anillo de `clamp(92px, 26vw, 120px)`, centro en HTML con JetBrains Mono (total o porcentaje) y leyenda con valor y porcentaje como texto real, no solo color. Los porcentajes de una leyenda suman 100.
+- `app-donut-grid`: columnas `auto-fill` de mínimo 220 px y sin `row-gap` (cada dona se separa de la siguiente con su padding inferior: así la subgrid no suma espacio entre sus filas).
+- **Accesibilidad:** el anillo es `role="img"` con un `aria-label` que lista cada porción con su valor y porcentaje; la leyenda visual va con `aria-hidden` para no repetirlo. La transición del trazo se desactiva con `prefers-reduced-motion`.
+
+### 11.5 Tarjetas en la vista de gráficos
+- Las tarjetas de detalle del post-partido (`.detail-card`) miden 440 px con scroll interno en Lista. En Gráficos pasan a **alto automático** (mínimo 440 px) y las de una misma fila igualan su alto, así no se recorta ningún anillo.
+- Los KPI, el mapa de zonas, la comparación con el plantel y la lista de partidos no cambian: ya son gráficos o no son partes de un total.
