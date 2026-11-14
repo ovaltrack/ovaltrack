@@ -3,18 +3,20 @@ package com.ovaltrack.backend.common.config;
 import java.util.Properties;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 
 import com.ovaltrack.backend.common.config.exceptions.BusinessException;
+import com.ovaltrack.backend.common.mail.config.MailProperties;
 
 @Configuration
-@PropertySource("classpath:email.properties")
+@EnableConfigurationProperties(MailProperties.class)
 public class EmailConfig {
 
     @Value("${email.username}")
@@ -31,7 +33,9 @@ public class EmailConfig {
         return properties;
     }
 
+    /** Solo con SMTP: con un proveedor HTTP no se crea y no hacen falta las credenciales de email. */
     @Bean
+    @ConditionalOnProperty(prefix = "ovaltrack.mail", name = "provider", havingValue = "smtp", matchIfMissing = true)
     JavaMailSender javaMailSender() {
 
         if (email == null || email.isBlank())
@@ -44,7 +48,7 @@ public class EmailConfig {
         mailSender.setJavaMailProperties(getMailProperties());
         mailSender.setUsername(email);
         mailSender.setPassword(password);
-        
+
         return mailSender;
     }
 
