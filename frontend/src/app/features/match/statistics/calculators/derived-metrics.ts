@@ -74,7 +74,7 @@ const assessBalance = (events: (stat: StatLookup) => TeamValue) =>
 const DERIVED_METRICS: DerivedMetricDefinition[] = [
   {
     id: 'scrum-success',
-    label: 'Scrums ganados con saque propio',
+    label: 'Scrums propios ganados (limpios + penal a favor)',
     format: 'percent',
     enabled: true,
     requires: ['SCRUM'],
@@ -82,7 +82,7 @@ const DERIVED_METRICS: DerivedMetricDefinition[] = [
   },
   {
     id: 'lineout-success',
-    label: 'Line-outs ganados con saque propio',
+    label: 'Line-outs propios ganados (limpios + penal a favor)',
     format: 'percent',
     enabled: true,
     requires: ['LINEOUT'],
@@ -90,7 +90,7 @@ const DERIVED_METRICS: DerivedMetricDefinition[] = [
   },
   {
     id: 'goal-kicking',
-    label: 'Efectividad a los palos',
+    label: 'Efectividad a los palos (conversiones + penales)',
     format: 'percent',
     enabled: true,
     requires: ['CONVERSION', 'PENALTY_KICK'],
@@ -101,7 +101,7 @@ const DERIVED_METRICS: DerivedMetricDefinition[] = [
   },
   {
     id: 'penalty-balance',
-    label: 'Balance de penales',
+    label: 'Balance de penales (cometidos por el rival − propios)',
     format: 'signed',
     enabled: true,
     requires: ['PENALTY_CONCEDED'],
@@ -114,7 +114,7 @@ const DERIVED_METRICS: DerivedMetricDefinition[] = [
   },
   {
     id: 'tackle-effectiveness',
-    label: 'Efectividad de tackles',
+    label: 'Efectividad de tackles (completados / intentados)',
     format: 'percent',
     enabled: true,
     requires: ['TACKLE_MADE', 'TACKLE_MISSED'],
@@ -131,7 +131,7 @@ const DERIVED_METRICS: DerivedMetricDefinition[] = [
   },
   {
     id: 'turnover-balance',
-    label: 'Balance de turnovers',
+    label: 'Balance de turnovers (ganados − perdidos)',
     format: 'signed',
     enabled: true,
     requires: ['TURNOVER_WON'],
