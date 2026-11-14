@@ -63,8 +63,9 @@
               </div>
               <div class="scoreboard__center">
                 <div class="possession-labels">
-                  <span class="text-own">Posesión {{ s.ownPossessionPercentage }}%</span>
-                  <span class="text-opp">{{ opponentPossession() }}% Posesión</span>
+                  <span class="text-own">{{ s.ownPossessionPercentage }}%</span>
+                  <span class="possession-caption">Posesión (tiempo de juego)</span>
+                  <span class="text-opp">{{ opponentPossession() }}%</span>
                 </div>
                 <div class="bar" role="progressbar" [attr.aria-valuenow]="s.ownPossessionPercentage" aria-valuemin="0" aria-valuemax="100">
                   <div class="bar__fill bar__fill--own" [style.width.%]="s.ownPossessionPercentage"></div>
