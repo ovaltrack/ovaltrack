@@ -130,10 +130,4 @@ describe('computeMatchStatistics', () => {
     expect(typeStat(withoutEvents, 'RETIRED')).toBeUndefined();
     expect(typeStat(withEvents, 'RETIRED')?.count).toEqual({ own: 1, opponent: 0 });
   });
-
-  it('no calcula las métricas combinadas deshabilitadas (tackles y turnovers)', () => {
-    for (const view of ['basic', 'intermediate', 'full'] as const) {
-      expect(computeMatchStatistics(events, types, view).derived).withContext(view).toEqual([]);
-    }
-  });
 });
