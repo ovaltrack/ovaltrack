@@ -31,7 +31,7 @@ Fase actual: Fase 1 (un club por instalación lógica; multi-club/Bounded Contex
 | `./ds reset` | Borra contenedores y volúmenes (pide confirmación) |
 
 Puertos: backend `8080` (Swagger `/swagger-ui`, health `/actuator/health`), frontend `4200`, PWA `4201`, Postgres `5432` (test `5433`).
-Variables en `.env` (ignorado por git): `DB_*`, `OVALTRACK_BOOTSTRAP_ADMIN_EMAIL/PASSWORD`, `EMAIL_USERNAME/PASSWORD`. **Nunca commitear ni mostrar secretos.**
+Variables en `.env` (ignorado por git): `DB_*`, `OVALTRACK_BOOTSTRAP_ADMIN_EMAIL/PASSWORD`, `EMAIL_USERNAME/PASSWORD` (SMTP en desarrollo), `MAIL_PROVIDER` (`smtp` | `brevo` | `log`), `MAIL_FROM_ADDRESS/NAME`, `BREVO_API_KEY`, `APP_FRONTEND_URL` (enlaces de los correos). En Render (bloquea SMTP) se usa `MAIL_PROVIDER=brevo`. **Nunca commitear ni mostrar secretos.**
 
 ## 3. Backend
 
