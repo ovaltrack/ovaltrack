@@ -1,9 +1,9 @@
-import { When, Then } from '@cucumber/cucumber';
+import { Given, When, Then } from '@cucumber/cucumber';
 import assert from 'node:assert/strict';
 import { getUserToken } from '../../support/auth_helper.js';
 import { MISSING_UUID } from '../../support/ids.js';
 import { makeHttpRequest } from '../../support/httpRequest.js';
-import { findDivisionId } from '../../support/match_helper.js';
+import { findDivisionId, requestMatchCreation } from '../../support/match_helper.js';
 
 // Pasos reutilizados:
 //  - "Dado que el coach / jugador ... ha iniciado sesión" y "Dado un usuario sin sesión iniciada ..."
@@ -15,6 +15,17 @@ import { findDivisionId } from '../../support/match_helper.js';
 
 const getMatchStatistics = (matchId, token, period) =>
   makeHttpRequest('GET', `statistics/match/${matchId}${period ? `?period=${period}` : ''}`, null, token);
+
+const getAdvancedStatistics = (matchId, token) =>
+  makeHttpRequest('GET', `statistics/match/${matchId}/advanced`, null, token);
+
+// Período de la respuesta avanzada: "1", "2" o "completo" (period null)
+const advancedPeriod = (body, periodo) => {
+  const period = periodo === 'completo' ? null : Number(periodo);
+  const found = body.periods.find((p) => p.period === period);
+  assert.ok(found, `No se informó el período ${periodo}`);
+  return found;
+};
 
 const getDivisionStatistics = (divisionId, from, to, token) =>
   makeHttpRequest('GET', `statistics/division/${divisionId}?from=${from}&to=${to}`, null, token);
@@ -54,6 +65,55 @@ When('el administrador del club con email {string} y contraseña {string} intent
 
 Then('las estadísticas incluyen:', function (dataTable) {
   assertFields(this.response.body, dataTable);
+});
+
+// <==================== Estadísticas avanzadas del partido ====================>
+
+// Otra fecha: el partido finalizado de los antecedentes ocupa la franja del paso de zonas.
+Given('que existe otro partido no iniciado para la división {string} contra {string}', async function (divisionNombre, rival) {
+  const divisionId = await findDivisionId(divisionNombre, this.token);
+  const response = await requestMatchCreation('2026-12-08T15:30:00', divisionId, rival, this.token);
+  assert.equal(response.status, 200, `No se pudo crear el partido contra ${rival}: ${response.body?.message}`);
+  this.currentMatch = response.body;
+});
+
+When('consulta las estadísticas avanzadas del partido', async function () {
+  this.response = await getAdvancedStatistics(this.currentMatch.id, this.token);
+});
+
+When('el administrador del club con email {string} y contraseña {string} intenta consultar las estadísticas avanzadas de ese partido', async function (email, contraseña) {
+  const token = await getUserToken(email, contraseña);
+  assert.ok(token, `Fallo de inicio de sesión para ${email}`);
+  this.response = await getAdvancedStatistics(this.currentMatch.id, token);
+});
+
+Then('las estadísticas avanzadas informan el primer tiempo, el segundo tiempo y el partido completo', function () {
+  assert.deepEqual(this.response.body.periods.map((p) => p.period), [1, 2, null]);
+});
+
+Then('las estadísticas avanzadas del período {string} incluyen:', function (periodo, dataTable) {
+  const stats = advancedPeriod(this.response.body, periodo);
+  for (const { campo, propio, rival } of dataTable.hashes()) {
+    assert.equal(stats[campo].own, Number(propio), `Campo "${campo}" propio`);
+    assert.equal(stats[campo].opponent, Number(rival), `Campo "${campo}" rival`);
+  }
+});
+
+Then('el origen de los tries del período {string} es:', function (periodo, dataTable) {
+  const { trySources } = advancedPeriod(this.response.body, periodo);
+  for (const { fuente, propio, rival } of dataTable.hashes()) {
+    const source = trySources.find((s) => s.key === fuente);
+    assert.ok(source, `No se informó la fuente ${fuente}`);
+    assert.equal(source.own, Number(propio), `Fuente "${fuente}" propio`);
+    assert.equal(source.opponent, Number(rival), `Fuente "${fuente}" rival`);
+  }
+});
+
+Then('la zona roja del período {string} informa {int} visita propia con {int} puntos', function (periodo, visitas, puntos) {
+  const { redZone } = advancedPeriod(this.response.body, periodo);
+  assert.equal(redZone.available, true);
+  assert.equal(redZone.visits.own, visitas);
+  assert.equal(redZone.points.own, puntos);
 });
 
 // <==================== Estadísticas de la división ====================>

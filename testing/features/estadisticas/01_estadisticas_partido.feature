@@ -77,3 +77,32 @@ Característica: Estadísticas de un partido
     Dado un usuario sin sesión iniciada en la plataforma
     Cuando consulta las estadísticas del periodo 1 del partido
     Entonces el sistema responde con 401
+
+  Escenario: Estadísticas avanzadas de un partido finalizado
+    Dado que el partido tiene asignada la zona fila 2 columna 5 en el periodo 2 entre el minuto 45 y el minuto 51
+    Cuando consulta las estadísticas avanzadas del partido
+    Entonces el sistema responde con 200
+    Y las estadísticas avanzadas informan el primer tiempo, el segundo tiempo y el partido completo
+    Y las estadísticas avanzadas del período "1" incluyen:
+      | campo               | propio | rival |
+      | possessions         | 2      | 1     |
+      | pointsPerPossession | 3.5    | 5     |
+      | turnoverPossessions | 1      | 0     |
+    Y las estadísticas avanzadas del período "completo" incluyen:
+      | campo               | propio | rival |
+      | possessions         | 3      | 1     |
+      | pointsPerPossession | 4      | 5     |
+    Y el origen de los tries del período "completo" es:
+      | fuente  | propio | rival |
+      | OTHER   | 2      | 0     |
+      | RESTART | 0      | 1     |
+    Y la zona roja del período "2" informa 1 visita propia con 5 puntos
+
+  Escenario: Las estadísticas avanzadas exigen el partido finalizado
+    Dado que existe otro partido no iniciado para la división "Primera" contra "Bigornia Club"
+    Cuando consulta las estadísticas avanzadas del partido
+    Entonces el sistema responde con 409 y "Las estadísticas avanzadas solo están disponibles con el partido finalizado"
+
+  Escenario: Un administrador de otro club no puede ver las estadísticas avanzadas del partido
+    Cuando el administrador del club con email "admin_multiclub@test.com" y contraseña "PassSegura123!" intenta consultar las estadísticas avanzadas de ese partido
+    Entonces el sistema responde con 403
