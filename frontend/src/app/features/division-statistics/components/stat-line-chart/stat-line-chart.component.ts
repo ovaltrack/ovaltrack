@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, Input, OnChanges } from '@angular/core';
+import { scaleMaxFor } from '../../../../shared/utils/bars';
 import { formatMetricValue, MetricUnit } from '../../utils/division-metrics';
 
 export interface ChartSeries {
@@ -110,10 +111,6 @@ export class StatLineChartComponent implements OnChanges {
 
   /** Techo del eje Y: 100 en porcentajes; en conteos, el siguiente valor "redondo" por encima del máximo. */
   private niceMax(): number {
-    if (this.unit === 'percent') return 100;
-    const max = Math.max(0, ...this.series.flatMap(serie => serie.values).filter((v): v is number => v !== null));
-    if (max <= 4) return 4;
-    const magnitude = Math.pow(10, Math.floor(Math.log10(max)));
-    return Math.ceil(max / (magnitude / 2)) * (magnitude / 2) || 4;
+    return scaleMaxFor(this.unit === 'percent' ? 'percent' : 'count', this.series.flatMap(serie => serie.values));
   }
 }
