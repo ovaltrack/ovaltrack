@@ -5,6 +5,13 @@ export type Team = 'OWN' | 'OPPONENT';
 
 export const opposite = (team: Team): Team => (team === 'OWN' ? 'OPPONENT' : 'OWN');
 
+/**
+ * Atributos que guardan un número de camiseta (el jugador del evento y los de un cambio). Son identificadores unicamente
+ */
+export const JERSEY_NUMBER_KEYS: readonly string[] = ['playerNumber', 'playerOutNumber', 'playerInNumber'];
+
+export const isJerseyNumberField = (field: TemplateField): boolean => JERSEY_NUMBER_KEYS.includes(field.key);
+
 /** Campos que se piden en el momento de la carga en vivo. */
 export const liveFields = (type: LiveCaptureEventType): TemplateField[] =>
   (type.templateEventFields ?? []).filter(field => field.phase === 'live');
