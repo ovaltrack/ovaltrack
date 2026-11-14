@@ -8,6 +8,8 @@
       <p class="empty">No hay acciones registradas con este jugador.</p>
     } @else if (viewMode() === 'chart') {
       <app-donut-grid [charts]="charts()" />
+    } @else if (viewMode() === 'bars') {
+      <app-bar-grid [charts]="bars()" />
     } @else {
       <div class="groups">
         @for (group of groups(); track group.title) {

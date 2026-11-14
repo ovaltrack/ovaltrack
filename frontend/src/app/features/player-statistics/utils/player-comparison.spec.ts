@@ -3,6 +3,7 @@ import {
   formatMetricValue,
   matchResult,
   tackleDetail,
+  toActionBars,
   toActionDonuts,
   toActionGroups,
   toComparisonRows,
@@ -118,6 +119,37 @@ describe('player-comparison', () => {
 
     it('sin acciones no hay donas', () => {
       expect(toActionDonuts([])).toEqual([]);
+    });
+  });
+
+  describe('toActionBars', () => {
+    const groups = toActionGroups([
+      { code: 'CARRY', name: 'Acarreo', groupName: 'Ataque', count: 2, made: null },
+      { code: 'PASS_OFFLOAD', name: 'Pase', groupName: 'Ataque', count: 5, made: null },
+      { code: 'CONVERSION', name: 'Conversión', groupName: 'Puntuación', count: 3, made: 2 },
+    ]);
+
+    it('un gráfico por grupo con una barra por acción, de la que más hizo a la que menos', () => {
+      const charts = toActionBars(groups);
+      expect(charts.map(chart => chart.title)).toEqual(['Ataque', 'Puntos y pateo']);
+      expect(charts[0].groups.map(group => [group.label, group.values[0].value])).toEqual([['Pase', 5], ['Acarreo', 2]]);
+      expect(charts[0].max).toBe(5);
+    });
+
+    it('los pateos muestran los aciertos sobre los intentos y miden los intentos', () => {
+      const [value] = toActionBars(groups)[1].groups[0].values;
+      expect(value.display).toBe('2 de 3');
+      expect(value.value).toBe(3);
+    });
+
+    it('todas las barras son del jugador: usan el color propio', () => {
+      expect(toActionBars(groups).flatMap(chart => chart.groups.map(group => group.values[0].color))).toEqual(
+        ['var(--btn-primary-bg)', 'var(--btn-primary-bg)', 'var(--btn-primary-bg)']
+      );
+    });
+
+    it('sin acciones no hay gráficos', () => {
+      expect(toActionBars([])).toEqual([]);
     });
   });
 });
