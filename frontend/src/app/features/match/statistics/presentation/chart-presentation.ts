@@ -28,10 +28,11 @@ import {
 /**
  * Qué se grafica como dona: lo que es parte de un total (categorías de un campo, finales de posesión, puntos por
  * tipo de tanto), una cantidad de propio contra rival y los porcentajes. Lo que no es parte de un total (tasas,
- * promedios, saldos) queda como fila en `rest`, así ningún dato desaparece al cambiar de visualización.
+ * promedios, saldos) queda como fila en `rest`, así ningún dato desaparece al cambiar de visualización. El gráfico
+ * es genérico: las barras (`bar-presentation.ts`) usan la misma tarjeta con sus propios gráficos.
  */
-export interface ChartCard {
-  charts: DonutChart[];
+export interface ChartCard<T = DonutChart> {
+  charts: T[];
   rest: StatLine[];
 }
 
@@ -46,7 +47,8 @@ interface TeamItem {
   muted?: boolean;
 }
 
-const hasData = (line: StatLine): boolean => line.ownValue + line.opponentValue > 0;
+/** La fila tiene algo que graficar: 0 contra 0 queda como fila. */
+export const hasData = (line: StatLine): boolean => line.ownValue + line.opponentValue > 0;
 
 const toItems = (lines: StatLine[]): TeamItem[] =>
   lines.map(line => ({ label: line.label, own: line.ownValue, opponent: line.opponentValue, muted: line.label === PENDING_LABEL }));
@@ -114,7 +116,7 @@ export function scoreCharts(stats: MatchStatistics, scoring: StatLine[], names: 
   ];
 }
 
-const metricLine = (metric: DerivedMetric): StatLine => ({
+export const metricLine = (metric: DerivedMetric): StatLine => ({
   label: metric.label,
   own: formatMetric(metric.value.own, metric.format),
   opponent: formatMetric(metric.value.opponent, metric.format),
@@ -122,9 +124,13 @@ const metricLine = (metric: DerivedMetric): StatLine => ({
   opponentValue: metric.value.opponent ?? 0,
 });
 
+/** Indicador que es un porcentaje con dato de algún equipo: se grafica; saldos y tasas quedan como fila. */
+export const isGaugedMetric = (metric: DerivedMetric): boolean =>
+  metric.format === 'percent' && (metric.value.own !== null || metric.value.opponent !== null);
+
 /** Tarjeta «Indicadores»: los porcentajes son anillos de avance por equipo; los saldos quedan como fila. */
 export function indicatorCard(derived: DerivedMetric[], names: VersusNames): ChartCard {
-  const gauged = derived.filter(metric => metric.format === 'percent' && (metric.value.own !== null || metric.value.opponent !== null));
+  const gauged = derived.filter(isGaugedMetric);
   return {
     charts: gauged.flatMap(metric => [
       withTeam(gaugeDonut(`${metric.id}-own`, metric.label, metric.value.own, OWN_COLOR_VAR), names.own, OWN_COLOR_VAR),
@@ -159,24 +165,33 @@ export function measurementCard(section: GroupStatPresentation, names: VersusNam
   };
 }
 
-/** Acciones de un jugador: una dona por grupo del catálogo con las acciones que registró. */
-export function playerActionCharts(columns: PlayerStatColumn[], player: PlayerStatistic): DonutChart[] {
+/** Acciones que registró un jugador en un grupo del catálogo, con su valor ya formateado. */
+export interface PlayerActionGroup {
+  groupName: string;
+  items: { label: string; value: number; display: string }[];
+}
+
+/** Grupos del catálogo con las acciones que el jugador registró (los grupos sin acciones no aparecen). */
+export function playerActionGroups(columns: PlayerStatColumn[], player: PlayerStatistic): PlayerActionGroup[] {
   const groups = columns.reduce<Map<string, PlayerStatColumn[]>>(
     (result, column) => result.set(column.groupName, [...(result.get(column.groupName) ?? []), column]),
     new Map()
   );
-  return Array.from(groups, ([groupName, groupColumns]) =>
-    shareDonut(
-      `player-${groupName}`,
-      groupName,
-      groupColumns
-        .filter(column => (player.values[column.eventTypeId]?.count ?? 0) > 0)
-        .map(column => ({
-          label: column.label,
-          value: player.values[column.eventTypeId].count,
-          display: formatPlayerValue(column, player.values[column.eventTypeId]),
-        })),
-      OWN_COLOR_VAR
-    )
-  ).filter(chart => !isEmptyDonut(chart));
+  return Array.from(groups, ([groupName, groupColumns]) => ({
+    groupName,
+    items: groupColumns
+      .filter(column => (player.values[column.eventTypeId]?.count ?? 0) > 0)
+      .map(column => ({
+        label: column.label,
+        value: player.values[column.eventTypeId].count,
+        display: formatPlayerValue(column, player.values[column.eventTypeId]),
+      })),
+  })).filter(group => group.items.length > 0);
+}
+
+/** Acciones de un jugador: una dona por grupo del catálogo con las acciones que registró. */
+export function playerActionCharts(columns: PlayerStatColumn[], player: PlayerStatistic): DonutChart[] {
+  return playerActionGroups(columns, player).map(group =>
+    shareDonut(`player-${group.groupName}`, group.groupName, group.items, OWN_COLOR_VAR)
+  );
 }

@@ -59,7 +59,7 @@
             <h2 class="form-card-title">Marcador y posesión</h2>
           </div>
           <div class="form-card-body">
-            <div class="scoreboard" [class.scoreboard--chart]="viewMode() === 'chart'">
+            <div class="scoreboard" [class.scoreboard--chart]="isGraphic()">
               <div class="scoreboard__team">
                 <span class="scoreboard__name">{{ ownClubName() }}</span>
                 <span class="scoreboard__score scoreboard__score--own">{{ s.score.own }}</span>
@@ -99,16 +99,18 @@
                 </div>
               }
             </div>
-            } @else {
+            } @else if (viewMode() === 'chart') {
               <app-donut-grid [charts]="scoreCharts()" />
+            } @else {
+              <app-bar-grid [charts]="scoreBars()" />
             }
           </div>
         </section>
 
         <!-- Detalle por grupo del catálogo (todos los campos, live y post) -->
-        <div class="detail-grid" [class.detail-grid--chart]="viewMode() === 'chart'">
+        <div class="detail-grid" [class.detail-grid--chart]="isGraphic()">
           @if (showAnalysis() && s.derived.length > 0) {
-            <section class="form-card detail-card" [class.detail-card--chart]="viewMode() === 'chart'">
+            <section class="form-card detail-card" [class.detail-card--chart]="isGraphic()">
               <div class="form-card-header detail-header">
                 <h2 class="form-card-title"><i class="bi bi-speedometer2"></i> Indicadores</h2>
                 <div class="legend" aria-hidden="true">
@@ -127,8 +129,10 @@
                     </div>
                   }
                 </div>
-                } @else {
+                } @else if (viewMode() === 'chart') {
                   <ng-container *ngTemplateOutlet="chartCard; context: { $implicit: indicatorCard() }" />
+                } @else {
+                  <ng-container *ngTemplateOutlet="barCard; context: { $implicit: indicatorBarCard() }" />
                 }
               </div>
             </section>
@@ -136,7 +140,7 @@
 
           <!-- Segundo nivel: lo calcula el backend con la secuencia de eventos y los tramos de zona -->
           @if (showAnalysis() && advancedUnavailable()) {
-            <section class="form-card detail-card" [class.detail-card--chart]="viewMode() === 'chart'">
+            <section class="form-card detail-card" [class.detail-card--chart]="isGraphic()">
               <div class="form-card-header detail-header">
                 <h2 class="form-card-title"><i class="bi bi-speedometer2"></i> Análisis del juego</h2>
               </div>
@@ -146,7 +150,7 @@
             </section>
           }
           @for (section of showAnalysis() ? advancedSections() : []; track section.id) {
-            <section class="form-card detail-card" [class.detail-card--chart]="viewMode() === 'chart'">
+            <section class="form-card detail-card" [class.detail-card--chart]="isGraphic()">
               <div class="form-card-header detail-header">
                 <h2 class="form-card-title"><i class="bi bi-speedometer2"></i> {{ section.title }}</h2>
                 <div class="legend" aria-hidden="true">
@@ -160,6 +164,8 @@
                   <p class="form-card-subtitle">{{ section.emptyMessage }}</p>
                 } @else if (viewMode() === 'chart') {
                   <ng-container *ngTemplateOutlet="chartCard; context: { $implicit: advancedCards()[section.id] }" />
+                } @else if (viewMode() === 'bars') {
+                  <ng-container *ngTemplateOutlet="barCard; context: { $implicit: advancedBarCards()[section.id] }" />
                 } @else {
                   <div class="metric-table">
                     @for (row of section.lines; track row.label) {
@@ -190,7 +196,7 @@
           }
 
           @for (section of showMeasurements() ? detailSections() : []; track section.name) {
-            <section class="form-card detail-card" [class.detail-card--chart]="viewMode() === 'chart'">
+            <section class="form-card detail-card" [class.detail-card--chart]="isGraphic()">
               <div class="form-card-header detail-header">
                 <h2 class="form-card-title"><i class="bi bi-bar-chart"></i> {{ section.name }}</h2>
                 <div class="legend" aria-hidden="true">
@@ -202,6 +208,8 @@
               <div class="form-card-body">
                 @if (viewMode() === 'chart') {
                   <ng-container *ngTemplateOutlet="chartCard; context: { $implicit: detailCards()[section.name] }" />
+                } @else if (viewMode() === 'bars') {
+                  <ng-container *ngTemplateOutlet="barCard; context: { $implicit: detailBarCards()[section.name] }" />
                 } @else {
                 <div class="metric-table">
                   @for (type of section.types; track type.eventTypeId) {
@@ -308,7 +316,11 @@
                 @if (selectedPlayerPoints(); as points) {
                   <ng-container *ngTemplateOutlet="statGroup; context: { $implicit: points }" />
                 }
-                <app-donut-grid [charts]="selectedPlayerCharts()" />
+                @if (viewMode() === 'chart') {
+                  <app-donut-grid [charts]="selectedPlayerCharts()" />
+                } @else {
+                  <app-bar-grid [charts]="selectedPlayerBars()" />
+                }
               }
             </div>
           } @else {
@@ -323,12 +335,22 @@
   }
 }
 
-<!-- Vista de gráficos de una tarjeta: donas y, debajo, lo que no es parte de un total (tasas, promedios, saldos) -->
+<!-- Vista de donas de una tarjeta: donas y, debajo, lo que no es parte de un total (tasas, promedios, saldos) -->
 <ng-template #chartCard let-card>
   <app-donut-grid [charts]="card.charts" />
-  @if (card.rest.length > 0) {
+  <ng-container *ngTemplateOutlet="restRows; context: { $implicit: card.rest }" />
+</ng-template>
+
+<!-- Vista de barras de una tarjeta: gráficos y, debajo, lo que no se puede dibujar sin mezclar unidades -->
+<ng-template #barCard let-card>
+  <app-bar-grid [charts]="card.charts" />
+  <ng-container *ngTemplateOutlet="restRows; context: { $implicit: card.rest }" />
+</ng-template>
+
+<ng-template #restRows let-lines>
+  @if (lines.length > 0) {
     <div class="metric-table">
-      @for (line of card.rest; track line.label) {
+      @for (line of lines; track line.label) {
         <div class="compare-row compare-row--plain">
           <strong class="text-own" [class.zero]="line.ownValue === 0">{{ line.own }}</strong>
           <span class="compare-row__label">{{ line.label }}</span>

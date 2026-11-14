@@ -25,6 +25,13 @@ import {
   scoreCharts,
 } from '../../../statistics/presentation/chart-presentation';
 import {
+  advancedBars,
+  indicatorBars,
+  measurementBars,
+  playerActionBars,
+  scoreBars,
+} from '../../../statistics/presentation/bar-presentation';
+import {
   formatMetric,
   formatPlayerValue,
   GroupStatPresentation,
@@ -38,7 +45,9 @@ import { LoadingGate } from '../../../../../shared/utils/loading-gate';
 import { RugbyBallLoaderComponent } from '../../../../../shared/components/rugby-ball-loader/rugby-ball-loader.component';
 import { oneOf, persistedSignal } from '../../../../../shared/utils/persisted-signal';
 import { DonutChart } from '../../../../../shared/utils/donut';
+import { BarChart } from '../../../../../shared/utils/bars';
 import { DonutGridComponent } from '../../../../../shared/components/donut-grid/donut-grid.component';
+import { BarGridComponent } from '../../../../../shared/components/bar-grid/bar-grid.component';
 import { ViewModeToggleComponent } from '../../../../../shared/components/view-mode-toggle/view-mode-toggle.component';
 import { statsViewModeSignal } from '../../../../../shared/components/view-mode-toggle/view-mode';
 
@@ -54,7 +63,7 @@ interface RosterGroup { label: string; players: PlayerStatistic[]; }
 @Component({
   selector: 'app-post-match-statistics',
   standalone: true,
-  imports: [CommonModule, RugbyBallLoaderComponent, DonutGridComponent, ViewModeToggleComponent],
+  imports: [CommonModule, RugbyBallLoaderComponent, DonutGridComponent, BarGridComponent, ViewModeToggleComponent],
   templateUrl: './post-match-statistics.component.html',
   styleUrl: './post-match-statistics.component.css',
 })
@@ -85,8 +94,10 @@ export class PostMatchStatisticsComponent implements OnInit, OnDestroy {
   readonly content = persistedSignal<StatsContent>('post-match.statistics.content', 'all', {
     isValid: oneOf<StatsContent>(['all', 'analysis', 'measurements']),
   });
-  /** Lista (filas) o gráficos (donas): preferencia de la pantalla, la misma en todos los partidos. */
+  /** Lista (filas), donas o barras: preferencia de la pantalla, la misma en todos los partidos. */
   readonly viewMode = statsViewModeSignal('post-match.statistics.view');
+  /** Donas y barras comparten el diseño de tarjetas: alto automático en vez del fijo con scroll de la lista. */
+  readonly isGraphic = computed(() => this.viewMode() !== 'list');
   readonly showAnalysis = computed(() => this.content() !== 'measurements');
   readonly showMeasurements = computed(() => this.content() !== 'analysis');
 
@@ -156,6 +167,19 @@ export class PostMatchStatisticsComponent implements OnInit, OnDestroy {
     Object.fromEntries(this.detailSections().map(section => [section.name, measurementCard(section, this.teamNames())]))
   );
 
+  /** Vista de barras: mismos datos que las donas, partidos de la misma forma (adaptadores en bar-presentation.ts). */
+  readonly scoreBars = computed<BarChart[]>(() => {
+    const stats = this.stats();
+    return stats ? scoreBars(stats, this.scoreLines(), this.teamNames()) : [];
+  });
+  readonly indicatorBarCard = computed<ChartCard<BarChart>>(() => indicatorBars(this.stats()?.derived ?? [], this.teamNames()));
+  readonly advancedBarCards = computed<Record<string, ChartCard<BarChart>>>(() =>
+    Object.fromEntries(this.advancedSections().map(section => [section.id, advancedBars(section, this.teamNames())]))
+  );
+  readonly detailBarCards = computed<Record<string, ChartCard<BarChart>>>(() =>
+    Object.fromEntries(this.detailSections().map(section => [section.name, measurementBars(section, this.teamNames())]))
+  );
+
   private readonly playerStatistics = computed<PlayerStatistics>(() => {
     if (this.eventTypes().length === 0) return { columns: [], players: [] };
     return this.statisticService.computePlayerStatistics(
@@ -214,6 +238,11 @@ export class PostMatchStatisticsComponent implements OnInit, OnDestroy {
   readonly selectedPlayerCharts = computed<DonutChart[]>(() => {
     const p = this.selectedPlayer();
     return p ? playerActionCharts(this.playerStatistics().columns, p) : [];
+  });
+
+  readonly selectedPlayerBars = computed<BarChart[]>(() => {
+    const p = this.selectedPlayer();
+    return p ? playerActionBars(this.playerStatistics().columns, p) : [];
   });
 
   readonly opponentPossession = computed(() => opponentPossessionOf(this.stats()?.ownPossessionPercentage ?? 50));
