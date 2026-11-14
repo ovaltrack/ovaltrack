@@ -91,7 +91,7 @@ Fuente de verdad: `docs/DESIGN_SYSTEM.md` + `frontend/src/styles.css`. Bootstrap
 - **Un solo botón primario sólido verde por pantalla**; el resto `outline`; rojo solo destructivo.
 - Tarjetas/tablas: borde 2px, radio 16–20px, sombra de elevación. Hit-targets táctiles **44–48px**.
 - Pantallas de gestión dentro de `.layout-container.page` (max 1180px; wide 1560px).
-- **Excepción**: `/live-capture/:matchId` y `/halftime` son pantalla completa, sin navbar ni `.layout-container`.
+- **Excepción**: `/live-capture/:matchId` y `/halftime` ocupan todo el viewport debajo de la navbar global en modo compacto (`navbar: 'compact'`, 56 px) y no usan `.layout-container`.
 - Tipografías: Hanken Grotesk (títulos), Inter (UI), JetBrains Mono (números/dorsales/tiempos).
 - Modo oscuro «Grafito con verde botella»: definido en `docs/DESIGN_SYSTEM.md` §5. Los colores oscuros van en tokens de `[data-theme="dark"]` (`frontend/src/styles.css`); no escribir colores a mano en overrides `:host-context`.
 
