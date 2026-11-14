@@ -2417,7 +2417,7 @@ INSERT INTO persons (id, first_name, last_name, birth_date, contact_email, conta
     ('33333333-1111-1111-1111-000000000107', 'Facundo', 'Isa', '1996-09-21', 'player7@ovaltrack.com', '123456789', CURRENT_TIMESTAMP),
     ('33333333-1111-1111-1111-000000000108', 'Gonzalo', 'Bertranou', '1997-12-31', 'player8@ovaltrack.com', '123456789', CURRENT_TIMESTAMP),
     ('33333333-1111-1111-1111-000000000109', 'Nicolas', 'Sanchez', '1995-10-26', 'player9@ovaltrack.com', '123456789', CURRENT_TIMESTAMP),
-    ('33333333-1111-1111-1111-000000000110', 'Santiago', 'Carreras', '1998-05-01', 'player10@ovaltrack.com', '123456789', CURRENT_TIMESTAMP),
+    ('33333333-1111-1111-1111-000000000110', 'Santiago', 'Carreras', '1998-05-01', 'santi@jugador.com', '123456789', CURRENT_TIMESTAMP),
     ('33333333-1111-1111-1111-000000000111', 'Emiliano', 'Boffelli', '1999-01-16', 'player11@ovaltrack.com', '123456789', CURRENT_TIMESTAMP),
     ('33333333-1111-1111-1111-000000000112', 'Mateo', 'Carreras', '2000-12-17', 'player12@ovaltrack.com', '123456789', CURRENT_TIMESTAMP),
     -- 16 a 30: 15 Personas/Jugadores que NO tienen cuenta de usuario
@@ -2472,7 +2472,7 @@ INSERT INTO users (id, login_email, password_hash, role, person_id, active, crea
     ('33333333-1111-1111-1111-000000000107', 'player7@ovaltrack.com', '$2a$10$rfosuoBOENyuQRIy6eCSX.RVjuk2ZrLtlz7NdGpBlxrqviDJflWiG', 'PLAYER', '33333333-1111-1111-1111-000000000107', true, CURRENT_TIMESTAMP),
     ('33333333-1111-1111-1111-000000000108', 'player8@ovaltrack.com', '$2a$10$rfosuoBOENyuQRIy6eCSX.RVjuk2ZrLtlz7NdGpBlxrqviDJflWiG', 'PLAYER', '33333333-1111-1111-1111-000000000108', true, CURRENT_TIMESTAMP),
     ('33333333-1111-1111-1111-000000000109', 'player9@ovaltrack.com', '$2a$10$rfosuoBOENyuQRIy6eCSX.RVjuk2ZrLtlz7NdGpBlxrqviDJflWiG', 'PLAYER', '33333333-1111-1111-1111-000000000109', true, CURRENT_TIMESTAMP),
-    ('33333333-1111-1111-1111-000000000110', 'player10@ovaltrack.com', '$2a$10$rfosuoBOENyuQRIy6eCSX.RVjuk2ZrLtlz7NdGpBlxrqviDJflWiG', 'PLAYER', '33333333-1111-1111-1111-000000000110', true, CURRENT_TIMESTAMP),
+    ('33333333-1111-1111-1111-000000000110', 'santi@jugador.com', '$2a$10$rfosuoBOENyuQRIy6eCSX.RVjuk2ZrLtlz7NdGpBlxrqviDJflWiG', 'PLAYER', '33333333-1111-1111-1111-000000000110', true, CURRENT_TIMESTAMP),
     ('33333333-1111-1111-1111-000000000111', 'player11@ovaltrack.com', '$2a$10$rfosuoBOENyuQRIy6eCSX.RVjuk2ZrLtlz7NdGpBlxrqviDJflWiG', 'PLAYER', '33333333-1111-1111-1111-000000000111', true, CURRENT_TIMESTAMP),
     ('33333333-1111-1111-1111-000000000112', 'player12@ovaltrack.com', '$2a$10$rfosuoBOENyuQRIy6eCSX.RVjuk2ZrLtlz7NdGpBlxrqviDJflWiG', 'PLAYER', '33333333-1111-1111-1111-000000000112', true, CURRENT_TIMESTAMP),
     ('33333333-1111-1111-1111-000000000128', 'player13@ovaltrack.com', '$2a$10$rfosuoBOENyuQRIy6eCSX.RVjuk2ZrLtlz7NdGpBlxrqviDJflWiG', 'PLAYER', '33333333-1111-1111-1111-000000000128', true, CURRENT_TIMESTAMP),
