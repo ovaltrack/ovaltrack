@@ -24,6 +24,14 @@ describe('StatColumnsComponent', () => {
     expect(element.querySelector('.cols__xaxis')?.classList).toContain('cols__xaxis--two-lines');
   });
 
+  it('cada grupo lleva su rótulo o, si se saltea, una marca corta en el eje', () => {
+    const element = render(chart(Array.from({ length: 11 }, () => 'DP')));
+    const labels = element.querySelectorAll('.cols__xtext').length;
+    const marks = element.querySelectorAll('.cols__xmark').length;
+    expect(labels + marks).toBe(11);
+    expect(labels).toBeGreaterThanOrEqual(6);
+  });
+
   it('sin siglas (bloques de 10\') el eje queda en un renglón', () => {
     const element = render(chart([undefined, undefined]));
     expect(element.querySelectorAll('.cols__xsub').length).toBe(0);

@@ -1,8 +1,14 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { BarChart, barPercent, describeBars, isEmptyBars, scaleTicks, showsColumnValues } from '../../utils/bars';
-
-/** Con más grupos que esto se muestra una etiqueta del eje cada tanto (igual que el gráfico de líneas). */
-const MAX_X_LABELS = 8;
+import { ChangeDetectionStrategy, Component, ElementRef, NgZone, computed, effect, inject, input, signal, viewChild } from '@angular/core';
+import { observeWidth } from '../../../features/match/post-match/utils/observe-width';
+import {
+  BarChart,
+  barPercent,
+  describeBars,
+  isEmptyBars,
+  labeledColumns,
+  scaleTicks,
+  showsColumnValues,
+} from '../../utils/bars';
 
 /**
  * Columnas en HTML/CSS puro, solo para secuencias en el tiempo (bloques de 10', partidos de una división): una columna
@@ -19,6 +25,20 @@ const MAX_X_LABELS = 8;
 export class StatColumnsComponent {
   readonly chart = input.required<BarChart>();
 
+  private readonly area = viewChild<ElementRef<HTMLElement>>('area');
+  private readonly ngZone = inject(NgZone);
+  /** Ancho en píxeles del área de columnas (sin el eje Y): decide si entran todas las etiquetas del eje X. */
+  private readonly plotWidth = signal(0);
+
+  constructor() {
+    effect(onCleanup => {
+      const element = this.area()?.nativeElement;
+      if (!element) return;
+      const stop = observeWidth(element, width => this.ngZone.run(() => this.plotWidth.set(width)));
+      onCleanup(stop);
+    });
+  }
+
   readonly ticks = computed(() => scaleTicks(this.chart()));
   readonly isEmpty = computed(() => isEmptyBars(this.chart()));
   readonly description = computed(() => describeBars(this.chart()));
@@ -27,11 +47,11 @@ export class StatColumnsComponent {
   readonly twoLines = computed(() => this.chart().groups.some(group => !!group.sublabel));
   readonly groups = computed(() => {
     const { groups, max } = this.chart();
-    const step = Math.max(1, Math.ceil(groups.length / MAX_X_LABELS));
+    const labeled = new Set(labeledColumns(groups.length, this.plotWidth()));
     return groups.map((group, index) => ({
       label: group.label,
       sublabel: group.sublabel ?? '',
-      showLabel: index % step === 0 || index === groups.length - 1,
+      showLabel: labeled.has(index),
       title: `${group.detail ?? group.label}: ${group.values.map(value => `${value.series} ${value.display}`).join(', ')}`,
       columns: group.values.map(value => ({
         color: value.color,

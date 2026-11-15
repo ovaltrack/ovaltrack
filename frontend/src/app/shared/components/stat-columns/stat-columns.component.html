@@ -19,7 +19,7 @@
         }
       </div>
 
-      <div class="cols__area">
+      <div class="cols__area" #area>
         @for (tick of ticks(); track tick.percent) {
           <span class="cols__grid" [style.bottom.%]="tick.percent"></span>
         }
@@ -49,6 +49,8 @@
                   <span class="cols__xsub">{{ group.sublabel }}</span>
                 }
               </span>
+            } @else {
+              <span class="cols__xmark" aria-hidden="true"></span>
             }
           </span>
         }

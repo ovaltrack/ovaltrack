@@ -72,6 +72,10 @@ export interface VersusBarOptions {
 
 /** Con más valores que esto los números de las columnas se superponen: se ocultan y quedan en el `title`. */
 export const MAX_LABELED_COLUMN_VALUES = 24;
+/** Ancho mínimo por grupo para rotular todas las columnas sin que se encimen (fecha `dd/mm` y sigla). */
+export const MIN_COLUMN_LABEL_WIDTH = 44;
+/** Sin ese lugar, se rotula uno de cada `ceil(n/8)` grupos (la misma regla del gráfico de líneas). */
+const MAX_SKIPPED_LABELS = 8;
 
 const PERCENT_MAX = 100;
 const MIN_COUNT_MAX = 4;
@@ -200,6 +204,16 @@ export function isEmptyBars(chart: BarChart): boolean {
   const values = present(chart.groups.flatMap(group => group.values.map(value => value.value)));
   const allZero = chart.unit === 'count' && chart.orientation === 'horizontal' && values.every(value => value <= 0);
   return values.length === 0 || allZero;
+}
+
+/**
+ * Índices de los grupos de columnas que llevan etiqueta en el eje X: todos si al área le tocan 44 px o más por grupo;
+ * si no, uno de cada `ceil(n/8)`. El último se rotula siempre. Sin medir todavía (ancho 0) se aplican los saltos.
+ */
+export function labeledColumns(count: number, plotWidth: number): number[] {
+  const fits = count > 0 && plotWidth / count >= MIN_COLUMN_LABEL_WIDTH;
+  const step = fits ? 1 : Math.max(1, Math.ceil(count / MAX_SKIPPED_LABELS));
+  return Array.from({ length: count }, (_, index) => index).filter(index => index % step === 0 || index === count - 1);
 }
 
 /** Las columnas muestran su valor encima solo mientras entren sin pisarse. */

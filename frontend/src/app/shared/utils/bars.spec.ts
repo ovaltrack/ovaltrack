@@ -5,6 +5,7 @@ import {
   describeBars,
   evenScaleMax,
   isEmptyBars,
+  labeledColumns,
   niceScaleMax,
   scaleMaxFor,
   scaleTicks,
@@ -211,6 +212,33 @@ describe('versusBars con intentos', () => {
 
   it('el texto accesible dice «1 de 3»', () => {
     expect(describeBars(chart)).toBe('Tantos: Conversión: Puerto Madryn 1 de 3, Rival 2 de 3; Try: Puerto Madryn 3, Rival 3');
+  });
+});
+
+describe('labeledColumns', () => {
+  const all = (count: number) => Array.from({ length: count }, (_, index) => index);
+
+  it('con lugar (44 px o más por grupo) rotula todos los grupos', () => {
+    expect(labeledColumns(11, 560)).toEqual(all(11));
+  });
+
+  it('sin lugar rotula uno de cada ceil(n/8)', () => {
+    expect(labeledColumns(11, 300)).toEqual([0, 2, 4, 6, 8, 10]);
+  });
+
+  it('8 grupos con 352 px o más: todos', () => {
+    expect([352, 400, 1000].map(width => labeledColumns(8, width))).toEqual([all(8), all(8), all(8)]);
+  });
+
+  it('el último grupo siempre se rotula', () => {
+    expect(labeledColumns(12, 300)).toEqual([0, 2, 4, 6, 8, 10, 11]);
+    const counts = Array.from({ length: 30 }, (_, index) => index + 1);
+    expect(counts.filter(count => !labeledColumns(count, 100).includes(count - 1))).toEqual([]);
+  });
+
+  it('antes de medir (ancho 0) aplica los saltos, y sin grupos no rotula nada', () => {
+    expect(labeledColumns(11, 0)).toEqual([0, 2, 4, 6, 8, 10]);
+    expect(labeledColumns(0, 560)).toEqual([]);
   });
 });
 
