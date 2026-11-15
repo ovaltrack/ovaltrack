@@ -16,7 +16,7 @@ runtime:
     - type: after-response
       code: |-
         const users = res.getBody();
-        const player = users.find(u => u.loginEmail === "player10@ovaltrack.com" || u.email === "player10@ovaltrack.com");
+        const player = users.find(u => u.loginEmail === "santicarreras98@example.com" || u.email === "santicarreras98@example.com");
         if (player) {
           bru.setEnvVar("targetUserId", player.id);
         }
