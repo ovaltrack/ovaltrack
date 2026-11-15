@@ -98,9 +98,12 @@
   min-height: 0;
 }
 
-/* En gráficos las tarjetas crecen con sus donas (no se recortan ni scrollean) y las de una fila igualan su alto */
-.detail-grid--chart { align-items: stretch; }
-.detail-card--chart { height: auto; min-height: 440px; }
+/*
+ * En gráficos las tarjetas miden lo que sus gráficos (no se recortan ni scrollean) y no igualan su alto con la de al
+ * lado: Indicadores en barras es mucho más corta que Posesiones y quedaba con un hueco grande debajo.
+ */
+.detail-grid--chart { align-items: start; }
+.detail-card--chart { height: auto; }
 
 .detail-header { 
   display: flex; 
