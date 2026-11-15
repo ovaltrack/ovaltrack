@@ -133,7 +133,7 @@ describe('player-comparison', () => {
       const charts = toActionBars(groups);
       expect(charts.map(chart => chart.title)).toEqual(['Ataque', 'Puntos y pateo']);
       expect(charts[0].groups.map(group => [group.label, group.values[0].value])).toEqual([['Pase', 5], ['Acarreo', 2]]);
-      expect(charts[0].max).toBe(5);
+      expect(charts[0].max).toBe(6);
     });
 
     it('los pateos muestran los aciertos sobre los intentos y miden los intentos', () => {

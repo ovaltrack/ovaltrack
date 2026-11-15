@@ -28,7 +28,7 @@ describe('matchBars', () => {
     const chart = matchBars(metric('points'), [stats({ ownScore: 33, opponentScore: 10 }), stats({ ownScore: 5, opponentScore: 3 })], labels, details);
 
     expect(chart.unit).toBe('count');
-    expect(chart.max).toBe(35);
+    expect(chart.max).toBe(40);
   });
 
   it('los porcentajes van de 0 a 100 con el símbolo, y un partido sin dato no tiene columna', () => {

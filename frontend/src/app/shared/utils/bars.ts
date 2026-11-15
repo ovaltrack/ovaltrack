@@ -35,7 +35,7 @@ export interface BarChart {
   /** Horizontal para categorías; vertical (columnas) solo para secuencias en el tiempo. */
   orientation: 'horizontal' | 'vertical';
   unit: BarUnit;
-  /** Valor que equivale al extremo del eje: 100 en porcentajes, `niceScaleMax` en cantidades. */
+  /** Valor que equivale al extremo del eje: 100 en porcentajes, `evenScaleMax` en cantidades. */
   max: number;
   groups: BarGroup[];
   /** Solo cuando las series no son propio y rival (p. ej. los colores de las métricas de división). */
@@ -69,21 +69,43 @@ export const MAX_LABELED_COLUMN_VALUES = 24;
 const PERCENT_MAX = 100;
 const MIN_COUNT_MAX = 4;
 const NO_VALUE = '—';
+/** Mitades «redondas» del eje de barras, por orden de magnitud: con el máximo en el doble, la marca del medio es entera. */
+const HALF_STEPS = [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10];
 
 const oneDecimal = (value: number): number => Math.round(value * 10) / 10;
 
 const present = (values: (number | null)[]): number[] => values.filter((value): value is number => value !== null);
 
-/** Techo de un eje de cantidades: el siguiente valor «redondo» (medio orden de magnitud) por encima del máximo, mínimo 4. */
+/**
+ * Techo del eje Y del gráfico de líneas: el siguiente valor «redondo» (medio orden de magnitud) por encima del máximo,
+ * mínimo 4. Las barras y las columnas usan `evenScaleMax`.
+ */
 export function niceScaleMax(max: number): number {
   if (max <= MIN_COUNT_MAX) return MIN_COUNT_MAX;
   const step = Math.pow(10, Math.floor(Math.log10(max))) / 2;
   return Math.ceil(max / step) * step || MIN_COUNT_MAX;
 }
 
-/** Techo del eje según la unidad y los valores que se dibujan. */
+/** Techo del eje del gráfico de líneas según la unidad y los valores que se dibujan. */
 export function scaleMaxFor(unit: BarUnit, values: (number | null)[]): number {
   return unit === 'percent' ? PERCENT_MAX : niceScaleMax(Math.max(0, ...present(values)));
+}
+
+/**
+ * Techo de un eje de cantidades en barras y columnas, que marcan el cero, la mitad y el máximo: el doble de la menor
+ * mitad entera y «redonda» que cubre el mayor valor, mínimo 4. Así ninguna marca tiene decimales (15 → 16, 45 → 50) y
+ * la barra más larga ocupa al menos el 60 % del eje.
+ */
+export function evenScaleMax(max: number): number {
+  if (max <= MIN_COUNT_MAX) return MIN_COUNT_MAX;
+  const magnitude = Math.pow(10, Math.floor(Math.log10(max / 2)));
+  const halves = HALF_STEPS.map(step => step * magnitude).filter(half => Number.isInteger(half) && half * 2 >= max);
+  return Math.min(...halves) * 2;
+}
+
+/** Techo del eje de barras y columnas según la unidad y los valores que se dibujan. */
+export function axisMaxFor(unit: BarUnit, values: (number | null)[]): number {
+  return unit === 'percent' ? PERCENT_MAX : evenScaleMax(Math.max(0, ...present(values)));
 }
 
 const formatAxis = (value: number, unit: BarUnit): string => (unit === 'percent' ? `${value}%` : `${value}`);
@@ -132,7 +154,7 @@ export function versusBars(
     title,
     orientation: options.orientation ?? 'horizontal',
     unit,
-    max: scaleMaxFor(unit, groups.flatMap(group => group.values.map(value => value.value))),
+    max: axisMaxFor(unit, groups.flatMap(group => group.values.map(value => value.value))),
     groups,
   };
 }
@@ -150,7 +172,7 @@ export function teamBars(id: string, title: string, items: TeamBarItem[], colorV
     title,
     orientation: 'horizontal',
     unit: 'count',
-    max: scaleMaxFor('count', items.map(item => item.value)),
+    max: axisMaxFor('count', items.map(item => item.value)),
     groups: items.map(item => ({ label: item.label, values: [barValue(item.label, item.value, item.display, 'count', colorVar)] })),
   };
 }

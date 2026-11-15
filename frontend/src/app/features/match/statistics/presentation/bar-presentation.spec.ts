@@ -143,7 +143,7 @@ describe('advancedBars', () => {
 
     expect(card.charts.map(chart => chart.title)).toEqual(['Posesiones ganadas', 'Puntos conseguidos']);
     expect(card.charts.map(chart => chart.groups.map(group => group.label))).toEqual([[''], ['']]);
-    expect(card.charts.map(chart => chart.max)).toEqual([4, 7]);
+    expect(card.charts.map(chart => chart.max)).toEqual([4, 8]);
   });
 
   it('las cantidades sin datos quedan como fila: nada desaparece', () => {

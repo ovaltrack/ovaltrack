@@ -1,4 +1,4 @@
-import { BarChart, BarGroup, BarUnit, scaleMaxFor } from '../../../shared/utils/bars';
+import { BarChart, BarGroup, BarUnit, axisMaxFor } from '../../../shared/utils/bars';
 import { PeriodStatisticDTO } from '../../match/statistics/types/statistic.types';
 import { DivisionMetricDef, formatMetricValue } from './division-metrics';
 
@@ -29,7 +29,7 @@ export function matchBars(metric: DivisionMetricDef, matches: PeriodStatisticDTO
     title: metric.label,
     orientation: 'vertical',
     unit,
-    max: scaleMaxFor(unit, groups.flatMap(group => group.values.map(value => value.value))),
+    max: axisMaxFor(unit, groups.flatMap(group => group.values.map(value => value.value))),
     groups,
     legend: metric.series.map(serie => ({ label: serie.label, color: serie.color })),
   };

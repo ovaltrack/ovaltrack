@@ -1,7 +1,9 @@
 import {
   BarChart,
+  axisMaxFor,
   barPercent,
   describeBars,
+  evenScaleMax,
   isEmptyBars,
   niceScaleMax,
   scaleMaxFor,
@@ -37,6 +39,36 @@ describe('scaleMaxFor', () => {
   it('las cantidades usan el mayor valor y descartan los que no tienen dato', () => {
     expect(scaleMaxFor('count', [3, null, 13])).toBe(15);
     expect(scaleMaxFor('count', [null, null])).toBe(4);
+  });
+});
+
+describe('evenScaleMax', () => {
+  const ticksOf = (value: number) => scaleTicks({ max: evenScaleMax(value), unit: 'count' }).map(tick => tick.value);
+
+  it('no baja de 4, para que un eje con pocos eventos no se estire', () => {
+    expect([0, 1, 3, 4].map(evenScaleMax)).toEqual([4, 4, 4, 4]);
+  });
+
+  it('elige un máximo con la mitad entera y cerca del dato', () => {
+    expect([5, 7, 13, 15, 21, 31, 35, 43, 45, 99, 120].map(evenScaleMax)).toEqual([6, 8, 16, 16, 30, 40, 40, 50, 50, 100, 120]);
+  });
+
+  it('de 1 a 500: marcas enteras, el máximo cubre el dato y la barra más larga ocupa al menos el 60 % del eje', () => {
+    const values = Array.from({ length: 500 }, (_, index) => index + 1);
+    expect(values.filter(value => !ticksOf(value).every(Number.isInteger))).toEqual([]);
+    expect(values.filter(value => evenScaleMax(value) < value)).toEqual([]);
+    expect(values.filter(value => value > 4 && value / evenScaleMax(value) < 0.6)).toEqual([]);
+  });
+});
+
+describe('axisMaxFor', () => {
+  it('los porcentajes siempre van de 0 a 100', () => {
+    expect(axisMaxFor('percent', [12, 30])).toBe(100);
+  });
+
+  it('las cantidades usan el mayor valor con la mitad del eje entera y descartan los que no tienen dato', () => {
+    expect(axisMaxFor('count', [3, null, 15])).toBe(16);
+    expect(axisMaxFor('count', [null, null])).toBe(4);
   });
 });
 
@@ -87,7 +119,8 @@ describe('versusBars', () => {
       { label: 'B', ownValue: 1, opponentValue: 0 },
     ], names);
 
-    expect(chart.max).toBe(15);
+    expect(chart.max).toBe(16);
+    expect(scaleTicks(chart).map(tick => tick.label)).toEqual(['0', '8', '16']);
   });
 
   it('usa el texto de la fila cuando lo trae (convertidos/intentos) y «—» si no hay dato', () => {
