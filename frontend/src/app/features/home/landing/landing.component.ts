@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, ElementRef, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ScreenCarouselComponent } from './screen-carousel/screen-carousel.component';
+import { OviAvatarComponent } from '../../tour/ovi-avatar/ovi-avatar.component';
 import {
   LANDING_AUDIENCES,
   LANDING_FEATURES,
@@ -13,7 +14,7 @@ import {
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [RouterLink, ScreenCarouselComponent],
+  imports: [RouterLink, ScreenCarouselComponent, OviAvatarComponent],
   templateUrl: './landing.component.html',
   styleUrl: './landing.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush

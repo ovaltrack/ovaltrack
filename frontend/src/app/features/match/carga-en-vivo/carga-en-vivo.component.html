@@ -23,7 +23,7 @@
                 <span class="live-capture__btn-label">Estadísticas</span>
             </button>
         </div>
-        <div class="live-capture__scoreboard">
+        <div class="live-capture__scoreboard" data-tour="live-scoreboard">
             <!-- Marcador y período: en escritorio se reparten alrededor del reloj; en celular van apilados a la izquierda -->
             <div class="live-capture__match">
                 <span class="live-capture__score">
@@ -80,6 +80,7 @@
                     aria-hidden="true"></i>
             </button>
             <i
+                data-tour="live-sync"
                 class="ti live-capture__sync"
                 [class.ti-cloud-check]="syncStatus().state === 'synced'"
                 [class.ti-cloud-off]="syncStatus().state === 'offline'"
@@ -98,6 +99,7 @@
         role="main">
 
         <div class="event-catalog"
+            data-tour="live-catalog"
             [class.event-catalog--own]="currentPossession === 'OWN'"
             [class.event-catalog--neutral]="currentPossession === 'NEUTRAL'"
             [class.event-catalog--away]="currentPossession === 'OPPONENT'"

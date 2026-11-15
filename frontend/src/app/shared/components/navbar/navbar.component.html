@@ -19,6 +19,7 @@
           <app-nav-live-match class="top-live" [match]="match" />
         }
         <app-nav-sync-status [status]="syncStatus()" (activate)="userMenu.open()" />
+        <app-help-button />
         <app-user-menu #userMenu />
       </div>
     } @else {

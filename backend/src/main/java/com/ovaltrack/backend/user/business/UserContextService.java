@@ -67,8 +67,21 @@ public class UserContextService {
                 person != null ? person.getFirstName() : null,
                 person != null ? person.getLastName() : null,
                 club != null ? ClubDTOMapper.toResponseDTO(club) : null,
-                activeDivisions
+                activeDivisions,
+                user.isTutorialPending()
         );
+    }
+
+    /** La guía ya arrancó para este usuario: no vuelve a abrirse sola en ningún dispositivo. */
+    @Transactional
+    public void markTutorialSeen(Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
+            throw new EntityNotFoundException("No hay una sesión autenticada activa");
+        }
+        String email = authentication.getName();
+        User user = userRepository.findByLoginEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con email: " + email));
+        user.setTutorialPending(false);
     }
 
     /** Club del usuario: el de su persona o, si no tiene, el que administra. */

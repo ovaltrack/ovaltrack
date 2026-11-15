@@ -6,11 +6,12 @@ import { SyncManagerService } from './core/synchronization/SyncManagerService';
 import { BackendHealthService } from './core/services/backend-health.service';
 import { LayoutService } from './core/services/layout.service';
 import { NavbarModeService } from './core/navigation/navbar-mode.service';
+import { TourOverlayComponent } from './features/tour/tour-overlay/tour-overlay.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, NavbarComponent, ToastContainerComponent],
+  imports: [RouterOutlet, NavbarComponent, ToastContainerComponent, TourOverlayComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
