@@ -23,11 +23,14 @@ export class StatColumnsComponent {
   readonly isEmpty = computed(() => isEmptyBars(this.chart()));
   readonly description = computed(() => describeBars(this.chart()));
   readonly showValues = computed(() => showsColumnValues(this.chart()));
+  /** Alguna columna lleva una segunda línea (la sigla del rival): el eje X reserva dos renglones. */
+  readonly twoLines = computed(() => this.chart().groups.some(group => !!group.sublabel));
   readonly groups = computed(() => {
     const { groups, max } = this.chart();
     const step = Math.max(1, Math.ceil(groups.length / MAX_X_LABELS));
     return groups.map((group, index) => ({
       label: group.label,
+      sublabel: group.sublabel ?? '',
       showLabel: index % step === 0 || index === groups.length - 1,
       title: `${group.detail ?? group.label}: ${group.values.map(value => `${value.series} ${value.display}`).join(', ')}`,
       columns: group.values.map(value => ({

@@ -19,6 +19,8 @@ export interface BarValue {
 export interface BarGroup {
   /** Vacía cuando el título del gráfico ya nombra la única fila (una cantidad de propio contra rival). */
   label: string;
+  /** Segunda línea de la etiqueta de una columna (p. ej. la sigla del rival debajo de la fecha). */
+  sublabel?: string;
   /** Texto largo para el `title` de una columna (p. ej. fecha y rival). */
   detail?: string;
   values: BarValue[];

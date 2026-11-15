@@ -82,8 +82,9 @@
         </section>
       } @else if (viewMode() === 'bars') {
         <p class="ds-hint ds-hint--page">
-          Un grupo de columnas por partido, en orden de fecha, con los mismos colores que las líneas. Los partidos
-          sin dato no tienen columna; el rival de cada uno está en la tabla de abajo.
+          Un grupo de columnas por partido, en orden de fecha, con los mismos colores que las líneas. Debajo de cada
+          fecha, la sigla del rival (el nombre completo está en la tabla de abajo). Los partidos sin dato no tienen
+          columna.
         </p>
         <section class="ds-charts">
           @for (chart of matchColumns; track chart.id) {

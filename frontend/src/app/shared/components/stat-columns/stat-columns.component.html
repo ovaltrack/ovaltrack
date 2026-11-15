@@ -39,11 +39,16 @@
         </div>
       </div>
 
-      <div class="cols__xaxis">
+      <div class="cols__xaxis" [class.cols__xaxis--two-lines]="twoLines()">
         @for (group of groups(); track $index) {
           <span class="cols__xlabel">
             @if (group.showLabel) {
-              <span class="cols__xtext">{{ group.label }}</span>
+              <span class="cols__xtext">
+                {{ group.label }}
+                @if (group.sublabel) {
+                  <span class="cols__xsub">{{ group.sublabel }}</span>
+                }
+              </span>
             }
           </span>
         }

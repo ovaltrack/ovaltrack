@@ -1,5 +1,5 @@
 import { DIVISION_METRICS, DivisionMetricDef } from './division-metrics';
-import { matchBars } from './division-bars';
+import { matchBars, opponentAcronym } from './division-bars';
 import { PeriodStatisticDTO } from '../../match/statistics/types/statistic.types';
 
 const stats = (values: Partial<PeriodStatisticDTO>) => values as PeriodStatisticDTO;
@@ -7,7 +7,30 @@ const metric = (id: string): DivisionMetricDef => DIVISION_METRICS.find(candidat
 const labels = ['10/05', '17/05'];
 const details = ['10/05/2026 · vs Rival A', '17/05/2026 · vs Rival B'];
 
+describe('opponentAcronym', () => {
+  it('con varias palabras, sus iniciales (sin «Club», «Rugby Club» ni conectores)', () => {
+    expect(opponentAcronym('Deportivo Portugués')).toBe('DP');
+    expect(opponentAcronym('Puerto Madryn Rugby Club')).toBe('PM');
+    expect(opponentAcronym('Club Atlético de San Isidro')).toBe('ASI');
+  });
+
+  it('con una palabra, sus tres primeras letras, en mayúsculas y sin tildes', () => {
+    expect(opponentAcronym('Patoruzú Rugby Club')).toBe('PAT');
+    expect(opponentAcronym('Ñandúes')).toBe('NAN');
+  });
+
+  it('es estable y sin rival no hay sigla', () => {
+    expect(opponentAcronym('Deportivo Portugués')).toBe(opponentAcronym('Deportivo Portugués'));
+    expect(opponentAcronym(null)).toBe('');
+  });
+});
+
 describe('matchBars', () => {
+  it('cada grupo lleva la sigla del rival debajo de la fecha', () => {
+    const chart = matchBars(metric('points'), [stats({ ownScore: 1, opponentScore: 2 }), stats({})], labels, details, ['DP', 'PAT']);
+    expect(chart.groups.map(group => [group.label, group.sublabel])).toEqual([[labels[0], 'DP'], [labels[1], 'PAT']]);
+  });
+
   it('un grupo de columnas por partido, en el orden recibido, con su fecha y rival de detalle', () => {
     const chart = matchBars(metric('points'), [stats({ ownScore: 20, opponentScore: 10 }), stats({ ownScore: 15, opponentScore: 5 })], labels, details);
 

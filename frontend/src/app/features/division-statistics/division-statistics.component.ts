@@ -14,7 +14,7 @@ import { DIVISION_METRICS, DivisionMetricDef, MetricUnit, isMetricSelection } fr
 import { persistedSignal } from '../../shared/utils/persisted-signal';
 import { ChartSeries, StatLineChartComponent } from './components/stat-line-chart/stat-line-chart.component';
 import { StatColumnsComponent } from '../../shared/components/stat-columns/stat-columns.component';
-import { matchBars } from './utils/division-bars';
+import { matchBars, opponentAcronym } from './utils/division-bars';
 import { metricTotals } from './utils/division-totals';
 import { BarChart } from '../../shared/utils/bars';
 import { DonutChart } from '../../shared/utils/donut';
@@ -100,6 +100,8 @@ export class DivisionStatisticsComponent implements OnInit {
 
   labels: string[] = [];
   details: string[] = [];
+  /** Sigla del rival de cada partido, debajo de la fecha en las columnas. */
+  acronyms: string[] = [];
   charts: MetricChart[] = [];
   totals: DonutChart[] = [];
   matchColumns: BarChart[] = [];
@@ -186,6 +188,7 @@ export class DivisionStatisticsComponent implements OnInit {
     const matches = this.data?.matches ?? [];
     this.labels = matches.map(m => this.shortDate(m));
     this.details = matches.map(m => `${this.longDate(m)} · vs ${m.opponentName ?? 'Rival'}`);
+    this.acronyms = matches.map(m => opponentAcronym(m.opponentName));
     this.rows = matches.map(m => this.toRow(m));
     this.kpis = this.buildKpis(matches);
     this.buildCharts();
@@ -195,7 +198,7 @@ export class DivisionStatisticsComponent implements OnInit {
     const matches = this.data?.matches ?? [];
     const selected = this.metrics.filter(metric => this.isSelected(metric.id));
     this.totals = selected.flatMap(metric => metricTotals(metric, matches.map(match => match.statistics)));
-    this.matchColumns = selected.map(metric => matchBars(metric, matches.map(match => match.statistics), this.labels, this.details));
+    this.matchColumns = selected.map(metric => matchBars(metric, matches.map(match => match.statistics), this.labels, this.details, this.acronyms));
     this.charts = selected
       .map(metric => ({
         id: metric.id,
