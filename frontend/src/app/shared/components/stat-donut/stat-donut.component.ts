@@ -11,10 +11,12 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
   templateUrl: './stat-donut.component.html',
   styleUrl: './stat-donut.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { role: 'group', '[attr.aria-label]': 'chart().title' },
+  host: { role: 'group', '[attr.aria-label]': 'chart().title', '[class.donut--untitled]': '!showTitle()' },
 })
 export class StatDonutComponent {
   readonly chart = input.required<DonutChart>();
+  /** `false` dentro de un par: el título lo pone la celda una sola vez. */
+  readonly showTitle = input(true);
 
   readonly radius = RADIUS;
   readonly segments = computed(() => donutSegments(this.chart().slices, CIRCUMFERENCE, this.chart().max));

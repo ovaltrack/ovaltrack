@@ -39,6 +39,16 @@ export interface DonutChart {
   showPercent?: boolean;
   /** Aclaración debajo de un anillo de avance (p. ej. «45 de 51»): un avance no tiene leyenda. */
   note?: string;
+  /** Donas del mismo dato (el anillo propio y el rival de un indicador): la grilla las dibuja juntas, con un título. */
+  group?: string;
+}
+
+/** Celda de la grilla de donas: una dona suelta o un par del mismo `group`. */
+export interface DonutCell {
+  id: string;
+  title: string;
+  paired: boolean;
+  charts: DonutChart[];
 }
 
 /** Porción lista para dibujar con `stroke-dasharray` y `stroke-dashoffset`. */
@@ -203,6 +213,20 @@ export function gaugeDonut(id: string, title: string, percent: number | null, co
     center: { value: formatPercent(value), label: '' },
     variant: 'gauge',
   };
+}
+
+/**
+ * Celdas de la grilla: las donas consecutivas del mismo `group` van juntas (el título una vez y un anillo por equipo
+ * debajo), así un par no queda partido entre dos filas; las demás, sueltas y en su orden.
+ */
+export function donutCells(charts: DonutChart[]): DonutCell[] {
+  return charts.reduce<DonutCell[]>((cells, chart) => {
+    const last = cells[cells.length - 1];
+    if (chart.group && last?.paired && last.id === chart.group) {
+      return [...cells.slice(0, -1), { ...last, charts: [...last.charts, chart] }];
+    }
+    return [...cells, { id: chart.group ?? chart.id, title: chart.title, paired: !!chart.group, charts: [chart] }];
+  }, []);
 }
 
 /** Asocia el gráfico (dona o barras) a un equipo: línea con su color debajo del título. */

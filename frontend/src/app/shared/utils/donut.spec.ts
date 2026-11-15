@@ -1,6 +1,7 @@
 import {
   DonutSlice,
   describeDonut,
+  donutCells,
   donutSegments,
   gaugeDonut,
   isEmptyDonut,
@@ -167,6 +168,25 @@ describe('gaugeDonut', () => {
     const chart = gaugeDonut('a', 'A', 100, '--x');
     expect(isEmptyDonut(chart)).toBeFalse();
     expect(chart.slices[0].value).toBe(chart.max);
+  });
+});
+
+describe('donutCells', () => {
+  const gauge = (id: string, group?: string) => ({ ...gaugeDonut(id, `Título ${group ?? id}`, 50, '--x'), group });
+
+  it('junta en una celda los anillos consecutivos del mismo grupo, con el título una sola vez', () => {
+    const cells = donutCells([gauge('a-own', 'a'), gauge('a-rival', 'a'), gauge('b-own', 'b'), gauge('b-rival', 'b')]);
+    expect(cells.map(cell => [cell.title, cell.paired, cell.charts.map(chart => chart.id)])).toEqual([
+      ['Título a', true, ['a-own', 'a-rival']],
+      ['Título b', true, ['b-own', 'b-rival']],
+    ]);
+  });
+
+  it('deja sueltas las donas sin grupo, en su orden', () => {
+    const cells = donutCells([gauge('x'), gauge('a-own', 'a'), gauge('a-rival', 'a'), gauge('y')]);
+    expect(cells.map(cell => [cell.paired, cell.charts.map(chart => chart.id)])).toEqual([
+      [false, ['x']], [true, ['a-own', 'a-rival']], [false, ['y']],
+    ]);
   });
 });
 

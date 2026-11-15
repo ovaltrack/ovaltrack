@@ -122,6 +122,13 @@ describe('indicatorCard', () => {
     expect(card.rest).toEqual([]);
   });
 
+  it('los dos anillos de un indicador forman un par, propio primero, para que no se separen entre filas', () => {
+    const card = indicatorCard([metric({ id: 'scrum' }), metric({ id: 'line' })], names);
+    expect(card.charts.map(chart => [chart.group, chart.team?.name])).toEqual([
+      ['scrum', 'Club'], ['scrum', 'Rival'], ['line', 'Club'], ['line', 'Rival'],
+    ]);
+  });
+
   it('deja como fila los saldos y los porcentajes sin dato de ningún equipo', () => {
     const card = indicatorCard([
       metric({ id: 'balance', label: 'Saldo de penales', format: 'signed', value: { own: 2, opponent: -2 } }),

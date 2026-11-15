@@ -1,4 +1,6 @@
-<p class="donut__title">{{ chart().title }}</p>
+@if (showTitle()) {
+  <p class="donut__title">{{ chart().title }}</p>
+}
 
 @if (chart().team; as team) {
   <p class="donut__team">

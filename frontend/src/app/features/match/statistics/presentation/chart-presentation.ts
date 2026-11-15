@@ -139,13 +139,18 @@ export const metricLine = (metric: DerivedMetric): StatLine => ({
 export const isGaugedMetric = (metric: DerivedMetric): boolean =>
   metric.format === 'percent' && (metric.value.own !== null || metric.value.opponent !== null);
 
-/** Tarjeta «Indicadores»: los porcentajes son anillos de avance por equipo; los saldos quedan como fila. */
+/**
+ * Tarjeta «Indicadores»: los porcentajes son anillos de avance por equipo, en par (propio y rival juntos, con el
+ * título una vez); los saldos quedan como fila.
+ */
 export function indicatorCard(derived: DerivedMetric[], names: VersusNames): ChartCard {
   const gauged = derived.filter(isGaugedMetric);
+  const gauge = (metric: DerivedMetric, key: string, value: number | null, name: string, colorVar: string): DonutChart =>
+    ({ ...withTeam(gaugeDonut(`${metric.id}-${key}`, metric.label, value, colorVar), name, colorVar), group: metric.id });
   return {
     charts: gauged.flatMap(metric => [
-      withTeam(gaugeDonut(`${metric.id}-own`, metric.label, metric.value.own, OWN_COLOR_VAR), names.own, OWN_COLOR_VAR),
-      withTeam(gaugeDonut(`${metric.id}-rival`, metric.label, metric.value.opponent, RIVAL_COLOR_VAR), names.opponent, RIVAL_COLOR_VAR),
+      gauge(metric, 'own', metric.value.own, names.own, OWN_COLOR_VAR),
+      gauge(metric, 'rival', metric.value.opponent, names.opponent, RIVAL_COLOR_VAR),
     ]),
     rest: derived.filter(metric => !gauged.includes(metric)).map(metricLine),
   };
