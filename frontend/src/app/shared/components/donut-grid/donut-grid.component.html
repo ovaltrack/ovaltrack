@@ -1,0 +1,16 @@
+@if (charts().length > 0) {
+  <div class="donut-grid" [class.donut-grid--pairs]="hasPairs()">
+    @for (cell of cells(); track cell.id) {
+      @if (cell.paired) {
+        <div class="donut-pair" role="group" [attr.aria-label]="cell.title">
+          <p class="donut-pair__title">{{ cell.title }}</p>
+          @for (chart of cell.charts; track chart.id) {
+            <app-stat-donut [chart]="chart" [showTitle]="false" />
+          }
+        </div>
+      } @else {
+        <app-stat-donut [chart]="cell.charts[0]" />
+      }
+    }
+  </div>
+}

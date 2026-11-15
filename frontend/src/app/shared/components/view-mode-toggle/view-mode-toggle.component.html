@@ -1,0 +1,8 @@
+<div class="view-toggle" [class.view-toggle--compact]="compact()" role="group" aria-label="Visualización">
+  @for (option of options(); track option.mode) {
+    <button type="button" class="view-pill" [class.active]="mode() === option.mode" [attr.aria-pressed]="mode() === option.mode"
+            [attr.aria-label]="option.label" (click)="mode.set(option.mode)">
+      <i class="bi {{ option.icon }}" aria-hidden="true"></i><span class="view-pill__text">{{ option.label }}</span>
+    </button>
+  }
+</div>

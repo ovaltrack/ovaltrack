@@ -1,0 +1,55 @@
+@if (showTitle()) {
+  <p class="donut__title">{{ chart().title }}</p>
+}
+
+@if (chart().team; as team) {
+  <p class="donut__team">
+    <span class="donut__swatch" [style.background]="team.color"></span>
+    <span class="donut__team-name" [attr.title]="team.name">{{ team.name }}</span>
+  </p>
+}
+
+<div class="donut__figure">
+  <div class="donut__ring" role="img" [attr.aria-label]="description()">
+    <svg class="donut__svg" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+      <circle class="donut__track" [class.donut__track--none]="isEmpty() && chart().variant === 'gauge'" cx="60" cy="60" [attr.r]="radius" />
+      @for (segment of segments(); track segment.label) {
+        @if (segment.dash > 0) {
+          <circle class="donut__slice" cx="60" cy="60" [attr.r]="radius" transform="rotate(-90 60 60)"
+            [attr.stroke]="segment.color"
+            [attr.stroke-dasharray]="segment.dash + ' ' + segment.gap"
+            [attr.stroke-dashoffset]="-segment.offset">
+            <title>{{ segment.label }}: {{ segment.display ?? segment.value }} ({{ segment.percent }} %)</title>
+          </circle>
+        }
+      }
+    </svg>
+    <div class="donut__center">
+      <span class="donut__value" [class.donut__value--empty]="isEmpty()" [class.donut__value--long]="longCenter()">{{ centerValue() }}</span>
+      @if (chart().center.label && !isEmpty()) {
+        <span class="donut__caption">{{ chart().center.label }}</span>
+      }
+    </div>
+  </div>
+</div>
+
+<div class="donut__foot">
+  @if (showLegend()) {
+    <ul class="donut__legend" aria-hidden="true">
+      @for (segment of segments(); track segment.label) {
+        <li class="donut__item" [class.donut__item--no-percent]="chart().showPercent === false">
+          <span class="donut__swatch" [style.background]="segment.color"></span>
+          <span class="donut__label">{{ segment.label }}</span>
+          <strong class="donut__amount">{{ segment.display ?? segment.value }}</strong>
+          @if (chart().showPercent !== false) {
+            <span class="donut__percent">{{ segment.percent }} %</span>
+          }
+        </li>
+      }
+    </ul>
+  } @else if (isEmpty()) {
+    <p class="donut__empty">Sin datos</p>
+  } @else if (chart().note) {
+    <p class="donut__note" aria-hidden="true">{{ chart().note }}</p>
+  }
+</div>

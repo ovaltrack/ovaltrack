@@ -11,6 +11,8 @@ import { PlayerStatsApiService } from './services/player-stats-api.service';
 import { PlayerComparisonCardComponent } from './components/player-comparison-card/player-comparison-card.component';
 import { PlayerZonesCardComponent } from './components/player-zones-card/player-zones-card.component';
 import { PlayerActionsCardComponent } from './components/player-actions-card/player-actions-card.component';
+import { ViewModeToggleComponent } from 'src/app/shared/components/view-mode-toggle/view-mode-toggle.component';
+import { statsViewModeSignal } from 'src/app/shared/components/view-mode-toggle/view-mode';
 import {
   PlayerMatchStatisticsResponse,
   PlayerMatchSummary,
@@ -46,6 +48,7 @@ function initialsOf(fullName: string): string {
     PlayerComparisonCardComponent,
     PlayerZonesCardComponent,
     PlayerActionsCardComponent,
+    ViewModeToggleComponent,
   ],
   templateUrl: './player-statistics.component.html',
   styleUrl: './player-statistics.component.css',
@@ -67,6 +70,9 @@ export class PlayerStatisticsComponent {
   readonly personId = computed(() => this.params().personId ?? this.userContext.personId());
   readonly matchId = computed(() => this.params().matchId);
   readonly view = computed<'general' | 'match'>(() => (this.matchId() ? 'match' : 'general'));
+
+  /** Lista o gráficos: la misma preferencia en General y Por partido. */
+  readonly viewMode = statsViewModeSignal('player-statistics.view');
 
   /** División y temporada elegidas; vacío = las más recientes que elija el backend. */
   readonly query = signal<PlayerStatisticsQuery>({});

@@ -1,0 +1,53 @@
+:host { display: block; min-width: 0; }
+
+.cols__legend { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.cols__legend-item { display: inline-flex; align-items: center; gap: 6px; font: 600 12px var(--font-body); color: var(--text-secondary); }
+.cols__swatch { flex: none; width: 10px; height: 10px; border-radius: 50%; }
+
+/* La fila de arriba deja lugar para el valor de la columna más alta; la de abajo, para las etiquetas del eje X */
+.cols__plot { display: grid; grid-template-columns: 40px minmax(0, 1fr); grid-template-rows: 200px auto; margin-top: 18px; }
+
+.cols__yaxis { position: relative; }
+.cols__ytick {
+  position: absolute; right: 8px; transform: translateY(50%);
+  font: 500 11px/1 var(--font-mono); color: var(--text-muted);
+}
+
+.cols__area { position: relative; border-bottom: 2px solid var(--border-strong); }
+.cols__grid { position: absolute; left: 0; right: 0; height: 0; border-top: 1px solid var(--border-sport-subtle); }
+.cols__groups { position: relative; display: flex; align-items: flex-end; gap: 4px; height: 100%; }
+
+.cols__group { flex: 1 1 0; min-width: 0; height: 100%; display: flex; align-items: flex-end; justify-content: center; gap: 2px; }
+.cols__col {
+  position: relative; flex: 1 1 0; max-width: 28px; min-height: 2px;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0; transition: height .3s ease;
+}
+.cols__col--none { min-height: 0; }
+
+.cols__value {
+  position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); padding-bottom: 2px;
+  font: 700 10.5px/1.2 var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-primary); white-space: nowrap;
+}
+.cols__value--muted { font-weight: 500; color: var(--text-muted); }
+
+.cols__xaxis { grid-column: 2; display: flex; gap: 4px; padding-top: 6px; }
+.cols__xlabel { position: relative; flex: 1 1 0; min-width: 0; height: 16px; }
+.cols__xtext {
+  position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap;
+  display: flex; flex-direction: column; align-items: center;
+  font: 500 11px/1.4 var(--font-body); color: var(--text-muted);
+}
+/* Grupo sin rótulo (con saltos): una marca corta en el eje para que se vea que ahí hay un partido */
+.cols__xmark {
+  position: absolute; top: 0; left: 50%; width: 2px; height: 6px; transform: translateX(-50%);
+  border-radius: 1px; background: var(--border-strong);
+}
+/* Fecha y, debajo, la sigla del rival: en celular no hay `title` */
+.cols__xaxis--two-lines .cols__xlabel { height: 32px; }
+.cols__xsub { font: 600 10.5px/1.4 var(--font-mono); letter-spacing: .04em; color: var(--text-secondary); }
+
+.cols__empty { margin: 0; text-align: center; font: 500 13px var(--font-body); color: var(--text-muted); }
+
+@media (prefers-reduced-motion: reduce) {
+  .cols__col { transition: none; }
+}

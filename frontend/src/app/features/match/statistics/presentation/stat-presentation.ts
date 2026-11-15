@@ -48,6 +48,9 @@ export interface PresentationOptions {
 
 const EMPTY = '—';
 
+/** Etiqueta de los eventos sin valor en un campo `select`. */
+export const PENDING_LABEL = 'Sin completar';
+
 export function formatMetric(value: number | null, format: MetricFormat): string {
   if (value === null) return EMPTY;
   switch (format) {
@@ -89,7 +92,7 @@ function fieldBreakdown(field: FieldStat): StatBreakdown | null {
   if (field.kind === 'select') {
     lines = [
       ...field.options.map(option => countLine(option.label, option.count)),
-      countLine('Sin completar', field.pending),
+      countLine(PENDING_LABEL, field.pending),
     ].filter(line => line.ownValue + line.opponentValue > 0);
   } else if (field.kind === 'boolean') {
     lines = [countLine(field.trueLabel, field.yes), countLine(field.falseLabel, field.no)]

@@ -1,0 +1,21 @@
+:host { display: block; min-width: 0; }
+
+/* Sin row-gap: cada dona ocupa 4 filas compartidas (ver stat-donut) y se separa de la siguiente con su padding inferior */
+.donut-grid {
+  display: grid; column-gap: 16px; margin-bottom: -20px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+}
+
+/* Un par (propio y rival) necesita lugar para dos anillos lado a lado: a 390 px entran en una sola columna */
+.donut-grid--pairs { grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); }
+
+/* El par también es una subgrid de 4 filas: el título ocupa la primera a todo el ancho y cada anillo, las otras tres */
+.donut-pair {
+  display: grid; grid-row: span 4; grid-template-rows: subgrid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 12px; row-gap: 0; min-width: 0;
+}
+.donut-pair__title {
+  grid-row: 1; grid-column: 1 / -1; margin: 0; overflow-wrap: anywhere;
+  font: 800 12px/1.3 var(--font-head); text-transform: uppercase; letter-spacing: .06em;
+  color: var(--text-secondary);
+}

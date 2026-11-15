@@ -1,0 +1,39 @@
+@if (isEmpty()) {
+  <p class="bars__empty">Sin datos</p>
+} @else {
+  <div class="bars" [class.bars--single]="single()" [class.bars--bare]="bare()" role="img" [attr.aria-label]="description()">
+    <ul class="bars__rows">
+      @for (row of rows(); track row.label) {
+        <li class="bars__row">
+          @if (row.label) {
+            <span class="bars__label">{{ row.label }}</span>
+          }
+          <div class="bars__lines">
+            @for (line of row.lines; track line.series) {
+              <div class="bars__line">
+                <div class="bars__track">
+                  @if (line.attempts; as attempts) {
+                    <div class="bars__attempts" [style.width.%]="attempts.width" [style.background]="attempts.color"></div>
+                  }
+                  @if (line.drawn) {
+                    <div class="bars__fill" [style.width.%]="line.width" [style.background]="line.color"></div>
+                  }
+                </div>
+                <span class="bars__value" [class.bars__value--muted]="line.muted">{{ line.display }}</span>
+              </div>
+            }
+          </div>
+        </li>
+      }
+    </ul>
+
+    <div class="bars__axis">
+      <span class="bars__axis-spacer"></span>
+      <div class="bars__ticks">
+        @for (tick of ticks(); track tick.percent) {
+          <span class="bars__tick" [style.left.%]="tick.percent">{{ tick.label }}</span>
+        }
+      </div>
+    </div>
+  </div>
+}
