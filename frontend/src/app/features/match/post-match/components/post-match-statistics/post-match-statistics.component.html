@@ -108,11 +108,23 @@
         </section>
 
         <!-- Detalle por grupo del catálogo (todos los campos, live y post) -->
-        <div class="detail-grid" [class.detail-grid--chart]="isGraphic()">
-          @for (card of detailCardList(); track card.key) {
-            <ng-container *ngTemplateOutlet="detailCard; context: { $implicit: card }" />
-          }
-        </div>
+        @if (twoColumns()) {
+          <div class="detail-columns">
+            @for (column of detailColumns(); track $index) {
+              <div class="detail-col">
+                @for (card of column; track card.key) {
+                  <ng-container *ngTemplateOutlet="detailCard; context: { $implicit: card }" />
+                }
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="detail-grid" [class.detail-grid--chart]="isGraphic()">
+            @for (card of detailCardList(); track card.key) {
+              <ng-container *ngTemplateOutlet="detailCard; context: { $implicit: card }" />
+            }
+          </div>
+        }
 
         <ng-template #detailCard detailCard let-card>
           @switch (card.kind) {

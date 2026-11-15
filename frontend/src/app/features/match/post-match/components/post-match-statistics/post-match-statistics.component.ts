@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Directive, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, Directive, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { LayoutService } from 'src/app/core/services/layout.service';
@@ -46,6 +46,8 @@ import { RugbyBallLoaderComponent } from '../../../../../shared/components/rugby
 import { oneOf, persistedSignal } from '../../../../../shared/utils/persisted-signal';
 import { DonutChart } from '../../../../../shared/utils/donut';
 import { BarChart } from '../../../../../shared/utils/bars';
+import { watchMediaQuery } from '../../../../../shared/utils/media-query';
+import { splitColumns } from '../../../../../shared/utils/split-columns';
 import { DonutGridComponent } from '../../../../../shared/components/donut-grid/donut-grid.component';
 import { BarGridComponent } from '../../../../../shared/components/bar-grid/bar-grid.component';
 import { ViewModeToggleComponent } from '../../../../../shared/components/view-mode-toggle/view-mode-toggle.component';
@@ -113,6 +115,10 @@ export class PostMatchStatisticsComponent implements OnInit, OnDestroy {
   readonly viewMode = statsViewModeSignal('post-match.statistics.view');
   /** Donas y barras comparten el diseño de tarjetas: alto automático en vez del fijo con scroll de la lista. */
   readonly isGraphic = computed(() => this.viewMode() !== 'list');
+  /** Pantalla ≥ 1122 px: el corte opuesto al `max-width: 1121px` de la grilla de detalle en el CSS. */
+  private readonly wide = watchMediaQuery('(min-width: 1122px)', inject(DestroyRef));
+  /** Donas y barras en pantalla ancha: dos columnas independientes, para que una tarjeta corta no deje hueco. */
+  readonly twoColumns = computed(() => this.isGraphic() && this.wide());
   readonly showAnalysis = computed(() => this.content() !== 'measurements');
   readonly showMeasurements = computed(() => this.content() !== 'analysis');
 
@@ -177,6 +183,9 @@ export class PostMatchStatisticsComponent implements OnInit, OnDestroy {
       : [];
     return [...indicators, ...unavailable, ...advanced, ...measurements];
   });
+
+  /** Las tarjetas de detalle en dos columnas: las de índice par a la izquierda y las impares a la derecha. */
+  readonly detailColumns = computed(() => splitColumns(this.detailCardList()));
 
   /** En las donas los equipos van con nombre corto («Puerto Madryn», sin «Rugby Club»): los completos ya están en la tarjeta. */
   private readonly teamNames = computed(() => ({
