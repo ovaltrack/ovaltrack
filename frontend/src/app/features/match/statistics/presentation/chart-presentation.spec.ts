@@ -75,6 +75,15 @@ describe('scoreCard', () => {
     expect(conversion?.max).toBe(2);
   });
 
+  it('los tantos con intentos muestran al centro convertidos sobre intentos de los dos equipos', () => {
+    const conversion = charts.find(chart => chart.id === 'score-Conversión');
+    expect(conversion?.center).toEqual({ value: '2/4', label: 'convertidos' });
+  });
+
+  it('los tantos sin intentos muestran «propio – rival»', () => {
+    expect(charts.find(chart => chart.id === 'score-Try')?.center).toEqual({ value: '3 – 1', label: 'propio – rival' });
+  });
+
   describe('tantos con intentos pero sin aciertos', () => {
     const dropStat = stat({
       eventTypeId: 'drop', code: 'DROP_GOAL', name: 'Drop goal', isScoring: true, hasAttempts: true,

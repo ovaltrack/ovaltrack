@@ -95,9 +95,9 @@ describe('teamTones', () => {
 describe('versusDonut', () => {
   const names = { own: 'Club', opponent: 'Rival' };
 
-  it('suma ambos equipos en el centro y respeta el texto de la leyenda', () => {
+  it('muestra «propio – rival» en el centro (no la suma) y respeta el texto de la leyenda', () => {
     const chart = versusDonut('tries', 'Tries', { ownValue: 3, opponentValue: 1, own: '3', opponent: '1' }, names);
-    expect(chart.center).toEqual({ value: '4', label: 'total' });
+    expect(chart.center).toEqual({ value: '3 – 1', label: 'propio – rival' });
     expect(chart.max).toBe(4);
     expect(chart.slices.map(s => s.label)).toEqual(['Club', 'Rival']);
   });
@@ -110,6 +110,11 @@ describe('versusDonut', () => {
 
   it('sin datos queda vacío', () => {
     expect(isEmptyDonut(versusDonut('x', 'X', { ownValue: 0, opponentValue: 0 }, names))).toBeTrue();
+  });
+
+  it('con un empate muestra los dos valores, también con decimales', () => {
+    expect(versusDonut('t', 'Tries', { ownValue: 3, opponentValue: 3 }, names).center.value).toBe('3 – 3');
+    expect(versusDonut('m', 'Metros', { ownValue: 12.5, opponentValue: 4 }, names).center.value).toBe('12.5 – 4');
   });
 });
 

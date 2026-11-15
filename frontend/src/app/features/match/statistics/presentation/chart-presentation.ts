@@ -16,6 +16,7 @@ import {
   MatchStatistics,
   PlayerStatColumn,
   PlayerStatistic,
+  TeamValue,
 } from '../types/statistic.types';
 import { AdvancedSection } from './advanced-presentation';
 import {
@@ -112,7 +113,16 @@ export function pointsDonuts(groups: EventTypeStatGroup[], names: VersusNames): 
 const scoringTypes = (groups: EventTypeStatGroup[]): EventTypeStat[] =>
   groups.flatMap(group => group.types).filter(type => type.isScoring);
 
-const hasAttempts = (type: EventTypeStat): boolean => type.count.own + type.count.opponent > 0;
+const bothTeams = (value: TeamValue): number => value.own + value.opponent;
+
+const wasAttempted = (type: EventTypeStat): boolean => bothTeams(type.count) > 0;
+
+/** Dona de un tanto: en los que tienen intentos, el centro dice los convertidos sobre los intentos de los dos equipos. */
+function scoreDonut(type: EventTypeStat, names: VersusNames): DonutChart {
+  const chart = versusDonut(`score-${type.name}`, type.name, mainLine(type), names);
+  if (!type.hasAttempts || !type.made) return chart;
+  return { ...chart, center: { value: `${bothTeams(type.made)}/${bothTeams(type.count)}`, label: 'convertidos' } };
+}
 
 /**
  * Tarjeta «Marcador y posesión»: posesión, puntos por tipo de tanto y cada tanto propio contra rival. Un tanto con
@@ -120,10 +130,15 @@ const hasAttempts = (type: EventTypeStat): boolean => type.count.own + type.coun
  * no tuvieron ningún intento no aparecen.
  */
 export function scoreCard(stats: MatchStatistics, names: VersusNames): ChartCard {
-  const scoring = versusCharts('score', scoringTypes(stats.groups).filter(hasAttempts).map(mainLine), names);
+  const attempted = scoringTypes(stats.groups).filter(wasAttempted);
+  const charted = attempted.filter(type => hasData(mainLine(type)));
   return {
-    charts: [possessionDonut(stats.ownPossessionPercentage, names), ...pointsDonuts(stats.groups, names), ...scoring.charts],
-    rest: scoring.rest,
+    charts: [
+      possessionDonut(stats.ownPossessionPercentage, names),
+      ...pointsDonuts(stats.groups, names),
+      ...charted.map(type => scoreDonut(type, names)),
+    ],
+    rest: attempted.filter(type => !charted.includes(type)).map(mainLine),
   };
 }
 

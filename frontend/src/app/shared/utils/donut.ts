@@ -164,7 +164,10 @@ export function teamTones(colorVar: string, count: number): string[] {
   });
 }
 
-/** Dos porciones, propio y rival, con el color de cada equipo. El centro suma ambas. */
+/**
+ * Dos porciones, propio y rival, con el color de cada equipo. El centro dice «propio – rival»: la suma de los dos no
+ * dice nada (seis tries pueden ser 3 a 3 o 6 a 0).
+ */
 export function versusDonut(id: string, title: string, values: VersusValues, names: VersusNames): DonutChart {
   const total = values.ownValue + values.opponentValue;
   return {
@@ -175,7 +178,7 @@ export function versusDonut(id: string, title: string, values: VersusValues, nam
       { label: names.opponent, value: values.opponentValue, display: values.opponent, color: `var(${RIVAL_COLOR_VAR})` },
     ],
     max: total,
-    center: { value: `${total}`, label: 'total' },
+    center: { value: `${values.ownValue} – ${values.opponentValue}`, label: 'propio – rival' },
     variant: 'share',
   };
 }

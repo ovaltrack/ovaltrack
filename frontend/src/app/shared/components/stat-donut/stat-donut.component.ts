@@ -3,6 +3,8 @@ import { DonutChart, describeDonut, donutSegments, isEmptyDonut } from '../../ut
 
 const RADIUS = 44;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+/** Con más caracteres que esto («12 – 14», «15/22») el centro no entra en el hueco del anillo más chico. */
+const LONG_CENTER = 5;
 
 /** Dona (torta con hueco) en SVG puro: anillo con el total o el porcentaje al centro y leyenda con valor y %. */
 @Component({
@@ -23,4 +25,6 @@ export class StatDonutComponent {
   readonly isEmpty = computed(() => isEmptyDonut(this.chart()));
   readonly description = computed(() => describeDonut(this.chart()));
   readonly showLegend = computed(() => this.chart().variant === 'share' && !this.isEmpty());
+  readonly centerValue = computed(() => (this.isEmpty() && this.chart().variant === 'share' ? '—' : this.chart().center.value));
+  readonly longCenter = computed(() => this.centerValue().length > LONG_CENTER);
 }

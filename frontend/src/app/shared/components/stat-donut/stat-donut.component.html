@@ -25,7 +25,7 @@
       }
     </svg>
     <div class="donut__center">
-      <span class="donut__value" [class.donut__value--empty]="isEmpty()">{{ isEmpty() && chart().variant === 'share' ? '—' : chart().center.value }}</span>
+      <span class="donut__value" [class.donut__value--empty]="isEmpty()" [class.donut__value--long]="longCenter()">{{ centerValue() }}</span>
       @if (chart().center.label && !isEmpty()) {
         <span class="donut__caption">{{ chart().center.label }}</span>
       }

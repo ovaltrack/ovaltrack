@@ -33,6 +33,7 @@
 }
 .donut__value { font: 700 18px/1.1 var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-primary); }
 .donut__value--empty { color: var(--text-muted); }
+.donut__value--long { font-size: 14px; }
 .donut__caption { font: 600 10.5px var(--font-body); color: var(--text-muted); }
 
 /* El padding inferior es la separación con la fila de donas siguiente (la grilla no usa row-gap) */
