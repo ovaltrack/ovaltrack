@@ -22,7 +22,7 @@ import {
   measurementCard,
   opponentPossessionOf,
   playerActionCharts,
-  scoreCharts,
+  scoreCard,
 } from '../../../statistics/presentation/chart-presentation';
 import {
   advancedBars,
@@ -155,9 +155,9 @@ export class PostMatchStatisticsComponent implements OnInit, OnDestroy {
   }));
 
   /** Vista de gráficos: se calculan a partir de lo ya presentado, solo cuando se muestran. */
-  readonly scoreCharts = computed<DonutChart[]>(() => {
+  readonly scoreCard = computed<ChartCard>(() => {
     const stats = this.stats();
-    return stats ? scoreCharts(stats, this.scoreLines(), this.teamNames()) : [];
+    return stats ? scoreCard(stats, this.teamNames()) : { charts: [], rest: [] };
   });
   readonly indicatorCard = computed<ChartCard>(() => indicatorCard(this.stats()?.derived ?? [], this.teamNames()));
   readonly advancedCards = computed<Record<string, ChartCard>>(() =>

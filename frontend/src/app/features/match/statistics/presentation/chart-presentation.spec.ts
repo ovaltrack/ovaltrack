@@ -1,6 +1,6 @@
-import { advancedCard, indicatorCard, measurementCard, opponentPossessionOf, playerActionCharts, scoreCharts } from './chart-presentation';
+import { advancedCard, indicatorCard, measurementCard, opponentPossessionOf, playerActionCharts, scoreCard } from './chart-presentation';
 import { presentAdvancedStatistics } from './advanced-presentation';
-import { presentGroups, scoringLines } from './stat-presentation';
+import { presentGroups } from './stat-presentation';
 import {
   AdvancedPeriodStatistics,
   DerivedMetric,
@@ -45,8 +45,8 @@ const matchStats = (): MatchStatistics => ({
   derived: [],
 });
 
-describe('scoreCharts', () => {
-  const charts = scoreCharts(matchStats(), scoringLines(matchStats().groups), names);
+describe('scoreCard', () => {
+  const charts = scoreCard(matchStats(), names).charts;
 
   it('arranca con la posesión: la propia al centro y el complemento para el rival', () => {
     expect(charts[0].id).toBe('possession');
@@ -73,6 +73,31 @@ describe('scoreCharts', () => {
     const conversion = charts.find(chart => chart.id === 'score-Conversión');
     expect(conversion?.slices[0].display).toBe('2/3');
     expect(conversion?.max).toBe(2);
+  });
+
+  describe('tantos con intentos pero sin aciertos', () => {
+    const dropStat = stat({
+      eventTypeId: 'drop', code: 'DROP_GOAL', name: 'Drop goal', isScoring: true, hasAttempts: true,
+      count: { own: 1, opponent: 0 }, made: zero, points: zero,
+    });
+    const penaltyTryStat = stat({
+      eventTypeId: 'ptry', code: 'PENALTY_TRY', name: 'Try penal', isScoring: true, count: zero, points: zero,
+    });
+    const card = scoreCard({ ...matchStats(), groups: [{ name: 'Puntuación', types: [tryStat, dropStat, penaltyTryStat] }] }, names);
+
+    it('quedan como fila con «convertidos/intentos»: no desaparecen al cambiar de vista', () => {
+      expect(card.rest.map(line => [line.label, line.own, line.opponent])).toEqual([['Drop goal', '0/1', '0/0']]);
+      expect(card.charts.some(chart => chart.id === 'score-Drop goal')).toBeFalse();
+    });
+
+    it('los que no tuvieron ningún intento no aparecen', () => {
+      expect(card.charts.some(chart => chart.title === 'Try penal')).toBeFalse();
+      expect(card.rest.some(line => line.label === 'Try penal')).toBeFalse();
+    });
+
+    it('los que tienen aciertos siguen como dona', () => {
+      expect(card.charts.some(chart => chart.id === 'score-Try')).toBeTrue();
+    });
   });
 });
 

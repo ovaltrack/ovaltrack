@@ -11,6 +11,7 @@ import {
 } from '../../../../shared/utils/donut';
 import {
   DerivedMetric,
+  EventTypeStat,
   EventTypeStatGroup,
   MatchStatistics,
   PlayerStatColumn,
@@ -23,6 +24,7 @@ import {
   StatLine,
   formatMetric,
   formatPlayerValue,
+  mainLine,
 } from './stat-presentation';
 
 /**
@@ -107,13 +109,22 @@ export function pointsDonuts(groups: EventTypeStatGroup[], names: VersusNames): 
   return teamShares('points', 'Puntos', items, names);
 }
 
-/** Tarjeta «Marcador y posesión»: posesión, puntos por tipo de tanto y cada tanto propio contra rival. */
-export function scoreCharts(stats: MatchStatistics, scoring: StatLine[], names: VersusNames): DonutChart[] {
-  return [
-    possessionDonut(stats.ownPossessionPercentage, names),
-    ...pointsDonuts(stats.groups, names),
-    ...versusCharts('score', scoring, names).charts,
-  ];
+const scoringTypes = (groups: EventTypeStatGroup[]): EventTypeStat[] =>
+  groups.flatMap(group => group.types).filter(type => type.isScoring);
+
+const hasAttempts = (type: EventTypeStat): boolean => type.count.own + type.count.opponent > 0;
+
+/**
+ * Tarjeta «Marcador y posesión»: posesión, puntos por tipo de tanto y cada tanto propio contra rival. Un tanto con
+ * intentos pero sin aciertos (un drop errado) no tiene porciones: queda como fila, igual que en Mediciones. Los que
+ * no tuvieron ningún intento no aparecen.
+ */
+export function scoreCard(stats: MatchStatistics, names: VersusNames): ChartCard {
+  const scoring = versusCharts('score', scoringTypes(stats.groups).filter(hasAttempts).map(mainLine), names);
+  return {
+    charts: [possessionDonut(stats.ownPossessionPercentage, names), ...pointsDonuts(stats.groups, names), ...scoring.charts],
+    rest: scoring.rest,
+  };
 }
 
 export const metricLine = (metric: DerivedMetric): StatLine => ({

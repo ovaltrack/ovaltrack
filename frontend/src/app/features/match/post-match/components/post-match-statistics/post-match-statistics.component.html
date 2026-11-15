@@ -100,7 +100,7 @@
               }
             </div>
             } @else if (viewMode() === 'chart') {
-              <app-donut-grid [charts]="scoreCharts()" />
+              <ng-container *ngTemplateOutlet="chartCard; context: { $implicit: scoreCard() }" />
             } @else {
               <app-bar-grid [charts]="scoreBars()" />
             }
