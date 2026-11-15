@@ -83,12 +83,25 @@ function teamShares(id: string, title: string, items: TeamItem[], names: VersusN
 }
 
 /** Una dona versus por cada línea con datos; las demás (0 contra 0) siguen como fila. */
-function versusCharts(prefix: string, lines: StatLine[], names: VersusNames): ChartCard {
+function versusCharts(prefix: string, lines: StatLine[], names: VersusNames, titleOf = (line: StatLine) => line.label): ChartCard {
   return {
-    charts: lines.filter(hasData).map(line => versusDonut(`${prefix}-${line.label}`, line.label, line, names)),
+    charts: lines.filter(hasData).map(line => versusDonut(`${prefix}-${line.label}`, titleOf(line), line, names)),
     rest: lines.filter(line => !hasData(line)),
   };
 }
+
+/** Título del reparto de un bloque de segundo nivel: el de la tarjeta ya nombra el tema, el gráfico dice qué muestra. */
+const DISTRIBUTION_TITLES: Record<string, string> = {
+  possessions: 'Cómo terminan',
+  'try-sources': 'Tries por origen',
+  'score-blocks': 'Puntos por bloque',
+};
+
+export const distributionTitle = (section: AdvancedSection): string => DISTRIBUTION_TITLES[section.id] ?? section.title;
+
+/** Título de una cantidad: si repite el de la tarjeta («Posesiones»), dice que es la cantidad. Las filas de la Lista no cambian. */
+export const countTitle = (section: AdvancedSection, line: StatLine): string =>
+  line.label === section.title ? `Cantidad de ${line.label.toLowerCase()}` : line.label;
 
 export function possessionDonut(ownPercentage: number, names: VersusNames): DonutChart {
   const opponentPercentage = opponentPossessionOf(ownPercentage);
@@ -173,8 +186,8 @@ export function indicatorCard(derived: DerivedMetric[], names: VersusNames): Cha
 
 /** Bloque de segundo nivel: repartos por equipo, cantidades propio-rival y, como fila, las tasas. */
 export function advancedCard(section: AdvancedSection, names: VersusNames): ChartCard {
-  const distribution = teamShares(section.id, section.title, toItems(section.distribution), names, ADVANCED_MAX_SLICES);
-  const counts = versusCharts(section.id, section.counts, names);
+  const distribution = teamShares(section.id, distributionTitle(section), toItems(section.distribution), names, ADVANCED_MAX_SLICES);
+  const counts = versusCharts(section.id, section.counts, names, line => countTitle(section, line));
   const charted = new Set([...(distribution.length > 0 ? section.distribution : []), ...section.counts.filter(hasData)]);
   return {
     charts: [...distribution, ...counts.charts],

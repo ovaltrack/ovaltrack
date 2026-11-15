@@ -2,7 +2,16 @@ import { BarChart, VersusBarLine, isEmptyBars, teamBars, versusBars } from '../.
 import { OWN_COLOR_VAR, VersusNames } from '../../../../shared/utils/donut';
 import { DerivedMetric, EventTypeStatGroup, MatchStatistics, PlayerStatColumn, PlayerStatistic } from '../types/statistic.types';
 import { AdvancedSection } from './advanced-presentation';
-import { ChartCard, hasData, isGaugedMetric, metricLine, opponentPossessionOf, playerActionGroups } from './chart-presentation';
+import {
+  ChartCard,
+  countTitle,
+  distributionTitle,
+  hasData,
+  isGaugedMetric,
+  metricLine,
+  opponentPossessionOf,
+  playerActionGroups,
+} from './chart-presentation';
 import { GroupStatPresentation, StatLine, formatMetric } from './stat-presentation';
 
 /**
@@ -65,14 +74,14 @@ export function indicatorBars(derived: DerivedMetric[], names: VersusNames): Cha
 export function advancedBars(section: AdvancedSection, names: VersusNames): ChartCard<BarChart> {
   const orientation = SEQUENCE_SECTIONS.has(section.id) ? 'vertical' : 'horizontal';
   const distribution = section.distribution.length > 0
-    ? [versusBars(`${section.id}-distribution`, section.title, section.distribution, names, { orientation })]
+    ? [versusBars(`${section.id}-distribution`, distributionTitle(section), section.distribution, names, { orientation })]
     : [];
   const counts = section.counts.filter(hasData);
   const charted = new Set([...section.distribution, ...counts]);
   return {
     charts: [
       ...distribution,
-      ...counts.map(line => versusBars(`${section.id}-${line.label}`, line.label, [unlabeled(line)], names)),
+      ...counts.map(line => versusBars(`${section.id}-${line.label}`, countTitle(section, line), [unlabeled(line)], names)),
     ],
     rest: section.lines.filter(line => !charted.has(line)),
   };

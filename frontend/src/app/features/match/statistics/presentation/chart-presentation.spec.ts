@@ -169,6 +169,25 @@ describe('advancedCard', () => {
     sinBin: { yellowCards: zero, pointsFor: zero, pointsAgainst: zero },
     ...overrides,
   });
+
+  it('ningún gráfico se titula igual que su tarjeta', () => {
+    const full = advanced({
+      trySources: [{ key: 'SCRUM', own: 1, opponent: 1 }],
+      turnoverPossessions: { own: 2, opponent: 1 },
+      pointsFromTurnovers: { own: 5, opponent: 0 },
+      penaltiesByTerritory: { ownHalf: { own: 2, opponent: 1 }, opponentHalf: zero, withoutZone: zero },
+      scoreByBlock: [{ fromMinute: 0, toMinute: 10, own: 5, opponent: 0 }, { fromMinute: 10, toMinute: 20, own: 0, opponent: 3 }],
+    });
+    const repeated = presentAdvancedStatistics(full)
+      .filter(section => advancedCard(section, names).charts.some(chart => chart.title === section.title))
+      .map(section => section.id);
+    expect(repeated).toEqual([]);
+  });
+
+  it('posesiones: «Cómo terminan» (una dona por equipo) y «Cantidad de posesiones»', () => {
+    expect(cardOf('possessions').charts.map(chart => chart.title)).toEqual(['Cómo terminan', 'Cómo terminan', 'Cantidad de posesiones']);
+  });
+
   const cardOf = (id: string, value = advanced()) =>
     advancedCard(presentAdvancedStatistics(value).find(section => section.id === id)!, names);
 
