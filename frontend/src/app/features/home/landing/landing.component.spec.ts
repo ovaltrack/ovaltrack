@@ -21,6 +21,12 @@ describe('LandingComponent', () => {
     Array.from(host.querySelectorAll<HTMLButtonElement>('button'))
       .find(button => button.textContent?.includes('Ver funcionalidades'))!;
 
+  it('presenta a Ovi y cómo llamarlo desde la app', () => {
+    const ovi = host.querySelector('.ovi-hello');
+    expect(ovi?.querySelector('app-ovi-avatar')).not.toBeNull();
+    expect(ovi?.textContent).toContain('«?»');
+  });
+
   it('muestra una tarjeta por cada funcionalidad', () => {
     expect(host.querySelectorAll('#features .feature-card').length).toBe(LANDING_FEATURES.length);
   });
