@@ -8,6 +8,10 @@ export interface AdvancedSection {
   /** Cómo leer el bloque: qué mide y qué indica un valor alto o bajo. */
   hint: string;
   lines: StatLine[];
+  /** Filas de `lines` que reparten un total entre categorías (finales, orígenes, bloques de 10'): una dona por equipo. */
+  distribution: StatLine[];
+  /** Filas de `lines` que comparan una cantidad de propio y rival: una dona cada una. */
+  counts: StatLine[];
   /** Las filas comparan cantidades del mismo tipo: se muestran con barra. */
   bars: boolean;
   /** Texto a mostrar cuando el bloque no tiene datos. */
@@ -77,11 +81,26 @@ export const ADVANCED_HINTS: Record<string, string> = {
     + 'baja el rendimiento.',
 };
 
-const section = (id: string, title: string, lines: StatLine[], bars: boolean, emptyMessage: string): AdvancedSection => ({
+/** Qué filas de una sección se grafican y cómo; las que no figuran en ninguna quedan como filas (tasas). */
+interface LineKinds {
+  distribution?: StatLine[];
+  counts?: StatLine[];
+}
+
+const section = (
+  id: string,
+  title: string,
+  lines: StatLine[],
+  bars: boolean,
+  emptyMessage: string,
+  kinds: LineKinds = {}
+): AdvancedSection => ({
   id,
   title,
   hint: ADVANCED_HINTS[id],
   lines,
+  distribution: kinds.distribution ?? [],
+  counts: kinds.counts ?? [],
   bars,
   emptyMessage: lines.some(hasData) ? null : emptyMessage,
 });
@@ -92,36 +111,45 @@ export function presentAdvancedStatistics(stats: AdvancedPeriodStatistics): Adva
   const penalties = stats.penaltiesByTerritory;
   const sinBin = stats.sinBin;
 
+  const possessionCount = countLine('Posesiones', stats.possessions);
+  const outcomes = categoryLines(stats.possessionOutcomes, POSSESSION_OUTCOME_LABELS);
+  const trySources = categoryLines(stats.trySources, TRY_SOURCE_LABELS);
+  const turnoverCounts = [
+    countLine('Posesiones ganadas', stats.turnoverPossessions),
+    countLine('Puntos conseguidos', stats.pointsFromTurnovers),
+  ];
+  const redZoneCounts = [countLine('Visitas', redZone.visits), countLine('Puntos', redZone.points)];
+  const disciplineCounts = [
+    countLine('Penales en campo propio', penalties.ownHalf),
+    countLine('Penales en campo rival', penalties.opponentHalf),
+    ...(hasData(countLine('', penalties.withoutZone)) ? [countLine('Penales sin zona', penalties.withoutZone)] : []),
+    countLine('Amarillas', sinBin.yellowCards),
+    countLine('Puntos a favor con un amarillado', sinBin.pointsFor),
+    countLine('Puntos en contra con un amarillado', sinBin.pointsAgainst),
+  ];
+  const blocks = stats.scoreByBlock.map(block => countLine(`${block.fromMinute}'–${block.toMinute}'`, block));
+
   return [
     section('possessions', 'Posesiones', [
-      countLine('Posesiones', stats.possessions),
+      possessionCount,
       rateLine('Puntos por posesión', stats.pointsPerPossession),
-      ...categoryLines(stats.possessionOutcomes, POSSESSION_OUTCOME_LABELS),
-    ], false, 'Sin posesiones registradas.'),
-    section('try-sources', 'Origen de los tries', categoryLines(stats.trySources, TRY_SOURCE_LABELS), true,
-      'Sin tries en el período.'),
-    section('turnovers', 'Después de un turnover', [
-      countLine('Posesiones ganadas', stats.turnoverPossessions),
-      countLine('Puntos conseguidos', stats.pointsFromTurnovers),
-    ], false, 'Sin turnovers en el período.'),
+      ...outcomes,
+    ], false, 'Sin posesiones registradas.', { distribution: outcomes, counts: [possessionCount] }),
+    section('try-sources', 'Origen de los tries', trySources, true, 'Sin tries en el período.',
+      { distribution: trySources }),
+    section('turnovers', 'Después de un turnover', turnoverCounts, false, 'Sin turnovers en el período.',
+      { counts: turnoverCounts }),
     redZone.available
       ? section('red-zone', 'Zona roja (22 rival)', [
-        countLine('Visitas', redZone.visits),
-        countLine('Puntos', redZone.points),
+        ...redZoneCounts,
         rateLine('Puntos por visita', redZone.pointsPerVisit),
-      ], false, 'Sin visitas a la 22 rival.')
-      : { id: 'red-zone', title: 'Zona roja (22 rival)', hint: ADVANCED_HINTS['red-zone'], lines: [], bars: false,
+      ], false, 'Sin visitas a la 22 rival.', { counts: redZoneCounts })
+      : { id: 'red-zone', title: 'Zona roja (22 rival)', hint: ADVANCED_HINTS['red-zone'], lines: [], distribution: [],
+        counts: [], bars: false,
         emptyMessage: 'Cargá los tramos de zona del período para ver la zona roja.' },
-    section('discipline', 'Disciplina', [
-      countLine('Penales en campo propio', penalties.ownHalf),
-      countLine('Penales en campo rival', penalties.opponentHalf),
-      ...(hasData(countLine('', penalties.withoutZone)) ? [countLine('Penales sin zona', penalties.withoutZone)] : []),
-      countLine('Amarillas', sinBin.yellowCards),
-      countLine('Puntos a favor con un amarillado', sinBin.pointsFor),
-      countLine('Puntos en contra con un amarillado', sinBin.pointsAgainst),
-    ], false, 'Sin penales ni amarillas en el período.'),
-    section('score-blocks', 'Puntos cada 10 minutos',
-      stats.scoreByBlock.map(block => countLine(`${block.fromMinute}'–${block.toMinute}'`, block)), true,
-      'Sin puntos en el período.'),
+    section('discipline', 'Disciplina', disciplineCounts, false, 'Sin penales ni amarillas en el período.',
+      { counts: disciplineCounts }),
+    section('score-blocks', 'Puntos cada 10 minutos', blocks, true, 'Sin puntos en el período.',
+      { distribution: blocks }),
   ];
 }

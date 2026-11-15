@@ -76,9 +76,14 @@ export function formatEventCount(count: number): string {
 const TEAM_NAME_NOISE = /\b(rugby\s*club|rugby|club|r\.?\s?c\.?)\b/gi;
 const SHORT_TEAM_NAME_MAX = 14;
 
+/** Nombre sin "Rugby Club" / "Club" / "RC"; si no queda nada, el original. */
+export function teamNameCore(name: string): string {
+  const trimmed = name.trim();
+  return trimmed.replace(TEAM_NAME_NOISE, ' ').replace(/\s+/g, ' ').trim() || trimmed;
+}
+
 /** Nombre corto para el in-goal: sin "Rugby Club" / "RC" y acotado a 14 caracteres. */
 export function shortTeamName(name: string): string {
-  const trimmed = name.trim();
-  const core = trimmed.replace(TEAM_NAME_NOISE, ' ').replace(/\s+/g, ' ').trim() || trimmed;
+  const core = teamNameCore(name);
   return core.length > SHORT_TEAM_NAME_MAX ? `${core.slice(0, SHORT_TEAM_NAME_MAX - 1).trimEnd()}…` : core;
 }

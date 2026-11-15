@@ -75,6 +75,8 @@
               </select>
             </label>
           }
+
+          <app-view-mode-toggle class="view-toggle" [(mode)]="viewMode" [compact]="true" />
         </div>
 
         @if (view() === 'general') {
@@ -130,7 +132,7 @@
               </ul>
             </section>
 
-            <app-player-actions-card [groups]="generalActions()" />
+            <app-player-actions-card [groups]="generalActions()" [viewMode]="viewMode()" />
           }
         } @else {
           @switch (matchDetail().status) {
@@ -181,7 +183,7 @@
                     scopeLabel="Este partido" />
                 </div>
 
-                <app-player-actions-card [groups]="matchActions()" />
+                <app-player-actions-card [groups]="matchActions()" [viewMode]="viewMode()" />
               }
             }
           }

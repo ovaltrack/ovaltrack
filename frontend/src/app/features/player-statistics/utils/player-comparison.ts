@@ -1,3 +1,5 @@
+import { BarChart, teamBars } from '../../../shared/utils/bars';
+import { DonutChart, OWN_COLOR_VAR, shareDonut } from '../../../shared/utils/donut';
 import { ZoneCellSummary } from '../../match/types/zone.types';
 import { zoneLabel, zoneName } from '../../match/post-match/utils/zone-grid';
 import {
@@ -150,6 +152,10 @@ export interface ActionRow {
   name: string;
   /** "3" o, en los pateos a palos, "2 de 3". */
   value: string;
+  /** Veces que lo hizo (en los pateos, los intentos): es lo que reparte la dona. */
+  count: number;
+  /** Aciertos en los pateos a palos; `null` en las demás acciones. */
+  made: number | null;
 }
 
 export interface ActionGroup {
@@ -188,6 +194,32 @@ export function toActionGroups(actions: PlayerActionCount[]): ActionGroup[] {
       .map(item => ({
         name: ACTION_NAMES[item.code] ?? item.name,
         value: item.made === null ? `${item.count}` : `${item.made} de ${item.count}`,
+        count: item.count,
+        made: item.made,
       })),
   }));
+}
+
+/** Una dona por grupo de acciones: reparte lo que hizo el jugador, con los aciertos sobre intentos en los pateos. */
+export function toActionDonuts(groups: ActionGroup[]): DonutChart[] {
+  return groups.map(group => shareDonut(
+    `actions-${group.title}`,
+    group.title,
+    group.rows
+      .filter(row => row.count > 0)
+      .map(row => ({ label: row.name, value: row.count, display: row.made === null ? undefined : row.value })),
+    OWN_COLOR_VAR
+  ));
+}
+
+/** Una barra por acción en cada grupo, de la que más hizo a la que menos; el largo son los intentos y el texto, «2 de 3» en los pateos. */
+export function toActionBars(groups: ActionGroup[]): BarChart[] {
+  return groups.map(group => teamBars(
+    `actions-${group.title}`,
+    group.title,
+    group.rows
+      .filter(row => row.count > 0)
+      .map(row => ({ label: row.name, value: row.count, display: row.made === null ? undefined : row.value })),
+    OWN_COLOR_VAR
+  ));
 }

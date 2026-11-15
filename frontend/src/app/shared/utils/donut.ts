@@ -1,0 +1,290 @@
+/** Porción de una dona: `display` reemplaza al número en la leyenda (p. ej. "2 de 3"). */
+export interface DonutSlice {
+  label: string;
+  value: number;
+  display?: string;
+  /** Color CSS listo para `stroke`: siempre sale de tokens del sistema de diseño. */
+  color: string;
+}
+
+/** Porción sin color: el color lo asigna la fábrica según el equipo y la cantidad de porciones. */
+export interface DonutSliceInput {
+  label: string;
+  value: number;
+  display?: string;
+  /** Porción de relleno ("Otros", "Sin completar"): se pinta en neutro y no entra en la rampa del equipo. */
+  muted?: boolean;
+  /** Posición en la rampa del equipo (0 = el más intenso). Sin ella, el tono sale del orden de las porciones. */
+  tone?: number;
+}
+
+/** Categoría de un reparto con el valor de cada equipo, antes de partirlo en una dona por equipo. */
+export interface PairedSliceInput {
+  label: string;
+  own: number;
+  opponent: number;
+  muted?: boolean;
+}
+
+/** Equipo al que pertenece una dona de reparto o de avance: se muestra en su propia línea, con su color. */
+export interface DonutTeam {
+  name: string;
+  /** Color CSS del equipo (`var(--…)`). */
+  color: string;
+}
+
+export interface DonutChart {
+  id: string;
+  title: string;
+  /** Solo en las donas de un único equipo; las de propio contra rival nombran a ambos en la leyenda. */
+  team?: DonutTeam;
+  slices: DonutSlice[];
+  /** Valor que equivale al círculo completo: la suma en las de reparto, 100 en las de avance. */
+  max: number;
+  /** Texto del centro: el total en las de reparto, el porcentaje en las de avance. */
+  center: { value: string; label: string };
+  /** `share` reparte un total entre categorías; `gauge` muestra un porcentaje sobre 100. */
+  variant: 'share' | 'gauge';
+  /** `false` oculta el porcentaje de la leyenda cuando el valor ya es un porcentaje (p. ej. la posesión). */
+  showPercent?: boolean;
+  /** Aclaración debajo de un anillo de avance (p. ej. «45 de 51»): un avance no tiene leyenda. */
+  note?: string;
+  /** Donas del mismo dato (el anillo propio y el rival de un indicador): la grilla las dibuja juntas, con un título. */
+  group?: string;
+}
+
+/** Celda de la grilla de donas: una dona suelta o un par del mismo `group`. */
+export interface DonutCell {
+  id: string;
+  title: string;
+  paired: boolean;
+  charts: DonutChart[];
+}
+
+/** Porción lista para dibujar con `stroke-dasharray` y `stroke-dashoffset`. */
+export interface DonutSegment extends DonutSlice {
+  percent: number;
+  dash: number;
+  gap: number;
+  offset: number;
+}
+
+/** Propio vs rival de una misma cantidad; las filas de estadísticas (`StatLine`) ya cumplen esta forma. */
+export interface VersusValues {
+  ownValue: number;
+  opponentValue: number;
+  own?: string;
+  opponent?: string;
+}
+
+export interface VersusNames {
+  own: string;
+  opponent: string;
+}
+
+/** Variables de color de cada equipo (las mismas de `.text-own` y `.text-opp`). */
+export const OWN_COLOR_VAR = '--btn-primary-bg';
+export const RIVAL_COLOR_VAR = '--team-rival';
+
+export const OTHERS_LABEL = 'Otros';
+export const DEFAULT_MAX_SLICES = 6;
+
+const MUTED_COLOR = 'var(--border-strong)';
+/** Intensidad (%) del color del equipo en cada porción, de la mayor a la menor. */
+const TONE_PERCENTS = [100, 82, 66, 52, 40, 30, 22, 16];
+
+const sum = (values: number[]): number => values.reduce((total, value) => total + value, 0);
+
+const formatPercent = (value: number): string => `${Math.round(value * 10) / 10}%`;
+
+/**
+ * Porcentajes enteros que suman 100 (método del mayor resto), para que la leyenda no muestre 99 % ni 101 %.
+ * Sin total devuelve ceros.
+ */
+export function roundedPercents(values: number[]): number[] {
+  const total = sum(values);
+  if (total <= 0) return values.map(() => 0);
+
+  const exact = values.map(value => (value / total) * 100);
+  const floors = exact.map(Math.floor);
+  const missing = Math.round(100 - sum(floors));
+  const winners = new Set(
+    exact
+      .map((value, index) => ({ index, remainder: value - floors[index] }))
+      .sort((a, b) => b.remainder - a.remainder || a.index - b.index)
+      .slice(0, missing)
+      .map(entry => entry.index)
+  );
+  return floors.map((value, index) => (winners.has(index) ? value + 1 : value));
+}
+
+/** Porcentaje de cada porción sobre `max`; lo que falta para completar el círculo no se informa. */
+export function slicePercents(slices: DonutSlice[], max: number): number[] {
+  const values = slices.map(slice => Math.max(0, slice.value));
+  const remainder = Math.max(0, max - sum(values));
+  return roundedPercents([...values, remainder]).slice(0, slices.length);
+}
+
+/** Tramos del anillo en orden, con las porciones sin valor en largo cero (siguen en la leyenda). */
+export function donutSegments(slices: DonutSlice[], circumference: number, max: number): DonutSegment[] {
+  const percents = slicePercents(slices, max);
+  const lengths = slices.map(slice => (max > 0 ? (Math.max(0, slice.value) / max) * circumference : 0));
+  return slices.map((slice, index) => ({
+    ...slice,
+    percent: percents[index],
+    dash: lengths[index],
+    gap: circumference - lengths[index],
+    offset: sum(lengths.slice(0, index)),
+  }));
+}
+
+/** Sin nada que dibujar: un reparto sin valores o un avance sin dato (`null`). Un avance en 0 % es un dato. */
+export function isEmptyDonut(chart: DonutChart): boolean {
+  if (chart.variant === 'gauge') return chart.slices.length === 0;
+  return chart.slices.every(slice => slice.value <= 0);
+}
+
+/**
+ * Deja las `max` porciones más grandes en su orden original y junta el resto en «Otros» (al final).
+ * Una dona con muchas porciones pequeñas no se puede leer.
+ */
+export function limitSlices(slices: DonutSliceInput[], max = DEFAULT_MAX_SLICES): DonutSliceInput[] {
+  if (slices.length <= max) return slices;
+
+  const keep = new Set(
+    slices
+      .map((slice, index) => ({ index, value: slice.value }))
+      .sort((a, b) => b.value - a.value || a.index - b.index)
+      .slice(0, max - 1)
+      .map(entry => entry.index)
+  );
+  const kept = slices.filter((_, index) => keep.has(index));
+  const rest = slices.filter((_, index) => !keep.has(index));
+  return [...kept, { label: OTHERS_LABEL, value: sum(rest.map(slice => slice.value)), muted: true }];
+}
+
+/**
+ * Reparto en par (una dona por equipo): las dos donas tienen las mismas categorías, en el orden recibido (catálogo o
+ * tiempo), con «0» en la leyenda del equipo que no tiene una; el corte de «Otros» y el tono de cada categoría salen del
+ * total de los dos equipos, así la misma categoría tiene el mismo tono en la dona propia y en la rival.
+ */
+export function sharedSlices(
+  items: PairedSliceInput[],
+  maxSlices = DEFAULT_MAX_SLICES
+): { own: DonutSliceInput[]; opponent: DonutSliceInput[] } {
+  const total = (item: PairedSliceInput): number => item.own + item.opponent;
+  // `sort` es estable: a igual total queda primero la que viene antes en el orden recibido.
+  const byTotal = (list: PairedSliceInput[]) => [...list].sort((a, b) => total(b) - total(a));
+  const present = items.filter(item => total(item) > 0);
+  const keep = new Set(present.length <= maxSlices ? present : byTotal(present).slice(0, maxSlices - 1));
+  const kept = present.filter(item => keep.has(item));
+  const grouped = present.filter(item => !keep.has(item));
+  const ranked = byTotal(kept.filter(item => !item.muted));
+
+  const side = (value: (item: PairedSliceInput) => number): DonutSliceInput[] => [
+    ...kept.map(item => (item.muted
+      ? { label: item.label, value: value(item), muted: true }
+      : { label: item.label, value: value(item), tone: ranked.indexOf(item) })),
+    ...(grouped.length > 0 ? [{ label: OTHERS_LABEL, value: sum(grouped.map(value)), muted: true }] : []),
+  ];
+
+  return { own: side(item => item.own), opponent: side(item => item.opponent) };
+}
+
+/**
+ * Rampa de `count` tonos del color de un equipo, de más a menos intenso. Se mezcla con la superficie de la tarjeta
+ * en vez de inventar colores, así sigue el tema claro y el oscuro.
+ */
+export function teamTones(colorVar: string, count: number): string[] {
+  return Array.from({ length: count }, (_, index) => {
+    const percent = TONE_PERCENTS[Math.min(index, TONE_PERCENTS.length - 1)];
+    return percent === 100 ? `var(${colorVar})` : `color-mix(in srgb, var(${colorVar}) ${percent}%, var(--surface))`;
+  });
+}
+
+/**
+ * Dos porciones, propio y rival, con el color de cada equipo. El centro dice «propio – rival»: la suma de los dos no
+ * dice nada (seis tries pueden ser 3 a 3 o 6 a 0).
+ */
+export function versusDonut(id: string, title: string, values: VersusValues, names: VersusNames): DonutChart {
+  const total = values.ownValue + values.opponentValue;
+  return {
+    id,
+    title,
+    slices: [
+      { label: names.own, value: values.ownValue, display: values.own, color: `var(${OWN_COLOR_VAR})` },
+      { label: names.opponent, value: values.opponentValue, display: values.opponent, color: `var(${RIVAL_COLOR_VAR})` },
+    ],
+    max: total,
+    center: { value: `${values.ownValue} – ${values.opponentValue}`, label: 'propio – rival' },
+    variant: 'share',
+  };
+}
+
+/** Reparte un total entre categorías con la rampa de un equipo; las muchas porciones chicas van a «Otros». */
+export function shareDonut(
+  id: string,
+  title: string,
+  items: DonutSliceInput[],
+  colorVar: string,
+  maxSlices = DEFAULT_MAX_SLICES
+): DonutChart {
+  const limited = limitSlices(items, maxSlices);
+  const ramp = limited.filter(item => !item.muted);
+  const toneOf = (item: DonutSliceInput): number => item.tone ?? ramp.indexOf(item);
+  const tones = teamTones(colorVar, Math.max(0, ...ramp.map(toneOf)) + 1);
+  const slices = limited.map<DonutSlice>(item => ({
+    label: item.label,
+    value: item.value,
+    display: item.display,
+    color: item.muted ? MUTED_COLOR : tones[toneOf(item)],
+  }));
+  const total = sum(slices.map(slice => slice.value));
+  return { id, title, slices, max: total, center: { value: `${total}`, label: 'total' }, variant: 'share' };
+}
+
+/** Anillo de avance de un porcentaje (0–100). Sin dato (`null`) queda vacío con «—» en el centro. */
+export function gaugeDonut(id: string, title: string, percent: number | null, colorVar: string): DonutChart {
+  if (percent === null) {
+    return { id, title, slices: [], max: 100, center: { value: '—', label: '' }, variant: 'gauge' };
+  }
+  const value = Math.min(100, Math.max(0, percent));
+  return {
+    id,
+    title,
+    slices: [{ label: title, value, color: `var(${colorVar})` }],
+    max: 100,
+    center: { value: formatPercent(value), label: '' },
+    variant: 'gauge',
+  };
+}
+
+/**
+ * Celdas de la grilla: las donas consecutivas del mismo `group` van juntas (el título una vez y un anillo por equipo
+ * debajo), así un par no queda partido entre dos filas; las demás, sueltas y en su orden.
+ */
+export function donutCells(charts: DonutChart[]): DonutCell[] {
+  return charts.reduce<DonutCell[]>((cells, chart) => {
+    const last = cells[cells.length - 1];
+    if (chart.group && last?.paired && last.id === chart.group) {
+      return [...cells.slice(0, -1), { ...last, charts: [...last.charts, chart] }];
+    }
+    return [...cells, { id: chart.group ?? chart.id, title: chart.title, paired: !!chart.group, charts: [chart] }];
+  }, []);
+}
+
+/** Asocia el gráfico (dona o barras) a un equipo: línea con su color debajo del título. */
+export function withTeam<T extends { team?: DonutTeam }>(chart: T, name: string, colorVar: string): T {
+  return { ...chart, team: { name, color: `var(${colorVar})` } };
+}
+
+/** Texto para lectores de pantalla: el anillo es un dibujo y la leyenda se oculta para no repetir. */
+export function describeDonut(chart: DonutChart): string {
+  const heading = chart.team ? `${chart.title} de ${chart.team.name}` : chart.title;
+  if (isEmptyDonut(chart)) return `${heading}: sin datos`;
+  if (chart.variant === 'gauge') return `${heading}: ${chart.center.value}${chart.note ? ` (${chart.note})` : ''}`;
+
+  const percents = slicePercents(chart.slices, chart.max);
+  const parts = chart.slices.map((slice, index) => `${slice.label} ${slice.display ?? slice.value} (${percents[index]} %)`);
+  return `${heading}: ${parts.join(', ')}`;
+}

@@ -97,6 +97,7 @@
 .bi-person-lines-fill::before { content: "\f4db"; }
 .bi-person-vcard::before { content: "\f8c9"; }
 .bi-person-x::before { content: "\f4e0"; }
+.bi-pie-chart::before { content: "\f4e9"; }
 .bi-plus-circle::before { content: "\f4fa"; }
 .bi-plus-circle-fill::before { content: "\f4f9"; }
 .bi-plus-lg::before { content: "\f64d"; }

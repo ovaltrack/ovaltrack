@@ -3,6 +3,8 @@ import {
   formatMetricValue,
   matchResult,
   tackleDetail,
+  toActionBars,
+  toActionDonuts,
   toActionGroups,
   toComparisonRows,
   topZones,
@@ -81,7 +83,7 @@ describe('player-comparison', () => {
       { code: 'INJURY', name: 'Lesión', groupName: 'Neutro', count: 1, made: null },
       { code: 'PENALTY_CONCEDED', name: 'Penal / Infracción', groupName: 'Neutro', count: 2, made: null },
     ]);
-    expect(groups).toEqual([{ title: 'Disciplina', rows: [{ name: 'Penales cometidos', value: '2' }] }]);
+    expect(groups).toEqual([{ title: 'Disciplina', rows: [{ name: 'Penales cometidos', value: '2', count: 2, made: null }] }]);
   });
 
   it('agrupa las acciones por grupo y muestra aciertos en los pateos', () => {
@@ -93,5 +95,61 @@ describe('player-comparison', () => {
     expect(groups.map(g => g.title)).toEqual(['Ataque', 'Puntos y pateo']);
     expect(groups[0].rows.map(r => r.name)).toEqual(['Pase', 'Acarreo']);
     expect(groups[1].rows[0].value).toBe('2 de 3');
+    expect(groups[1].rows[0]).toEqual(jasmine.objectContaining({ count: 3, made: 2 }));
+  });
+
+  describe('toActionDonuts', () => {
+    const groups = toActionGroups([
+      { code: 'CARRY', name: 'Acarreo', groupName: 'Ataque', count: 2, made: null },
+      { code: 'PASS_OFFLOAD', name: 'Pase', groupName: 'Ataque', count: 5, made: null },
+      { code: 'CONVERSION', name: 'Conversión', groupName: 'Puntuación', count: 3, made: 2 },
+    ]);
+
+    it('una dona por grupo, con el total de acciones al centro', () => {
+      const charts = toActionDonuts(groups);
+      expect(charts.map(chart => [chart.title, chart.center.value])).toEqual([['Ataque', '7'], ['Puntos y pateo', '3']]);
+      expect(charts[0].slices.map(slice => [slice.label, slice.value])).toEqual([['Pase', 5], ['Acarreo', 2]]);
+    });
+
+    it('los pateos muestran los aciertos sobre los intentos en la leyenda y reparten los intentos', () => {
+      const [slice] = toActionDonuts(groups)[1].slices;
+      expect(slice.display).toBe('2 de 3');
+      expect(slice.value).toBe(3);
+    });
+
+    it('sin acciones no hay donas', () => {
+      expect(toActionDonuts([])).toEqual([]);
+    });
+  });
+
+  describe('toActionBars', () => {
+    const groups = toActionGroups([
+      { code: 'CARRY', name: 'Acarreo', groupName: 'Ataque', count: 2, made: null },
+      { code: 'PASS_OFFLOAD', name: 'Pase', groupName: 'Ataque', count: 5, made: null },
+      { code: 'CONVERSION', name: 'Conversión', groupName: 'Puntuación', count: 3, made: 2 },
+    ]);
+
+    it('un gráfico por grupo con una barra por acción, de la que más hizo a la que menos', () => {
+      const charts = toActionBars(groups);
+      expect(charts.map(chart => chart.title)).toEqual(['Ataque', 'Puntos y pateo']);
+      expect(charts[0].groups.map(group => [group.label, group.values[0].value])).toEqual([['Pase', 5], ['Acarreo', 2]]);
+      expect(charts[0].max).toBe(6);
+    });
+
+    it('los pateos muestran los aciertos sobre los intentos y miden los intentos', () => {
+      const [value] = toActionBars(groups)[1].groups[0].values;
+      expect(value.display).toBe('2 de 3');
+      expect(value.value).toBe(3);
+    });
+
+    it('todas las barras son del jugador: usan el color propio', () => {
+      expect(toActionBars(groups).flatMap(chart => chart.groups.map(group => group.values[0].color))).toEqual(
+        ['var(--btn-primary-bg)', 'var(--btn-primary-bg)', 'var(--btn-primary-bg)']
+      );
+    });
+
+    it('sin acciones no hay gráficos', () => {
+      expect(toActionBars([])).toEqual([]);
+    });
   });
 });

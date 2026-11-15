@@ -721,3 +721,93 @@ Dos piezas del CSS global (los íconos y la hoja de Bootstrap) **no se editan a 
 - **Comprobación en el build:** `npm run build` (lo que usan `Dockerfile.pwa` y Vercel) corre `scripts/check-icons.mjs` y `build-bootstrap-subset.mjs --check` y falla, con la lista, si una pantalla usa un ícono o una clase de Bootstrap que el archivo generado no tiene. `ng serve` (`./ds up`) no corre esas comprobaciones: un ícono o una clase faltante se vería sin estilo en desarrollo, así que hay que regenerar antes de commitear.
 - **Fondos fijos:** `body` conserva `background-attachment: fixed` (en iOS el `fixed` ya se comporta como `scroll`: pasarlo a un seudoelemento fijo cambiaría lo que se ve ahí). `.halftime-page` no lo usa: su fondo ocupa justo el viewport.
 - **Presupuesto:** el bundle inicial pesa unos 750 kB contra un presupuesto de 1 MB; ninguna optimización tocó `angular.json` más que la hoja de Bootstrap.
+
+---
+
+## 11. Visualizaciones de estadísticas (Lista / Donas / Barras)
+
+Las pantallas de estadísticas ofrecen tres formas de ver los mismos datos: **Lista** (las filas de siempre), **Donas** (SVG) y **Barras** (HTML/CSS). No hay datos distintos en cada vista: los gráficos se derivan de lo que la pantalla ya calcula y presenta, sin recalcular estadísticas, y lo que una vista no puede dibujar sin forzarlo queda como fila, así nada desaparece al cambiar de vista. Ninguna usa dependencias.
+
+### 11.1 Selector (`app-view-mode-toggle`)
+- **Un control por pantalla**, que cambia todas sus tarjetas a la vez. Se usa con `[(mode)]="viewMode"`, donde `viewMode = statsViewModeSignal(clave)` (`shared/components/view-mode-toggle/view-mode.ts`): `'list' | 'chart' | 'bars'`, `'list'` por defecto, guardado en `sessionStorage` con `persistedSignal` (un valor guardado que ya no existe se descarta; los de antes de sumar las barras siguen valiendo).
+- **Ubicación:** post-partido (`post-match.statistics.view`), al final de la barra de filtros fija, en Equipo y Jugadores; jugador (`player-statistics.view`), al extremo derecho de la barra de vista (General y Por partido); división (`division-statistics.view`), en el encabezado de la tarjeta «Métricas a graficar», con las etiquetas **Evolución** (líneas, `bi-graph-up`), **Totales** (donas, `bi-pie-chart`) y **Por partido** (columnas, `bi-bar-chart`).
+- **Opciones:** el toggle recibe un arreglo `options` de `{ mode, label, icon }` y dibuja un botón por opción. Por defecto usa `STATS_VIEW_OPTIONS`: **Lista** (`bi-list-ul`), **Donas** (`bi-pie-chart`) y **Barras** (`bi-bar-chart`); una pantalla con otros nombres (la división) pasa los suyos.
+- **Aspecto:** una píldora de 44 px por opción, con el mismo estilo que `.filter-pill`; la activa usa `--grass-tint-strong` con borde y texto `--btn-primary-bg` (en oscuro, `--grass`). Con `compact`, hasta 480 px muestra solo los íconos; cada botón conserva su `aria-label` y su `aria-pressed`.
+
+### 11.2 Qué se grafica como dona
+Una torta representa **partes de un total**; lo demás no se fuerza a torta.
+| Dato | Gráfico |
+|---|---|
+| Categorías que suman un total (campos select y boolean, finales de posesión, orígenes de try, puntos por tipo de tanto, acciones de un grupo, bloques de 10') | Reparto: una dona por equipo (`shareDonut`); las dos del par comparten categorías, orden y tonos (`sharedSlices`) |
+| Una cantidad de propio contra rival (posesión, tries, cada tanto) | Dona de dos porciones (`versusDonut`) |
+| Un porcentaje (indicadores, efectividades, porcentaje del rango) | Anillo de avance sobre 100 (`gaugeDonut`); en Indicadores, propio y rival en par |
+| Tasas, promedios, saldos y comparaciones entre magnitudes distintas (p. ej. jugador contra promedio del plantel) | Siguen como **fila** (`rest`) o como el gráfico que ya tenían: nada desaparece al cambiar de vista |
+
+Un tanto con intentos y sin aciertos (Drop goal 0/1) no tiene porciones: en Marcador queda como **fila** debajo de las donas, igual que en Mediciones (`scoreCard`). Solo se oculta un tanto sin ningún intento de los dos equipos.
+
+Los adaptadores son funciones puras con spec: `features/match/statistics/presentation/chart-presentation.ts`, `toActionDonuts` (`player-statistics/utils/player-comparison.ts`) y `division-statistics/utils/division-totals.ts`.
+
+**Títulos:** un gráfico dice qué muestra y no repite el título de su tarjeta. En el segundo nivel, el reparto se titula «Cómo terminan», «Tries por origen» o «Puntos por bloque», y una cantidad que repetiría la tarjeta pasa a «Cantidad de posesiones» (`distributionTitle`, `countTitle`). Las filas de la Lista no cambian.
+
+**Dashboard de división · Totales:**
+- **Centro de las cantidades:** la diferencia con signo entre las dos series (propio menos rival, ganados menos perdidos en turnovers, con el formato `signed` de la Lista: «+2», «-1»). En scrum y line propios va ganados sobre jugados («45/51»), y en tarjetas, la suma. Sumar series opuestas no significa nada.
+- **Porcentajes:** scrum, line y tackles se ponderan con lo jugado en el rango (`Σ ganados / Σ jugados`), con «del rango» en el centro y «45 de 51» debajo (`DonutChart.note`). La posesión, que solo trae el % por partido, es el promedio de los partidos con dato («promedio · por partido»).
+
+### 11.3 Color
+- **Sin colores nuevos.** Propio = `--btn-primary-bg`, rival = `--team-rival`. El reparto de un solo equipo usa una **rampa de 8 tonos** de su color, mezclada con la superficie de la tarjeta (`color-mix(in srgb, var(--btn-primary-bg) N%, var(--surface))`), así sigue el tema claro y el oscuro. «Otros» y «Sin completar» van en `--border-strong`; el carril del anillo es una mezcla de `--border-strong` y `--surface`.
+- **Reparto en par (una dona por equipo):** el tono de cada categoría sale de su puesto en el total de los dos equipos, así la misma categoría tiene el mismo nivel de la rampa en la dona verde y en la azul. Las categorías van en el orden del catálogo o del tiempo (los bloques de 10' no se reordenan); el corte de «Otros» es el mismo en las dos donas, y una categoría en 0 de un equipo sigue en su leyenda con «0». El contraste entre tonos vecinos es bajo (1,1–1,7 : 1 en claro; 1,1–1,3 : 1 en oscuro), así que la leyenda con texto es la señal principal.
+- **Excepción:** el dashboard de división usa los colores de serie de `division-metrics.ts`, los mismos de las líneas de Evolución, para que la leyenda sea coherente entre las tres vistas.
+- Hasta 6 porciones por dona (8 en los repartos de segundo nivel, que incluyen los bloques de 10'); las más chicas se juntan en «Otros».
+
+### 11.4 Dona (`app-stat-donut`) y grilla (`app-donut-grid`)
+- La dona es una **subgrid de 4 filas** (título, equipo, anillo, leyenda) dentro de la grilla: en una misma fila todos los anillos arrancan a la misma altura aunque un título del catálogo ocupe más líneas. Los títulos **no se truncan**; la leyenda va debajo del anillo, a todo el ancho, y sus etiquetas pasan a una segunda línea en vez de cortarse (en celular no hay tooltip).
+- El **equipo** va en una línea propia, con su color, y con nombre corto (`shortTeamName`: «Puerto Madryn», sin «Rugby Club»). Los nombres completos quedan en el scoreboard y en las leyendas de cada tarjeta.
+- Anillo de `clamp(92px, 26vw, 120px)`, centro en HTML con JetBrains Mono y leyenda con valor y porcentaje como texto real, no solo color. Los porcentajes de una leyenda suman 100. Un centro de más de 5 caracteres baja de 18 a 14 px para entrar en el hueco del anillo más chico.
+- **Centro:**
+  - **Reparto:** el total.
+  - **Versus:** «propio – rival» («3 – 3»), nunca la suma.
+  - **Tantos con intentos:** los convertidos sobre los intentos de los dos equipos («3/6 convertidos»).
+  - **Posesión:** el % propio.
+  - **Avance:** el porcentaje. Un **0 % es un dato** (anillo vacío con «0%»); solo sin dato (`null`) muestra «—» y «Sin datos».
+- **Pie de un anillo de avance:** puede llevar una aclaración (`note`, p. ej. «45 de 51» o «por partido»), ya que un avance no tiene leyenda.
+- `app-donut-grid`: columnas `auto-fill` de mínimo 220 px y sin `row-gap` (cada dona se separa de la siguiente con su padding inferior: así la subgrid no suma espacio entre sus filas).
+- **Par:** las donas consecutivas con el mismo `group` (el anillo propio y el rival de un indicador) van en una celda (`donutCells`) con el título una sola vez y los dos anillos lado a lado, cada uno con su equipo debajo. La celda también es una subgrid de 4 filas; con pares, la grilla usa columnas de mínimo 280 px y a 390 px los dos anillos entran en una columna. Los repartos por equipo no van en par: sus leyendas no entran lado a lado en celular.
+- **Sin dato:** el anillo de avance con dato `null` es un **aro vacío**: en lugar del carril grueso, un contorno fino sobre el radio medio del anillo (`donut__track--none`: `stroke-width: 2` en el viewBox de 120, o sea 1,5–2 px; `stroke-dasharray: 4 4`; mismo color de carril; sin animación), con «—» al centro. Trazos cortos sobre el carril grueso se leían como un indicador de carga. Un 0 % mantiene el carril continuo. Aplica a partido y división (mismo componente).
+- **Reparto con una sola categoría:** si una sola categoría tiene datos (contando «Sin completar»), dos anillos completos no reparten nada: no hay donas y queda **una fila** con los dos equipos (`teamShares` devuelve `charts` y `rest`). Etiqueta: en el segundo nivel, la categoría sola («Sin origen registrado», la tarjeta ya da el contexto); en Marcador, «Puntos · Try»; en Mediciones, «Tipo · Campo · Opción» («Tackle · Resultado · Completado»). Con dos o más categorías con datos siguen las donas.
+- **Accesibilidad:** el anillo es `role="img"` con un `aria-label` que lista cada porción con su valor y porcentaje; la leyenda visual va con `aria-hidden` para no repetirlo. La transición del trazo se desactiva con `prefers-reduced-motion`.
+
+### 11.5 Tarjetas en las vistas de gráficos
+- Las tarjetas de detalle del post-partido (`.detail-card`) miden 440 px con scroll interno en Lista. En Donas y en Barras (`isGraphic = viewMode() !== 'list'`) pasan a **alto automático**, sin mínimo y sin igualar su alto con la de al lado (`align-items: start`): no se recorta ningún gráfico y una tarjeta corta no queda con un hueco.
+- **Dos columnas independientes** (solo Donas y Barras, con pantalla de **1122 px o más**, el corte opuesto al `max-width: 1121px` de la grilla): las tarjetas de índice par van a la columna izquierda y las impares a la derecha (`splitColumns`), cada columna un flex vertical con `gap` de 20 px (`.detail-columns` / `.detail-col`), así una tarjeta corta no deja hueco junto a una larga y el orden del DOM coincide con el visual. En Lista o por debajo de 1122 px sigue la grilla de siempre (`.detail-grid`). Las dos ramas dibujan las mismas tarjetas con un único `ng-template` (`detailCardList`); el ancho se sigue con `watchMediaQuery` (`shared/utils/media-query.ts`).
+- Los KPI, el mapa de zonas, la comparación con el plantel y la lista de partidos no cambian: ya son gráficos o no son partes de un total.
+
+### 11.6 Qué se grafica en barras
+Un eje de barras necesita una **escala común y unidades comparables**. Reglas:
+1. El eje **empieza siempre en 0** y marca el 0, la mitad y el máximo con su valor en texto.
+2. Un gráfico **solo mezcla valores de la misma unidad**: porcentajes de 0 a 100 (escala fija), o cantidades del mismo tipo con una escala común redondeada (`axisMaxFor` / `evenScaleMax`: el doble de la menor mitad entera y redonda —1, 1,5, 2, 2,5, 3, 4, 5, 6 u 8 por potencia de 10— que cubre el máximo, mínimo 4). Así **ninguna marca tiene decimales** (15 → 16, 45 → 50) y la barra más larga ocupa al menos el 60 % del eje. El gráfico de líneas sigue con `niceScaleMax`. Visitas y puntos, o penales y amarillas, van en gráficos separados.
+3. **Tasas, promedios y saldos** (pueden ser negativos o no se suman) quedan como **fila**, igual que en Donas. Nada desaparece al cambiar de vista.
+4. Cada barra lleva su **valor como texto** (el largo nunca es la única señal). Un cero se dibuja como un trazo de 2 px con el número atenuado; sin dato (`null`) no hay barra y el valor es «—». En columnas, el «0» sobre la columna se muestra solo si otra serie del mismo grupo tiene valor (`showsColumnValue`): con todas en 0 queda el trazo sin número.
+5. **Horizontal para categorías, columnas solo para secuencias en el tiempo** (bloques de 10', partidos de la división).
+
+| Pantalla · tarjeta | Barras |
+|---|---|
+| Post · Marcador y posesión | Posesión (0–100); «Tantos», cada tanto de propio contra rival (también los que están en cero): en los que tienen intentos, el carril claro son los intentos y la barra, los convertidos, con «2/3»; después, «Puntos» por tipo de tanto |
+| Post · Indicadores | Todos los porcentajes en un solo eje de 0 a 100; los saldos, como fila |
+| Post · Segundo nivel | Reparto por categorías (finales de posesión, orígenes de try) en un gráfico; **puntos cada 10' en columnas**, con los bloques sin puntos; cada cantidad en su gráfico, sin etiqueta de fila porque el título ya la nombra; las tasas, como fila |
+| Post · Mediciones | Cantidad por tipo en un gráfico y un gráfico por desglose; totales, promedios y puntos, como fila |
+| Post · Jugadores | Una barra por acción en cada grupo, de la que más hizo a la que menos (los puntos siguen como tiles) |
+| Jugador · Acciones registradas | Igual que el panel del jugador; el largo son los intentos y el texto, «2 de 3» en los pateos |
+| División · Por partido | **Columnas**: un grupo por partido y una columna por serie, con los colores de las líneas y su leyenda; porcentajes de 0 a 100 |
+| Jugador · comparación con el plantel, «Dónde juega», KPIs; división · KPIs y tabla de partidos | Sin cambio: ya son barras, mapa de calor o no son partes comparables |
+
+Los adaptadores son funciones puras con spec: `features/match/statistics/presentation/bar-presentation.ts` (comparten reglas de partición con `chart-presentation.ts`), `toActionBars` (`player-comparison.ts`) y `division-statistics/utils/division-bars.ts`.
+
+### 11.7 Barras (`app-stat-bars`), columnas (`app-stat-columns`) y grilla (`app-bar-grid`)
+- **Modelo:** `shared/utils/bars.ts` (`BarChart`, `versusBars`, `teamBars`, `axisMaxFor`, `scaleTicks`, `describeBars`), análogo a `donut.ts`. Un valor puede traer `of` (los intentos de un tanto) y una columna, `sublabel` (la segunda línea de su etiqueta).
+- **Grilla:** `app-bar-grid` pone el título (mismo estilo que el de la dona, sin truncar), la línea de equipo y el gráfico según su orientación. Columnas `auto-fit` de mínimo 280 px, separación de 24 × 20 px; las columnas ocupan todo el ancho.
+- **Barras:** la etiqueta de la categoría va arriba y **envuelve** (nunca se corta; en celular no hay tooltip); con un contenedor de 520 px o más pasa a una columna izquierda de `minmax(120px, 34%)`. Una barra de 14 px por equipo (18 px si hay una sola serie), con el extremo redondeado (`--radius-sm`), sobre un carril de `--border-strong` mezclado con `--surface` y una línea fina en la mitad. El valor va a la derecha, en una columna fija de 72 px en JetBrains Mono de 14 px, así todas las barras miden lo mismo y el eje queda alineado. **Con intentos** (`of`), debajo de la barra va el carril de intentos, en `color-mix(in srgb, <color del equipo> 30%, var(--surface))`, y la escala cubre los intentos.
+- **Columnas:** área de 200 px con eje Y de 40 px, líneas guía y base en `--border-strong`. Columnas de hasta 28 px; el valor va sobre cada columna mientras haya 24 valores o menos (con más se oculta y queda en el `title` de cada grupo y en el texto accesible). Las etiquetas del eje X se muestran **todas cuando al área de columnas le tocan 44 px o más por grupo** (el ancho se mide con `ResizeObserver`); por debajo, una de cada `ceil(n/8)` más la última, y cada grupo sin rótulo lleva una **marca corta** (2 × 6 px en `--border-strong`) para que se vea que ahí hay un partido. La regla es una función pura con spec (`labeledColumns(n, ancho)`); el `title` y el `aria-label` no cambian. En la división, cada etiqueta lleva debajo la **sigla del rival** (`opponentAcronym`: iniciales o las 3 primeras letras, sin «Club» ni tildes, en JetBrains Mono), porque en celular no hay `title`; el eje reserva dos renglones. La leyenda se muestra cuando las series no son propio y rival.
+- **División · Por partido con más de 8 partidos** (`needsFullWidth`): cada gráfico ocupa el ancho completo (`.ds-charts--full`, una columna) para que las columnas y las fechas no queden apretadas. Evolución no cambia.
+- **Color:** sin colores ni sombras nuevos. Propio `--btn-primary-bg`, rival `--team-rival` (sin la opacidad de las barras de la Lista); división, los colores de serie de `division-metrics.ts`. Sin overrides `:host-context`.
+- **Estado vacío:** «Sin datos» cuando una categoría de cantidades está toda en cero o no hay ningún valor. Una secuencia de columnas en cero **es un dato** (ninguna tarjeta en el rango) y se dibuja.
+- **Accesibilidad:** cada gráfico es `role="img"` con un `aria-label` (`describeBars`) que lista cada categoría con el valor de cada serie («1 de 3» con intentos) y aclara la escala en los porcentajes. La transición de ancho y de alto se desactiva con `prefers-reduced-motion`.
