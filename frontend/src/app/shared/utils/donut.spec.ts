@@ -156,6 +156,18 @@ describe('gaugeDonut', () => {
     expect(isEmptyDonut(chart)).toBeTrue();
     expect(chart.center.value).toBe('—');
   });
+
+  it('un 0 % es un dato: no queda vacío', () => {
+    const chart = gaugeDonut('a', 'A', 0, '--x');
+    expect(isEmptyDonut(chart)).toBeFalse();
+    expect(chart.center.value).toBe('0%');
+  });
+
+  it('un 100 % llena el anillo', () => {
+    const chart = gaugeDonut('a', 'A', 100, '--x');
+    expect(isEmptyDonut(chart)).toBeFalse();
+    expect(chart.slices[0].value).toBe(chart.max);
+  });
 });
 
 describe('withTeam', () => {
@@ -183,5 +195,9 @@ describe('describeDonut', () => {
 
   it('avisa si no hay datos', () => {
     expect(describeDonut(gaugeDonut('p', 'Posesión', null, '--x'))).toBe('Posesión: sin datos');
+  });
+
+  it('un avance en 0 dice «0%», no «sin datos»', () => {
+    expect(describeDonut(gaugeDonut('s', 'Scrums', 0, '--x'))).toBe('Scrums: 0%');
   });
 });

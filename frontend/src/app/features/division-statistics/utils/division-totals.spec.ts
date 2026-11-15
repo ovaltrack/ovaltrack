@@ -1,5 +1,6 @@
 import { DIVISION_METRICS, DivisionMetricDef } from './division-metrics';
 import { metricTotals } from './division-totals';
+import { isEmptyDonut } from '../../../shared/utils/donut';
 import { PeriodStatisticDTO } from '../../match/statistics/types/statistic.types';
 
 const stats = (values: Partial<PeriodStatisticDTO>) => values as PeriodStatisticDTO;
@@ -37,6 +38,12 @@ describe('metricTotals', () => {
     expect(chart.max).toBe(100);
     expect(chart.center).toEqual({ value: '62.5%', label: 'promedio' });
     expect(chart.title).toBe('Obtención en scrum (efectividad)');
+  });
+
+  it('porcentajes: un promedio de 0 es un dato, no un anillo vacío', () => {
+    const [chart] = metricTotals(metric('possession'), [stats({ ownPossessionPercentage: 0 })]);
+    expect(isEmptyDonut(chart)).toBeFalse();
+    expect(chart.center.value).toBe('0%');
   });
 
   it('porcentajes: sin ningún partido con dato muestra «—»', () => {

@@ -116,7 +116,9 @@ export function donutSegments(slices: DonutSlice[], circumference: number, max: 
   }));
 }
 
+/** Sin nada que dibujar: un reparto sin valores o un avance sin dato (`null`). Un avance en 0 % es un dato. */
 export function isEmptyDonut(chart: DonutChart): boolean {
+  if (chart.variant === 'gauge') return chart.slices.length === 0;
   return chart.slices.every(slice => slice.value <= 0);
 }
 
