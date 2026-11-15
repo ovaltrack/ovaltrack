@@ -56,17 +56,40 @@ export const opponentPossessionOf = (own: number): number => Math.max(0, Math.ro
 /**
  * Una dona de reparto para cada equipo que tenga datos: el reparto de un equipo no se compara con el del otro, pero
  * las dos tienen las mismas categorías, en el mismo orden y con el mismo tono (`sharedSlices`), para leerlas juntas.
+ * Con una sola categoría con datos no hay reparto que mostrar: no hay donas y queda una fila con los dos equipos,
+ * con la etiqueta que arma `rowLabel`.
  */
-function teamShares(id: string, title: string, items: PairedSliceInput[], names: VersusNames, maxSlices?: number): DonutChart[] {
+function teamShares(
+  id: string,
+  title: string,
+  items: PairedSliceInput[],
+  names: VersusNames,
+  rowLabel: (category: string) => string,
+  maxSlices?: number
+): ChartCard {
+  const present = items.filter(item => item.own + item.opponent > 0);
+  if (present.length === 1) return { charts: [], rest: [shareRow(present[0], rowLabel(present[0].label))] };
+
   const slices = sharedSlices(items, maxSlices);
   const sides = [
     { key: 'own', name: names.own, colorVar: OWN_COLOR_VAR, slices: slices.own },
     { key: 'rival', name: names.opponent, colorVar: RIVAL_COLOR_VAR, slices: slices.opponent },
   ];
-  return sides
-    .map(side => withTeam(shareDonut(`${id}-${side.key}`, title, side.slices, side.colorVar, maxSlices), side.name, side.colorVar))
-    .filter(chart => !isEmptyDonut(chart));
+  return {
+    charts: sides
+      .map(side => withTeam(shareDonut(`${id}-${side.key}`, title, side.slices, side.colorVar, maxSlices), side.name, side.colorVar))
+      .filter(chart => !isEmptyDonut(chart)),
+    rest: [],
+  };
 }
+
+const shareRow = (item: PairedSliceInput, label: string): StatLine => ({
+  label,
+  own: `${item.own}`,
+  opponent: `${item.opponent}`,
+  ownValue: item.own,
+  opponentValue: item.opponent,
+});
 
 /** Una dona versus por cada línea con datos; las demás (0 contra 0) siguen como fila. */
 function versusCharts(prefix: string, lines: StatLine[], names: VersusNames, titleOf = (line: StatLine) => line.label): ChartCard {
@@ -101,12 +124,12 @@ export function possessionDonut(ownPercentage: number, names: VersusNames): Donu
 }
 
 /** Puntos de cada equipo repartidos por tipo de tanto (try, conversión, penal, drop). */
-export function pointsDonuts(groups: EventTypeStatGroup[], names: VersusNames): DonutChart[] {
+export function pointsDonuts(groups: EventTypeStatGroup[], names: VersusNames): ChartCard {
   const items = groups
     .flatMap(group => group.types)
     .filter(type => type.isScoring)
     .map(type => ({ label: type.name, own: type.points?.own ?? 0, opponent: type.points?.opponent ?? 0 }));
-  return teamShares('points', 'Puntos', items, names);
+  return teamShares('points', 'Puntos', items, names, category => `Puntos · ${category}`);
 }
 
 const scoringTypes = (groups: EventTypeStatGroup[]): EventTypeStat[] =>
@@ -131,13 +154,14 @@ function scoreDonut(type: EventTypeStat, names: VersusNames): DonutChart {
 export function scoreCard(stats: MatchStatistics, names: VersusNames): ChartCard {
   const attempted = scoringTypes(stats.groups).filter(wasAttempted);
   const charted = attempted.filter(type => hasData(mainLine(type)));
+  const points = pointsDonuts(stats.groups, names);
   return {
     charts: [
       possessionDonut(stats.ownPossessionPercentage, names),
-      ...pointsDonuts(stats.groups, names),
+      ...points.charts,
       ...charted.map(type => scoreDonut(type, names)),
     ],
-    rest: attempted.filter(type => !charted.includes(type)).map(mainLine),
+    rest: [...points.rest, ...attempted.filter(type => !charted.includes(type)).map(mainLine)],
   };
 }
 
@@ -172,11 +196,12 @@ export function indicatorCard(derived: DerivedMetric[], names: VersusNames): Cha
 
 /** Bloque de segundo nivel: repartos por equipo, cantidades propio-rival y, como fila, las tasas. */
 export function advancedCard(section: AdvancedSection, names: VersusNames): ChartCard {
-  const distribution = teamShares(section.id, distributionTitle(section), toItems(section.distribution), names, ADVANCED_MAX_SLICES);
+  // La tarjeta da el contexto: la categoría sola ya está en `section.lines` con su etiqueta, así que esa fila no se suma.
+  const distribution = teamShares(section.id, distributionTitle(section), toItems(section.distribution), names, category => category, ADVANCED_MAX_SLICES);
   const counts = versusCharts(section.id, section.counts, names, line => countTitle(section, line));
-  const charted = new Set([...(distribution.length > 0 ? section.distribution : []), ...section.counts.filter(hasData)]);
+  const charted = new Set([...(distribution.charts.length > 0 ? section.distribution : []), ...section.counts.filter(hasData)]);
   return {
-    charts: [...distribution, ...counts.charts],
+    charts: [...distribution.charts, ...counts.charts],
     rest: section.lines.filter(line => !charted.has(line)),
   };
 }
@@ -184,14 +209,13 @@ export function advancedCard(section: AdvancedSection, names: VersusNames): Char
 /** Área del catálogo: cada tipo es una dona versus y cada desglose, un reparto por equipo; totales y promedios, filas. */
 export function measurementCard(section: GroupStatPresentation, names: VersusNames): ChartCard {
   const mains = versusCharts(section.name, section.types.map(type => type.main), names);
+  const shares = section.types.flatMap(type => type.breakdowns.map(breakdown => {
+    const title = `${type.name} · ${breakdown.title}`;
+    return teamShares(`${type.eventTypeId}-${breakdown.title}`, title, toItems(breakdown.lines), names, category => `${title} · ${category}`);
+  }));
   return {
-    charts: [
-      ...mains.charts,
-      ...section.types.flatMap(type => type.breakdowns.flatMap(breakdown =>
-        teamShares(`${type.eventTypeId}-${breakdown.title}`, `${type.name} · ${breakdown.title}`, toItems(breakdown.lines), names)
-      )),
-    ],
-    rest: [...mains.rest, ...section.types.flatMap(type => type.extra)],
+    charts: [...mains.charts, ...shares.flatMap(share => share.charts)],
+    rest: [...mains.rest, ...section.types.flatMap(type => type.extra), ...shares.flatMap(share => share.rest)],
   };
 }
 

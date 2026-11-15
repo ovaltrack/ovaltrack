@@ -92,6 +92,21 @@ describe('scoreCard', () => {
     expect(charts.find(chart => chart.id === 'score-Try')?.center).toEqual({ value: '3 – 1', label: 'propio – rival' });
   });
 
+  describe('puntos con una sola categoría', () => {
+    const onlyTry = scoreCard({ ...matchStats(), groups: [{ name: 'Puntuación', types: [tryStat] }] }, names);
+
+    it('no hay donas de puntos: una fila «Puntos · Try» con los dos equipos', () => {
+      expect(onlyTry.charts.filter(chart => chart.id.startsWith('points-'))).toEqual([]);
+      const row = onlyTry.rest.find(line => line.label === 'Puntos · Try');
+      expect(row).toEqual({ label: 'Puntos · Try', own: '15', opponent: '5', ownValue: 15, opponentValue: 5 });
+    });
+
+    it('con dos categorías siguen las dos donas de puntos', () => {
+      expect(charts.filter(chart => chart.id.startsWith('points-')).length).toBe(2);
+      expect(scoreCard(matchStats(), names).rest.some(line => line.label.startsWith('Puntos ·'))).toBeFalse();
+    });
+  });
+
   describe('tantos con intentos pero sin aciertos', () => {
     const dropStat = stat({
       eventTypeId: 'drop', code: 'DROP_GOAL', name: 'Drop goal', isScoring: true, hasAttempts: true,
@@ -103,7 +118,8 @@ describe('scoreCard', () => {
     const card = scoreCard({ ...matchStats(), groups: [{ name: 'Puntuación', types: [tryStat, dropStat, penaltyTryStat] }] }, names);
 
     it('quedan como fila con «convertidos/intentos»: no desaparecen al cambiar de vista', () => {
-      expect(card.rest.map(line => [line.label, line.own, line.opponent])).toEqual([['Drop goal', '0/1', '0/0']]);
+      // Con el Try como único tipo que puntúa, los puntos son una fila («Puntos · Try») y no donas.
+      expect(card.rest.map(line => [line.label, line.own, line.opponent])).toEqual([['Puntos · Try', '15', '5'], ['Drop goal', '0/1', '0/0']]);
       expect(card.charts.some(chart => chart.id === 'score-Drop goal')).toBeFalse();
     });
 
@@ -224,6 +240,20 @@ describe('advancedCard', () => {
   it('sin datos no hay donas', () => {
     expect(cardOf('try-sources').charts).toEqual([]);
   });
+
+  it('un reparto con una sola categoría con datos es una fila, sin donas y sin repetirse', () => {
+    const card = cardOf('try-sources', advanced({ trySources: [{ key: 'OTHER', own: 3, opponent: 1 }] }));
+    expect(card.charts.filter(chart => chart.title === 'Tries por origen')).toEqual([]);
+    const rows = card.rest.filter(line => line.label === 'Sin origen registrado');
+    expect(rows.length).toBe(1);
+    expect([rows[0].own, rows[0].opponent, rows[0].ownValue, rows[0].opponentValue]).toEqual(['3', '1', 3, 1]);
+  });
+
+  it('con dos categorías con datos el reparto sigue en donas', () => {
+    const card = cardOf('try-sources', advanced({ trySources: [{ key: 'OTHER', own: 3, opponent: 1 }, { key: 'SCRUM', own: 1, opponent: 0 }] }));
+    expect(card.charts.map(chart => chart.id)).toEqual(['try-sources-own', 'try-sources-rival']);
+    expect(card.rest.map(line => line.label)).not.toContain('Sin origen registrado');
+  });
 });
 
 describe('measurementCard', () => {
@@ -238,6 +268,19 @@ describe('measurementCard', () => {
     const own = measurementCard(group, names).charts.find(chart => chart.id === 'tackle-Resultado-own');
     expect(own?.slices.at(-1)?.label).toBe('Sin completar');
     expect(own?.slices.at(-1)?.color).toBe('var(--border-strong)');
+  });
+
+  it('un desglose con una sola opción con datos es una fila «Tipo · Campo · Opción», sin donas', () => {
+    const single = stat({
+      eventTypeId: 'tk', name: 'Tackle', count: { own: 8, opponent: 4 },
+      fields: [{
+        kind: 'select', key: 'result', label: 'Resultado', pending: zero,
+        options: [{ value: 'ok', label: 'Completado', count: { own: 8, opponent: 4 } }],
+      }],
+    });
+    const card = measurementCard(presentGroups([{ name: 'Defensa', types: [single] }], { includePoints: true })[0], names);
+    expect(card.charts.map(chart => chart.id)).toEqual(['Defensa-Tackle']);
+    expect(card.rest).toContain({ label: 'Tackle · Resultado · Completado', own: '8', opponent: '4', ownValue: 8, opponentValue: 4 });
   });
 
   it('un tipo con intentos pero ningún acierto queda como fila y no como dona vacía', () => {
