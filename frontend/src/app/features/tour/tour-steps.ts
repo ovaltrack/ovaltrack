@@ -54,7 +54,7 @@ export const DEFAULT_TOUR_STEPS: readonly TourStep[] = [
     route: squad,
     anchor: 'squad',
     title: 'El plantel completo',
-    body: 'Jugadores con su puesto y su dorsal. Los podés invitar por correo para que vean sus propias estadísticas. Hasta el pilar más tímido se engancha.',
+    body: 'Jugadores con su puesto y su dorsal. ¿Tenés el plantel en Excel? Con «Importar planilla» lo cargás de una vez, sin duplicar a nadie. Después los invitás por correo para que vean sus propias estadísticas.',
     placement: 'bottom',
     mood: 'happy'
   },
