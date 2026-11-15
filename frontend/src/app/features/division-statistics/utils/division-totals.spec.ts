@@ -26,18 +26,45 @@ describe('metricTotals', () => {
     expect(chart.center.value).toBe('0');
   });
 
-  it('porcentajes: promedio por partido, sin contar los partidos sin dato', () => {
+  it('scrum: ganados sobre jugados en todo el rango, no el promedio de los porcentajes', () => {
     const [chart] = metricTotals(metric('scrum-effectiveness'), [
-      stats({ ownScrumsWon: 3, ownScrumsLost: 1 }),
-      stats({ ownScrumsWon: 0, ownScrumsLost: 0 }),
-      stats({ ownScrumsWon: 1, ownScrumsLost: 1 }),
+      stats({ ownScrumsWon: 1, ownScrumsLost: 0 }),
+      stats({ ownScrumsWon: 6, ownScrumsLost: 6 }),
     ]);
 
     expect(chart.variant).toBe('gauge');
-    expect(chart.slices[0].value).toBe(62.5);
+    expect(chart.slices[0].value).toBe(53.8);
     expect(chart.max).toBe(100);
-    expect(chart.center).toEqual({ value: '62.5%', label: 'promedio' });
+    expect(chart.center).toEqual({ value: '53.8%', label: 'del rango' });
+    expect(chart.note).toBe('7 de 13');
     expect(chart.title).toBe('Obtención en scrum (efectividad)');
+  });
+
+  it('line: un partido sin line-outs propios no suma', () => {
+    const [chart] = metricTotals(metric('lineout-effectiveness'), [
+      stats({ ownLineoutsWon: 3, ownLineoutsLost: 1 }),
+      stats({ ownLineoutsWon: 0, ownLineoutsLost: 0 }),
+    ]);
+    expect(chart.center.value).toBe('75%');
+    expect(chart.note).toBe('3 de 4');
+  });
+
+  it('tackles: un partido sin tackles no cuenta como 0 % (el backend lo manda en 0)', () => {
+    const [chart] = metricTotals(metric('tackles'), [
+      stats({ ownTacklesCompleted: 8, ownTacklesMissed: 2, ownTackleEffectiveness: 80 }),
+      stats({ ownTacklesCompleted: 0, ownTacklesMissed: 0, ownTackleEffectiveness: 0 }),
+    ]);
+    expect(chart.center.value).toBe('80%');
+    expect(chart.note).toBe('8 de 10');
+  });
+
+  it('posesión: sin tiempos por partido, sigue siendo el promedio por partido', () => {
+    const [chart] = metricTotals(metric('possession'), [
+      stats({ ownPossessionPercentage: 40 }),
+      stats({ ownPossessionPercentage: 55 }),
+    ]);
+    expect(chart.center).toEqual({ value: '47.5%', label: 'promedio' });
+    expect(chart.note).toBe('por partido');
   });
 
   it('porcentajes: un promedio de 0 es un dato, no un anillo vacío', () => {
@@ -50,6 +77,7 @@ describe('metricTotals', () => {
     const [chart] = metricTotals(metric('lineout-effectiveness'), [stats({ ownLineoutsWon: 0, ownLineoutsLost: 0 })]);
     expect(chart.slices).toEqual([]);
     expect(chart.center.value).toBe('—');
+    expect(chart.note).toBeUndefined();
   });
 
   it('sin partidos no hay nada que sumar ni promediar', () => {

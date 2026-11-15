@@ -37,6 +37,8 @@ export interface DonutChart {
   variant: 'share' | 'gauge';
   /** `false` oculta el porcentaje de la leyenda cuando el valor ya es un porcentaje (p. ej. la posesión). */
   showPercent?: boolean;
+  /** Aclaración debajo de un anillo de avance (p. ej. «45 de 51»): un avance no tiene leyenda. */
+  note?: string;
 }
 
 /** Porción lista para dibujar con `stroke-dasharray` y `stroke-dashoffset`. */
@@ -212,7 +214,7 @@ export function withTeam<T extends { team?: DonutTeam }>(chart: T, name: string,
 export function describeDonut(chart: DonutChart): string {
   const heading = chart.team ? `${chart.title} de ${chart.team.name}` : chart.title;
   if (isEmptyDonut(chart)) return `${heading}: sin datos`;
-  if (chart.variant === 'gauge') return `${heading}: ${chart.center.value}`;
+  if (chart.variant === 'gauge') return `${heading}: ${chart.center.value}${chart.note ? ` (${chart.note})` : ''}`;
 
   const percents = slicePercents(chart.slices, chart.max);
   const parts = chart.slices.map((slice, index) => `${slice.label} ${slice.display ?? slice.value} (${percents[index]} %)`);

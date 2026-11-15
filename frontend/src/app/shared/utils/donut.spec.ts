@@ -197,6 +197,10 @@ describe('describeDonut', () => {
     expect(describeDonut(gaugeDonut('p', 'Posesión', null, '--x'))).toBe('Posesión: sin datos');
   });
 
+  it('en un avance suma la nota (p. ej. ganados sobre jugados)', () => {
+    expect(describeDonut({ ...gaugeDonut('s', 'Scrums', 75, '--x'), note: '3 de 4' })).toBe('Scrums: 75% (3 de 4)');
+  });
+
   it('un avance en 0 dice «0%», no «sin datos»', () => {
     expect(describeDonut(gaugeDonut('s', 'Scrums', 0, '--x'))).toBe('Scrums: 0%');
   });

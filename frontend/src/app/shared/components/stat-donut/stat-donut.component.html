@@ -47,5 +47,7 @@
     </ul>
   } @else if (isEmpty()) {
     <p class="donut__empty">Sin datos</p>
+  } @else if (chart().note) {
+    <p class="donut__note" aria-hidden="true">{{ chart().note }}</p>
   }
 </div>
