@@ -1,0 +1,87 @@
+@if (step(); as current) {
+  <div class="tour-layer">
+    @if (spot(); as rect) {
+      <div
+        class="tour-spot"
+        aria-hidden="true"
+        [style.top.px]="rect.top"
+        [style.left.px]="rect.left"
+        [style.width.px]="rect.width"
+        [style.height.px]="rect.height"
+      ></div>
+    } @else {
+      <div class="tour-dim" aria-hidden="true"></div>
+    }
+
+    <section
+      #bubble
+      class="tour-bubble"
+      [class.is-sheet]="isSheet()"
+      [class.is-ready]="isReady()"
+      [class.is-center]="position()?.placement === 'center'"
+      [attr.data-placement]="position()?.placement ?? null"
+      [style.top.px]="isSheet() ? null : position()?.top"
+      [style.left.px]="isSheet() ? null : position()?.left"
+      role="dialog"
+      aria-modal="false"
+      aria-labelledby="tour-title"
+      aria-describedby="tour-body"
+      tabindex="-1"
+    >
+      <app-ovi-avatar class="tour-ovi" [mood]="current.mood" [size]="isSheet() ? 'sm' : 'md'" />
+
+      <div class="tour-card">
+        <header class="tour-head">
+          <span class="label-mono tour-count">
+            @if (mode() === 'help') { Ayuda · } Paso {{ progress().current }} de {{ progress().total }}
+          </span>
+          <button type="button" class="tour-close" (click)="exit()" [attr.aria-label]="mode() === 'help' ? 'Cerrar la ayuda' : 'Saltar el tutorial'">
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
+          </button>
+        </header>
+
+        <div class="tour-track" aria-hidden="true">
+          <span class="tour-track-fill" [style.width.%]="progressPercent()"></span>
+        </div>
+
+        <h2 id="tour-title" class="tour-title">{{ current.title }}</h2>
+        <p id="tour-body" class="tour-body" aria-live="polite">{{ current.body }}</p>
+        @if (current.image; as image) {
+          <!-- Vista previa: al club le faltan los datos de esta pantalla, así que Ovi muestra cómo se ve -->
+          <img
+            class="tour-shot"
+            [src]="image.src + '-800.webp'"
+            [attr.srcset]="image.src + '-800.webp 800w, ' + image.src + '-1600.webp 1600w'"
+            sizes="(max-width: 640px) 100vw, 480px"
+            [alt]="image.alt"
+            width="800"
+            height="500"
+            decoding="async"
+            (load)="onShotLoad()"
+          />
+        }
+
+        <footer class="tour-actions">
+          @if (mode() === 'help') {
+            <button type="button" class="btn btn-ghost tour-skip" (click)="fullTour()">Ver tutorial completo</button>
+          } @else if (!isLast()) {
+            <button type="button" class="btn btn-ghost tour-skip" (click)="exit()">Saltar tutorial</button>
+          }
+          <span class="tour-spacer"></span>
+          @if (mode() !== 'help' || progress().total > 1) {
+            <button type="button" class="btn btn-outline" (click)="prev()" [disabled]="isFirst()" aria-label="Paso anterior">
+              <i class="bi bi-arrow-left" aria-hidden="true"></i>
+              <span class="tour-btn-label">Anterior</span>
+            </button>
+          }
+          <button type="button" class="btn btn-invite" (click)="next()">
+            {{ isLast() ? (mode() === 'help' ? 'Entendido' : '¡Listo!') : 'Siguiente' }}
+            @if (!isLast()) {
+              <i class="bi bi-arrow-right" aria-hidden="true"></i>
+            }
+          </button>
+        </footer>
+      </div>
+    </section>
+  </div>
+}

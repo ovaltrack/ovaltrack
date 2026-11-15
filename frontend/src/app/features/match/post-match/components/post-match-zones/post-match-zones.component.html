@@ -97,6 +97,7 @@
           </div>
 
           <app-zone-territory-grid
+            data-tour="zones-grid"
             [assignments]="zonesStore.assignments()" [events]="gridEvents()" [points]="points()" [cuts]="zonesStore.cuts()" [allEvents]="zonesStore.events()" [periodFilter]="periodFilter()" [compact]="compact()"
             [selectedId]="zonesStore.editingId()" [selectedCol]="selectedCell()?.col ?? null"
             [conflictId]="zonesStore.conflictId()"
@@ -150,7 +151,7 @@
       </div>
 
       <div class="zones-side">
-        <app-zone-assignment-panel [matchId]="matchId()" [(selectedCell)]="selectedCell" (unzonedRequested)="openUnzoned()" />
+        <app-zone-assignment-panel data-tour="zones-panel" [matchId]="matchId()" [(selectedCell)]="selectedCell" (unzonedRequested)="openUnzoned()" />
       </div>
     </div>
   }

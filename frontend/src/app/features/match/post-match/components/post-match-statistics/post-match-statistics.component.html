@@ -29,7 +29,7 @@
       <button type="button" class="filter-pill" [class.active]="activeTab() === 'team'" [attr.aria-pressed]="activeTab() === 'team'" (click)="switchTab('team')">
         <i class="bi bi-grid-1x2"></i><span>Equipo</span>
       </button>
-      <button type="button" class="filter-pill" [class.active]="activeTab() === 'players'" [attr.aria-pressed]="activeTab() === 'players'" (click)="switchTab('players')">
+      <button type="button" class="filter-pill" [class.active]="activeTab() === 'players'" [attr.aria-pressed]="activeTab() === 'players'" (click)="switchTab('players')" data-tour="stats-players">
         <i class="bi bi-people"></i><span>Jugadores</span>
       </button>
     </div>
@@ -51,7 +51,7 @@
       <div class="stats-layout">
 
         <!-- Marcador + posesión + desglose -->
-        <section class="form-card">
+        <section class="form-card" data-tour="stats-summary">
           <div class="form-card-header">
             <h2 class="form-card-title">Marcador y posesión</h2>
           </div>
