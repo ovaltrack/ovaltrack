@@ -382,3 +382,8 @@
   line-height: 1;
 }
 
+
+/* Cuatro acciones en el encabezado: en pantallas angostas pasan a otra línea en vez de desbordar la página */
+.hud-actions {
+  flex-wrap: wrap;
+}

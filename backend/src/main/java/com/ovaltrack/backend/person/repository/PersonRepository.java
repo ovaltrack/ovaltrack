@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -23,6 +24,11 @@ public interface PersonRepository extends JpaRepository<Person, UUID> {
     boolean existsByContactEmailIgnoreCaseAndIdNot(String contactEmail, UUID id);
 
     boolean existsByContactPhone(String contactPhone);
+
+    Optional<Person> findFirstByContactEmailIgnoreCase(String contactEmail);
+
+    Optional<Person> findFirstByClubIdAndFirstNameIgnoreCaseAndLastNameIgnoreCaseAndBirthDate(
+            UUID clubId, String firstName, String lastName, LocalDate birthDate);
 
     List<Person> findAllByClubId(UUID clubId);
 
