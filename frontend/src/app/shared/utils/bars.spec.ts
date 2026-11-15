@@ -6,6 +6,7 @@ import {
   evenScaleMax,
   isEmptyBars,
   labeledColumns,
+  needsFullWidth,
   niceScaleMax,
   scaleMaxFor,
   scaleTicks,
@@ -301,5 +302,15 @@ describe('showsColumnValue', () => {
   it('oculta el 0 de un grupo de una sola serie', () => {
     const group = groupOf(0);
     expect(showsColumnValue(group.values[0], group)).toBeFalse();
+  });
+});
+
+describe('needsFullWidth', () => {
+  it('con 8 grupos o menos las tarjetas comparten fila', () => {
+    expect(needsFullWidth(8)).toBeFalse();
+  });
+
+  it('con más de 8 grupos cada gráfico ocupa el ancho completo', () => {
+    expect(needsFullWidth(9)).toBeTrue();
   });
 });

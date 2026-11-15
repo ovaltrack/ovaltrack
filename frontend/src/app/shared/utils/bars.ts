@@ -216,6 +216,11 @@ export function labeledColumns(count: number, plotWidth: number): number[] {
   return Array.from({ length: count }, (_, index) => index).filter(index => index % step === 0 || index === count - 1);
 }
 
+/** Con más grupos que los que se rotulan sin saltos, la tarjeta de columnas necesita el ancho completo para no apretarse. */
+export function needsFullWidth(groupCount: number): boolean {
+  return groupCount > MAX_SKIPPED_LABELS;
+}
+
 /** Las columnas muestran su valor encima solo mientras entren sin pisarse. */
 export function showsColumnValues(chart: BarChart): boolean {
   return chart.groups.reduce((total, group) => total + group.values.length, 0) <= MAX_LABELED_COLUMN_VALUES;

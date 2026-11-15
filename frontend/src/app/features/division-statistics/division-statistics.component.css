@@ -52,6 +52,7 @@
 .ds-metric-picker { display: flex; flex-wrap: wrap; gap: 8px; }
 
 .ds-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 16px; }
+.ds-charts--full { grid-template-columns: 1fr; }
 .ds-chart-title { margin: 0 0 8px; font-size: 0.95rem; color: var(--text-primary); }
 
 .ds-table-wrap { overflow-x: auto; }

@@ -16,7 +16,7 @@ import { ChartSeries, StatLineChartComponent } from './components/stat-line-char
 import { StatColumnsComponent } from '../../shared/components/stat-columns/stat-columns.component';
 import { matchBars, opponentAcronym } from './utils/division-bars';
 import { metricTotals } from './utils/division-totals';
-import { BarChart } from '../../shared/utils/bars';
+import { BarChart, needsFullWidth } from '../../shared/utils/bars';
 import { DonutChart } from '../../shared/utils/donut';
 import { DonutGridComponent } from '../../shared/components/donut-grid/donut-grid.component';
 import { ViewModeToggleComponent } from '../../shared/components/view-mode-toggle/view-mode-toggle.component';
@@ -105,6 +105,8 @@ export class DivisionStatisticsComponent implements OnInit {
   charts: MetricChart[] = [];
   totals: DonutChart[] = [];
   matchColumns: BarChart[] = [];
+  /** Más de 8 partidos: cada gráfico de columnas ocupa el ancho completo. */
+  fullWidthColumns = false;
   kpis: Kpi[] = [];
   rows: MatchRow[] = [];
 
@@ -198,6 +200,7 @@ export class DivisionStatisticsComponent implements OnInit {
     const matches = this.data?.matches ?? [];
     const selected = this.metrics.filter(metric => this.isSelected(metric.id));
     this.totals = selected.flatMap(metric => metricTotals(metric, matches.map(match => match.statistics)));
+    this.fullWidthColumns = needsFullWidth(matches.length);
     this.matchColumns = selected.map(metric => matchBars(metric, matches.map(match => match.statistics), this.labels, this.details, this.acronyms));
     this.charts = selected
       .map(metric => ({

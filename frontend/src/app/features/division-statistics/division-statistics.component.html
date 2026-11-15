@@ -86,7 +86,7 @@
           fecha, la sigla del rival (el nombre completo está en la tabla de abajo). Los partidos sin dato no tienen
           columna.
         </p>
-        <section class="ds-charts">
+        <section class="ds-charts" [class.ds-charts--full]="fullWidthColumns">
           @for (chart of matchColumns; track chart.id) {
             <article class="ds-card ds-chart-card">
               <h3 class="ds-chart-title">{{ chart.title }}</h3>
