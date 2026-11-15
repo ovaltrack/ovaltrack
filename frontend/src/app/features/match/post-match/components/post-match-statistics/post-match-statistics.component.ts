@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit, computed, inject, signal} from '@angular/core';
+import { Component, Directive, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { LayoutService } from 'src/app/core/services/layout.service';
@@ -56,6 +56,21 @@ export type StatsTab = 'team' | 'players';
 /** Qué tarjetas muestra la pestaña Equipo: todo, solo el análisis (indicadores y segundo nivel) o solo las mediciones. */
 export type StatsContent = 'all' | 'analysis' | 'measurements';
 
+/** Tarjeta de la grilla de detalle, en el orden en que se muestran; `key` es la identidad para el `track`. */
+export type DetailCardRef =
+  | { kind: 'indicators'; key: string }
+  | { kind: 'unavailable'; key: string }
+  | { kind: 'advanced'; key: string; section: AdvancedSection }
+  | { kind: 'measurement'; key: string; section: GroupStatPresentation };
+
+/** Solo tipa el contexto del `<ng-template #detailCard>`: un ng-template no infiere el tipo de `let-card`. */
+@Directive({ selector: 'ng-template[detailCard]', standalone: true })
+export class DetailCardTemplateDirective {
+  static ngTemplateContextGuard(_directive: DetailCardTemplateDirective, _context: unknown): _context is { $implicit: DetailCardRef } {
+    return true;
+  }
+}
+
 interface StatTile { label: string; value: string; empty: boolean; }
 interface StatGroup { title: string; icon: string; tiles: StatTile[]; }
 interface RosterGroup { label: string; players: PlayerStatistic[]; }
@@ -63,7 +78,7 @@ interface RosterGroup { label: string; players: PlayerStatistic[]; }
 @Component({
   selector: 'app-post-match-statistics',
   standalone: true,
-  imports: [CommonModule, RugbyBallLoaderComponent, DonutGridComponent, BarGridComponent, ViewModeToggleComponent],
+  imports: [CommonModule, DetailCardTemplateDirective, RugbyBallLoaderComponent, DonutGridComponent, BarGridComponent, ViewModeToggleComponent],
   templateUrl: './post-match-statistics.component.html',
   styleUrl: './post-match-statistics.component.css',
 })
@@ -147,6 +162,21 @@ export class PostMatchStatisticsComponent implements OnInit, OnDestroy {
       .map(group => ({ ...group, types: group.types.filter(type => type.hasData) }))
       .filter(group => group.hasData)
   );
+
+  /** Tarjetas de detalle visibles, en el orden de la pantalla: indicadores, aviso o análisis del juego y mediciones. */
+  readonly detailCardList = computed<DetailCardRef[]>(() => {
+    const analysis = this.showAnalysis();
+    const hasIndicators = (this.stats()?.derived.length ?? 0) > 0;
+    const indicators: DetailCardRef[] = analysis && hasIndicators ? [{ kind: 'indicators', key: 'indicators' }] : [];
+    const unavailable: DetailCardRef[] = analysis && this.advancedUnavailable() ? [{ kind: 'unavailable', key: 'unavailable' }] : [];
+    const advanced = analysis
+      ? this.advancedSections().map<DetailCardRef>(section => ({ kind: 'advanced', key: `advanced-${section.id}`, section }))
+      : [];
+    const measurements = this.showMeasurements()
+      ? this.detailSections().map<DetailCardRef>(section => ({ kind: 'measurement', key: `measurement-${section.name}`, section }))
+      : [];
+    return [...indicators, ...unavailable, ...advanced, ...measurements];
+  });
 
   /** En las donas los equipos van con nombre corto («Puerto Madryn», sin «Rugby Club»): los completos ya están en la tarjeta. */
   private readonly teamNames = computed(() => ({
