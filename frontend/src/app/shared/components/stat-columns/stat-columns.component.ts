@@ -7,6 +7,7 @@ import {
   isEmptyBars,
   labeledColumns,
   scaleTicks,
+  showsColumnValue,
   showsColumnValues,
 } from '../../utils/bars';
 
@@ -47,6 +48,7 @@ export class StatColumnsComponent {
   readonly twoLines = computed(() => this.chart().groups.some(group => !!group.sublabel));
   readonly groups = computed(() => {
     const { groups, max } = this.chart();
+    const showValues = this.showValues();
     const labeled = new Set(labeledColumns(groups.length, this.plotWidth()));
     return groups.map((group, index) => ({
       label: group.label,
@@ -59,6 +61,7 @@ export class StatColumnsComponent {
         height: barPercent(value.value, max),
         muted: !value.value,
         drawn: value.value !== null,
+        showValue: showValues && showsColumnValue(value, group),
       })),
     }));
   });

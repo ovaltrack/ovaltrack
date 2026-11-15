@@ -29,7 +29,7 @@
               @for (column of group.columns; track $index) {
                 <div class="cols__col" [class.cols__col--none]="!column.drawn"
                      [style.height.%]="column.height" [style.background]="column.drawn ? column.color : null">
-                  @if (showValues()) {
+                  @if (column.showValue) {
                     <span class="cols__value" [class.cols__value--muted]="column.muted">{{ column.display }}</span>
                   }
                 </div>

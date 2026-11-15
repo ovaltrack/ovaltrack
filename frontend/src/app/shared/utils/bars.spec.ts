@@ -9,6 +9,7 @@ import {
   niceScaleMax,
   scaleMaxFor,
   scaleTicks,
+  showsColumnValue,
   showsColumnValues,
   teamBars,
   versusBars,
@@ -275,5 +276,30 @@ describe('describeBars', () => {
     const chart = withTeam(teamBars('a', 'Pateo', [], '--x'), 'Puerto Madryn', '--btn-primary-bg');
 
     expect(describeBars(chart)).toBe('Pateo de Puerto Madryn: sin datos');
+  });
+});
+
+describe('showsColumnValue', () => {
+  const value = (amount: number | null) => ({ series: 's', value: amount, display: `${amount}`, color: 'var(--x)' });
+  const groupOf = (...amounts: (number | null)[]) => ({ label: 'g', values: amounts.map(value) });
+
+  it('oculta el 0 cuando todas las series del grupo están en 0', () => {
+    const group = groupOf(0, 0);
+    expect(group.values.map(item => showsColumnValue(item, group))).toEqual([false, false]);
+  });
+
+  it('muestra el 0 cuando otra serie del grupo tiene valor', () => {
+    const group = groupOf(0, 3);
+    expect(group.values.map(item => showsColumnValue(item, group))).toEqual([true, true]);
+  });
+
+  it('siempre muestra el «—» de sin dato', () => {
+    const group = groupOf(null, 0);
+    expect(showsColumnValue(group.values[0], group)).toBeTrue();
+  });
+
+  it('oculta el 0 de un grupo de una sola serie', () => {
+    const group = groupOf(0);
+    expect(showsColumnValue(group.values[0], group)).toBeFalse();
   });
 });

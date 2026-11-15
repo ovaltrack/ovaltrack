@@ -221,6 +221,14 @@ export function showsColumnValues(chart: BarChart): boolean {
   return chart.groups.reduce((total, group) => total + group.values.length, 0) <= MAX_LABELED_COLUMN_VALUES;
 }
 
+/**
+ * El número sobre una columna: un «0» solo aporta si otra serie del grupo tiene valor (ahí se compara); con todas en 0
+ * queda el trazo mínimo sin número. El «—» de sin dato se muestra siempre.
+ */
+export function showsColumnValue(value: BarValue, group: BarGroup): boolean {
+  return value.value === null || value.value !== 0 || group.values.some(other => other !== value && (other.value ?? 0) > 0);
+}
+
 /** Valor en texto: «1 de 3» cuando la barra tiene intentos. */
 const describeValue = (value: BarValue): string => (value.of === undefined ? value.display : `${value.value} de ${value.of}`);
 
