@@ -12,7 +12,7 @@
 <div class="donut__figure">
   <div class="donut__ring" role="img" [attr.aria-label]="description()">
     <svg class="donut__svg" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
-      <circle class="donut__track" cx="60" cy="60" [attr.r]="radius" />
+      <circle class="donut__track" [class.donut__track--none]="isEmpty() && chart().variant === 'gauge'" cx="60" cy="60" [attr.r]="radius" />
       @for (segment of segments(); track segment.label) {
         @if (segment.dash > 0) {
           <circle class="donut__slice" cx="60" cy="60" [attr.r]="radius" transform="rotate(-90 60 60)"

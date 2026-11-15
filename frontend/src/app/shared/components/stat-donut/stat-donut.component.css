@@ -25,6 +25,7 @@
 .donut__svg { display: block; width: 100%; height: 100%; }
 .donut__track, .donut__slice { fill: none; stroke-width: 16; }
 .donut__track { stroke: color-mix(in srgb, var(--border-strong) 30%, var(--surface)); }
+.donut__track--none { stroke-dasharray: 4 6; }
 .donut__slice { transition: stroke-dasharray .3s ease, stroke-dashoffset .3s ease; }
 
 .donut__center {
