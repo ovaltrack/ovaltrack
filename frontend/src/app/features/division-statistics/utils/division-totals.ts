@@ -1,4 +1,5 @@
 import { DonutChart } from '../../../shared/utils/donut';
+import { formatMetric } from '../../match/statistics/presentation/stat-presentation';
 import { PeriodStatisticDTO } from '../../match/statistics/types/statistic.types';
 import { DivisionMetricDef, MetricSeriesDef, formatMetricValue, winRate } from './division-metrics';
 
@@ -32,11 +33,36 @@ function averageOf(serie: MetricSeriesDef, matches: PeriodStatisticDTO[]): numbe
   return values.length > 0 ? Math.round((sum(values) / values.length) * 10) / 10 : null;
 }
 
+/**
+ * Qué muestra el centro de una cantidad con dos series: sumar series opuestas (a favor y en contra) no significa nada,
+ * así que va la diferencia con signo (la primera menos la segunda); en la formación fija propia, ganados sobre jugados
+ * (la suma son los saques propios). Las demás (tarjetas: amarillas más rojas) muestran la suma.
+ */
+const TOTAL_CENTERS: Record<string, 'difference' | 'won'> = {
+  points: 'difference',
+  tries: 'difference',
+  penalties: 'difference',
+  'penalties-conceded': 'difference',
+  conversions: 'difference',
+  turnovers: 'difference',
+  'scrum-result': 'won',
+  'lineout-result': 'won',
+};
+
+function centerOf(metric: DivisionMetricDef, values: number[]): DonutChart['center'] {
+  const total = sum(values);
+  switch (TOTAL_CENTERS[metric.id]) {
+    case 'difference': return { value: formatMetric(values[0] - values[1], 'signed'), label: 'diferencia' };
+    case 'won': return { value: `${values[0]}/${total}`, label: 'ganados' };
+    default: return { value: `${total}`, label: 'total' };
+  }
+}
+
 /** Cantidades: reparte la suma del rango entre las series de la métrica (a favor y en contra, ganados y perdidos…). */
 function shareOf(metric: DivisionMetricDef, matches: PeriodStatisticDTO[]): DonutChart {
   const slices = metric.series.map(serie => ({ label: serie.label, value: totalOf(serie, matches), color: serie.color }));
-  const total = sum(slices.map(slice => slice.value));
-  return { id: metric.id, title: metric.label, slices, max: total, center: { value: `${total}`, label: 'total' }, variant: 'share' };
+  const values = slices.map(slice => slice.value);
+  return { id: metric.id, title: metric.label, slices, max: sum(values), center: centerOf(metric, values), variant: 'share' };
 }
 
 /** Porcentaje del rango con su aclaración: ponderado («7 de 13») o, si el partido solo trae el %, promedio por partido. */

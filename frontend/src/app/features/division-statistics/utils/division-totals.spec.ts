@@ -17,7 +17,34 @@ describe('metricTotals', () => {
     expect(chart.slices.map(slice => [slice.label, slice.value])).toEqual([['A favor', 35], ['En contra', 15]]);
     expect(chart.slices.map(slice => slice.color)).toEqual(metric('points').series.map(serie => serie.color));
     expect(chart.max).toBe(50);
-    expect(chart.center).toEqual({ value: '50', label: 'total' });
+    expect(chart.center).toEqual({ value: '+20', label: 'diferencia' });
+  });
+
+  it('propio contra rival: el centro es la diferencia con signo, no la suma', () => {
+    const center = (own: number, opponent: number) =>
+      metricTotals(metric('points'), [stats({ ownScore: own, opponentScore: opponent })])[0].center.value;
+    expect(center(229, 230)).toBe('-1');
+    expect(center(37, 35)).toBe('+2');
+    expect(center(0, 0)).toBe('0');
+  });
+
+  it('también en penales cometidos y turnovers (ganados menos perdidos)', () => {
+    expect(metricTotals(metric('penalties-conceded'), [stats({ ownPenaltiesConceded: 8, opponentPenaltiesConceded: 12 })])[0].center)
+      .toEqual({ value: '-4', label: 'diferencia' });
+    expect(metricTotals(metric('turnovers'), [stats({ ownTurnoversWon: 5, ownTurnoversLost: 3 })])[0].center.value).toBe('+2');
+  });
+
+  it('formación fija propia: ganados sobre jugados, porque la suma son los saques propios', () => {
+    const [chart] = metricTotals(metric('scrum-result'), [
+      stats({ ownScrumsWon: 40, ownScrumsLost: 4 }),
+      stats({ ownScrumsWon: 5, ownScrumsLost: 2 }),
+    ]);
+    expect(chart.center).toEqual({ value: '45/51', label: 'ganados' });
+  });
+
+  it('tarjetas: amarillas más rojas son las tarjetas propias, así que el centro es la suma', () => {
+    const [chart] = metricTotals(metric('cards'), [stats({ ownYellowCards: 3, ownRedCards: 1 })]);
+    expect(chart.center).toEqual({ value: '4', label: 'total' });
   });
 
   it('una métrica sin ningún dato en el rango queda vacía', () => {
