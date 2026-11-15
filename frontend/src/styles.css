@@ -1278,3 +1278,9 @@ button {
 .rule-help:hover::after, .rule-help:focus::after { opacity: 1; }
 /* Tooltip anclado al borde izquierdo: para un "?" cerca del inicio de la fila, en columnas angostas */
 .rule-help.tip-start::after { right: auto; left: -12px; }
+
+/* Guía de funcionalidades: al llevar un elemento a la vista, que no quede bajo la navbar ni bajo la hoja de la guía */
+[data-tour] {
+  scroll-margin-top: calc(var(--navbar-h) + 16px);
+  scroll-margin-bottom: 16px;
+}

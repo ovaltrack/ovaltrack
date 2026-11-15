@@ -12,6 +12,7 @@ import { NavModulesComponent } from './nav-modules/nav-modules.component';
 import { MobileTabBarComponent } from './mobile-tab-bar/mobile-tab-bar.component';
 import { NavSyncStatusComponent } from './nav-sync-status/nav-sync-status.component';
 import { UserMenuComponent } from './user-menu/user-menu.component';
+import { HelpButtonComponent } from 'src/app/features/tour/help-button/help-button.component';
 
 /**
  * Barra superior: orquesta logo, módulos, estados y menú de usuario.
@@ -20,7 +21,7 @@ import { UserMenuComponent } from './user-menu/user-menu.component';
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterLink, NavModulesComponent, NavLiveMatchComponent, NavSyncStatusComponent, UserMenuComponent, MobileTabBarComponent],
+  imports: [RouterLink, NavModulesComponent, NavLiveMatchComponent, NavSyncStatusComponent, UserMenuComponent, MobileTabBarComponent, HelpButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.css'

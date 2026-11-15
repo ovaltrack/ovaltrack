@@ -64,6 +64,20 @@ export class UserContextService {
   }
 
 
+  /**
+   * La guía ya arrancó: el backend no vuelve a marcarla pendiente en ningún dispositivo.
+   * Si falla (sin conexión), solo queda el cambio local: en el peor caso la guía vuelve a arrancar una vez.
+   */
+  markTutorialSeen(): Observable<void> {
+    const ctx = this.contextSignal();
+    if (ctx?.tutorialPending) {
+      this.contextSignal.set({ ...ctx, tutorialPending: false });
+    }
+    return this.http.post<void>(`${this.apiUrl}/api/me/tutorial/seen`, null).pipe(
+      catchError(() => of(undefined))
+    );
+  }
+
   setContext(context: UserContext | null): void {
     this.contextSignal.set(context);
   }

@@ -15,6 +15,8 @@ public record UserContextDTO(
     String firstName,
     String lastName,
     ClubResponseDTO club,
-    List<DivisionResponseDTO> activeDivisions
+    List<DivisionResponseDTO> activeDivisions,
+    /** Cuenta nueva que todavía no vio la guía de funcionalidades: el frontend la arranca sola una vez. */
+    boolean tutorialPending
 ) {
 }

@@ -1,0 +1,226 @@
+/* Velo de la guía: mismo valor que el fondo de los diálogos en claro; en oscuro, el token --scrim. */
+:host {
+  --tour-veil: rgba(15, 25, 15, 0.55);
+}
+
+:host-context([data-theme="dark"]) {
+  --tour-veil: var(--scrim);
+}
+
+/* La capa no bloquea la página: se puede seguir scrolleando la pantalla. */
+.tour-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 1090;
+  pointer-events: none;
+}
+
+.tour-dim {
+  position: fixed;
+  inset: 0;
+  background: var(--tour-veil);
+}
+
+/* Recorte: el resto de la pantalla queda bajo el velo con una sombra gigante. */
+.tour-spot {
+  position: fixed;
+  border-radius: 14px;
+  box-shadow: 0 0 0 2px var(--grass), 0 0 0 9999px var(--tour-veil);
+  transition: top .25s ease, left .25s ease, width .25s ease, height .25s ease;
+}
+
+/* ---------- Globo ---------- */
+.tour-bubble {
+  position: fixed;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  width: min(580px, calc(100vw - 24px));
+  pointer-events: auto;
+  visibility: hidden;
+  outline: none;
+  transition: top .25s ease, left .25s ease;
+}
+
+.tour-bubble.is-ready {
+  visibility: visible;
+  animation: tour-in .22s ease-out;
+}
+
+.tour-card {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 16px 18px 14px;
+  background: var(--surface-overlay);
+  border: 2px solid var(--border-sport);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-elevation);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}
+
+/* Colita del globo apuntando a Ovi */
+.tour-card::before {
+  content: '';
+  position: absolute;
+  left: -9px;
+  bottom: 26px;
+  width: 16px;
+  height: 16px;
+  background: var(--surface-overlay);
+  border-left: 2px solid var(--border-sport);
+  border-bottom: 2px solid var(--border-sport);
+  transform: rotate(45deg);
+}
+
+.tour-bubble:focus-visible .tour-card {
+  box-shadow: var(--shadow-elevation), 0 0 0 3px var(--grass-border);
+}
+
+.tour-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: -4px -8px 6px 0;
+}
+
+.tour-count {
+  font-size: 11px;
+}
+
+.tour-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+
+.tour-close:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.tour-track {
+  height: 4px;
+  margin-bottom: 12px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-track);
+  overflow: hidden;
+}
+
+.tour-track-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--grass);
+  transition: width .25s ease;
+}
+
+.tour-title {
+  margin: 0 0 6px;
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 20px;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.tour-body {
+  margin: 0 0 14px;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.tour-shot {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: min(34vh, 300px);
+  margin: -4px 0 14px;
+  object-fit: cover;
+  object-position: top;
+  border: 2px solid var(--border-sport);
+  border-radius: var(--radius-lg);
+  background: var(--surface-track);
+}
+
+.tour-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.tour-spacer {
+  flex: 1 1 auto;
+}
+
+.tour-skip {
+  margin-left: -12px;
+}
+
+.tour-actions .btn:disabled {
+  opacity: .45;
+  pointer-events: none;
+}
+
+/* ---------- Teléfono: hoja fija abajo, Ovi asoma por encima ---------- */
+.tour-bubble.is-sheet {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: auto;
+  display: block;
+  padding: 0 8px calc(8px + env(safe-area-inset-bottom));
+}
+
+.tour-bubble.is-sheet .tour-ovi {
+  position: absolute;
+  top: -50px;
+  left: 18px;
+  z-index: 1;
+}
+
+.tour-bubble.is-sheet .tour-card {
+  padding-top: 20px;
+  border-radius: var(--radius-xl) var(--radius-xl) var(--radius-lg) var(--radius-lg);
+}
+
+.tour-bubble.is-sheet .tour-card::before {
+  display: none;
+}
+
+.tour-bubble.is-sheet .tour-shot {
+  max-height: 24vh;
+}
+
+.tour-bubble.is-sheet .tour-head {
+  padding-left: 64px;
+}
+
+@media (max-width: 480px) {
+  .tour-btn-label {
+    display: none;
+  }
+}
+
+@keyframes tour-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-spot,
+  .tour-bubble,
+  .tour-track-fill { transition: none; }
+  .tour-bubble.is-ready { animation: none; }
+}
