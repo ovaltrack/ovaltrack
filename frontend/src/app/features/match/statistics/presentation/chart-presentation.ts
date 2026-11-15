@@ -1,11 +1,13 @@
 import {
   DonutChart,
   OWN_COLOR_VAR,
+  PairedSliceInput,
   RIVAL_COLOR_VAR,
   VersusNames,
   gaugeDonut,
   isEmptyDonut,
   shareDonut,
+  sharedSlices,
   versusDonut,
   withTeam,
 } from '../../../../shared/utils/donut';
@@ -42,43 +44,27 @@ export interface ChartCard<T = DonutChart> {
 /** Las secciones avanzadas más largas (bloques de 10') tienen 8 categorías: nunca se agrupan en «Otros». */
 const ADVANCED_MAX_SLICES = 8;
 
-interface TeamItem {
-  label: string;
-  own: number;
-  opponent: number;
-  /** Relleno como «Sin completar»: va en neutro. */
-  muted?: boolean;
-}
-
 /** La fila tiene algo que graficar: 0 contra 0 queda como fila. */
 export const hasData = (line: StatLine): boolean => line.ownValue + line.opponentValue > 0;
 
-const toItems = (lines: StatLine[]): TeamItem[] =>
+const toItems = (lines: StatLine[]): PairedSliceInput[] =>
   lines.map(line => ({ label: line.label, own: line.ownValue, opponent: line.opponentValue, muted: line.label === PENDING_LABEL }));
 
 /** Porcentaje de posesión del rival, con un decimal (el complemento de la propia). */
 export const opponentPossessionOf = (own: number): number => Math.max(0, Math.round((100 - own) * 10) / 10);
 
-/** Una dona de reparto para cada equipo que tenga datos: el reparto de un equipo no se compara con el del otro. */
-function teamShares(id: string, title: string, items: TeamItem[], names: VersusNames, maxSlices?: number): DonutChart[] {
+/**
+ * Una dona de reparto para cada equipo que tenga datos: el reparto de un equipo no se compara con el del otro, pero
+ * las dos tienen las mismas categorías, en el mismo orden y con el mismo tono (`sharedSlices`), para leerlas juntas.
+ */
+function teamShares(id: string, title: string, items: PairedSliceInput[], names: VersusNames, maxSlices?: number): DonutChart[] {
+  const slices = sharedSlices(items, maxSlices);
   const sides = [
-    { key: 'own', name: names.own, colorVar: OWN_COLOR_VAR, value: (item: TeamItem) => item.own },
-    { key: 'rival', name: names.opponent, colorVar: RIVAL_COLOR_VAR, value: (item: TeamItem) => item.opponent },
+    { key: 'own', name: names.own, colorVar: OWN_COLOR_VAR, slices: slices.own },
+    { key: 'rival', name: names.opponent, colorVar: RIVAL_COLOR_VAR, slices: slices.opponent },
   ];
   return sides
-    .map(side => withTeam(
-      shareDonut(
-        `${id}-${side.key}`,
-        title,
-        items
-          .map(item => ({ label: item.label, value: side.value(item), muted: item.muted }))
-          .filter(slice => slice.value > 0),
-        side.colorVar,
-        maxSlices
-      ),
-      side.name,
-      side.colorVar
-    ))
+    .map(side => withTeam(shareDonut(`${id}-${side.key}`, title, side.slices, side.colorVar, maxSlices), side.name, side.colorVar))
     .filter(chart => !isEmptyDonut(chart));
 }
 

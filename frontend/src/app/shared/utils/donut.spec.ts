@@ -8,6 +8,7 @@ import {
   limitSlices,
   roundedPercents,
   shareDonut,
+  sharedSlices,
   slicePercents,
   teamTones,
   versusDonut,
@@ -135,12 +136,52 @@ describe('shareDonut', () => {
     expect(chart.slices[1].color).toBe('var(--btn-primary-bg)');
   });
 
+  it('usa el tono pedido por cada porción, así dos donas de un par coinciden', () => {
+    const chart = shareDonut('p', 'Par', [{ label: 'A', value: 0, tone: 1 }, { label: 'B', value: 4, tone: 0 }], '--team-rival');
+    expect(chart.slices.map(slice => slice.color)).toEqual([teamTones('--team-rival', 2)[1], 'var(--team-rival)']);
+  });
+
   it('agrupa en «Otros» cuando hay demasiadas categorías', () => {
     const items = Array.from({ length: 9 }, (_, index) => ({ label: `c${index}`, value: index + 1 }));
     const chart = shareDonut('many', 'Muchas', items, '--team-rival');
     expect(chart.slices.length).toBe(6);
     expect(chart.slices[5].label).toBe('Otros');
     expect(chart.max).toBe(45);
+  });
+});
+
+describe('sharedSlices', () => {
+  const item = (label: string, own: number, opponent: number) => ({ label, own, opponent });
+
+  it('las dos donas tienen las mismas categorías en el mismo orden, también las que un equipo tiene en 0', () => {
+    const { own, opponent } = sharedSlices([item('Puntos', 2, 0), item('Patada', 1, 4), item('Nada', 0, 0)]);
+    expect(own.map(slice => [slice.label, slice.value])).toEqual([['Puntos', 2], ['Patada', 1]]);
+    expect(opponent.map(slice => [slice.label, slice.value])).toEqual([['Puntos', 0], ['Patada', 4]]);
+  });
+
+  it('el tono sale del total de los dos equipos: la misma categoría tiene el mismo tono en las dos', () => {
+    const { own, opponent } = sharedSlices([item('Puntos', 2, 0), item('Patada', 1, 4)]);
+    expect(own.map(slice => slice.tone)).toEqual([1, 0]);
+    expect(opponent.map(slice => slice.tone)).toEqual([1, 0]);
+  });
+
+  it('respeta el orden recibido (catálogo o tiempo): los bloques de 10\' no se reordenan', () => {
+    const { own } = sharedSlices([item("0'–10'", 0, 3), item("10'–20'", 7, 0), item("20'–30'", 3, 0)]);
+    expect(own.map(slice => slice.label)).toEqual(["0'–10'", "10'–20'", "20'–30'"]);
+  });
+
+  it('junta en «Otros» las mismas categorías en las dos donas, según el total de ambos', () => {
+    const items = Array.from({ length: 8 }, (_, index) => item(`c${index}`, index % 2 === 0 ? index + 1 : 0, index % 2 === 0 ? 0 : index + 1));
+    const { own, opponent } = sharedSlices(items, 6);
+    expect(own.map(slice => slice.label)).toEqual(opponent.map(slice => slice.label));
+    expect(own.map(slice => slice.label)).toEqual(['c3', 'c4', 'c5', 'c6', 'c7', 'Otros']);
+    expect(own[5]).toEqual(jasmine.objectContaining({ value: 1 + 3, muted: true }));
+    expect(opponent[5]).toEqual(jasmine.objectContaining({ value: 2, muted: true }));
+  });
+
+  it('el relleno («Sin completar») no gasta un tono de la rampa', () => {
+    const { own } = sharedSlices([{ label: 'Sin completar', own: 5, opponent: 0, muted: true }, item('Limpio', 1, 1)]);
+    expect(own.map(slice => [slice.label, slice.tone, slice.muted])).toEqual([['Sin completar', undefined, true], ['Limpio', 0, undefined]]);
   });
 });
 

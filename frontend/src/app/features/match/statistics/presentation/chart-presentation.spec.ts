@@ -1,5 +1,6 @@
 import { advancedCard, indicatorCard, measurementCard, opponentPossessionOf, playerActionCharts, scoreCard } from './chart-presentation';
 import { presentAdvancedStatistics } from './advanced-presentation';
+import { slicePercents } from '../../../../shared/utils/donut';
 import { presentGroups } from './stat-presentation';
 import {
   AdvancedPeriodStatistics,
@@ -11,6 +12,7 @@ import {
 } from '../types/statistic.types';
 
 const names = { own: 'Club', opponent: 'Rival' };
+const sum = (values: number[]) => values.reduce((total, value) => total + value, 0);
 const zero = { own: 0, opponent: 0 };
 
 const stat = (overrides: Partial<EventTypeStat>): EventTypeStat => ({
@@ -59,14 +61,20 @@ describe('scoreCard', () => {
     expect(charts[1].showPercent).toBeUndefined();
   });
 
-  it('reparte los puntos de cada equipo por tipo de tanto, solo del equipo que tiene puntos', () => {
+  it('reparte los puntos de cada equipo por tipo de tanto, con las mismas categorías y tonos en las dos donas', () => {
     const own = charts.find(chart => chart.id === 'points-own');
     const rival = charts.find(chart => chart.id === 'points-rival');
     expect(own?.slices.map(slice => [slice.label, slice.value])).toEqual([['Try', 15], ['Conversión', 4]]);
     expect(own?.title).toBe('Puntos');
     expect(own?.team).toEqual({ name: 'Club', color: 'var(--btn-primary-bg)' });
     expect(rival?.team?.name).toBe('Rival');
-    expect(rival?.slices.map(slice => [slice.label, slice.value])).toEqual([['Try', 5]]);
+    expect(rival?.slices.map(slice => [slice.label, slice.value])).toEqual([['Try', 5], ['Conversión', 0]]);
+    expect(rival?.slices.map(slice => slice.color)).toEqual(['var(--team-rival)', 'color-mix(in srgb, var(--team-rival) 82%, var(--surface))']);
+  });
+
+  it('en cada dona del par los porcentajes de la leyenda suman 100', () => {
+    const shares = charts.filter(chart => chart.id.startsWith('points-'));
+    expect(shares.map(chart => sum(slicePercents(chart.slices, chart.max)))).toEqual([100, 100]);
   });
 
   it('suma una dona versus por tanto, con convertidos/intentos en la leyenda', () => {
@@ -196,7 +204,7 @@ describe('advancedCard', () => {
     expect(card.charts.map(chart => chart.id)).toEqual([
       'possessions-own', 'possessions-rival', 'possessions-Posesiones',
     ]);
-    expect(card.charts[1].slices.map(slice => slice.label)).toEqual(['Terminan en patada']);
+    expect(card.charts[1].slices.map(slice => [slice.label, slice.value])).toEqual([['Terminan en puntos', 0], ['Terminan en patada', 1]]);
     expect(card.rest.map(line => line.label)).toEqual(['Puntos por posesión']);
   });
 

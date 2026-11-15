@@ -14,6 +14,16 @@ export interface DonutSliceInput {
   display?: string;
   /** Porción de relleno ("Otros", "Sin completar"): se pinta en neutro y no entra en la rampa del equipo. */
   muted?: boolean;
+  /** Posición en la rampa del equipo (0 = el más intenso). Sin ella, el tono sale del orden de las porciones. */
+  tone?: number;
+}
+
+/** Categoría de un reparto con el valor de cada equipo, antes de partirlo en una dona por equipo. */
+export interface PairedSliceInput {
+  label: string;
+  own: number;
+  opponent: number;
+  muted?: boolean;
 }
 
 /** Equipo al que pertenece una dona de reparto o de avance: se muestra en su propia línea, con su color. */
@@ -154,6 +164,34 @@ export function limitSlices(slices: DonutSliceInput[], max = DEFAULT_MAX_SLICES)
 }
 
 /**
+ * Reparto en par (una dona por equipo): las dos donas tienen las mismas categorías, en el orden recibido (catálogo o
+ * tiempo), con «0» en la leyenda del equipo que no tiene una; el corte de «Otros» y el tono de cada categoría salen del
+ * total de los dos equipos, así la misma categoría tiene el mismo tono en la dona propia y en la rival.
+ */
+export function sharedSlices(
+  items: PairedSliceInput[],
+  maxSlices = DEFAULT_MAX_SLICES
+): { own: DonutSliceInput[]; opponent: DonutSliceInput[] } {
+  const total = (item: PairedSliceInput): number => item.own + item.opponent;
+  // `sort` es estable: a igual total queda primero la que viene antes en el orden recibido.
+  const byTotal = (list: PairedSliceInput[]) => [...list].sort((a, b) => total(b) - total(a));
+  const present = items.filter(item => total(item) > 0);
+  const keep = new Set(present.length <= maxSlices ? present : byTotal(present).slice(0, maxSlices - 1));
+  const kept = present.filter(item => keep.has(item));
+  const grouped = present.filter(item => !keep.has(item));
+  const ranked = byTotal(kept.filter(item => !item.muted));
+
+  const side = (value: (item: PairedSliceInput) => number): DonutSliceInput[] => [
+    ...kept.map(item => (item.muted
+      ? { label: item.label, value: value(item), muted: true }
+      : { label: item.label, value: value(item), tone: ranked.indexOf(item) })),
+    ...(grouped.length > 0 ? [{ label: OTHERS_LABEL, value: sum(grouped.map(value)), muted: true }] : []),
+  ];
+
+  return { own: side(item => item.own), opponent: side(item => item.opponent) };
+}
+
+/**
  * Rampa de `count` tonos del color de un equipo, de más a menos intenso. Se mezcla con la superficie de la tarjeta
  * en vez de inventar colores, así sigue el tema claro y el oscuro.
  */
@@ -192,12 +230,15 @@ export function shareDonut(
   maxSlices = DEFAULT_MAX_SLICES
 ): DonutChart {
   const limited = limitSlices(items, maxSlices);
-  const tones = teamTones(colorVar, limited.filter(item => !item.muted).length);
-  const slices = limited.reduce<DonutSlice[]>((result, item) => {
-    const colored = result.filter(slice => slice.color !== MUTED_COLOR).length;
-    const color = item.muted ? MUTED_COLOR : tones[colored];
-    return [...result, { label: item.label, value: item.value, display: item.display, color }];
-  }, []);
+  const ramp = limited.filter(item => !item.muted);
+  const toneOf = (item: DonutSliceInput): number => item.tone ?? ramp.indexOf(item);
+  const tones = teamTones(colorVar, Math.max(0, ...ramp.map(toneOf)) + 1);
+  const slices = limited.map<DonutSlice>(item => ({
+    label: item.label,
+    value: item.value,
+    display: item.display,
+    color: item.muted ? MUTED_COLOR : tones[toneOf(item)],
+  }));
   const total = sum(slices.map(slice => slice.value));
   return { id, title, slices, max: total, center: { value: `${total}`, label: 'total' }, variant: 'share' };
 }
