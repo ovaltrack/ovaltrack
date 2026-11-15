@@ -69,6 +69,24 @@ public class User {
     @Column(name = "password_changed_at")
     private LocalDateTime passwordChangedAt;
 
+    /**
+     * La guía de funcionalidades está pendiente: nace en {@code true} con cada cuenta nueva y se apaga
+     * la primera vez que arranca. Null (cuentas anteriores a la guía) cuenta como ya vista.
+     */
+    @Column(name = "tutorial_pending")
+    private Boolean tutorialPending;
+
+    @PrePersist
+    void markTutorialPendingOnCreate() {
+        if (tutorialPending == null) {
+            tutorialPending = true;
+        }
+    }
+
+    public boolean isTutorialPending() {
+        return Boolean.TRUE.equals(tutorialPending);
+    }
+
     /** Reemplaza la contraseña y marca el momento: cierra las sesiones abiertas. */
     public void changePassword(String newPasswordHash) {
         this.passwordHash = newPasswordHash;

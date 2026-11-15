@@ -51,6 +51,8 @@ export interface UserContext {
   lastName?: string;
   club: import('../../division/types/division.types').ClubSummary | null;
   activeDivisions: import('../../division/types/division.types').Division[];
+  /** Cuenta nueva que todavía no vio la guía: arranca sola una vez. */
+  tutorialPending?: boolean;
 }
 
 

@@ -6,7 +6,8 @@ import { UserContext } from '../../auth/types/auth.types';
 import { TOUR_STEPS } from '../tour-steps';
 import { TourContext, TourStep } from '../types/tour.types';
 import { TourContextService } from './tour-context.service';
-import { TOUR_SEEN_KEY, TourService } from './tour.service';
+import { of } from 'rxjs';
+import { TourService } from './tour.service';
 
 @Component({ standalone: true, template: '' })
 class BlankComponent {}
@@ -23,8 +24,8 @@ const STEPS: readonly TourStep[] = [
   step('e', () => '/divisions')
 ];
 
-const staff = (userId: string, role: UserContext['role'] = 'COACH_ANALYST'): UserContext =>
-  ({ userId, role, club: { id: 'c1' } } as UserContext);
+const staff = (userId: string, role: UserContext['role'] = 'COACH_ANALYST', tutorialPending = true): UserContext =>
+  ({ userId, role, club: { id: 'c1' }, tutorialPending } as UserContext);
 
 const FULL: TourContext = { divisionId: 'd1', upcomingMatchId: 'u1', liveMatchId: 'l1', finishedMatchId: 'f1' };
 
@@ -36,9 +37,11 @@ describe('TourService', () => {
   let context: TourContext;
   const userContext = signal<UserContext | null>(null);
 
+  let markTutorialSeen: jasmine.Spy;
+
   beforeEach(async () => {
-    localStorage.removeItem(TOUR_SEEN_KEY);
     context = FULL;
+    markTutorialSeen = jasmine.createSpy('markTutorialSeen').and.returnValue(of(undefined));
     userContext.set(null);
     TestBed.configureTestingModule({
       providers: [
@@ -51,15 +54,13 @@ describe('TourService', () => {
         ]),
         { provide: TOUR_STEPS, useValue: STEPS },
         { provide: TourContextService, useValue: { load: () => Promise.resolve(context) } },
-        { provide: UserContextService, useValue: { userContext } }
+        { provide: UserContextService, useValue: { userContext, markTutorialSeen } }
       ]
     });
     service = TestBed.inject(TourService);
     router = TestBed.inject(Router);
     await router.navigateByUrl('/club');
   });
-
-  afterEach(() => localStorage.removeItem(TOUR_SEEN_KEY));
 
   it('arranca inactiva', () => {
     expect(service.state().active).toBeFalse();
@@ -91,7 +92,7 @@ describe('TourService', () => {
         provideRouter([]),
         { provide: TOUR_STEPS, useValue: [step('x', () => null)] },
         { provide: TourContextService, useValue: { load: () => Promise.resolve(context) } },
-        { provide: UserContextService, useValue: { userContext } }
+        { provide: UserContextService, useValue: { userContext, markTutorialSeen } }
       ]
     });
     const empty = TestBed.inject(TourService);
@@ -137,17 +138,15 @@ describe('TourService', () => {
 
     expect(service.state().active).toBeFalse();
     expect(router.url).toBe('/club');
-    expect(service.hasSeen()).toBeTrue();
   });
 
-  it('exit() (saltar el tutorial) vuelve a la pantalla de origen y la marca como vista', async () => {
+  it('exit() (saltar el tutorial) vuelve a la pantalla de origen', async () => {
     await service.start(2);
     service.exit();
     await tick();
 
     expect(service.currentStep()).toBeNull();
     expect(router.url).toBe('/club');
-    expect(localStorage.getItem(TOUR_SEEN_KEY)).toBe('true');
   });
 
   it('atrás del navegador mueve la guía al paso de esa pantalla', async () => {
@@ -163,13 +162,14 @@ describe('TourService', () => {
     expect(router.url).toBe('/club');
   });
 
-  it('arranca sola la primera vez que el staff entra al inicio', async () => {
+  it('una cuenta nueva la ve sola al llegar al inicio y queda marcada como vista en el backend', async () => {
     await router.navigateByUrl('/home');
     userContext.set(staff('u1'));
     TestBed.flushEffects();
     await tick();
 
     expect(service.state().active).toBeTrue();
+    expect(markTutorialSeen).toHaveBeenCalledTimes(1);
   });
 
   it('arranca sola aunque el contexto llegue antes que la navegación al inicio (recién logueado)', async () => {
@@ -183,18 +183,34 @@ describe('TourService', () => {
     expect(service.state().active).toBeTrue();
   });
 
-  it('la marca de vista es por usuario: una cuenta nueva en el mismo navegador ve la guía', async () => {
-    localStorage.setItem(`${TOUR_SEEN_KEY}:u1`, 'true');
+  it('no arranca sola en cada inicio de sesión: sin la guía pendiente, ni si el rol no es del staff', async () => {
     await router.navigateByUrl('/home');
-    userContext.set(staff('u2'));
+    userContext.set(staff('u1', 'COACH_ANALYST', false));
     TestBed.flushEffects();
     await tick();
+    expect(service.state().active).toBeFalse();
 
-    expect(service.state().active).toBeTrue();
-    localStorage.removeItem(`${TOUR_SEEN_KEY}:u1`);
+    userContext.set(null);
+    TestBed.flushEffects();
+    userContext.set(staff('u3', 'PLAYER'));
+    TestBed.flushEffects();
+    await tick();
+    expect(service.state().active).toBeFalse();
+    expect(markTutorialSeen).not.toHaveBeenCalled();
+  });
+
+  it('en la misma sesión arranca una sola vez aunque vuelva al inicio', async () => {
+    await router.navigateByUrl('/home');
+    userContext.set(staff('u1'));
+    TestBed.flushEffects();
+    await tick();
     service.exit();
-    expect(localStorage.getItem(`${TOUR_SEEN_KEY}:u2`)).toBe('true');
-    localStorage.removeItem(`${TOUR_SEEN_KEY}:u2`);
+    await router.navigateByUrl('/club');
+    await router.navigateByUrl('/home');
+    await tick();
+
+    expect(service.state().active).toBeFalse();
+    expect(markTutorialSeen).toHaveBeenCalledTimes(1);
   });
 
   it('el «?» explica solo la pantalla actual, con cualquier partido, y no navega al cerrar', async () => {
@@ -232,29 +248,4 @@ describe('TourService', () => {
     expect(service.progress().total).toBe(5);
   });
 
-  it('no arranca sola si ya se vio o si el rol no es del staff', async () => {
-    await router.navigateByUrl('/home');
-    localStorage.setItem(`${TOUR_SEEN_KEY}:u1`, 'true');
-    userContext.set(staff('u1'));
-    TestBed.flushEffects();
-    await tick();
-    expect(service.state().active).toBeFalse();
-
-    localStorage.removeItem(`${TOUR_SEEN_KEY}:u1`);
-    userContext.set(null);
-    TestBed.flushEffects();
-    userContext.set(staff('u3', 'PLAYER'));
-    TestBed.flushEffects();
-    await tick();
-    expect(service.state().active).toBeFalse();
-  });
-
-  it('sin localStorage la guía funciona igual', async () => {
-    spyOn(Storage.prototype, 'setItem').and.throwError('bloqueado');
-    spyOn(Storage.prototype, 'getItem').and.throwError('bloqueado');
-
-    await service.start();
-    expect(() => service.exit()).not.toThrow();
-    expect(service.hasSeen()).toBeFalse();
-  });
 });

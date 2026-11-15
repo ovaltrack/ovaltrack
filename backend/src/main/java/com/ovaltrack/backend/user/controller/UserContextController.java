@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,6 +42,17 @@ public class UserContextController {
     @GetMapping
     public ResponseEntity<UserContextDTO> getMe(Authentication authentication) {
         return ResponseEntity.ok(userContextService.getUserContext(authentication));
+    }
+
+    @Operation(summary = "Mark the feature tour as seen", description = "The tour starts on its own only once per account: after this it no longer opens automatically on any device.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Tour marked as seen."),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - Missing or invalid token.")
+    })
+    @PostMapping("/tutorial/seen")
+    public ResponseEntity<Void> markTutorialSeen(Authentication authentication) {
+        userContextService.markTutorialSeen(authentication);
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Get the authenticated user's profile", description = "Account, personal data, club and divisions of the authenticated user.")

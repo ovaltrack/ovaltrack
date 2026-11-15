@@ -10,9 +10,6 @@ import { TOUR_STEPS, helpStepsFor, resolveTourSteps } from '../tour-steps';
 import { ResolvedTourStep, TourMode, TourProgress, TourState } from '../types/tour.types';
 import { TourContextService } from './tour-context.service';
 
-/** Prefijo de la clave de `localStorage` que recuerda, por usuario, que la guía ya se vio (o se saltó). */
-export const TOUR_SEEN_KEY = 'ovaltrack.tour.seen';
-
 /** Roles que recorren la guía: las pantallas que muestra son del staff del club. */
 export const TOUR_ROLES: readonly UserRole[] = ['ADMIN_CLUB', 'COACH_ANALYST'];
 
@@ -65,7 +62,7 @@ export class TourService {
         this.maybeAutoStart();
       });
 
-    // La primera vez que alguien del staff llega al inicio, la guía arranca sola (y se puede saltar desde el primer globo).
+    // Con una cuenta nueva (`tutorialPending` del backend), la guía arranca sola al llegar al inicio, una única vez.
     // Se evalúa al tener el contexto y en cada navegación: después del login, cualquiera de los dos puede llegar primero.
     effect(() => {
       const context = this.userContext.userContext();
@@ -151,7 +148,7 @@ export class TourService {
     return true;
   }
 
-  /** Termina (o salta) la guía y la marca como vista; el recorrido completo vuelve a la pantalla desde donde se lanzó. */
+  /** Termina (o salta) la guía; el recorrido completo vuelve a la pantalla desde donde se lanzó. */
   exit(): void {
     if (!this.stateSignal().active) {
       return;
@@ -160,15 +157,6 @@ export class TourService {
     this.finish();
     if (target && this.router.url !== target) {
       void this.router.navigateByUrl(target);
-    }
-  }
-
-  /** Si el usuario de la sesión ya vio (o saltó) la guía. */
-  hasSeen(): boolean {
-    try {
-      return localStorage.getItem(this.seenKey()) === 'true';
-    } catch {
-      return false;
     }
   }
 
@@ -192,7 +180,10 @@ export class TourService {
     }
   }
 
-  /** Arranque automático, una vez por usuario: solo en el inicio, con el contexto cargado y si nunca la vio. */
+  /**
+   * Arranque automático, solo para cuentas nuevas: en el inicio, con el contexto cargado y la guía pendiente.
+   * Se marca vista apenas arranca: aunque la cierre a mitad, no vuelve a aparecer sola en cada inicio de sesión.
+   */
   private maybeAutoStart(): void {
     const context = this.userContext.userContext();
     if (!context || pathOf(this.router.url) !== AUTO_START_URL) {
@@ -203,30 +194,16 @@ export class TourService {
       return;
     }
     this.autoStartCheckedFor = userId;
-    if (!context.club?.id || !TOUR_ROLES.includes(context.role) || this.hasSeen() || this.stateSignal().active) {
+    if (!context.tutorialPending || !context.club?.id || !TOUR_ROLES.includes(context.role) || this.stateSignal().active) {
       return;
     }
+    this.userContext.markTutorialSeen().subscribe();
     void this.start();
   }
 
   private finish(): void {
     this.stateSignal.set(INACTIVE);
     this.returnUrl = null;
-    this.markSeen();
-  }
-
-  private markSeen(): void {
-    try {
-      localStorage.setItem(this.seenKey(), 'true');
-    } catch {
-      // Sin almacenamiento (modo privado): la guía igual funciona.
-    }
-  }
-
-  /** La marca de «vista» es por usuario: otra cuenta en el mismo navegador vuelve a ver la guía. */
-  private seenKey(): string {
-    const userId = this.userContext.userContext()?.userId || this.tokenService.getPayload()?.userId || null;
-    return userId ? `${TOUR_SEEN_KEY}:${userId}` : TOUR_SEEN_KEY;
   }
 
   private isValidIndex(index: number, length: number): boolean {
