@@ -1,6 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { BarChart, barPercent, describeBars, isEmptyBars, scaleTicks } from '../../utils/bars';
 
+/** Intensidad (%) del color del equipo en el carril de intentos. */
+const ATTEMPTS_TONE = 30;
+
 /**
  * Barras horizontales en HTML/CSS puro, para categorías: la etiqueta envuelve (nunca se corta), cada equipo tiene su
  * barra sobre una escala común con el valor como texto, y el eje marca el cero, la mitad y el máximo.
@@ -33,6 +36,10 @@ export class StatBarsComponent {
         width: barPercent(value.value, max),
         muted: !value.value,
         drawn: value.value !== null,
+        /** Intentos: un tono claro del color del equipo, mezclado con la superficie (la misma técnica de la rampa de las donas). */
+        attempts: value.of === undefined
+          ? null
+          : { width: barPercent(value.of, max), color: `color-mix(in srgb, ${value.color} ${ATTEMPTS_TONE}%, var(--surface))` },
       })),
     }));
   });

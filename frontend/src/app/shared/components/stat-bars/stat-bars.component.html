@@ -12,6 +12,9 @@
             @for (line of row.lines; track line.series) {
               <div class="bars__line">
                 <div class="bars__track">
+                  @if (line.attempts; as attempts) {
+                    <div class="bars__attempts" [style.width.%]="attempts.width" [style.background]="attempts.color"></div>
+                  }
                   @if (line.drawn) {
                     <div class="bars__fill" [style.width.%]="line.width" [style.background]="line.color"></div>
                   }

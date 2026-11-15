@@ -12,7 +12,7 @@ import {
   opponentPossessionOf,
   playerActionGroups,
 } from './chart-presentation';
-import { GroupStatPresentation, StatLine, formatMetric } from './stat-presentation';
+import { GroupStatPresentation, StatLine, formatMetric, mainLine } from './stat-presentation';
 
 /**
  * Qué se grafica en barras, con las mismas reglas de partición que las donas (`chart-presentation.ts`): lo que no se
@@ -32,10 +32,21 @@ const pointLines = (groups: EventTypeStatGroup[]): VersusBarLine[] =>
     .filter(type => type.isScoring)
     .map(type => ({ label: type.name, ownValue: type.points?.own ?? 0, opponentValue: type.points?.opponent ?? 0 }));
 
-/** Tarjeta «Marcador y posesión»: posesión (0–100), puntos por tipo de tanto y cada tanto de propio contra rival. */
-export function scoreBars(stats: MatchStatistics, scoring: StatLine[], names: VersusNames): BarChart[] {
+/** Cada tanto, también los que están en cero; en los que tienen intentos, el carril son los intentos y la barra, los convertidos. */
+const scoringBarLines = (groups: EventTypeStatGroup[]): VersusBarLine[] =>
+  groups
+    .flatMap(group => group.types)
+    .filter(type => type.isScoring)
+    .map(type => (type.hasAttempts ? { ...mainLine(type), ownOf: type.count.own, opponentOf: type.count.opponent } : mainLine(type)));
+
+/**
+ * Tarjeta «Marcador y posesión»: posesión (0–100), cada tanto de propio contra rival y, después, los puntos por tipo de
+ * tanto (salen de los tantos: muestran cómo se formó el marcador).
+ */
+export function scoreBars(stats: MatchStatistics, names: VersusNames): BarChart[] {
   const own = stats.ownPossessionPercentage;
   const opponent = opponentPossessionOf(own);
+  const scoring = scoringBarLines(stats.groups);
   const points = versusBars('points', 'Puntos', pointLines(stats.groups), names);
   return [
     versusBars(
@@ -45,8 +56,8 @@ export function scoreBars(stats: MatchStatistics, scoring: StatLine[], names: Ve
       names,
       { unit: 'percent' }
     ),
-    ...(isEmptyBars(points) ? [] : [points]),
     ...(scoring.length > 0 ? [versusBars('score', 'Tantos', scoring, names)] : []),
+    ...(isEmptyBars(points) ? [] : [points]),
   ];
 }
 

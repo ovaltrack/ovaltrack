@@ -1,6 +1,6 @@
 import { advancedBars, indicatorBars, measurementBars, playerActionBars, scoreBars } from './bar-presentation';
 import { presentAdvancedStatistics } from './advanced-presentation';
-import { presentGroups, scoringLines } from './stat-presentation';
+import { presentGroups } from './stat-presentation';
 import {
   AdvancedPeriodStatistics,
   DerivedMetric,
@@ -47,7 +47,16 @@ const matchStats = (overrides: Partial<MatchStatistics> = {}): MatchStatistics =
 });
 
 describe('scoreBars', () => {
-  const charts = scoreBars(matchStats(), scoringLines(matchStats().groups), names);
+  const charts = scoreBars(matchStats(), names);
+
+  it('el orden es posesión, tantos y puntos: los puntos salen de los tantos', () => {
+    expect(charts.map(chart => chart.id)).toEqual(['possession', 'score', 'points']);
+  });
+
+  it('los tantos con intentos miden los intentos en el carril y los convertidos en la barra', () => {
+    const conversion = charts.find(chart => chart.id === 'score')?.groups[1];
+    expect(conversion?.values.map(value => [value.value, value.of, value.display])).toEqual([[2, 3, '2/3'], [0, 1, '0/1']]);
+  });
 
   it('arranca con la posesión sobre 0–100: la propia y el complemento para el rival', () => {
     expect(charts[0].id).toBe('possession');
@@ -71,9 +80,9 @@ describe('scoreBars', () => {
   });
 
   it('sin puntos no hay gráfico de puntos', () => {
-    const quiet = scoreBars(matchStats({ groups: [{ name: 'Puntuación', types: [{ ...tryStat, points: null }] }] }), [], names);
+    const quiet = scoreBars(matchStats({ groups: [{ name: 'Puntuación', types: [{ ...tryStat, points: null }] }] }), names);
 
-    expect(quiet.map(chart => chart.id)).toEqual(['possession']);
+    expect(quiet.map(chart => chart.id)).toEqual(['possession', 'score']);
   });
 });
 

@@ -9,6 +9,8 @@ export interface BarValue {
   value: number | null;
   /** Texto que se muestra junto a la barra (p. ej. "2/3" o "85%"). */
   display: string;
+  /** Intentos en los tantos que los tienen: el carril claro mide los intentos y la barra, los convertidos (`value`). */
+  of?: number;
   /** Color CSS listo para `background`: siempre sale de tokens del sistema de diseño. */
   color: string;
 }
@@ -56,6 +58,9 @@ export interface VersusBarLine {
   opponentValue: number | null;
   own?: string;
   opponent?: string;
+  /** Intentos de cada equipo, en los tantos que los tienen (`ownValue` son los convertidos). */
+  ownOf?: number;
+  opponentOf?: number;
 }
 
 export interface VersusBarOptions {
@@ -129,8 +134,16 @@ const defaultDisplay = (value: number | null, unit: BarUnit): string => {
   return unit === 'percent' ? `${oneDecimal(value)}%` : `${value}`;
 };
 
-function barValue(series: string, value: number | null, display: string | undefined, unit: BarUnit, colorVar: string): BarValue {
-  return { series, value, display: display ?? defaultDisplay(value, unit), color: `var(${colorVar})` };
+function barValue(
+  series: string,
+  value: number | null,
+  display: string | undefined,
+  unit: BarUnit,
+  colorVar: string,
+  of?: number
+): BarValue {
+  const bar = { series, value, display: display ?? defaultDisplay(value, unit), color: `var(${colorVar})` };
+  return of === undefined ? bar : { ...bar, of };
 }
 
 /** Una barra por equipo en cada línea, con el color de cada uno; ambos comparten la escala del gráfico. */
@@ -145,8 +158,8 @@ export function versusBars(
   const groups = lines.map<BarGroup>(line => ({
     label: line.label,
     values: [
-      barValue(names.own, line.ownValue, line.own, unit, OWN_COLOR_VAR),
-      barValue(names.opponent, line.opponentValue, line.opponent, unit, RIVAL_COLOR_VAR),
+      barValue(names.own, line.ownValue, line.own, unit, OWN_COLOR_VAR, line.ownOf),
+      barValue(names.opponent, line.opponentValue, line.opponent, unit, RIVAL_COLOR_VAR, line.opponentOf),
     ],
   }));
   return {
@@ -154,7 +167,7 @@ export function versusBars(
     title,
     orientation: options.orientation ?? 'horizontal',
     unit,
-    max: axisMaxFor(unit, groups.flatMap(group => group.values.map(value => value.value))),
+    max: axisMaxFor(unit, groups.flatMap(group => group.values.flatMap(value => [value.value, value.of ?? null]))),
     groups,
   };
 }
@@ -192,10 +205,13 @@ export function showsColumnValues(chart: BarChart): boolean {
   return chart.groups.reduce((total, group) => total + group.values.length, 0) <= MAX_LABELED_COLUMN_VALUES;
 }
 
+/** Valor en texto: «1 de 3» cuando la barra tiene intentos. */
+const describeValue = (value: BarValue): string => (value.of === undefined ? value.display : `${value.value} de ${value.of}`);
+
 /** Un grupo en texto: «categoría valor» con una serie, «categoría: serie valor, serie valor» con varias; sin etiqueta, solo los valores. */
 function describeGroup(group: BarGroup): string {
   const single = group.values.length === 1;
-  const values = single ? group.values[0].display : group.values.map(value => `${value.series} ${value.display}`).join(', ');
+  const values = single ? describeValue(group.values[0]) : group.values.map(value => `${value.series} ${describeValue(value)}`).join(', ');
   if (!group.label) return values;
   return single ? `${group.label} ${values}` : `${group.label}: ${values}`;
 }

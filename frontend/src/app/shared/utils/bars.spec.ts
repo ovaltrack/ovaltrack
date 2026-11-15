@@ -193,6 +193,27 @@ describe('showsColumnValues', () => {
   });
 });
 
+describe('versusBars con intentos', () => {
+  const chart = versusBars('score', 'Tantos', [
+    { label: 'Conversión', ownValue: 1, opponentValue: 2, own: '1/3', opponent: '2/3', ownOf: 3, opponentOf: 3 },
+    { label: 'Try', ownValue: 3, opponentValue: 3 },
+  ], names);
+
+  it('cada valor lleva los convertidos y, aparte, los intentos', () => {
+    expect(chart.groups[0].values.map(value => [value.value, value.of, value.display])).toEqual([[1, 3, '1/3'], [2, 3, '2/3']]);
+    expect(chart.groups[1].values.every(value => value.of === undefined)).toBeTrue();
+  });
+
+  it('la escala cubre los intentos, no solo los convertidos', () => {
+    const kicks = versusBars('k', 'Kicks', [{ label: 'Kick H', ownValue: 1, opponentValue: 0, ownOf: 9, opponentOf: 2 }], names);
+    expect(kicks.max).toBe(10);
+  });
+
+  it('el texto accesible dice «1 de 3»', () => {
+    expect(describeBars(chart)).toBe('Tantos: Conversión: Puerto Madryn 1 de 3, Rival 2 de 3; Try: Puerto Madryn 3, Rival 3');
+  });
+});
+
 describe('describeBars', () => {
   it('lista cada grupo con el valor de cada serie', () => {
     const chart = versusBars('t', 'Tries', [{ label: 'Tries', ownValue: 3, opponentValue: 1 }], names);

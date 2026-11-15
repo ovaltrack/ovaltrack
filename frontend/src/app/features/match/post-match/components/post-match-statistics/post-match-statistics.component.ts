@@ -170,7 +170,7 @@ export class PostMatchStatisticsComponent implements OnInit, OnDestroy {
   /** Vista de barras: mismos datos que las donas, partidos de la misma forma (adaptadores en bar-presentation.ts). */
   readonly scoreBars = computed<BarChart[]>(() => {
     const stats = this.stats();
-    return stats ? scoreBars(stats, this.scoreLines(), this.teamNames()) : [];
+    return stats ? scoreBars(stats, this.teamNames()) : [];
   });
   readonly indicatorBarCard = computed<ChartCard<BarChart>>(() => indicatorBars(this.stats()?.derived ?? [], this.teamNames()));
   readonly advancedBarCards = computed<Record<string, ChartCard<BarChart>>>(() =>
