@@ -5,6 +5,7 @@ import { formatCountdown } from '../../domain/countdown';
 import { msUntil } from '../../domain/match-time';
 import { isActionEnabled } from '../../domain/primary-action';
 import { BoardModel, PrimaryAction, STARTERS_TARGET, SUBSTITUTES_TARGET } from '../../types/home.types';
+import { BoardPanelComponent } from './board-panel.component';
 import { BoardStepsComponent } from './board-steps.component';
 import { ClubDayTimelineComponent } from './club-day-timeline.component';
 
@@ -14,7 +15,7 @@ const ONBOARDING_STEPS = ['Crear división', 'Programar partido', 'Capturar en v
 @Component({
   selector: 'app-home-board',
   standalone: true,
-  imports: [NgTemplateOutlet, RouterLink, BoardStepsComponent, ClubDayTimelineComponent],
+  imports: [NgTemplateOutlet, RouterLink, BoardPanelComponent, BoardStepsComponent, ClubDayTimelineComponent],
   templateUrl: './home-board.component.html',
   styleUrl: './home-board.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush

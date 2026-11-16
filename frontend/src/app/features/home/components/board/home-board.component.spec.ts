@@ -48,6 +48,16 @@ describe('HomeBoardComponent', () => {
     expect(el().querySelector('.step.done')?.textContent).toContain('hecho');
   });
 
+  it('en curso acá: los últimos eventos van en un panel lateral y el chip dice «Sin señal: listo»', () => {
+    render({
+      kind: 'live-here', matchId: 'm1', opponent: 'Trelew RC', periodLabel: "2T 52'", ownScore: 21, opponentScore: 13, halftime: false,
+      recent: [{ label: 'Try', minute: "51'" }, { label: 'Penal', minute: "47'" }], week: null
+    }, capture);
+    expect(el().querySelector('app-board-panel')?.textContent).toContain('Últimos eventos');
+    expect(el().querySelectorAll('app-board-panel li').length).toBe(2);
+    expect(el().textContent).toContain('Sin señal: listo');
+  });
+
   it('sin semana no dibuja pasos', () => {
     render(next, capture);
     expect(el().querySelector('app-board-steps')).toBeNull();

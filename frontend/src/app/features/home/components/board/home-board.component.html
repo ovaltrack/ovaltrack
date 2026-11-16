@@ -73,16 +73,21 @@
             <span>{{ m.ownScore }}</span><span class="score-sep" aria-hidden="true">·</span><span>{{ m.opponentScore }}</span>
           </p>
           <p class="board-meta">vs {{ m.opponent }}</p>
-          @if (m.recent.length > 0) {
-            <ul class="ticker" aria-label="Últimos eventos">
-              @for (line of m.recent; track $index) {
-                <li><span class="ticker-minute">{{ line.minute }}</span> {{ line.label }}</li>
-              }
-            </ul>
-          }
+          <ul class="chips">
+            <li class="chip-board ok"><i class="bi bi-wifi-off" aria-hidden="true"></i> Sin señal: listo</li>
+          </ul>
         </div>
         <div class="board-side">
           <ng-container *ngTemplateOutlet="actions" />
+          @if (m.recent.length > 0) {
+            <app-board-panel class="board-panel" label="Últimos eventos">
+              <ul class="ticker">
+                @for (line of m.recent; track $index) {
+                  <li><span class="ticker-minute">{{ line.minute }}</span> {{ line.label }}</li>
+                }
+              </ul>
+            </app-board-panel>
+          }
         </div>
       }
 
