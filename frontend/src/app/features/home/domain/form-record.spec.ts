@@ -47,6 +47,23 @@ describe('form-record', () => {
     expect(record?.last[0]).toEqual({ matchId: '2', result: 'loss', score: '15-22', opponent: 'Draig Goch' });
   });
 
+  it('promedia los tantos a favor y en contra por partido de la temporada, con 1 decimal', () => {
+    const record = formRecord([
+      match('1', '2026-01-01T15:00:00', 24, 17),
+      match('2', '2026-01-08T15:00:00', 15, 22),
+      match('3', '2026-01-15T15:00:00', 19, 19),
+      match('4', '2026-01-22T15:00:00', 31, 12),
+      match('5', '2026-01-29T15:00:00', 27, 10),
+      match('6', '2026-02-05T15:00:00', 10, 3),
+      match('viejo', '2025-10-05T15:00:00', 90, 0)
+    ], now);
+    expect(record).toEqual(jasmine.objectContaining({ averageFor: 21, averageAgainst: 13.8 }));
+  });
+
+  it('un solo partido: sus tantos son el promedio', () => {
+    expect(formRecord([match('1', '2026-01-01T15:00:00', 24, 17)], now)).toEqual(jasmine.objectContaining({ averageFor: 24, averageAgainst: 17 }));
+  });
+
   it('sin partidos jugados no hay forma', () => {
     expect(formRecord([match('n', '2026-11-07T15:00:00', 0, 0, 'not_started')], now)).toBeNull();
   });
