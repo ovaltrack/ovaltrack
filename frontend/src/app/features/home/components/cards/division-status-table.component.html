@@ -1,0 +1,79 @@
+<app-home-tile label="Divisiones" title="Estado de las divisiones" [state]="state()" (retry)="retry.emit()">
+  <p class="table-note">Solo se marca lo que no está bien.</p>
+  <div class="mx-wrap">
+    <div class="mx" role="table" aria-label="Estado de las divisiones">
+      <div class="mx-row mx-head" role="row">
+        <span role="columnheader">División</span>
+        <span role="columnheader">Staff</span>
+        <span role="columnheader">Plantel</span>
+        <span role="columnheader">Próximo partido</span>
+        <span role="columnheader">Nómina</span>
+        <span role="columnheader">Últimos 5</span>
+        <span role="columnheader">Análisis</span>
+        <span role="columnheader"><span class="sr-only">Acción</span></span>
+      </div>
+      @for (row of rows(); track row.divisionId) {
+        <div class="mx-row" role="row">
+          <span role="cell"><strong class="mx-division">{{ row.name }}</strong></span>
+          <span role="cell">
+            <span class="cell" [class.error]="row.staff.issue === 'error'" [class.warn]="row.staff.issue === 'warn'">
+              @if (row.staff.issue) { <i class="bi bi-exclamation-triangle" aria-hidden="true"></i> }
+              {{ row.staff.text }}
+            </span>
+          </span>
+          <span role="cell">
+            <span class="cell mono" [class.warn]="row.players.issue === 'warn'">
+              @if (row.players.issue) { <i class="bi bi-exclamation-triangle" aria-hidden="true"></i> }
+              {{ row.players.text }}
+            </span>
+            @if (row.players.note) { <span class="sub">{{ row.players.note }}</span> }
+          </span>
+          <span role="cell">
+            <span class="cell">
+              @if (row.next.live) { <span class="live-dot" aria-hidden="true"></span> }
+              {{ row.next.text }}
+            </span>
+            @if (row.next.sub) { <span class="sub">{{ row.next.sub }}</span> }
+          </span>
+          <span role="cell">
+            <span class="cell" [class.warn]="row.roster.issue === 'warn'">
+              @if (row.roster.issue) { <i class="bi bi-exclamation-triangle" aria-hidden="true"></i> }
+              {{ row.roster.text }}
+            </span>
+          </span>
+          <span role="cell">
+            <span class="last">
+              @for (entry of row.last; track entry.matchId) {
+                <app-result-pill [result]="entry.result" [score]="entry.score" />
+              } @empty {
+                <span class="sub">–</span>
+              }
+            </span>
+          </span>
+          <span role="cell">
+            @if (row.analysis.percent !== null) {
+              <span class="analysis" [class]="'analysis tone-' + row.analysis.tone">
+                <span class="analysis-bar" role="img" [attr.aria-label]="'Análisis ' + row.analysis.percent + ' %'">
+                  <span class="analysis-fill" [style.width.%]="row.analysis.percent"></span>
+                </span>
+                <span class="analysis-text">{{ row.analysis.percent }} %</span>
+              </span>
+            } @else {
+              <span class="sub">–</span>
+            }
+          </span>
+          <span role="cell" class="mx-action">
+            @if (row.action; as action) {
+              @if (online()) {
+                <a class="btn btn-outline action-btn" [routerLink]="action.route" [attr.aria-label]="action.ariaLabel">{{ action.label }}</a>
+              } @else {
+                <button type="button" class="btn btn-outline action-btn" disabled [attr.aria-label]="action.ariaLabel + ', requiere conexión'">Requiere conexión</button>
+              }
+            }
+          </span>
+        </div>
+      }
+    </div>
+  </div>
+  <p tileEmpty>Todavía no hay divisiones.</p>
+</app-home-tile>

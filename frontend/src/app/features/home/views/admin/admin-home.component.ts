@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { dataOf } from '../../types/home.types';
 import { HomeBoardComponent } from '../../components/board/home-board.component';
 import { HomeHudComponent } from '../../components/hud/home-hud.component';
+import { DivisionStatusTableComponent } from '../../components/cards/division-status-table.component';
 import { HomeKpiRowComponent } from '../../components/ui/home-kpi-row.component';
 import { HomeTileComponent } from '../../components/tile/home-tile.component';
 import { ResultPillComponent } from '../../components/ui/result-pill.component';
@@ -13,7 +14,7 @@ import { AdminHomeStore } from './admin-home.store';
 @Component({
   selector: 'app-admin-home',
   standalone: true,
-  imports: [RouterLink, HomeHudComponent, HomeBoardComponent, HomeKpiRowComponent, HomeTileComponent, ResultPillComponent],
+  imports: [RouterLink, HomeHudComponent, HomeBoardComponent, DivisionStatusTableComponent, HomeKpiRowComponent, HomeTileComponent, ResultPillComponent],
   providers: [AdminHomeStore, AdminHomeDataService],
   templateUrl: './admin-home.component.html',
   styleUrls: ['../styles/home-views.css', './admin-home.component.css'],
