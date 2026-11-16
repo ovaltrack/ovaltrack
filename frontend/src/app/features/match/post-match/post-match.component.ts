@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, HostListener, inject, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { LayoutService } from 'src/app/core/services/layout.service';
 import { EventService } from '../services/event.service';
@@ -11,6 +12,7 @@ import { LiveCaptureService } from '../services/live-capture.service';
 import { ToastService } from 'src/app/core/services/toast.service';
 import { HidingFilter, MatchReviewStore } from './store/match-review.store';
 import { MatchTimelineEventResponse } from '../types/event.types';
+import { PENDING_QUERY_PARAM, pendingOnlyFilters, wantsPendingOnly } from './utils/pending-deep-link';
 import { PostMatchShellStore } from './store/post-match-shell.store';
 import { RugbyBallLoaderComponent } from '../../../shared/components/rugby-ball-loader/rugby-ball-loader.component';
 import { LoadingGate } from '../../../shared/utils/loading-gate';
@@ -57,6 +59,8 @@ export class PostMatchComponent implements OnInit, OnDestroy {
   private readonly layoutService = inject(LayoutService);
   private readonly zoneService = inject(ZoneService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   readonly store = inject(MatchReviewStore);
 
   @ViewChild(PostMatchPanelComponent) panel!: PostMatchPanelComponent;
@@ -175,6 +179,7 @@ export class PostMatchComponent implements OnInit, OnDestroy {
       this.eventToRestore = this.shell.lastSelectedEventId();
       this.store.resetSession();
       this.store.setMatchId(this.matchId);
+      this.applyPendingDeepLink();
       this.applyMatchDetails();
       this.loading.start();
       this.loadZones();
@@ -189,6 +194,13 @@ export class PostMatchComponent implements OnInit, OnDestroy {
     this.layoutService.setWide(null);
     this.store.resetSession();
     this.loading.dispose();
+  }
+
+  /** `?pendientes=1`: abre con «Solo sin jugador» y consume el enlace (la URL queda limpia, recargar no lo repite). */
+  private applyPendingDeepLink(): void {
+    if (this.route.snapshot.queryParamMap.get(PENDING_QUERY_PARAM) === null) return;
+    if (wantsPendingOnly(this.route.snapshot.queryParamMap.get(PENDING_QUERY_PARAM))) this.store.filters.set(pendingOnlyFilters());
+    this.router.navigate([], { relativeTo: this.route, queryParams: { [PENDING_QUERY_PARAM]: null }, queryParamsHandling: 'merge', replaceUrl: true });
   }
 
   /**

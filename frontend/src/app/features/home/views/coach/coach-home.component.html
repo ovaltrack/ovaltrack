@@ -49,7 +49,7 @@
           </div>
           @if (d.percent < 100) {
             @if (store.online()) {
-              <a class="btn debt-btn" [class.btn-invite]="debtIsPrimary()" [class.btn-outline]="!debtIsPrimary()" [routerLink]="['/post-match', d.matchId]">Completar análisis</a>
+              <a class="btn debt-btn" [class.btn-invite]="debtIsPrimary()" [class.btn-outline]="!debtIsPrimary()" [routerLink]="['/post-match', d.matchId]" [queryParams]="{ pendientes: 1 }">Completar análisis</a>
             } @else {
               <button type="button" class="btn btn-outline debt-btn" disabled>Completar análisis</button>
               <p class="offline-note">Requiere conexión</p>
