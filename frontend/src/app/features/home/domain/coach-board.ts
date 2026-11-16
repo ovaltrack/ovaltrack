@@ -1,6 +1,7 @@
 import { Match } from '../../match/types/match.types';
 import { shortTeamName } from '../../match/post-match/utils/zone-grid';
 import { BoardModel, LiveEventLine } from '../types/home.types';
+import { rosterGaps } from './roster-gaps';
 import { MATCH_DAY_WINDOW_MS } from './countdown';
 import { divisionMatchState, playedAt } from './division-match-state';
 import { resultOf } from './form-record';
@@ -29,6 +30,15 @@ export function periodText(match: Match, progress: CoachBoardContext['progress']
   return match.currentPeriod === 2 ? '2T' : '1T';
 }
 
+/**
+ * Período y minuto de un partido que captura otro dispositivo: "2T 52'". El minuto es el último dato sincronizado
+ * (`clockElapsedSeconds` acumulado de partido), sin extrapolar; va junto con la hora del último dato.
+ */
+export function remotePeriodText(match: Match): string {
+  if (match.status === 'halftime') return 'Entretiempo';
+  return `${match.currentPeriod === 2 ? '2T' : '1T'} ${Math.floor(match.clockElapsedSeconds / 60)}'`;
+}
+
 /** Elige la variante del tablero del entrenador: en curso, día de partido, próximo, sin partido programado o primeros pasos. */
 export function buildCoachBoard(ctx: CoachBoardContext): BoardModel {
   const { live, liveHere, next, lastFinished } = divisionMatchState(ctx.matches, ctx.captureMatchId, ctx.now);
@@ -40,7 +50,7 @@ export function buildCoachBoard(ctx: CoachBoardContext): BoardModel {
       };
     }
     return {
-      kind: 'live-elsewhere', matchId: live.id, opponent: opponentName(live), ownScore: live.homeScore, opponentScore: live.awayScore,
+      kind: 'live-elsewhere', matchId: live.id, opponent: opponentName(live), periodLabel: remotePeriodText(live), ownScore: live.homeScore, opponentScore: live.awayScore,
       lastDataAt: live.clockUpdatedAt ? formatUtcAsArgentina(live.clockUpdatedAt) : null
     };
   }
@@ -70,6 +80,7 @@ export function buildCoachBoard(ctx: CoachBoardContext): BoardModel {
   const parts = label.split(' · ');
   return {
     kind: 'next', matchId: next.id, divisionName: ctx.divisionName, opponent: opponentName(next), city: next.opponent.city,
-    dateLabel: parts.slice(0, -1).join(' · '), time: parts[parts.length - 1], starters, substitutes, readyOffline: ctx.readyOffline
+    dateLabel: parts.slice(0, -1).join(' · '), time: parts[parts.length - 1], starters, substitutes,
+    rosterGaps: rosterGaps(ctx.roster, next.status), readyOffline: ctx.readyOffline
   };
 }

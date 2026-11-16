@@ -155,10 +155,12 @@ describe('AdminHomeStore', () => {
   it('un error posterior sí reemplaza los datos, y reintentar muestra la carga', () => {
     const store = createStore();
     store.reload();
-    data.divisionStats = () => of<WidgetState<DivisionStat[]>>({ status: 'loading' }, { status: 'error', message: 'No pudimos cargar esto' });
+    const failing: WidgetState<DivisionStat[]>[] = [{ status: 'loading' }, { status: 'error', message: 'No pudimos cargar esto' }];
+    data.divisionStats = () => of(...failing);
     store.retry('divisions');
     expect(store.statsState().status).toBe('error');
-    data.divisionStats = () => of<WidgetState<DivisionStat[]>>({ status: 'loading' });
+    const loadingOnly: WidgetState<DivisionStat[]>[] = [{ status: 'loading' }];
+    data.divisionStats = () => of(...loadingOnly);
     store.retry('divisions');
     expect(store.statsState().status).toBe('loading');
   });

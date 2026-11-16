@@ -1,3 +1,5 @@
+import { RosterGaps } from '../domain/roster-gaps';
+
 /** Estado de un widget: cada tarjeta carga, falla y se reintenta sin afectar a las demás. */
 export type WidgetState<T> =
   | { status: 'loading' }
@@ -60,10 +62,10 @@ export interface LiveEventLine {
 
 /** Contenido del tablero verde; `kind` decide la variante que dibuja `home-board`. */
 export type BoardModel =
-  | { kind: 'next'; matchId: string; divisionName: string; opponent: string; city: string | null; dateLabel: string; time: string; starters: number; substitutes: number; readyOffline: boolean }
+  | { kind: 'next'; matchId: string; divisionName: string; opponent: string; city: string | null; dateLabel: string; time: string; starters: number; substitutes: number; rosterGaps: RosterGaps; readyOffline: boolean }
   | { kind: 'match-day'; matchId: string; divisionName: string; opponent: string; startsAt: Date; starters: number; substitutes: number }
   | { kind: 'live-here'; matchId: string; opponent: string; periodLabel: string; ownScore: number; opponentScore: number; halftime: boolean; recent: LiveEventLine[] }
-  | { kind: 'live-elsewhere'; matchId: string; opponent: string; ownScore: number; opponentScore: number; lastDataAt: string | null }
+  | { kind: 'live-elsewhere'; matchId: string; opponent: string; periodLabel: string; ownScore: number; opponentScore: number; lastDataAt: string | null }
   | { kind: 'onboarding'; step: 'create-division' | 'schedule-match' | 'await-division' | 'no-matches-player' }
   | { kind: 'club-day'; title: string; label: string; items: ClubDayTimelineItem[]; nowMinute: number | null }
   | { kind: 'club-idle'; nextLabel: string | null }

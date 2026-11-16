@@ -26,6 +26,25 @@ describe('coach-board', () => {
     expect(board).toEqual(jasmine.objectContaining({ kind: 'live-elsewhere', lastDataAt: '14:05' }));
   });
 
+  it('live-elsewhere trae el período y el minuto del último dato, sin extrapolar', () => {
+    const second = buildCoachBoard(context([match({ status: 'in_progress', currentPeriod: 2, clockElapsedSeconds: 52 * 60 + 40 })]));
+    const first = buildCoachBoard(context([match({ status: 'in_progress', currentPeriod: 1, clockElapsedSeconds: 7 * 60 })]));
+    const halftime = buildCoachBoard(context([match({ status: 'halftime', currentPeriod: 1, clockElapsedSeconds: 40 * 60 })]));
+    expect(second).toEqual(jasmine.objectContaining({ periodLabel: "2T 52'" }));
+    expect(first).toEqual(jasmine.objectContaining({ periodLabel: "1T 7'" }));
+    expect(halftime).toEqual(jasmine.objectContaining({ periodLabel: 'Entretiempo' }));
+  });
+
+  it('next lleva los huecos de la nómina: sin nómina, suplentes 3/8 y completa', () => {
+    const date = '2026-11-12T14:30:00';
+    const none = buildCoachBoard(context([match({ status: 'empty_roster', date })], { roster: null }));
+    const short = buildCoachBoard(context([match({ status: 'not_started', date })], { roster: { starters: 15, substitutes: 3 } }));
+    const full = buildCoachBoard(context([match({ status: 'not_started', date })], { roster: { starters: 15, substitutes: 8 } }));
+    expect(none).toEqual(jasmine.objectContaining({ kind: 'next', rosterGaps: jasmine.objectContaining({ kind: 'none' }) }));
+    expect(short).toEqual(jasmine.objectContaining({ rosterGaps: jasmine.objectContaining({ kind: 'substitutes', label: 'Suplentes 3/8' }) }));
+    expect(full).toEqual(jasmine.objectContaining({ rosterGaps: { kind: 'complete' } }));
+  });
+
   it('con menos de 24 h y nómina: match-day', () => {
     const board = buildCoachBoard(context([match({ status: 'not_started' })]));
     expect(board.kind).toBe('match-day');

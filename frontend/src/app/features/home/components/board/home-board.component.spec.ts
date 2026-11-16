@@ -10,7 +10,7 @@ describe('HomeBoardComponent', () => {
   const lineup: PrimaryAction = { kind: 'define-lineup', label: 'Definir alineación', route: '/selection-roster/m1', target: 'board', requiresConnection: true };
   const next: BoardModel = {
     kind: 'next', matchId: 'm1', divisionName: 'Superior', opponent: 'Trelew RC', city: null,
-    dateLabel: 'Sáb 7 nov · mañana', time: '14:30', starters: 15, substitutes: 6, readyOffline: true
+    dateLabel: 'Sáb 7 nov · mañana', time: '14:30', starters: 15, substitutes: 6, rosterGaps: { kind: 'substitutes', count: 2, label: 'Suplentes 6/8', missing: '2 suplentes' }, readyOffline: true
   };
 
   const render = (model: BoardModel, primary: PrimaryAction | null, online = true): void => {
@@ -55,7 +55,7 @@ describe('HomeBoardComponent', () => {
   });
 
   it('con el partido en otro dispositivo no ofrece capturar', () => {
-    render({ kind: 'live-elsewhere', matchId: 'm1', opponent: 'Trelew RC', ownScore: 7, opponentScore: 3, lastDataAt: '14:05' }, null);
+    render({ kind: 'live-elsewhere', matchId: 'm1', opponent: 'Trelew RC', periodLabel: "2T 52'", ownScore: 7, opponentScore: 3, lastDataAt: '14:05' }, null);
     expect(el().querySelectorAll('.btn-on-board').length).toBe(0);
     expect(el().textContent).toContain('otro dispositivo');
   });
