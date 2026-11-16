@@ -37,6 +37,7 @@ describe('CoachHomeStore', () => {
   const data = {
     matches: (): Observable<WidgetState<Match[]>> => of(matches),
     boardExtras: () => of(extras),
+    invalidateEvents: () => undefined,
     debt: () => of(debt),
     playersWithoutJersey: () => of(jerseys),
     form: () => of(form)

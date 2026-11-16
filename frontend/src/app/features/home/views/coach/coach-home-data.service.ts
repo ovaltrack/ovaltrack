@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, forkJoin, from, map, of } from 'rxjs';
+import { Observable, catchError, forkJoin, from, map, of, shareReplay } from 'rxjs';
 import { UserContextService } from '../../../../core/services/user-context.service';
 import { ConnectivityService } from '../../../../core/services/connectivity.service';
 import { DivisionPlayerService } from '../../../../services/division-player.service';
@@ -9,6 +9,7 @@ import { EventService } from '../../../match/services/event.service';
 import { MatchService } from '../../../match/services/match.service';
 import { RosterService } from '../../../match/services/roster.service';
 import { ZoneService } from '../../../match/services/zone.service';
+import { MatchTimelineEventResponse } from '../../../match/types/event.types';
 import { Match } from '../../../match/types/match.types';
 import { DashboardSnapshotCache } from '../../data/dashboard-snapshot.cache';
 import { OfflineMatchReader } from '../../data/offline-match-reader';
@@ -65,6 +66,14 @@ export class CoachHomeDataService {
   private readonly userContext = inject(UserContextService);
   private readonly connectivity = inject(ConnectivityService);
 
+  /** Eventos post-partido por partido, compartidos entre Deuda y Forma dentro de una misma recarga. */
+  private readonly eventsByMatch = new Map<string, Observable<MatchTimelineEventResponse[]>>();
+
+  /** Descarta los eventos guardados: lo llama el store al arrancar cada recarga, así Deuda y Forma piden una sola vez. */
+  invalidateEvents(): void {
+    this.eventsByMatch.clear();
+  }
+
   /** Partidos de todas las divisiones; una división que falla no tumba a las demás, salvo que fallen todas. */
   matches(divisions: readonly Division[]): Observable<WidgetState<Match[]>> {
     const loads = divisions.map(division => this.matchService.getAllMatchesByDivisionId(division.id).pipe(
@@ -113,7 +122,7 @@ export class CoachHomeDataService {
     if (!last) return of<WidgetState<DebtData>>({ status: 'empty' });
     const played = playedAt(last);
     return forkJoin({
-      events: this.eventService.getByMatchPostMatch(last.id),
+      events: this.eventsOf(last.id),
       zones: this.zoneService.list(last.id).pipe(catchError(() => of(null)))
     }).pipe(
       map(({ events, zones }): DebtData => {
@@ -143,7 +152,7 @@ export class CoachHomeDataService {
   form(matches: readonly Match[], now: Date): Observable<WidgetState<FormData>> {
     const record = formRecord(matches, now);
     if (!record) return of<WidgetState<FormData>>({ status: 'empty' });
-    const percents$ = record.last.map(entry => this.eventService.getByMatchPostMatch(entry.matchId).pipe(
+    const percents$ = record.last.map(entry => this.eventsOf(entry.matchId).pipe(
       map(events => [entry.matchId, analysisCoverage(events).percent] as const),
       catchError(() => of([entry.matchId, null] as const))
     ));
@@ -151,6 +160,14 @@ export class CoachHomeDataService {
       map((pairs): FormData => ({ record, percents: Object.fromEntries(pairs) })),
       toWidgetState<FormData>(this.options('form', { isEmpty: () => false }))
     );
+  }
+
+  private eventsOf(matchId: string): Observable<MatchTimelineEventResponse[]> {
+    const cached = this.eventsByMatch.get(matchId);
+    if (cached) return cached;
+    const shared = this.eventService.getByMatchPostMatch(matchId).pipe(shareReplay({ bufferSize: 1, refCount: false }));
+    this.eventsByMatch.set(matchId, shared);
+    return shared;
   }
 
   /** Snapshot por usuario y modo offline para el widget indicado. */

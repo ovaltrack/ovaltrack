@@ -1,7 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { DexieOfflineMatchReader } from '../../data/dexie-offline-match-reader';
-import { OfflineMatchReader } from '../../data/offline-match-reader';
 import { dataOf } from '../../types/home.types';
 import { HomeBoardComponent } from '../../components/board/home-board.component';
 import { HomeHudComponent } from '../../components/hud/home-hud.component';
@@ -15,7 +13,7 @@ import { AdminHomeStore } from './admin-home.store';
   selector: 'app-admin-home',
   standalone: true,
   imports: [RouterLink, HomeHudComponent, HomeBoardComponent, HomeTileComponent, ResultPillComponent],
-  providers: [AdminHomeStore, AdminHomeDataService, { provide: OfflineMatchReader, useClass: DexieOfflineMatchReader }],
+  providers: [AdminHomeStore, AdminHomeDataService],
   templateUrl: './admin-home.component.html',
   styleUrls: ['../styles/home-views.css', './admin-home.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush

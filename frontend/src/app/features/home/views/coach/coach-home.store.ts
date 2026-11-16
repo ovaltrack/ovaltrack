@@ -184,6 +184,7 @@ export class CoachHomeStore {
 
   /** Vuelve a cargar lo que depende de la división activa y del partido que captura este dispositivo. */
   refreshDerived(): void {
+    this.data.invalidateEvents();
     this.derive$.next();
   }
 
