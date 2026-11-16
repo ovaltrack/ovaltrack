@@ -38,23 +38,6 @@ export interface PrimaryAction {
   requiresConnection: boolean;
 }
 
-/** Un partido del día del club en el timeline del administrador. */
-export type ClubDayItemStatus = 'alert' | 'ok' | 'live' | 'final';
-
-export interface ClubDayTimelineItem {
-  id: string;
-  /** Minutos desde la medianoche. */
-  startMinute: number;
-  endMinute: number;
-  /** "10:00". */
-  timeLabel: string;
-  /** División a la que pertenece. */
-  title: string;
-  /** "Sin nómina", "Suplentes 7/8", "Nómina lista"... */
-  detail: string;
-  status: ClubDayItemStatus;
-}
-
 export type AgendaChipTone = 'ok' | 'warn' | 'live' | 'neutral';
 
 /** Estado de un partido en la agenda del club; siempre con texto, el color solo acompaña. */
@@ -132,7 +115,6 @@ export type BoardModel =
   | { kind: 'live-here'; matchId: string; opponent: string; periodLabel: string; ownScore: number; opponentScore: number; halftime: boolean; recent: LiveEventLine[]; week: BoardWeek | null }
   | { kind: 'live-elsewhere'; matchId: string; opponent: string; periodLabel: string; ownScore: number; opponentScore: number; lastDataAt: string | null; week: BoardWeek | null }
   | { kind: 'onboarding'; step: 'create-division' | 'schedule-match' | 'await-division' | 'no-matches-player' }
-  | { kind: 'club-day'; title: string; label: string; items: ClubDayTimelineItem[]; nowMinute: number | null }
   | { kind: 'club-agenda'; mode: 'week' | 'day'; label: string; title: string; sections: ClubAgendaSection[]; live: ClubAgendaLive | null; urgent: ClubUrgent | null }
   | { kind: 'club-idle'; nextLabel: string | null }
   | { kind: 'team-idle'; divisionName: string; last: { opponent: string; dateLabel: string; ownScore: number; opponentScore: number; result: 'win' | 'loss' | 'draw' } }
