@@ -9,6 +9,10 @@
 
   @if (model(); as m) {
     <div class="board-body">
+      @if (week(); as w) {
+        <app-board-steps class="board-week" [label]="w.label" [steps]="w.steps" />
+      }
+
       @if (m.kind === 'next') {
         <div class="board-main">
           <p class="label-mono on-board">Próximo partido · {{ m.divisionName }}</p>

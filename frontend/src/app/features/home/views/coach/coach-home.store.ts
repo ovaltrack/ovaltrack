@@ -86,6 +86,12 @@ export class CoachHomeStore {
     });
   });
 
+  /** Análisis del último partido jugado, tal como lo ve el tablero; `null` mientras no se conoce. */
+  private readonly analysis = computed(() => {
+    const debt = this.debtState();
+    return debt.status === 'ready' ? { percent: debt.data.percent, minutesWithoutZone: debt.data.minutesWithoutZone } : null;
+  });
+
   readonly board = computed<BoardModel>(() => {
     if (this.divisions().length === 0) return { kind: 'onboarding', step: 'await-division' };
     const extras = this.extras();
@@ -97,7 +103,8 @@ export class CoachHomeStore {
       progress: extras.progress,
       recent: extras.recent,
       roster: extras.roster,
-      readyOffline: extras.readyOffline
+      readyOffline: extras.readyOffline,
+      analysis: this.analysis()
     });
   });
 

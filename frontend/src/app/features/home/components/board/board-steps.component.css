@@ -1,0 +1,87 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.steps-label {
+  margin: 0 0 10px;
+  color: var(--on-board-muted);
+}
+
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 48px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--board-line-strong);
+}
+
+.step-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid var(--board-line-strong);
+  color: var(--on-board-muted);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.step.done .step-dot {
+  border-color: transparent;
+  background: var(--board-chip-ok-bg);
+  color: var(--board-chip-ok-fg);
+}
+
+.step.current {
+  border-color: var(--on-board-accent);
+  background: var(--board-digit-bg);
+}
+
+.step.current .step-dot {
+  border-color: transparent;
+  background: var(--on-board-accent);
+  color: var(--btn-on-board-fg);
+}
+
+.step-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.step-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--on-board);
+}
+
+.step-sub {
+  overflow: hidden;
+  font-size: 12px;
+  color: var(--on-board-muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 700px) {
+  .steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

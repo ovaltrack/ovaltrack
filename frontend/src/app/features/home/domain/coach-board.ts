@@ -1,9 +1,10 @@
 import { Match } from '../../match/types/match.types';
 import { shortTeamName } from '../../match/post-match/utils/zone-grid';
-import { BoardModel, LiveEventLine } from '../types/home.types';
+import { BoardModel, BoardWeek, LiveEventLine } from '../types/home.types';
+import { gameWeek } from './game-week';
 import { rosterGaps } from './roster-gaps';
 import { MATCH_DAY_WINDOW_MS } from './countdown';
-import { divisionMatchState, playedAt } from './division-match-state';
+import { DivisionMatchState, divisionMatchState, playedAt } from './division-match-state';
 import { resultOf } from './form-record';
 import { formatUtcAsArgentina, msUntil, parseWallClock, relativeMatchLabel, shortDateLabel } from './match-time';
 
@@ -19,6 +20,8 @@ export interface CoachBoardContext {
   recent: readonly LiveEventLine[];
   roster: { starters: number; substitutes: number } | null;
   readyOffline: boolean;
+  /** Análisis del último partido jugado; `null` si no hay o no se pudo leer. */
+  analysis: { percent: number; minutesWithoutZone: number | null } | null;
 }
 
 const opponentName = (match: Match) => shortTeamName(match.opponent.alias || match.opponent.name);
@@ -39,19 +42,33 @@ export function remotePeriodText(match: Match): string {
   return `${match.currentPeriod === 2 ? '2T' : '1T'} ${Math.floor(match.clockElapsedSeconds / 60)}'`;
 }
 
+/** La semana de juego del tablero; `null` si no hay pasos (sin partido por jugar ni análisis pendiente). */
+function boardWeek(ctx: CoachBoardContext, state: DivisionMatchState<Match>): BoardWeek | null {
+  const last = state.lastFinished;
+  const week = gameWeek({
+    state,
+    analysis: ctx.analysis && last ? { opponent: opponentName(last), ...ctx.analysis } : null,
+    roster: ctx.roster,
+    now: ctx.now
+  });
+  return week && { stage: week.stage, label: `Semana de juego · ${ctx.divisionName} · paso ${week.stepNumber} de 4`, steps: week.steps };
+}
+
 /** Elige la variante del tablero del entrenador: en curso, día de partido, próximo, sin partido programado o primeros pasos. */
 export function buildCoachBoard(ctx: CoachBoardContext): BoardModel {
-  const { live, liveHere, next, lastFinished } = divisionMatchState(ctx.matches, ctx.captureMatchId, ctx.now);
+  const state = divisionMatchState(ctx.matches, ctx.captureMatchId, ctx.now);
+  const { live, liveHere, next, lastFinished } = state;
+  const week = boardWeek(ctx, state);
   if (live) {
     if (liveHere) {
       return {
         kind: 'live-here', matchId: live.id, opponent: opponentName(live), periodLabel: periodText(live, ctx.progress),
-        ownScore: live.homeScore, opponentScore: live.awayScore, halftime: live.status === 'halftime', recent: [...ctx.recent]
+        ownScore: live.homeScore, opponentScore: live.awayScore, halftime: live.status === 'halftime', recent: [...ctx.recent], week
       };
     }
     return {
       kind: 'live-elsewhere', matchId: live.id, opponent: opponentName(live), periodLabel: remotePeriodText(live), ownScore: live.homeScore, opponentScore: live.awayScore,
-      lastDataAt: live.clockUpdatedAt ? formatUtcAsArgentina(live.clockUpdatedAt) : null
+      lastDataAt: live.clockUpdatedAt ? formatUtcAsArgentina(live.clockUpdatedAt) : null, week
     };
   }
 
@@ -74,13 +91,13 @@ export function buildCoachBoard(ctx: CoachBoardContext): BoardModel {
   const starters = ctx.roster?.starters ?? 0;
   const substitutes = ctx.roster?.substitutes ?? 0;
   if (next.status === 'not_started' && msUntil(start, ctx.now) < MATCH_DAY_WINDOW_MS) {
-    return { kind: 'match-day', matchId: next.id, divisionName: ctx.divisionName, opponent: opponentName(next), startsAt: start, starters, substitutes };
+    return { kind: 'match-day', matchId: next.id, divisionName: ctx.divisionName, opponent: opponentName(next), startsAt: start, starters, substitutes, week };
   }
   const label = relativeMatchLabel(start, ctx.now);
   const parts = label.split(' · ');
   return {
     kind: 'next', matchId: next.id, divisionName: ctx.divisionName, opponent: opponentName(next), city: next.opponent.city,
     dateLabel: parts.slice(0, -1).join(' · '), time: parts[parts.length - 1], starters, substitutes,
-    rosterGaps: rosterGaps(ctx.roster, next.status), readyOffline: ctx.readyOffline
+    rosterGaps: rosterGaps(ctx.roster, next.status), readyOffline: ctx.readyOffline, week
   };
 }

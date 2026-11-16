@@ -1,0 +1,22 @@
+<p class="label-mono steps-label">{{ label() }}</p>
+<ol class="steps" aria-label="Semana de juego">
+  @for (step of steps(); track step.stage) {
+    <li class="step" [class.done]="step.status === 'done'" [class.current]="step.status === 'current'"
+        [attr.aria-current]="step.status === 'current' ? 'step' : null">
+      <span class="step-dot" aria-hidden="true">
+        @if (step.status === 'done') {
+          <i class="bi bi-check2"></i>
+        } @else {
+          {{ step.number }}
+        }
+      </span>
+      <span class="step-text">
+        <span class="step-name">{{ step.name }}</span>
+        <span class="step-sub" [title]="step.subtitle">{{ step.subtitle }}</span>
+        @if (step.status === 'done') {
+          <span class="visually-hidden">, hecho</span>
+        }
+      </span>
+    </li>
+  }
+</ol>

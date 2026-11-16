@@ -5,6 +5,7 @@ import { formatCountdown } from '../../domain/countdown';
 import { msUntil } from '../../domain/match-time';
 import { isActionEnabled } from '../../domain/primary-action';
 import { BoardModel, PrimaryAction, STARTERS_TARGET, SUBSTITUTES_TARGET } from '../../types/home.types';
+import { BoardStepsComponent } from './board-steps.component';
 import { ClubDayTimelineComponent } from './club-day-timeline.component';
 
 const ONBOARDING_STEPS = ['Crear división', 'Programar partido', 'Capturar en vivo'] as const;
@@ -13,7 +14,7 @@ const ONBOARDING_STEPS = ['Crear división', 'Programar partido', 'Capturar en v
 @Component({
   selector: 'app-home-board',
   standalone: true,
-  imports: [NgTemplateOutlet, RouterLink, ClubDayTimelineComponent],
+  imports: [NgTemplateOutlet, RouterLink, BoardStepsComponent, ClubDayTimelineComponent],
   templateUrl: './home-board.component.html',
   styleUrl: './home-board.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -37,6 +38,12 @@ export class HomeBoardComponent {
   readonly actionEnabled = computed(() => {
     const action = this.boardAction();
     return action !== null && isActionEnabled(action, this.online());
+  });
+
+  /** Semana de juego del entrenador, si la variante la lleva. */
+  readonly week = computed(() => {
+    const model = this.model();
+    return 'week' in model ? model.week : null;
   });
 
   /** Cajas de la cuenta regresiva: ["05", "07", "09"]. */

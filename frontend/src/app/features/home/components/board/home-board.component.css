@@ -40,6 +40,10 @@
   align-items: center;
 }
 
+.board-week {
+  grid-column: 1 / -1;
+}
+
 .board-main,
 .board-side,
 .board-wide {

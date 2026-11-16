@@ -11,7 +11,7 @@ describe('coach-board', () => {
   });
   const context = (matches: Match[], overrides: Partial<CoachBoardContext> = {}): CoachBoardContext => ({
     now, divisionName: 'Superior', matches, captureMatchId: null, progress: null, recent: [],
-    roster: { starters: 15, substitutes: 6 }, readyOffline: true, ...overrides
+    roster: { starters: 15, substitutes: 6 }, readyOffline: true, analysis: null, ...overrides
   });
 
   it('partido en curso que captura este dispositivo: live-here con período y reloj', () => {
@@ -59,6 +59,43 @@ describe('coach-board', () => {
 
   it('sin nómina a menos de 24 h sigue siendo next (no se ofrece capturar)', () => {
     expect(buildCoachBoard(context([match({ status: 'empty_roster' })])).kind).toBe('next');
+  });
+
+  describe('semana de juego', () => {
+    const stages = (board: ReturnType<typeof buildCoachBoard>) => board.kind !== 'onboarding' && 'week' in board ? board.week : null;
+
+    it('next lleva la semana: Entrenar con el rótulo de la división y el paso', () => {
+      const week = stages(buildCoachBoard(context([match({ date: '2026-11-12T14:30:00', status: 'not_started' })], { roster: { starters: 15, substitutes: 8 } })));
+      expect(week?.stage).toBe('train');
+      expect(week?.label).toBe('Semana de juego · Superior · paso 2 de 4');
+      expect(week?.steps.map(step => step.status)).toEqual(['done', 'current', 'done', 'pending']);
+    });
+
+    it('con suplentes 6/8 a menos de 72 h la etapa es Convocar', () => {
+      const week = stages(buildCoachBoard(context([match({ date: '2026-11-08T14:30:00', status: 'not_started' })])));
+      expect(week?.stage).toBe('call-up');
+      expect(week?.steps[2]).toEqual(jasmine.objectContaining({ status: 'current', subtitle: 'Suplentes 6/8' }));
+    });
+
+    it('el día de partido (match-day) y los partidos en curso son la etapa Jugar', () => {
+      expect(stages(buildCoachBoard(context([match({ status: 'not_started' })])))?.stage).toBe('play');
+      expect(stages(buildCoachBoard(context([match({ status: 'in_progress', date: '2026-11-07T14:30:00' })])))?.stage).toBe('play');
+      expect(stages(buildCoachBoard(context([match({ status: 'in_progress' })], { captureMatchId: 'm1', progress: null })))?.stage).toBe('play');
+    });
+
+    it('un análisis incompleto del último partido hace de Analizar el paso actual y muestra su rival y %', () => {
+      const board = buildCoachBoard(context([
+        match({ id: 'f', status: 'finished', date: '2026-11-01T15:00:00' }),
+        match({ id: 'n', status: 'not_started', date: '2026-11-20T15:00:00' })
+      ], { analysis: { percent: 85, minutesWithoutZone: 0 } }));
+      const week = stages(board);
+      expect(week?.stage).toBe('analyze');
+      expect(week?.steps[0].subtitle).toBe('vs Trelew · 85 %');
+    });
+
+    it('sin partido por jugar ni análisis pendiente no hay semana', () => {
+      expect(stages(buildCoachBoard(context([match({ status: 'finished', date: '2026-11-01T15:00:00' })])))).toBeNull();
+    });
   });
 
   it('sin partidos: primeros pasos para programar uno', () => {

@@ -1,3 +1,4 @@
+import { GameWeekStage, GameWeekStep } from '../domain/game-week';
 import { RosterGaps } from '../domain/roster-gaps';
 
 /** Estado de un widget: cada tarjeta carga, falla y se reintenta sin afectar a las demás. */
@@ -60,12 +61,20 @@ export interface LiveEventLine {
   minute: string;
 }
 
+/** La semana de juego que se dibuja sobre el tablero del entrenador. */
+export interface BoardWeek {
+  stage: GameWeekStage;
+  /** "Semana de juego · Superior · paso 3 de 4". */
+  label: string;
+  steps: GameWeekStep[];
+}
+
 /** Contenido del tablero verde; `kind` decide la variante que dibuja `home-board`. */
 export type BoardModel =
-  | { kind: 'next'; matchId: string; divisionName: string; opponent: string; city: string | null; dateLabel: string; time: string; starters: number; substitutes: number; rosterGaps: RosterGaps; readyOffline: boolean }
-  | { kind: 'match-day'; matchId: string; divisionName: string; opponent: string; startsAt: Date; starters: number; substitutes: number }
-  | { kind: 'live-here'; matchId: string; opponent: string; periodLabel: string; ownScore: number; opponentScore: number; halftime: boolean; recent: LiveEventLine[] }
-  | { kind: 'live-elsewhere'; matchId: string; opponent: string; periodLabel: string; ownScore: number; opponentScore: number; lastDataAt: string | null }
+  | { kind: 'next'; matchId: string; divisionName: string; opponent: string; city: string | null; dateLabel: string; time: string; starters: number; substitutes: number; rosterGaps: RosterGaps; readyOffline: boolean; week: BoardWeek | null }
+  | { kind: 'match-day'; matchId: string; divisionName: string; opponent: string; startsAt: Date; starters: number; substitutes: number; week: BoardWeek | null }
+  | { kind: 'live-here'; matchId: string; opponent: string; periodLabel: string; ownScore: number; opponentScore: number; halftime: boolean; recent: LiveEventLine[]; week: BoardWeek | null }
+  | { kind: 'live-elsewhere'; matchId: string; opponent: string; periodLabel: string; ownScore: number; opponentScore: number; lastDataAt: string | null; week: BoardWeek | null }
   | { kind: 'onboarding'; step: 'create-division' | 'schedule-match' | 'await-division' | 'no-matches-player' }
   | { kind: 'club-day'; title: string; label: string; items: ClubDayTimelineItem[]; nowMinute: number | null }
   | { kind: 'club-idle'; nextLabel: string | null }
