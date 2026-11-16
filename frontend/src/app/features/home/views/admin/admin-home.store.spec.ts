@@ -80,14 +80,14 @@ describe('AdminHomeStore', () => {
     expect(store.primary()).toEqual(jasmine.objectContaining({ kind: 'define-lineup', label: 'Definir alineación Superior', target: 'board' }));
   });
 
-  it('una división sin entrenador va a la bandeja y es el primario si no hay nada más urgente', () => {
+  it('una división sin entrenador se marca en la tabla y es el primario si no hay nada más urgente', () => {
     matches = ready([match({ id: 'ok', status: 'not_started' })]);
     stats = ready([stat('d1', 2), stat('d2', 0)]);
     const store = createStore();
     store.reload();
-    const inbox = store.inboxState();
-    expect(inbox.status).toBe('ready');
-    if (inbox.status === 'ready') expect(inbox.data.map(item => item.route)).toEqual(['/divisions/d2/coaches']);
+    const table = store.statusState();
+    expect(table.status).toBe('ready');
+    if (table.status === 'ready') expect(table.data.filter(row => row.action?.label === 'Asignar entrenador').map(row => row.action?.route)).toEqual(['/divisions/d2/coaches']);
     expect(store.primary()).toEqual(jasmine.objectContaining({ kind: 'assign-coach', target: 'board' }));
   });
 
@@ -124,10 +124,11 @@ describe('AdminHomeStore', () => {
     expect(store.primary()).toBeNull();
   });
 
-  it('la bandeja queda vacía cuando todas las divisiones tienen entrenador', () => {
+  it('la tabla no marca nada cuando todas las divisiones tienen entrenador y plantel suficiente', () => {
     const store = createStore();
     store.reload();
-    expect(store.inboxState().status).toBe('empty');
+    const table = store.statusState();
+    expect(table.status === 'ready' && table.data.every(row => row.action === null)).toBeTrue();
   });
 
   it('un widget en error no afecta a los demás', () => {
@@ -135,16 +136,18 @@ describe('AdminHomeStore', () => {
     matches = ready([match({ date: '2026-11-07T10:00:00' })]);
     const store = createStore();
     store.reload();
-    expect(store.divisionsState().status).toBe('error');
+    expect(store.statusState().status).toBe('error');
     expect(store.board().kind).toBe('club-agenda');
   });
 
-  it('las tarjetas traen staff, jugadores, próximo partido y análisis', () => {
+  it('la tabla trae staff, plantel, próximo partido y análisis de cada división, en el orden del club', () => {
     matches = ready([match({ id: 'n', divisionId: 'd1', status: 'not_started', date: '2026-11-14T14:30:00' })]);
     const store = createStore();
     store.reload();
-    const first = store.cards()[0];
-    expect(first).toEqual(jasmine.objectContaining({ name: 'Superior', staffLabel: '2 en staff', players: 20, nextLabel: 'Sáb 14 nov · 14:30', analysisPercent: 78, tone: 'warn' }));
+    const table = store.statusState();
+    if (table.status !== 'ready') throw new Error('tabla no lista');
+    expect(table.data.map(row => row.name)).toEqual(['Superior', 'M15']);
+    expect(table.data[0]).toEqual(jasmine.objectContaining({ staff: { text: '2 en staff', issue: null }, next: jasmine.objectContaining({ text: 'Sáb 14 nov' }), analysis: { percent: 78, tone: 'warn' } }));
   });
 
   it('pide la nómina de todos los pendientes de la ventana de la agenda o de las 72 h, no solo de hoy y mañana', () => {
@@ -158,13 +161,15 @@ describe('AdminHomeStore', () => {
     expect(requestedRosters).toEqual(['hoy', 'a60h']);
   });
 
-  it('un partido en curso con fecha de mañana: tablero de hoy y tarjeta de la división en curso, no "sin partido"', () => {
+  it('un partido en curso con fecha de mañana: agenda de hoy y fila de la división «En curso», no «Sin partido»', () => {
     matches = ready([match({ id: 'vivo', status: 'in_progress', date: '2026-11-07T14:30:00' })]);
     const store = createStore();
     store.reload();
     expect(store.board()).toEqual(jasmine.objectContaining({ kind: 'club-agenda', title: 'Hoy en el club' }));
-    expect(store.cards()[0]).toEqual(jasmine.objectContaining({ name: 'Superior', liveLabel: 'En curso', nextLabel: null }));
-    expect(store.cards()[1].liveLabel).toBeNull();
+    const table = store.statusState();
+    if (table.status !== 'ready') throw new Error('tabla no lista');
+    expect(table.data[0].next).toEqual(jasmine.objectContaining({ text: 'En curso', live: true }));
+    expect(table.data[1].next.text).toBe('Sin partido');
   });
 
   it('un refresco de las estadísticas no vuelve a "loading" lo que ya tiene datos', () => {

@@ -4,47 +4,22 @@ import { Observable, Subject, switchMap, tap } from 'rxjs';
 import { ConnectivityService } from '../../../../core/services/connectivity.service';
 import { UserContextService } from '../../../../core/services/user-context.service';
 import { Match } from '../../../match/types/match.types';
-import { analysisTone, AnalysisTone } from '../../domain/analysis-coverage';
 import { clubKpis, ClubKpi } from '../../domain/club-kpis';
 import { DivisionStat, DivisionStatusRow, divisionStatusRows } from '../../domain/division-status';
 import { buildAdminBoard } from '../../domain/admin-board';
 import { rosterWindowMatches } from '../../domain/club-agenda';
 import { urgentOf } from '../../domain/club-urgent';
-import { FormEntry, formRecord } from '../../domain/form-record';
-import { divisionMatchState } from '../../domain/division-match-state';
 import { greetingFor, hudDateLabel } from '../../domain/greeting';
-import { dayLabel, formatLocalClock, parseWallClock } from '../../domain/match-time';
+import { parseWallClock } from '../../domain/match-time';
 import { LINEUP_WINDOW_MS, adminRules, resolvePrimaryAction } from '../../domain/primary-action';
 import { BoardModel, PrimaryAction, WidgetState, dataOf } from '../../types/home.types';
 import { AdminHomeDataService, RosterCounts } from './admin-home-data.service';
 
 const CLOCK_TICK_MS = 1000;
 
-export interface InboxItem {
-  divisionId: string;
-  divisionName: string;
-  route: string;
-}
-
-export interface DivisionCard {
-  id: string;
-  name: string;
-  noCoach: boolean;
-  /** "2 en staff". */
-  staffLabel: string;
-  players: number | null;
-  /** "Sáb 7 nov · 14:30"; `null` si no hay partido programado. */
-  nextLabel: string | null;
-  /** "En curso" o "Entretiempo" si la división tiene un partido jugándose, sea cual sea su fecha; si no, `null`. */
-  liveLabel: string | null;
-  last: FormEntry[];
-  analysisPercent: number | null;
-  tone: AnalysisTone;
-}
-
 export type AdminWidget = 'matches' | 'divisions';
 
-/** Estado del Inicio del administrador del club. Se provee en la vista, así se destruye al salir. */
+/** Estado del Inicio del administrador del club: agenda, KPIs y estado de las divisiones. Se provee en la vista, así se destruye al salir. */
 @Injectable()
 export class AdminHomeStore {
   private readonly data = inject(AdminHomeDataService);
@@ -86,18 +61,6 @@ export class AdminHomeStore {
     return division ? { ...action, label: `Definir alineación ${division.name}` } : action;
   });
 
-  /** Divisiones sin entrenador; vacío = "todo en orden". */
-  readonly inboxState = computed<WidgetState<InboxItem[]>>(() => {
-    const state = this.statsState();
-    if (state.status !== 'ready') return state.status === 'empty' ? { status: 'empty' } : state as WidgetState<InboxItem[]>;
-    const items = this.divisions()
-      .filter(division => state.data.find(stat => stat.divisionId === division.id)?.staff === 0)
-      .map((division): InboxItem => ({ divisionId: division.id, divisionName: division.name, route: `/divisions/${division.id}/coaches` }));
-    return items.length === 0
-      ? { status: 'empty' }
-      : { status: 'ready', data: items, fetchedAt: state.fetchedAt, stale: state.stale };
-  });
-
   /** Una fila por división, en el orden del club (D4); sigue el estado de las estadísticas por división. */
   readonly statusState = computed<WidgetState<DivisionStatusRow[]>>(() => {
     const state = this.statsState();
@@ -112,32 +75,6 @@ export class AdminHomeStore {
     const stats = this.statsState();
     if (status.status !== 'ready' || stats.status !== 'ready') return status as WidgetState<ClubKpi[]>;
     return { status: 'ready', data: clubKpis(status.data, stats.data, this.matches(), this.now()), fetchedAt: status.fetchedAt, stale: status.stale };
-  });
-
-  readonly cards = computed<DivisionCard[]>(() => this.divisions().map(division => {
-    const stat = this.stats().find(candidate => candidate.divisionId === division.id);
-    const ofDivision = this.matches().filter(match => match.divisionId === division.id);
-    const { live, next } = divisionMatchState(ofDivision, null, this.now());
-    const start = next && parseWallClock(next.date);
-    const analysis = stat?.analysisPercent ?? null;
-    return {
-      id: division.id,
-      name: division.name,
-      noCoach: stat?.staff === 0,
-      staffLabel: stat?.staff == null ? '' : `${stat.staff} en staff`,
-      players: stat?.players ?? null,
-      liveLabel: live ? (live.status === 'halftime' ? 'Entretiempo' : 'En curso') : null,
-      nextLabel: start ? `${dayLabel(start)} · ${formatLocalClock(start.getTime())}` : null,
-      last: formRecord(ofDivision, this.now())?.last ?? [],
-      analysisPercent: analysis,
-      tone: analysisTone(analysis ?? 100)
-    };
-  }));
-
-  readonly divisionsState = computed<WidgetState<DivisionCard[]>>(() => {
-    const state = this.statsState();
-    if (state.status === 'ready') return { status: 'ready', data: this.cards(), fetchedAt: state.fetchedAt, stale: state.stale };
-    return state as WidgetState<DivisionCard[]>;
   });
 
   readonly hudLabel = computed(() => `${hudDateLabel(this.now())} · Panel del club`);
