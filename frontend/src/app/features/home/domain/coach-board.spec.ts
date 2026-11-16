@@ -87,7 +87,7 @@ describe('coach-board', () => {
       const board = buildCoachBoard(context([
         match({ id: 'f', status: 'finished', date: '2026-11-01T15:00:00' }),
         match({ id: 'n', status: 'not_started', date: '2026-11-20T15:00:00' })
-      ], { analysis: { percent: 85, minutesWithoutZone: 0 } }));
+      ], { analysis: { percent: 85, withoutPlayer: 3, minutesWithoutZone: 0 } }));
       const week = stages(board);
       expect(week?.stage).toBe('analyze');
       expect(week?.steps[0].subtitle).toBe('vs Trelew · 85 %');
@@ -95,6 +95,44 @@ describe('coach-board', () => {
 
     it('sin partido por jugar ni análisis pendiente no hay semana', () => {
       expect(stages(buildCoachBoard(context([match({ status: 'finished', date: '2026-11-01T15:00:00' })])))).toBeNull();
+    });
+  });
+
+  describe('variante analysis', () => {
+    const finished = match({ id: 'f', status: 'finished', date: '2026-11-01T15:00:00', homeScore: 21, awayScore: 13, finishedAt: '2026-11-01T18:00:00Z' });
+    const analysis = { percent: 85, withoutPlayer: 12, minutesWithoutZone: 9 };
+
+    it('con análisis incompleto y próximo partido lejano: «Cerrá el análisis del domingo», resultado y qué viene después', () => {
+      const board = buildCoachBoard(context([finished, match({ id: 'n', status: 'empty_roster', date: '2026-11-20T15:30:00' })], { analysis }));
+      expect(board).toEqual(jasmine.objectContaining({
+        kind: 'analysis', matchId: 'f', title: 'Cerrá el análisis del domingo', subtitle: 'vs Trelew · Ganado 21–13 · Dom 1 nov',
+        percent: 85, withoutPlayer: 12, minutesWithoutZone: 9,
+        after: { title: 'vs Trelew · Vie 20 nov · 15:30', detail: 'En 14 días · nómina sin armar todavía' }
+      }));
+    });
+
+    it('sin próximo partido igual se cierra el análisis; el panel «Después» no aparece', () => {
+      const board = buildCoachBoard(context([finished], { analysis }));
+      expect(board).toEqual(jasmine.objectContaining({ kind: 'analysis', after: null }));
+    });
+
+    it('solo minutos sin zona también es Analizar', () => {
+      const board = buildCoachBoard(context([finished], { analysis: { percent: 100, withoutPlayer: 0, minutesWithoutZone: 12 } }));
+      expect(board.kind).toBe('analysis');
+    });
+
+    it('con el análisis completo vuelve a team-idle / next', () => {
+      expect(buildCoachBoard(context([finished], { analysis: { percent: 100, withoutPlayer: 0, minutesWithoutZone: 0 } })).kind).toBe('team-idle');
+    });
+
+    it('sin lectura del análisis (null) no se acusa: team-idle', () => {
+      expect(buildCoachBoard(context([finished], { analysis: null })).kind).toBe('team-idle');
+    });
+
+    it('Convocar y Jugar le ganan a Analizar', () => {
+      const next = match({ id: 'n', status: 'empty_roster', date: '2026-11-08T14:30:00' });
+      expect(buildCoachBoard(context([finished, next], { analysis, roster: null })).kind).toBe('next');
+      expect(buildCoachBoard(context([finished, match({ id: 'v', status: 'in_progress' })], { analysis })).kind).toBe('live-elsewhere');
     });
   });
 

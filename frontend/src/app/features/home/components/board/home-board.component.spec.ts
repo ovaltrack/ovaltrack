@@ -58,6 +58,29 @@ describe('HomeBoardComponent', () => {
     expect(el().textContent).toContain('Sin señal: listo');
   });
 
+  it('analysis: título, chips de lo que falta, anillo, «Ver resumen» y panel «Después»', () => {
+    render({
+      kind: 'analysis', matchId: 'm9', divisionName: 'Superior', title: 'Cerrá el análisis del sábado', subtitle: 'vs Trelew · Ganado 21–13 · Sáb 14 nov',
+      percent: 85, withoutPlayer: 12, minutesWithoutZone: 9, after: { title: 'vs CRC · Sáb 21 nov · 15:30', detail: 'En 5 días · nómina sin armar todavía' }, week: null
+    }, { kind: 'complete-analysis', label: 'Completar análisis', route: '/post-match/m9', queryParams: { pendientes: 1 }, target: 'board', requiresConnection: true });
+    expect(el().textContent).toContain('Cerrá el análisis del sábado');
+    expect(el().textContent).toContain('12 jugadas sin jugador');
+    expect(el().textContent).toContain('9′ sin zona');
+    expect(el().querySelector('app-analysis-ring [role="img"]')?.getAttribute('aria-label')).toBe('Análisis cargado al 85 por ciento');
+    expect(el().querySelector('a.btn-on-board-outline')?.getAttribute('href')).toBe('/post-match/m9/statistics');
+    expect(el().querySelector('a.btn-on-board')?.getAttribute('href')).toBe('/post-match/m9?pendientes=1');
+    expect(el().querySelectorAll('.btn-on-board').length).toBe(1);
+    expect(el().querySelector('app-board-panel')?.textContent).toContain('Después: paso 4');
+  });
+
+  it('analysis sin partido próximo no dibuja el panel «Después»', () => {
+    render({
+      kind: 'analysis', matchId: 'm9', divisionName: 'Superior', title: 'Cerrá el análisis', subtitle: 'vs Trelew', percent: 100, withoutPlayer: 0, minutesWithoutZone: 4, after: null, week: null
+    }, null);
+    expect(el().querySelector('app-board-panel')).toBeNull();
+    expect(el().textContent).not.toContain('sin jugador');
+  });
+
   it('sin semana no dibuja pasos', () => {
     render(next, capture);
     expect(el().querySelector('app-board-steps')).toBeNull();

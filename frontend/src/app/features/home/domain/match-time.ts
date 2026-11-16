@@ -47,6 +47,19 @@ export function dayLabel(date: Date): string {
   return `${WEEKDAYS[date.getDay()]} ${date.getDate()} ${MONTHS[date.getMonth()]}`;
 }
 
+const WEEKDAY_NAMES = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'] as const;
+
+/** "sábado": día de la semana en minúscula, para frases como "Cerrá el análisis del sábado". */
+export function weekdayName(date: Date): string {
+  return WEEKDAY_NAMES[date.getDay()];
+}
+
+/** "Hoy", "Mañana" o "En 5 días": días de calendario hasta un partido (uno ya empezado cuenta como hoy). */
+export function daysUntilLabel(start: Date, now: Date): string {
+  const days = Math.max(0, calendarDaysBetween(now, start));
+  return days === 0 ? 'Hoy' : days === 1 ? 'Mañana' : `En ${days} días`;
+}
+
 /** "Sáb 21": día de la semana y del mes, para los subtítulos de los pasos. */
 export function weekdayDayLabel(date: Date): string {
   return `${WEEKDAYS[date.getDay()]} ${date.getDate()}`;

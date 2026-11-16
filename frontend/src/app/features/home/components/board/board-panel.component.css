@@ -22,10 +22,4 @@
 
 :host ::ng-deep .panel p {
   margin: 0;
-  font-size: 14px;
-}
-
-:host ::ng-deep .panel .panel-muted {
-  color: var(--on-board-muted);
-  font-size: 13.5px;
 }

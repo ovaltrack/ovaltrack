@@ -1,0 +1,49 @@
+:host {
+  display: inline-block;
+  flex: none;
+}
+
+.ring {
+  position: relative;
+  width: 124px;
+  height: 124px;
+}
+
+.ring-track,
+.ring-value {
+  fill: none;
+  stroke-width: 12;
+}
+
+.ring-track {
+  stroke: var(--board-line-strong);
+}
+
+.ring-value {
+  stroke: var(--on-board-accent);
+  stroke-linecap: round;
+}
+
+.ring-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--on-board);
+}
+
+.ring-percent {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 26px;
+  line-height: 1;
+}
+
+.ring-caption {
+  margin-top: 4px;
+  font-size: 10px;
+  color: var(--on-board-muted);
+}

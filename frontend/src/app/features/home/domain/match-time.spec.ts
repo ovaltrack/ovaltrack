@@ -1,4 +1,4 @@
-import { dayLabel, shortDateLabel, formatLocalClock, formatUtcAsArgentina, msUntil, parseBackendInstant, parseWallClock, relativeMatchLabel, seasonRange } from './match-time';
+import { dayLabel, daysUntilLabel, shortDateLabel, weekdayName, formatLocalClock, formatUtcAsArgentina, msUntil, parseBackendInstant, parseWallClock, relativeMatchLabel, seasonRange } from './match-time';
 
 describe('match-time', () => {
   const now = new Date(2026, 10, 6, 18, 0, 0); // vie 6 nov 2026, 18:00
@@ -13,6 +13,21 @@ describe('match-time', () => {
     it('acepta fecha sin segundos y descarta textos inválidos', () => {
       expect(parseWallClock('2026-11-07T14:30')!.getHours()).toBe(14);
       expect(parseWallClock('mañana')).toBeNull();
+    });
+  });
+
+  describe('weekdayName y daysUntilLabel', () => {
+    it('el día de la semana va en minúscula', () => {
+      expect(weekdayName(new Date(2026, 10, 7))).toBe('sábado');
+      expect(weekdayName(new Date(2026, 10, 8))).toBe('domingo');
+    });
+
+    it('hoy, mañana y en n días; uno ya empezado cuenta como hoy', () => {
+      expect(daysUntilLabel(new Date(2026, 10, 6, 23, 0), now)).toBe('Hoy');
+      expect(daysUntilLabel(new Date(2026, 10, 7, 9, 0), now)).toBe('Mañana');
+      expect(daysUntilLabel(new Date(2026, 10, 11, 9, 0), now)).toBe('En 5 días');
+      expect(daysUntilLabel(new Date(2026, 10, 6, 10, 0), now)).toBe('Hoy');
+      expect(daysUntilLabel(new Date(2026, 10, 5, 10, 0), now)).toBe('Hoy');
     });
   });
 

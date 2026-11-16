@@ -6,7 +6,7 @@ import { rosterGaps } from './roster-gaps';
 import { MATCH_DAY_WINDOW_MS } from './countdown';
 import { DivisionMatchState, divisionMatchState, playedAt } from './division-match-state';
 import { resultOf } from './form-record';
-import { formatUtcAsArgentina, msUntil, parseWallClock, relativeMatchLabel, shortDateLabel } from './match-time';
+import { clockLabel, dayLabel, daysUntilLabel, formatUtcAsArgentina, msUntil, parseWallClock, relativeMatchLabel, shortDateLabel, weekdayName } from './match-time';
 
 export interface CoachBoardContext {
   now: Date;
@@ -21,7 +21,7 @@ export interface CoachBoardContext {
   roster: { starters: number; substitutes: number } | null;
   readyOffline: boolean;
   /** Análisis del último partido jugado; `null` si no hay o no se pudo leer. */
-  analysis: { percent: number; minutesWithoutZone: number | null } | null;
+  analysis: { percent: number; withoutPlayer: number; minutesWithoutZone: number | null } | null;
 }
 
 const opponentName = (match: Match) => shortTeamName(match.opponent.alias || match.opponent.name);
@@ -47,11 +47,44 @@ function boardWeek(ctx: CoachBoardContext, state: DivisionMatchState<Match>): Bo
   const last = state.lastFinished;
   const week = gameWeek({
     state,
-    analysis: ctx.analysis && last ? { opponent: opponentName(last), ...ctx.analysis } : null,
+    analysis: ctx.analysis && last ? { opponent: opponentName(last), percent: ctx.analysis.percent, minutesWithoutZone: ctx.analysis.minutesWithoutZone } : null,
     roster: ctx.roster,
     now: ctx.now
   });
   return week && { stage: week.stage, label: `Semana de juego · ${ctx.divisionName} · paso ${week.stepNumber} de 4`, steps: week.steps };
+}
+
+const RESULT_WORD = { win: 'Ganado', draw: 'Empatado', loss: 'Perdido' } as const;
+
+/** Cómo está la nómina del próximo partido, en una frase corta para el panel «Después». */
+function rosterNote(roster: CoachBoardContext['roster'], next: Match): string | null {
+  const gaps = rosterGaps(roster, next.status);
+  if (gaps.kind === 'unknown') return null;
+  if (gaps.kind === 'complete') return 'nómina lista';
+  return gaps.kind === 'none' ? 'nómina sin armar todavía' : gaps.label.toLowerCase();
+}
+
+/** Variante «Cerrá el análisis»: el último partido jugado todavía tiene jugadas sin jugador o minutos sin zona. */
+function analysisBoard(ctx: CoachBoardContext, last: Match, analysis: NonNullable<CoachBoardContext['analysis']>, next: Match | null, week: BoardWeek | null): BoardModel {
+  const played = playedAt(last);
+  const nextStart = next ? parseWallClock(next.date) : null;
+  const result = resultOf(last.homeScore, last.awayScore);
+  const subtitle = [`vs ${opponentName(last)}`, `${RESULT_WORD[result]} ${last.homeScore}–${last.awayScore}`, played ? dayLabel(played) : ''].filter(Boolean).join(' · ');
+  const nextNote = next ? rosterNote(ctx.roster, next) : null;
+  return {
+    kind: 'analysis',
+    matchId: last.id,
+    divisionName: ctx.divisionName,
+    title: played ? `Cerrá el análisis del ${weekdayName(played)}` : 'Cerrá el análisis',
+    subtitle,
+    percent: analysis.percent,
+    withoutPlayer: analysis.withoutPlayer,
+    minutesWithoutZone: analysis.minutesWithoutZone,
+    after: next && nextStart
+      ? { title: `vs ${opponentName(next)} · ${dayLabel(nextStart)} · ${clockLabel(nextStart)}`, detail: [daysUntilLabel(nextStart, ctx.now), nextNote].filter(Boolean).join(' · ') }
+      : null,
+    week
+  };
 }
 
 /** Elige la variante del tablero del entrenador: en curso, día de partido, próximo, sin partido programado o primeros pasos. */
@@ -71,6 +104,8 @@ export function buildCoachBoard(ctx: CoachBoardContext): BoardModel {
       lastDataAt: live.clockUpdatedAt ? formatUtcAsArgentina(live.clockUpdatedAt) : null, week
     };
   }
+
+  if (week?.stage === 'analyze' && lastFinished && ctx.analysis) return analysisBoard(ctx, lastFinished, ctx.analysis, next, week);
 
   const start = next && parseWallClock(next.date);
   if (!next || !start) {

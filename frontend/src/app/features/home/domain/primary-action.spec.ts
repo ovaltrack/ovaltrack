@@ -75,6 +75,14 @@ describe('coachRules', () => {
     expect(action).toEqual(jasmine.objectContaining({ kind: 'complete-analysis', route: '/post-match/m0', queryParams: { pendientes: 1 }, target: 'board' }));
   });
 
+  it('4 · con el 100 % pero minutos sin zona: completar zonas', () => {
+    const action = resolve(coach({
+      matches: [match('m4', 'not_started', at(5, 14))],
+      lastFinished: { id: 'm0', analysisPercent: 100, minutesWithoutZone: 9 }
+    }));
+    expect(action).toEqual(jasmine.objectContaining({ kind: 'complete-analysis', label: 'Completar zonas', route: '/post-match/m0/zones', target: 'board' }));
+  });
+
   it('4 · con el análisis al 100 % no hay deuda', () => {
     const action = resolve(coach({
       matches: [match('m4', 'not_started', at(5, 14))],

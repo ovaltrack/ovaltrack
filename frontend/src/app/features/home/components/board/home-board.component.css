@@ -258,6 +258,58 @@
   50% { opacity: 0.4; transform: scale(0.8); }
 }
 
+.board-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.board-side-left {
+  align-items: stretch;
+  text-align: left;
+}
+
+.ring-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+}
+
+.ring-missing {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1 1 200px;
+}
+
+.ring-missing p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.ring-missing .on-board {
+  margin-bottom: 2px;
+}
+
+.ring-missing .board-meta {
+  margin-top: 6px;
+  font-size: 13.5px;
+}
+
+.panel-strong {
+  font-weight: 700;
+  font-size: 17px;
+}
+
+.panel-muted {
+  font-size: 13.5px;
+  color: var(--on-board-muted);
+}
+
 .board-panel {
   align-self: stretch;
 }

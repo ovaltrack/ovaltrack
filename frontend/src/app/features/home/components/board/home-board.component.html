@@ -42,6 +42,46 @@
         </div>
       }
 
+      @if (m.kind === 'analysis') {
+        <div class="board-main">
+          <h2 class="board-title">{{ m.title }}</h2>
+          <p class="board-meta">{{ m.subtitle }}</p>
+          <ul class="chips">
+            @if (m.withoutPlayer > 0) {
+              <li class="chip-board warn"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ m.withoutPlayer }} {{ m.withoutPlayer === 1 ? 'jugada sin jugador' : 'jugadas sin jugador' }}</li>
+            }
+            @if (m.minutesWithoutZone) {
+              <li class="chip-board warn"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ m.minutesWithoutZone }}′ sin zona</li>
+            }
+          </ul>
+          <div class="board-actions">
+            <ng-container *ngTemplateOutlet="actions" />
+            <a class="btn btn-on-board-outline board-btn" [routerLink]="['/post-match', m.matchId, 'statistics']">Ver resumen</a>
+          </div>
+        </div>
+        <div class="board-side board-side-left">
+          <div class="ring-row">
+            <app-analysis-ring [percent]="m.percent" />
+            <div class="ring-missing">
+              <p class="label-mono on-board">Lo que falta</p>
+              @if (m.withoutPlayer > 0) {
+                <p>{{ m.withoutPlayer }} {{ m.withoutPlayer === 1 ? 'jugada propia sin jugador' : 'jugadas propias sin jugador' }}</p>
+              }
+              @if (m.minutesWithoutZone) {
+                <p>{{ m.minutesWithoutZone }} {{ m.minutesWithoutZone === 1 ? 'minuto sin zona asignada' : 'minutos sin zona asignada' }}</p>
+              }
+              <p class="board-meta">Sin esto, Foco y Mi temporada de los jugadores quedan provisorios.</p>
+            </div>
+          </div>
+          @if (m.after; as after) {
+            <app-board-panel class="board-panel" label="Después: paso 4">
+              <p class="panel-strong">{{ after.title }}</p>
+              <p class="panel-muted">{{ after.detail }}</p>
+            </app-board-panel>
+          }
+        </div>
+      }
+
       @if (m.kind === 'match-day') {
         <div class="board-main">
           <p class="label-mono on-board">Hoy · {{ m.divisionName }}</p>

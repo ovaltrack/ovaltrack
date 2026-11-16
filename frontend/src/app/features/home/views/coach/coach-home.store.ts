@@ -82,14 +82,16 @@ export class CoachHomeStore {
       matches: this.divisionMatches(),
       captureMatchId: this.captureMatchId(),
       nextRoster: this.extras().roster,
-      lastFinished: debt.status === 'ready' ? { id: debt.data.matchId, analysisPercent: debt.data.percent } : null
+      lastFinished: debt.status === 'ready' ? { id: debt.data.matchId, analysisPercent: debt.data.percent, minutesWithoutZone: debt.data.minutesWithoutZone } : null
     });
   });
 
   /** Análisis del último partido jugado, tal como lo ve el tablero; `null` mientras no se conoce. */
   private readonly analysis = computed(() => {
     const debt = this.debtState();
-    return debt.status === 'ready' ? { percent: debt.data.percent, minutesWithoutZone: debt.data.minutesWithoutZone } : null;
+    return debt.status === 'ready'
+      ? { percent: debt.data.percent, withoutPlayer: debt.data.withoutPlayer, minutesWithoutZone: debt.data.minutesWithoutZone }
+      : null;
   });
 
   readonly board = computed<BoardModel>(() => {

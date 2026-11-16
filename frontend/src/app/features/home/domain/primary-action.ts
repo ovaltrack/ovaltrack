@@ -51,7 +51,7 @@ export interface CoachRuleContext {
   /** Partido que captura este dispositivo (`LiveMatchSource`), si hay uno. */
   captureMatchId: string | null;
   /** Último partido FINISHED con su % de análisis. */
-  lastFinished: { id: string; analysisPercent: number } | null;
+  lastFinished: { id: string; analysisPercent: number; minutesWithoutZone?: number | null } | null;
 }
 
 const stateOf = (ctx: CoachRuleContext) => divisionMatchState(ctx.matches, ctx.captureMatchId, ctx.now);
@@ -81,10 +81,17 @@ export const coachRules: readonly PrimaryRule<CoachRuleContext>[] = [
     const start = next && startOf(next);
     return next && start && lineupIncomplete(next, ctx.nextRoster) && msUntil(start, ctx.now) <= LINEUP_WINDOW_MS ? defineLineup(next.id) : null;
   },
-  // 4. El último partido jugado todavía tiene jugadas sin jugador: se completa desde el tablero, abriendo Eventos con «Solo sin jugador».
-  ctx => ctx.lastFinished && ctx.lastFinished.analysisPercent < 100
-    ? { kind: 'complete-analysis', label: 'Completar análisis', route: `/post-match/${ctx.lastFinished.id}`, queryParams: { pendientes: 1 }, target: 'board', requiresConnection: true }
-    : null,
+  // 4. El último partido jugado tiene jugadas sin jugador (se abre Eventos con «Solo sin jugador») o minutos sin zona (se abre Zonas).
+  ctx => {
+    const last = ctx.lastFinished;
+    if (!last) return null;
+    if (last.analysisPercent < 100) {
+      return { kind: 'complete-analysis', label: 'Completar análisis', route: `/post-match/${last.id}`, queryParams: { pendientes: 1 }, target: 'board', requiresConnection: true };
+    }
+    return (last.minutesWithoutZone ?? 0) > 0
+      ? { kind: 'complete-analysis', label: 'Completar zonas', route: `/post-match/${last.id}/zones`, target: 'board', requiresConnection: true }
+      : null;
+  },
   // 5. Nada programado ni en curso.
   ctx => {
     const { live, next } = stateOf(ctx);
