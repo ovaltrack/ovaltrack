@@ -1,4 +1,4 @@
-import { dayLabel, shortDateLabel, formatLocalClock, formatUtcAsArgentina, msUntil, parseWallClock, relativeMatchLabel, seasonRange } from './match-time';
+import { dayLabel, shortDateLabel, formatLocalClock, formatUtcAsArgentina, msUntil, parseBackendInstant, parseWallClock, relativeMatchLabel, seasonRange } from './match-time';
 
 describe('match-time', () => {
   const now = new Date(2026, 10, 6, 18, 0, 0); // vie 6 nov 2026, 18:00
@@ -38,7 +38,28 @@ describe('match-time', () => {
     expect(msUntil(new Date(2026, 10, 6, 17, 0), now)).toBe(-3_600_000);
   });
 
+  describe('parseBackendInstant', () => {
+    it('un LocalDateTime sin zona es UTC, no la hora del navegador', () => {
+      expect(parseBackendInstant('2026-11-07T01:05:00')!.toISOString()).toBe('2026-11-07T01:05:00.000Z');
+      expect(parseBackendInstant('2026-11-07T01:05:00.123456')!.toISOString()).toBe('2026-11-07T01:05:00.123Z');
+    });
+
+    it('respeta la Z y los offsets', () => {
+      expect(parseBackendInstant('2026-11-07T01:05:00.000Z')!.toISOString()).toBe('2026-11-07T01:05:00.000Z');
+      expect(parseBackendInstant('2026-11-07T01:05:00-03:00')!.toISOString()).toBe('2026-11-07T04:05:00.000Z');
+      expect(parseBackendInstant('2026-11-07T01:05:00+0100')!.toISOString()).toBe('2026-11-07T00:05:00.000Z');
+    });
+
+    it('texto inválido: null', () => {
+      expect(parseBackendInstant('no-es-fecha')).toBeNull();
+    });
+  });
+
   describe('formatUtcAsArgentina', () => {
+    it('sin zona se interpreta como UTC (así llega del backend)', () => {
+      expect(formatUtcAsArgentina('2026-11-07T01:12:00')).toBe('22:12');
+    });
+
     it('convierte UTC a hora de Buenos Aires (UTC-3)', () => {
       expect(formatUtcAsArgentina('2026-11-06T17:30:00Z')).toBe('14:30');
     });

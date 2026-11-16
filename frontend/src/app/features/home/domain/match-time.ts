@@ -52,10 +52,23 @@ export function shortDateLabel(date: Date): string {
   return `${date.getDate()} ${MONTHS[date.getMonth()]}`;
 }
 
+const HAS_ZONE = /(Z|[+-]\d{2}:?\d{2})$/i;
+
+/**
+ * Instante de un campo `LocalDateTime` del backend (`clockUpdatedAt`, `startedAt`, `finishedAt`): llega en UTC pero sin zona,
+ * y `Date.parse` lo tomaría como hora local del navegador. Si ya trae `Z` u offset (Dexie guarda `toISOString()`) se respeta.
+ * `null` si el texto no es una fecha.
+ */
+export function parseBackendInstant(value: string): Date | null {
+  const text = value.trim();
+  const instant = new Date(HAS_ZONE.test(text) ? text : `${text}Z`);
+  return Number.isNaN(instant.getTime()) ? null : instant;
+}
+
 /** `clockUpdatedAt`, `startedAt` y `finishedAt` llegan en UTC y se muestran en hora de Argentina. */
 export function formatUtcAsArgentina(iso: string): string | null {
-  const instant = new Date(iso);
-  if (Number.isNaN(instant.getTime())) return null;
+  const instant = parseBackendInstant(iso);
+  if (!instant) return null;
   return new Intl.DateTimeFormat('es-AR', {
     timeZone: ARGENTINA_TZ, hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
   }).format(instant);
