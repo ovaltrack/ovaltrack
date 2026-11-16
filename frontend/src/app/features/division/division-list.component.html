@@ -31,7 +31,7 @@
   </div>
 
   <!-- Estado Vacío -->
-  <div class="empty-state" *ngIf="!esCoach && !cargando && divisions.length === 0">
+  <div class="empty-state" data-tour="division-list" *ngIf="!esCoach && !cargando && divisions.length === 0">
     <div class="empty-icon">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -48,7 +48,7 @@
   </div>
 
   <!-- Listado de Divisiones -->
-  <div class="division-list" *ngIf="!cargando && divisions.length > 0">
+  <div class="division-list" data-tour="division-list" *ngIf="!cargando && divisions.length > 0">
     <div class="division-card" *ngFor="let division of divisions">
       <div class="division-main">
         <div class="division-badge-icon" aria-hidden="true">

@@ -37,6 +37,7 @@
     "dexie": "^4.4.6",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "zone.js": "~0.14.10"
   },
   "devDependencies": {

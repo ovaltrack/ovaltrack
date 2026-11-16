@@ -16,12 +16,12 @@
     </div>
 
     <!-- Área de Línea Temporal -->
-    <div class="pm-area-timeline">
+    <div class="pm-area-timeline" data-tour="pm-timeline">
       <app-post-match-timeline #timeline (addEvent)="openCreateModal()" />
     </div>
 
     <!-- Área de Tabla Detallada -->
-    <div class="pm-area-table">
+    <div class="pm-area-table" data-tour="pm-table">
       <app-post-match-table (editRequested)="onEditRequested()" (deleteRequested)="onDeleteRequested()"
                             (clearFiltersRequested)="timeline.clearAllFilters()" />
     </div>

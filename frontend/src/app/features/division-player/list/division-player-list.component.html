@@ -27,6 +27,13 @@
         }}
       </button>
 
+      <!-- Alta en lote desde una planilla .xlsx / .csv -->
+      @if (canImportRoster()) {
+        <button type="button" class="btn btn-outline" (click)="abrirImportacion()" [disabled]="!division">
+          <i class="bi bi-list-check"></i> Importar planilla
+        </button>
+      }
+
       <!-- Enlace / Botón auxiliar de navegación -->
       <a routerLink="/divisions" class="btn btn-outline">
         <i class="bi bi-arrow-left"></i> Volver
@@ -116,7 +123,7 @@
   </section>
 
   <!-- Main Content Card (Active Players List) -->
-  <section class="table-card" aria-live="polite">
+  <section class="table-card" data-tour="squad" aria-live="polite">
     <!-- Header inside card displaying total count -->
     <div class="card-header" *ngIf="activePlayers.length > 0">
       <p class="brand-text club">Plantel de división</p>
@@ -297,3 +304,13 @@
     (cancel)="cancelarDesasociacion()">
   </app-modal>  
 </div>
+
+@if (mostrarImportacion() && division) {
+  <app-roster-import-dialog
+    [divisionId]="division.id"
+    [divisionName]="division.name"
+    (closed)="cerrarImportacion()"
+    (imported)="onPlantelImportado($event)"
+    (failed)="onImportacionFallida($event)"
+  />
+}

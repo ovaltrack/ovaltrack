@@ -6,6 +6,7 @@ import {
   DivisionPlayerPersonUserResponse,
   DivisionPlayerResponse
 } from '../features/division-player/type/division-player.types';
+import { RosterImportRequest, RosterImportResult } from '../features/division-player/import/roster-import.types';
 import { ResultsPage } from '../features/pagination/results-page';
 import { MessageResponse } from '../shared/types/shared-types';
 
@@ -18,6 +19,11 @@ export class DivisionPlayerService {
 
   registerPlayer(playerData: any): Observable<any> {
     return this.http.post<any>(this.apiUrl, playerData);
+  }
+
+  /** Alta en lote del plantel; con dryRun solo valida (vista previa). */
+  importRoster(request: RosterImportRequest): Observable<RosterImportResult> {
+    return this.http.post<RosterImportResult>(`${this.apiUrl}/import`, request);
   }
 
   getByDivisionIdAndPersonId(divisionId: string, personId: string): Observable<DivisionPlayerResponse[]> {

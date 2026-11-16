@@ -16,7 +16,7 @@ http:
         "divisionId": "{{divisionId}}",
         "firstName": "Emiliano",
         "lastName": "Boffelli",
-        "contactEmail": "player1@ovaltrack.com",
+        "contactEmail": "agus.creevy95@example.com",
         "jerseyNumber": 15,
         "position": "Fullback"
       }
