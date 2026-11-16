@@ -47,6 +47,16 @@ export function dayLabel(date: Date): string {
   return `${WEEKDAYS[date.getDay()]} ${date.getDate()} ${MONTHS[date.getMonth()]}`;
 }
 
+/** "Sáb 21": día de la semana y del mes, para los subtítulos de los pasos. */
+export function weekdayDayLabel(date: Date): string {
+  return `${WEEKDAYS[date.getDay()]} ${date.getDate()}`;
+}
+
+/** "15:30": hora de pared de una fecha de partido. */
+export function clockLabel(date: Date): string {
+  return hhmm(date);
+}
+
 /** "1 nov": fecha corta de un partido ya jugado. */
 export function shortDateLabel(date: Date): string {
   return `${date.getDate()} ${MONTHS[date.getMonth()]}`;
