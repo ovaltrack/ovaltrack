@@ -1,6 +1,11 @@
 :host {
-  display: block;
+  display: flex;
+  flex-direction: column;
   min-width: 0;
+}
+
+:host > app-home-tile {
+  flex: 1 1 auto;
 }
 
 .focus-actions {
@@ -28,7 +33,7 @@
 
 .focus-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 88px 140px minmax(150px, auto);
+  grid-template-columns: minmax(0, 1fr) 104px 140px minmax(150px, auto);
   gap: 16px;
   align-items: center;
   padding: 12px 0;
@@ -61,6 +66,7 @@
   font-size: 30px;
   font-variant-numeric: tabular-nums;
   text-align: right;
+  white-space: nowrap;
   color: var(--text-primary);
 }
 
@@ -87,7 +93,7 @@
 }
 
 .focus-foot {
-  margin: 0;
+  margin: auto 0 0;
   padding-top: 12px;
   border-top: 1px solid var(--border);
   font-size: 12.5px;

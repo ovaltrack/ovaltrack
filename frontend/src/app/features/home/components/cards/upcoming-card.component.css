@@ -1,6 +1,11 @@
 :host {
-  display: block;
+  display: flex;
+  flex-direction: column;
   min-width: 0;
+}
+
+:host > app-home-tile {
+  flex: 1 1 auto;
 }
 
 .fixtures {
