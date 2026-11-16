@@ -26,7 +26,8 @@ describe('PlayerHomeStore', () => {
     matchId, date, opponentName: 'TRC', homeScore: 10, awayScore: 5, role: 'TITULAR' as const, number: 14, metrics: { ...zero, tacklesMade }
   });
   const seasonData: PlayerSeasonData = {
-    totals: { ...zero, tacklesMade: 27 }, matches: [game('m0', '2026-09-01T15:00:00', 5), game('m1', '2026-10-01T15:00:00', 6), game('m2', '2026-11-01T15:00:00', 16)]
+    totals: { ...zero, tacklesMade: 27 }, matches: [game('m0', '2026-09-01T15:00:00', 5), game('m1', '2026-10-01T15:00:00', 6), game('m2', '2026-11-01T15:00:00', 16)],
+    comparisons: [{ key: 'points', playerValue: 4, squadValue: 2, format: 'PER_MATCH', higherIsBetter: true, verdict: 'ABOVE' }]
   };
 
   let state: WidgetState<PlayerSummary>;
@@ -111,6 +112,37 @@ describe('PlayerHomeStore', () => {
     expect(store.seasonKpisState().status).toBe('error');
     expect(store.board().kind).toBe('player-last');
     expect(store.primary()?.kind).toBe('view-my-match');
+  });
+
+  it('«Vos contra el plantel» sale de la misma temporada; vacía sin métricas y en error sin afectar a las demás', () => {
+    state = { status: 'ready', data: summary, fetchedAt: 1, stale: false };
+    let store = createStore();
+    store.reload();
+    const comparison = store.comparisonState();
+    expect(comparison.status === 'ready' && comparison.data.summary).toBe('1 a favor · 0 a mejorar');
+    injector.destroy();
+
+    season = { status: 'ready', data: { ...seasonData, comparisons: [] }, fetchedAt: 1, stale: false };
+    store = createStore();
+    store.reload();
+    expect(store.comparisonState().status).toBe('empty');
+    expect(store.seasonKpisState().status).toBe('ready');
+    injector.destroy();
+
+    season = { status: 'error', message: 'No pudimos cargar esto' };
+    store = createStore();
+    store.reload();
+    expect(store.comparisonState().status).toBe('error');
+    expect(store.board().kind).toBe('player-last');
+  });
+
+  it('un snapshot guardado antes de la Fase 12 no trae comparaciones: la tarjeta queda vacía', () => {
+    state = { status: 'ready', data: summary, fetchedAt: 1, stale: false };
+    const { comparisons: _omitted, ...legacy } = seasonData;
+    season = { status: 'ready', data: legacy as PlayerSeasonData, fetchedAt: 1, stale: true };
+    const store = createStore();
+    store.reload();
+    expect(store.comparisonState().status).toBe('empty');
   });
 
   it('sin partidos: onboarding del jugador y ningún primario', () => {

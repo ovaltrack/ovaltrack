@@ -6,6 +6,16 @@
   grid-column: span 12;
 }
 
+.s7 {
+  grid-column: span 7;
+}
+
+@media (max-width: 1120px) {
+  .s7 {
+    grid-column: span 12;
+  }
+}
+
 .board-skeleton {
   height: 240px;
   margin-bottom: 20px;

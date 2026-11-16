@@ -1,0 +1,7 @@
+<app-home-tile label="Por partido · temporada" title="Vos contra el plantel" [state]="state()" (retry)="retry.emit()">
+  @if (comparison(); as comparison) {
+    <p class="cmp-summary">{{ comparison.summary }}</p>
+    <app-comparison-list [rows]="comparison.rows" playerLabel="Vos" squadLabel="Promedio del plantel" [neutralSquad]="true" />
+  }
+  <p tileEmpty>Todavía no hay datos para compararte con el plantel.</p>
+</app-home-tile>
