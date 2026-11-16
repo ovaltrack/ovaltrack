@@ -7,7 +7,8 @@ import { greetingFor, hudDateLabel } from '../../domain/greeting';
 import { playerRules, resolvePrimaryAction } from '../../domain/primary-action';
 import { BoardModel, PrimaryAction, WidgetState, dataOf } from '../../types/home.types';
 import { PlayerSummary } from '../../domain/player-summary';
-import { PlayerHomeDataService } from './player-home-data.service';
+import { matchTakeaways } from '../../domain/match-takeaways';
+import { PlayerHomeDataService, PlayerSeasonData } from './player-home-data.service';
 
 const CLOCK_TICK_MS = 1000;
 
@@ -21,14 +22,15 @@ export class PlayerHomeStore {
 
   readonly now = signal(new Date());
   readonly summaryState = signal<WidgetState<PlayerSummary>>({ status: 'loading' });
+  readonly seasonState = signal<WidgetState<PlayerSeasonData>>({ status: 'loading' });
 
   readonly summary = computed(() => dataOf(this.summaryState()));
 
   readonly board = computed<BoardModel>(() => {
     const last = this.summary()?.last;
-    return last
-      ? { kind: 'player-last', ...last }
-      : { kind: 'onboarding', step: 'no-matches-player' };
+    if (!last) return { kind: 'onboarding', step: 'no-matches-player' };
+    const season = dataOf(this.seasonState());
+    return { kind: 'player-last', ...last, takeaways: season ? matchTakeaways(season.matches, last.matchId, last.analysisPercent) : null };
   });
 
   readonly primary = computed<PrimaryAction | null>(() =>
@@ -54,6 +56,11 @@ export class PlayerHomeStore {
   constructor() {
     this.load$.pipe(
       switchMap(() => this.data.summary(this.now()).pipe(tap(state => this.summaryState.set(state)))),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe();
+
+    this.load$.pipe(
+      switchMap(() => this.data.season(this.now()).pipe(tap(state => this.seasonState.set(state)))),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe();
   }

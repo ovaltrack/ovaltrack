@@ -15,7 +15,10 @@ export interface PlayerLastMatch {
   role: 'TITULAR' | 'SUPLENTE';
   /** `null` mientras el análisis está incompleto y todavía no hay ninguno: un 0 ahí es solo "no cargado". */
   tries: number | null;
+  /** Tackles hechos. */
   tackles: number | null;
+  /** Efectividad de tackle del partido; `null` si no intentó ninguno o si los tackles todavía no se cargaron. */
+  tacklePercent: number | null;
   slotNumber: number | null;
   /** % de jugadas del partido con jugador asignado. */
   analysisPercent: number;
@@ -64,7 +67,9 @@ export function buildPlayerSummary(unordered: readonly PlayerMatchStatistic[], a
 
   const { match } = latest;
   const start = parseWallClock(match.date);
-  const tackles = count(latest, 'TACKLE_MADE') + count(latest, 'TACKLE_MISSED');
+  const tacklesMade = count(latest, 'TACKLE_MADE');
+  const tackleAttempts = tacklesMade + count(latest, 'TACKLE_MISSED');
+  const tackles = provisionalZero(tacklesMade, analysisPercent);
 
   const ofSeason = statistics.filter(entry => playedAt(entry.match)?.getFullYear() === now.getFullYear());
   const made = ofSeason.reduce((sum, entry) => sum + count(entry, 'TACKLE_MADE'), 0);
@@ -80,7 +85,8 @@ export function buildPlayerSummary(unordered: readonly PlayerMatchStatistic[], a
       result: toResult(match),
       role: match.role,
       tries: provisionalZero(count(latest, 'TRY'), analysisPercent),
-      tackles: provisionalZero(tackles, analysisPercent),
+      tackles,
+      tacklePercent: tackles === null || tackleAttempts === 0 ? null : Math.round((tacklesMade / tackleAttempts) * 100),
       slotNumber: match.slotNumber,
       analysisPercent
     },

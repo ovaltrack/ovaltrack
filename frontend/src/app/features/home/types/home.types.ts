@@ -1,4 +1,5 @@
 import { GameWeekStage, GameWeekStep } from '../domain/game-week';
+import { MatchTakeaways } from '../domain/match-takeaways';
 import { RosterGaps } from '../domain/roster-gaps';
 
 /** Estado de un widget: cada tarjeta carga, falla y se reintenta sin afectar a las demás. */
@@ -118,7 +119,7 @@ export type BoardModel =
   | { kind: 'club-agenda'; mode: 'week' | 'day'; label: string; title: string; sections: ClubAgendaSection[]; live: ClubAgendaLive | null; urgent: ClubUrgent | null }
   | { kind: 'club-idle'; nextLabel: string | null }
   | { kind: 'team-idle'; divisionName: string; last: { opponent: string; dateLabel: string; ownScore: number; opponentScore: number; result: 'win' | 'loss' | 'draw' } }
-  | { kind: 'player-last'; matchId: string; dateLabel: string; opponent: string; ownScore: number; opponentScore: number; result: 'win' | 'loss' | 'draw'; role: 'TITULAR' | 'SUPLENTE'; tries: number | null; tackles: number | null; analysisPercent: number; slotNumber: number | null };
+  | { kind: 'player-last'; matchId: string; dateLabel: string; opponent: string; ownScore: number; opponentScore: number; result: 'win' | 'loss' | 'draw'; role: 'TITULAR' | 'SUPLENTE'; tries: number | null; tackles: number | null; tacklePercent: number | null; analysisPercent: number; slotNumber: number | null; takeaways: MatchTakeaways | null };
 
 export const STARTERS_TARGET = 15;
 export const SUBSTITUTES_TARGET = 8;

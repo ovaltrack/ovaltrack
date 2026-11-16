@@ -140,46 +140,6 @@
   color: var(--board-chip-warn-fg);
 }
 
-.has-tip {
-  position: relative;
-  cursor: help;
-}
-
-.chip-tip {
-  position: absolute;
-  left: 0;
-  bottom: calc(100% + 8px);
-  z-index: 2;
-  width: max-content;
-  max-width: min(280px, 80vw);
-  padding: 10px 12px;
-  border: 2px solid var(--border-sport);
-  border-radius: 12px;
-  background: var(--surface);
-  color: var(--text-primary);
-  box-shadow: var(--shadow-elevation);
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.4;
-  visibility: hidden;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-  pointer-events: none;
-}
-
-.has-tip:hover .chip-tip,
-.has-tip:focus .chip-tip,
-.has-tip:focus-visible .chip-tip {
-  visibility: visible;
-  opacity: 1;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .chip-tip {
-    transition: none;
-  }
-}
-
 .board-btn {
   min-height: 48px;
   min-width: 180px;
@@ -421,14 +381,13 @@
   color: var(--on-board-accent);
 }
 
-.jersey {
+.takeaways {
   margin: 0;
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: 104px;
-  line-height: 1;
-  color: transparent;
-  -webkit-text-stroke: 2px var(--board-line-strong);
+  padding: 0 0 0 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 600;
 }
 
 @media (max-width: 1120px) {
@@ -460,13 +419,8 @@
     font-size: 44px;
   }
 
-  .score,
-  .jersey {
+  .score {
     font-size: 72px;
-  }
-
-  .jersey {
-    display: none;
   }
 
   .digit {

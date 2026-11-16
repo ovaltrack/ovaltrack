@@ -290,27 +290,37 @@
             <li class="chip-board" [class.ok]="m.result === 'win'">
               {{ m.result === 'win' ? 'Ganado' : m.result === 'loss' ? 'Perdido' : 'Empatado' }}
             </li>
-            <li class="chip-board">{{ m.role === 'TITULAR' ? 'Titular' : 'Suplente' }}</li>
+            <li class="chip-board">{{ m.role === 'TITULAR' ? 'Titular' + (m.slotNumber !== null ? ' · camiseta ' + m.slotNumber : '') : 'Suplente' }}</li>
             @if (m.tries !== null || m.tackles !== null) {
               <li class="chip-board">
                 @if (m.tries !== null) { {{ m.tries }} {{ m.tries === 1 ? 'try' : 'tries' }} }
                 @if (m.tries !== null && m.tackles !== null) { · }
-                @if (m.tackles !== null) { {{ m.tackles }} {{ m.tackles === 1 ? 'tackle' : 'tackles' }} }
+                @if (m.tackles !== null) { {{ m.tackles }} {{ m.tackles === 1 ? 'tackle' : 'tackles' }}@if (m.tacklePercent !== null) { ({{ m.tacklePercent }} %) } }
               </li>
+            } @else if (m.analysisPercent < 100) {
+              <li class="chip-board">Tus acciones todavía se están cargando</li>
             }
             @if (m.analysisPercent < 100) {
-              <li class="chip-board warn has-tip" tabindex="0" aria-describedby="provisional-tip">
-                <i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Estadísticas provisorias
-                <span class="chip-tip" id="provisional-tip" role="tooltip">Tus acciones todavía se están cargando. Tus números pueden cambiar.</span>
-              </li>
+              <li class="chip-board warn"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Análisis {{ m.analysisPercent }} % · puede cambiar</li>
             }
           </ul>
         </div>
-        <div class="board-side">
-          @if (m.slotNumber !== null) {
-            <p class="jersey" aria-hidden="true">{{ m.slotNumber }}</p>
-          }
+        <div class="board-side board-side-left">
           <ng-container *ngTemplateOutlet="actions" />
+          @if (m.takeaways; as takeaways) {
+            <app-board-panel class="board-panel" label="Lo que dejó el partido">
+              @if (takeaways.lines.length > 0) {
+                <ul class="takeaways">
+                  @for (line of takeaways.lines; track line) {
+                    <li>{{ line }}</li>
+                  }
+                </ul>
+              }
+              @if (takeaways.provisionalNote) {
+                <p class="panel-muted">{{ takeaways.provisionalNote }}</p>
+              }
+            </app-board-panel>
+          }
         </div>
       }
     </div>

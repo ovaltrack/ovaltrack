@@ -2,6 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, of, switchMap } from 'rxjs';
 import { ConnectivityService } from '../../../../core/services/connectivity.service';
 import { UserContextService } from '../../../../core/services/user-context.service';
+import { PlayerStatsApiService } from '../../../player-statistics/services/player-stats-api.service';
+import { PlayerMatchSummary, PlayerMetrics } from '../../../player-statistics/types/player-stats-api.types';
 import { PlayerStatisticsService } from '../../../player-statistics/services/player-statistics.service';
 import { DashboardSnapshotCache } from '../../data/dashboard-snapshot.cache';
 import { toWidgetState } from '../../data/to-widget-state';
@@ -10,10 +12,17 @@ import { analysisCoverage } from '../../domain/analysis-coverage';
 import { PlayerSummary, buildPlayerSummary, newestFirst } from '../../domain/player-summary';
 import { WidgetState } from '../../types/home.types';
 
+/** Temporada del jugador según el backend: totales y un resumen por partido. */
+export interface PlayerSeasonData {
+  totals: PlayerMetrics;
+  matches: PlayerMatchSummary[];
+}
+
 /** Lecturas del Inicio del jugador: reutiliza `PlayerStatisticsService` sin escrituras nuevas en Dexie. */
 @Injectable()
 export class PlayerHomeDataService {
   private readonly statistics = inject(PlayerStatisticsService);
+  private readonly statsApi = inject(PlayerStatsApiService);
   private readonly cache = inject(DashboardSnapshotCache);
   private readonly userContext = inject(UserContextService);
   private readonly connectivity = inject(ConnectivityService);
@@ -43,5 +52,27 @@ export class PlayerHomeDataService {
           : undefined
       })
     ) as Observable<WidgetState<PlayerSummary>>;
+  }
+
+  /** Temporada del año en curso (`GET /statistics/player/{personId}`); vacía si no jugó partidos o no hay persona asociada. */
+  season(now: Date): Observable<WidgetState<PlayerSeasonData>> {
+    const userId = this.userContext.userContext()?.userId;
+    const personId = this.userContext.personId();
+    if (!personId) return of<WidgetState<PlayerSeasonData>>({ status: 'empty' });
+    const divisionId = this.userContext.activeDivisions()[0]?.id ?? null;
+    const key = `player.season.${now.getFullYear()}`;
+    return this.statsApi.getGeneral(personId, { divisionId, season: now.getFullYear() }).pipe(
+      map((response): PlayerSeasonData => ({ totals: response.totals, matches: response.matches })),
+      toWidgetState<PlayerSeasonData>({
+        isEmpty: data => data.matches.length === 0,
+        offline: !this.connectivity.online(),
+        snapshot: userId
+          ? {
+              read: () => this.cache.read<PlayerSeasonData>(userId, key),
+              write: (data, fetchedAt) => this.cache.write(userId, key, data, fetchedAt)
+            }
+          : undefined
+      })
+    );
   }
 }

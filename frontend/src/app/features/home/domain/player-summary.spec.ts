@@ -29,13 +29,13 @@ describe('buildPlayerSummary', () => {
     const summary = buildPlayerSummary([entry('m2', '2026-11-01T15:00:00', 22, 14, { tries: 1, made: 6, missed: 1, points: 5 })], 78, now);
     expect(summary?.last).toEqual({
       matchId: 'm2', dateLabel: 'Dom 1 nov', opponent: 'Draig Goch', ownScore: 22, opponentScore: 14, result: 'win',
-      role: 'TITULAR', tries: 1, tackles: 7, slotNumber: 14, analysisPercent: 78
+      role: 'TITULAR', tries: 1, tackles: 6, tacklePercent: 86, slotNumber: 14, analysisPercent: 78
     });
   });
 
   it('con el análisis incompleto un 0 no es un dato: tries y tackles quedan en null', () => {
     const summary = buildPlayerSummary([entry('m2', '2026-11-01T15:00:00', 22, 14, {})], 78, now);
-    expect(summary?.last).toEqual(jasmine.objectContaining({ tries: null, tackles: null, analysisPercent: 78 }));
+    expect(summary?.last).toEqual(jasmine.objectContaining({ tries: null, tackles: null, tacklePercent: null, analysisPercent: 78 }));
   });
 
   it('con el análisis incompleto los valores mayores que 0 se muestran', () => {
@@ -45,7 +45,7 @@ describe('buildPlayerSummary', () => {
 
   it('con el análisis completo el 0 es un dato', () => {
     const summary = buildPlayerSummary([entry('m2', '2026-11-01T15:00:00', 22, 14, {})], 100, now);
-    expect(summary?.last).toEqual(jasmine.objectContaining({ tries: 0, tackles: 0 }));
+    expect(summary?.last).toEqual(jasmine.objectContaining({ tries: 0, tackles: 0, tacklePercent: null }));
   });
 
   it('el último es el que se jugó más tarde: un terminado con fecha futura y finishedAt viejo no gana', () => {
