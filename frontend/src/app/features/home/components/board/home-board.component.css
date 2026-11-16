@@ -62,15 +62,6 @@
   text-align: right;
 }
 
-.board-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
 .on-board {
   margin: 0 0 8px;
   color: var(--on-board-muted);
