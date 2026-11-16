@@ -1,4 +1,4 @@
-import { dayLabel, daysUntilLabel, shortDateLabel, weekdayName, formatLocalClock, formatUtcAsArgentina, msUntil, parseBackendInstant, parseWallClock, relativeMatchLabel, seasonRange } from './match-time';
+import { dayLabel, daysUntilLabel, shortDateLabel, weekdayName, formatLocalClock, formatUtcAsArgentina, msUntil, parseBackendInstant, parseWallClock, relativeMatchLabel, seasonRange, monthLabel } from './match-time';
 
 describe('match-time', () => {
   const now = new Date(2026, 10, 6, 18, 0, 0); // vie 6 nov 2026, 18:00
@@ -102,5 +102,10 @@ describe('match-time', () => {
 
   it('dayLabel da día de la semana, número y mes', () => {
     expect(dayLabel(new Date(2026, 10, 7))).toBe('Sáb 7 nov');
+  });
+
+  it('monthLabel abrevia el mes en minúscula', () => {
+    expect(monthLabel(new Date(2026, 10, 21))).toBe('nov');
+    expect(monthLabel(new Date(2026, 0, 3))).toBe('ene');
   });
 });

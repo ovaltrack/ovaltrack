@@ -244,6 +244,34 @@ describe('CoachHomeStore', () => {
     expect(store.pendingState().status).toBe('empty');
   });
 
+  it('próximas fechas: hasta 3 de la división activa, con el chip de nómina en la primera', () => {
+    matches = { status: 'ready', data: [
+      match({ id: 'a', date: '2026-11-10T15:00:00' }), match({ id: 'b', date: '2026-11-17T15:00:00' }),
+      match({ id: 'c', date: '2026-11-24T15:00:00' }), match({ id: 'd', date: '2026-12-01T15:00:00' }),
+      match({ id: 'x', divisionId: 'd2', date: '2026-11-09T15:00:00' })
+    ], fetchedAt: 1, stale: false };
+    extras = { ...EMPTY_BOARD_EXTRAS, roster: { starters: 15, substitutes: 6 } };
+    const store = createStore();
+    store.reload();
+    const state = store.upcomingState();
+    expect(state.status).toBe('ready');
+    if (state.status === 'ready') {
+      expect(state.data.map(fixture => fixture.matchId)).toEqual(['a', 'b', 'c']);
+      expect(state.data[0].rosterChip).toBe('Suplentes 6/8');
+      expect(state.data[1].rosterChip).toBeNull();
+    }
+  });
+
+  it('próximas fechas: sin partidos por jugar está vacío, y el error de partidos se propaga sin tocar a los demás', () => {
+    const store = createStore();
+    store.reload();
+    expect(store.upcomingState().status).toBe('empty');
+    matches = { status: 'error', message: 'No pudimos cargar esto' };
+    store.reload();
+    expect(store.upcomingState().status).toBe('error');
+    expect(store.formState().status).toBe('empty');
+  });
+
   it('pendientes vacío cuando la nómina está completa y todos tienen dorsal', () => {
     matches = { status: 'ready', data: [match({ status: 'not_started', date: '2026-11-07T15:00:00' })], fetchedAt: 1, stale: false };
     extras = { ...EMPTY_BOARD_EXTRAS, roster: { starters: 15, substitutes: 8 } };

@@ -73,6 +73,8 @@
         </ul>
         <p tileEmpty>No hay nada pendiente.</p>
       </app-home-tile>
+
+      <app-upcoming-card class="s6 s6-wide" [state]="store.upcomingState()" [divisionName]="store.activeDivision()?.name ?? ''" (retry)="store.retry('matches')" />
     </div>
   }
 </main>

@@ -75,6 +75,11 @@ export function shortDateLabel(date: Date): string {
   return `${date.getDate()} ${MONTHS[date.getMonth()]}`;
 }
 
+/** "nov": mes abreviado, para el bloque de fecha de las tarjetas. */
+export function monthLabel(date: Date): string {
+  return MONTHS[date.getMonth()];
+}
+
 const HAS_ZONE = /(Z|[+-]\d{2}:?\d{2})$/i;
 
 /**

@@ -7,16 +7,17 @@ import { dataOf } from '../../types/home.types';
 import { HomeBoardComponent } from '../../components/board/home-board.component';
 import { HomeHudComponent } from '../../components/hud/home-hud.component';
 import { FocusCardComponent } from '../../components/cards/focus-card.component';
+import { UpcomingCardComponent } from '../../components/cards/upcoming-card.component';
 import { HomeTileComponent } from '../../components/tile/home-tile.component';
 import { ResultPillComponent } from '../../components/ui/result-pill.component';
 import { CoachHomeDataService } from './coach-home-data.service';
 import { CoachHomeStore } from './coach-home.store';
 
-/** Inicio del entrenador / analista: tablero (con la semana de juego y el análisis pendiente) y tarjetas Qué trabajar, Forma y Pendientes. */
+/** Inicio del entrenador / analista: tablero (con la semana de juego y el análisis pendiente) y tarjetas Qué trabajar, Forma, Pendientes y Próximas fechas. */
 @Component({
   selector: 'app-coach-home',
   standalone: true,
-  imports: [RouterLink, FocusCardComponent, HomeHudComponent, HomeBoardComponent, HomeTileComponent, ResultPillComponent],
+  imports: [RouterLink, FocusCardComponent, UpcomingCardComponent, HomeHudComponent, HomeBoardComponent, HomeTileComponent, ResultPillComponent],
   providers: [CoachHomeStore, CoachHomeDataService, { provide: OfflineMatchReader, useClass: DexieOfflineMatchReader }],
   templateUrl: './coach-home.component.html',
   styleUrls: ['../styles/home-views.css', './coach-home.component.css'],

@@ -13,6 +13,7 @@ import { upcomingMatches } from '../../domain/division-match-state';
 import { greetingFor, hudDateLabel } from '../../domain/greeting';
 import { relativeMatchLabel, parseWallClock } from '../../domain/match-time';
 import { PendingRow, pendingRows } from '../../domain/pending-rows';
+import { UpcomingFixture, upcomingFixtures } from '../../domain/upcoming-fixtures';
 import { coachRules, resolvePrimaryAction } from '../../domain/primary-action';
 import { BoardModel, PrimaryAction, WidgetState } from '../../types/home.types';
 import { BoardExtras, CoachHomeDataService, DebtData, EMPTY_BOARD_EXTRAS, FormData } from './coach-home-data.service';
@@ -130,6 +131,14 @@ export class CoachHomeStore {
     return jerseys.status === 'ready'
       ? { status: 'ready', data: rows, fetchedAt: jerseys.fetchedAt, stale: jerseys.stale }
       : { status: 'ready', data: rows, fetchedAt: this.now().getTime(), stale: false };
+  });
+
+  /** Próximas fechas de la división activa, sobre los partidos ya cargados (sin otra llamada). */
+  readonly upcomingState = computed<WidgetState<UpcomingFixture[]>>(() => {
+    const matches = this.matchesState();
+    if (matches.status !== 'ready') return matches.status === 'empty' ? { status: 'empty' } : matches;
+    const fixtures = upcomingFixtures(this.divisionMatches(), this.now(), this.extras().roster);
+    return fixtures.length === 0 ? { status: 'empty' } : { status: 'ready', data: fixtures, fetchedAt: matches.fetchedAt, stale: matches.stale };
   });
 
   readonly hudLabel = computed(() => `${hudDateLabel(this.now())} · ${this.userContext.currentClub()?.name ?? ''}`);

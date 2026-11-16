@@ -87,7 +87,8 @@
     grid-column: span 6;
   }
 
-  .s8 {
+  .s8,
+  .s6-wide {
     grid-column: span 12;
   }
 }
