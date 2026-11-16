@@ -5,6 +5,7 @@ import { UserContextService } from '../../../../core/services/user-context.servi
 import { PlayerStatisticsService } from '../../../player-statistics/services/player-statistics.service';
 import { DashboardSnapshotCache } from '../../data/dashboard-snapshot.cache';
 import { toWidgetState } from '../../data/to-widget-state';
+import { activeTypeIdsOf } from '../../../match/post-match/utils/review-coverage';
 import { analysisCoverage } from '../../domain/analysis-coverage';
 import { PlayerSummary, buildPlayerSummary } from '../../domain/player-summary';
 import { WidgetState } from '../../types/home.types';
@@ -26,7 +27,7 @@ export class PlayerHomeDataService {
         if (!latest) return of(buildPlayerSummary(stats, 100, now));
         // El % de análisis es del partido completo (no solo de las jugadas del jugador).
         return this.statistics.loadMatchSource(latest.match.matchId).pipe(
-          map(source => analysisCoverage(source.events).percent),
+          map(source => analysisCoverage(source.events, activeTypeIdsOf(source.eventTypes)).percent),
           catchError(() => of(100)),
           map(percent => buildPlayerSummary(stats, percent, now))
         );

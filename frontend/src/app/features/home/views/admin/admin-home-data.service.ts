@@ -1,14 +1,16 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, forkJoin, map, of } from 'rxjs';
+import { Observable, catchError, forkJoin, map, of, shareReplay } from 'rxjs';
 import { ConnectivityService } from '../../../../core/services/connectivity.service';
 import { UserContextService } from '../../../../core/services/user-context.service';
 import { DivisionCoachService } from '../../../../services/division-coach.service';
 import { DivisionPlayerService } from '../../../../services/division-player.service';
 import { Division } from '../../../division/types/division.types';
 import { EventService } from '../../../match/services/event.service';
+import { EventTypeService } from '../../../match/services/event-type.service';
 import { MatchService } from '../../../match/services/match.service';
 import { RosterService } from '../../../match/services/roster.service';
 import { Match } from '../../../match/types/match.types';
+import { loadActiveTypeIds } from '../../data/active-type-ids';
 import { DashboardSnapshotCache } from '../../data/dashboard-snapshot.cache';
 import { ToWidgetStateOptions, toWidgetState } from '../../data/to-widget-state';
 import { analysisCoverage } from '../../domain/analysis-coverage';
@@ -33,6 +35,7 @@ export class AdminHomeDataService {
   private readonly matchService = inject(MatchService);
   private readonly rosterService = inject(RosterService);
   private readonly eventService = inject(EventService);
+  private readonly eventTypeService = inject(EventTypeService);
   private readonly coachService = inject(DivisionCoachService);
   private readonly playerService = inject(DivisionPlayerService);
   private readonly cache = inject(DashboardSnapshotCache);
@@ -55,20 +58,24 @@ export class AdminHomeDataService {
   }
 
   divisionStats(divisions: readonly Division[], matches: readonly Match[]): Observable<WidgetState<DivisionStat[]>> {
+    const activeTypeIds$ = loadActiveTypeIds(this.eventTypeService).pipe(shareReplay({ bufferSize: 1, refCount: false }));
     const loads = divisions.map(division => forkJoin({
       staff: this.coachService.getByDivisionId(division.id).pipe(
         map(coaches => coaches.filter(coach => !coach.endDate).length), catchError(() => of(null))),
       players: this.playerService.getActiveByDivisionId(division.id, 1, 1).pipe(
         map(page => page.totalElements), catchError(() => of(null))),
-      analysisPercent: this.lastFinishedAnalysis(division.id, matches)
+      analysisPercent: this.lastFinishedAnalysis(division.id, matches, activeTypeIds$)
     }).pipe(map(values => ({ divisionId: division.id, ...values }))));
     return (loads.length > 0 ? forkJoin(loads) : of([] as DivisionStat[])).pipe(toWidgetState<DivisionStat[]>(this.options('divisions')));
   }
 
-  private lastFinishedAnalysis(divisionId: string, matches: readonly Match[]): Observable<number | null> {
+  private lastFinishedAnalysis(divisionId: string, matches: readonly Match[], activeTypeIds$: Observable<ReadonlySet<string> | null>): Observable<number | null> {
     const last = lastFinishedOf(matches.filter(match => match.divisionId === divisionId));
     if (!last) return of(null);
-    return this.eventService.getByMatchPostMatch(last.id).pipe(map(events => analysisCoverage(events).percent), catchError(() => of(null)));
+    return forkJoin({ events: this.eventService.getByMatchPostMatch(last.id), activeTypeIds: activeTypeIds$ }).pipe(
+      map(({ events, activeTypeIds }) => analysisCoverage(events, activeTypeIds).percent),
+      catchError(() => of(null))
+    );
   }
 
   private options<T>(widget: string, extra: Partial<ToWidgetStateOptions<T>> = {}): ToWidgetStateOptions<T> {

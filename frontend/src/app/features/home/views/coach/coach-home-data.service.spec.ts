@@ -6,6 +6,7 @@ import { ConnectivityService } from '../../../../core/services/connectivity.serv
 import { UserContextService } from '../../../../core/services/user-context.service';
 import { DivisionPlayerService } from '../../../../services/division-player.service';
 import { EventService } from '../../../match/services/event.service';
+import { EventTypeService } from '../../../match/services/event-type.service';
 import { MatchService } from '../../../match/services/match.service';
 import { RosterService } from '../../../match/services/roster.service';
 import { ZoneService } from '../../../match/services/zone.service';
@@ -36,6 +37,7 @@ describe('CoachHomeDataService · eventos del último partido', () => {
         { provide: MatchService, useValue: {} },
         { provide: RosterService, useValue: {} },
         { provide: EventService, useValue: eventService },
+        { provide: EventTypeService, useValue: { getAll: () => of([]) } },
         { provide: ZoneService, useValue: { list: () => of({ assignments: [] }) } },
         { provide: DivisionPlayerService, useValue: {} },
         { provide: OfflineMatchReader, useValue: {} },
