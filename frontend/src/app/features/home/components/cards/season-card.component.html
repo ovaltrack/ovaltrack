@@ -1,0 +1,15 @@
+<app-home-tile [label]="label()" title="Mi temporada" [state]="state()" (retry)="retry.emit()">
+  @if (provisional()) {
+    <p class="season-provisional"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Incluye un partido provisorio: sus números pueden cambiar.</p>
+  }
+  <dl class="season-kpis">
+    @for (kpi of kpis(); track kpi.key) {
+      <div class="season-kpi">
+        <dt class="season-label">{{ kpi.label }}</dt>
+        <dd class="season-value" [class.own]="kpi.own">{{ kpi.value }}</dd>
+        <dd class="season-sub">{{ kpi.sub }}</dd>
+      </div>
+    }
+  </dl>
+  <p tileEmpty>Todavía no jugaste partidos en {{ year() }}.</p>
+</app-home-tile>

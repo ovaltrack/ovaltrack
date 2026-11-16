@@ -8,6 +8,7 @@ import { playerRules, resolvePrimaryAction } from '../../domain/primary-action';
 import { BoardModel, PrimaryAction, WidgetState, dataOf } from '../../types/home.types';
 import { PlayerSummary } from '../../domain/player-summary';
 import { matchTakeaways } from '../../domain/match-takeaways';
+import { SeasonKpi, seasonKpis } from '../../domain/season-kpis';
 import { PlayerHomeDataService, PlayerSeasonData } from './player-home-data.service';
 
 const CLOCK_TICK_MS = 1000;
@@ -31,6 +32,21 @@ export class PlayerHomeStore {
     if (!last) return { kind: 'onboarding', step: 'no-matches-player' };
     const season = dataOf(this.seasonState());
     return { kind: 'player-last', ...last, takeaways: season ? matchTakeaways(season.matches, last.matchId, last.analysisPercent) : null };
+  });
+
+  /** «Mi temporada»: los KPIs del año según el backend; sin partidos o sin persona asociada, vacío. */
+  readonly seasonKpisState = computed<WidgetState<SeasonKpi[]>>(() => {
+    const state = this.seasonState();
+    if (state.status !== 'ready') return state as WidgetState<SeasonKpi[]>;
+    const kpis = seasonKpis(state.data.totals, state.data.matches);
+    return kpis ? { status: 'ready', data: kpis, fetchedAt: state.fetchedAt, stale: state.stale } : { status: 'empty' };
+  });
+
+  /** La temporada incluye el último partido y su análisis todavía no está completo: sus números pueden cambiar. */
+  readonly seasonProvisional = computed(() => {
+    const last = this.summary()?.last;
+    const season = dataOf(this.seasonState());
+    return !!last && last.analysisPercent < 100 && !!season?.matches.some(match => match.matchId === last.matchId);
   });
 
   readonly primary = computed<PrimaryAction | null>(() =>

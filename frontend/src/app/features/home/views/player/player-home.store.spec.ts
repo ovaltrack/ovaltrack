@@ -84,6 +84,36 @@ describe('PlayerHomeStore', () => {
     expect(store.board()).toEqual(jasmine.objectContaining({ kind: 'player-last', takeaways: null }));
   });
 
+  it('«Mi temporada»: 5 KPIs de la temporada del backend y aviso de partido provisorio si el último está incompleto', () => {
+    state = { status: 'ready', data: summary, fetchedAt: 1, stale: false };
+    const store = createStore();
+    store.reload();
+    const kpis = store.seasonKpisState();
+    expect(kpis.status === 'ready' && kpis.data.map(kpi => kpi.key)).toEqual(['points', 'tries', 'matches', 'tackles', 'record']);
+    expect(store.seasonProvisional()).toBeTrue();
+  });
+
+  it('«Mi temporada»: sin aviso con el análisis completo, vacía sin partidos y en error sin afectar al tablero', () => {
+    state = { status: 'ready', data: { ...summary, last: { ...summary.last, analysisPercent: 100 } }, fetchedAt: 1, stale: false };
+    let store = createStore();
+    store.reload();
+    expect(store.seasonProvisional()).toBeFalse();
+    injector.destroy();
+
+    season = { status: 'empty' };
+    store = createStore();
+    store.reload();
+    expect(store.seasonKpisState().status).toBe('empty');
+    injector.destroy();
+
+    season = { status: 'error', message: 'No pudimos cargar esto' };
+    store = createStore();
+    store.reload();
+    expect(store.seasonKpisState().status).toBe('error');
+    expect(store.board().kind).toBe('player-last');
+    expect(store.primary()?.kind).toBe('view-my-match');
+  });
+
   it('sin partidos: onboarding del jugador y ningún primario', () => {
     state = { status: 'empty' };
     const store = createStore();
