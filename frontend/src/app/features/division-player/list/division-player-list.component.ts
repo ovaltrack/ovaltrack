@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -13,11 +13,13 @@ import { PaginationComponent } from '../../pagination/pagination.component';
 import { ResultsPage } from '../../pagination/results-page';
 import { ModalComponent } from '../../modal/modal.component';
 import { ToastService } from 'src/app/core/services/toast.service';
+import { UserContextService } from 'src/app/core/services/user-context.service';
+import { RosterImportDialogComponent, RosterImportOutcome } from '../import/roster-import-dialog.component';
 
 @Component({
   selector: 'app-division-player-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, PaginationComponent, ModalComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, PaginationComponent, ModalComponent, RosterImportDialogComponent],
   templateUrl: './division-player-list.component.html',
   styleUrls: ['../../division/styles/division-lists.css', './division-player-list.component.css']
 })
@@ -28,6 +30,14 @@ export class DivisionPlayerListComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly toastService = inject(ToastService);
+  private readonly userContext = inject(UserContextService);
+
+  /** La importación por planilla es solo para el administrador del club y el coach de la división (el backend lo valida). */
+  readonly canImportRoster = computed(() => {
+    const role = this.userContext.currentRole();
+    return role === 'ADMIN_CLUB' || role === 'COACH_ANALYST';
+  });
+  readonly mostrarImportacion = signal(false);
 
   division: Division | null = null;
   activePlayers: DivisionPlayerResponse[] = [];
@@ -251,5 +261,28 @@ export class DivisionPlayerListComponent implements OnInit {
       }
     });
   }
-}
 
+  abrirImportacion(): void {
+    this.mostrarImportacion.set(true);
+  }
+
+  cerrarImportacion(): void {
+    this.mostrarImportacion.set(false);
+  }
+
+  onPlantelImportado({ imported, skipped }: RosterImportOutcome): void {
+    this.mostrarImportacion.set(false);
+    const importados = imported === 1 ? '1 jugador importado' : `${imported} jugadores importados`;
+    const omitidos = skipped === 1 ? '1 omitido' : `${skipped} omitidos`;
+    if (imported > 0) {
+      this.toastService.success(`${importados}, ${omitidos}.`, 'Plantel importado');
+    } else {
+      this.toastService.warning(`No se importó ningún jugador; ${omitidos}.`, 'Plantel sin cambios');
+    }
+    this.cargarJugadoresActivos(1);
+  }
+
+  onImportacionFallida(message: string): void {
+    this.toastService.error(message, 'No se pudo importar');
+  }
+}

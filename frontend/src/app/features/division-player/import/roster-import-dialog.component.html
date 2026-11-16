@@ -1,0 +1,175 @@
+<div class="import-backdrop" (click)="close()">
+  <section
+    class="import-dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="roster-import-title"
+    (click)="$event.stopPropagation()"
+    (keydown.escape)="close()"
+  >
+    <header class="import-header">
+      <div>
+        <p class="label-mono import-eyebrow">Plantel • {{ divisionName() || 'División' }}</p>
+        <h2 class="import-title" id="roster-import-title">Importar planilla</h2>
+      </div>
+      <button type="button" class="icon-button" (click)="close()" [disabled]="phase() === 'importing'" aria-label="Cerrar">
+        <i class="bi bi-x-lg" aria-hidden="true"></i>
+      </button>
+    </header>
+
+    <div class="import-body">
+      @if (phase() === 'pick' || phase() === 'checking') {
+        <p class="import-intro">
+          Cargá el plantel de una vez desde una planilla <strong>.xlsx</strong> o <strong>.csv</strong>.
+          La primera fila tiene que tener los encabezados.
+        </p>
+
+        <ul class="column-list" aria-label="Columnas de la planilla">
+          @for (column of columns; track column.field) {
+            <li class="column-chip" [class.column-chip--required]="column.required">
+              {{ column.header }}@if (column.required) {<span aria-label="obligatoria"> *</span>}
+            </li>
+          }
+        </ul>
+        <p class="import-hint">
+          Fecha en formato dd/mm/aaaa. Dorsal de 1 a 99. Si el jugador es menor de 18, el correo y el teléfono son obligatorios.
+        </p>
+
+        <label
+          class="drop-zone"
+          [class.drop-zone--active]="dragging()"
+          [class.drop-zone--busy]="phase() === 'checking'"
+          (dragover)="onDragOver($event)"
+          (dragleave)="onDragLeave()"
+          (drop)="onDrop($event)"
+        >
+          <input
+            class="visually-hidden-input"
+            type="file"
+            accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+            (change)="onFileInput($event)"
+            [disabled]="phase() === 'checking'"
+          />
+          @if (phase() === 'checking') {
+            <i class="bi bi-hourglass-split drop-icon" aria-hidden="true"></i>
+            <span class="drop-title">Revisando {{ fileName() }}…</span>
+          } @else {
+            <i class="bi bi-file-earmark-check drop-icon" aria-hidden="true"></i>
+            <span class="drop-title">Elegí un archivo o arrastralo acá</span>
+            <span class="drop-subtitle">.xlsx, .xls o .csv · hasta 300 jugadores</span>
+          }
+        </label>
+
+        @if (fileError()) {
+          <div class="file-error" role="alert">
+            <i class="bi bi-exclamation-circle-fill" aria-hidden="true"></i>
+            <div>
+              @if (fileName()) {
+                <strong>{{ fileName() }}</strong>
+              }
+              <p>{{ fileError() }}</p>
+            </div>
+          </div>
+        }
+
+        <button type="button" class="btn btn-outline template-button" (click)="downloadTemplate()">
+          <i class="bi bi-arrow-down-right" aria-hidden="true"></i> Descargar plantilla
+        </button>
+      } @else {
+        <div class="file-summary">
+          <span class="file-name">
+            <i class="bi bi-file-earmark-check" aria-hidden="true"></i> {{ fileName() }}
+          </span>
+          <button type="button" class="btn btn-outline" (click)="chooseAnotherFile()" [disabled]="busy()">
+            Cambiar archivo
+          </button>
+        </div>
+
+        <div class="tabs-underline preview-filters" role="tablist" aria-label="Filtrar filas">
+          <button type="button" role="tab" [attr.aria-selected]="filter() === 'ALL'" (click)="filter.set('ALL')">
+            Todas <span class="count">{{ previewRows().length }}</span>
+          </button>
+          <button type="button" role="tab" [attr.aria-selected]="filter() === 'READY'" (click)="filter.set('READY')">
+            Listas <span class="count">{{ readyRows().length }}</span>
+          </button>
+          <button type="button" role="tab" [attr.aria-selected]="filter() === 'DUPLICATE'" (click)="filter.set('DUPLICATE')">
+            Duplicadas <span class="count">{{ duplicateCount() }}</span>
+          </button>
+          <button type="button" role="tab" [attr.aria-selected]="filter() === 'INVALID'" (click)="filter.set('INVALID')">
+            Con errores <span class="count">{{ invalidCount() }}</span>
+          </button>
+        </div>
+
+        <div class="preview-scroll">
+          <table class="preview-table">
+            <thead>
+              <tr>
+                <th scope="col" class="col-row">Fila</th>
+                <th scope="col">Jugador</th>
+                <th scope="col">Estado</th>
+                <th scope="col">Detalle</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of visibleRows(); track row.rowNumber) {
+                <tr>
+                  <td class="col-row">{{ row.rowNumber }}</td>
+                  <td class="player-cell">{{ row.displayName || 'Sin nombre' }}</td>
+                  <td>
+                    <span class="row-status" [attr.data-status]="row.status">{{ statusLabel(row.status) }}</span>
+                  </td>
+                  <td>
+                    @if (row.reasons.length === 0) {
+                      <span class="muted">Se va a crear en la división</span>
+                    } @else {
+                      <ul class="reason-list">
+                        @for (reason of row.reasons; track $index) {
+                          <li>
+                            @if (reason.column) {
+                              <span class="reason-column">{{ reason.column }}:</span>
+                            }
+                            {{ reason.message }}
+                          </li>
+                        }
+                      </ul>
+                    }
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="4" class="muted empty-row">No hay filas en este filtro.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (duplicateCount() + invalidCount() > 0) {
+          <p class="import-hint">
+            Las filas duplicadas o con errores no se importan. Corregilas en la planilla y volvé a cargarla si querés sumarlas.
+          </p>
+        }
+      }
+    </div>
+
+    <footer class="import-footer">
+      <button type="button" class="btn btn-outline" (click)="close()" [disabled]="phase() === 'importing'">Cancelar</button>
+      @if (phase() === 'preview' || phase() === 'importing') {
+        <button
+          type="button"
+          class="btn btn-primary-rugby"
+          (click)="confirmImport()"
+          [disabled]="readyRows().length === 0 || busy()"
+        >
+          {{
+            phase() === 'importing'
+              ? 'Importando…'
+              : readyRows().length === 1
+                ? 'Importar 1 jugador'
+                : 'Importar ' + readyRows().length + ' jugadores'
+          }}
+        </button>
+      }
+    </footer>
+  </section>
+</div>

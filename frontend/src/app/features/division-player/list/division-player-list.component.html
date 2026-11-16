@@ -27,6 +27,13 @@
         }}
       </button>
 
+      <!-- Alta en lote desde una planilla .xlsx / .csv -->
+      @if (canImportRoster()) {
+        <button type="button" class="btn btn-outline" (click)="abrirImportacion()" [disabled]="!division">
+          <i class="bi bi-list-check"></i> Importar planilla
+        </button>
+      }
+
       <!-- Enlace / Botón auxiliar de navegación -->
       <a routerLink="/divisions" class="btn btn-outline">
         <i class="bi bi-arrow-left"></i> Volver
@@ -297,3 +304,13 @@
     (cancel)="cancelarDesasociacion()">
   </app-modal>  
 </div>
+
+@if (mostrarImportacion() && division) {
+  <app-roster-import-dialog
+    [divisionId]="division.id"
+    [divisionName]="division.name"
+    (closed)="cerrarImportacion()"
+    (imported)="onPlantelImportado($event)"
+    (failed)="onImportacionFallida($event)"
+  />
+}
