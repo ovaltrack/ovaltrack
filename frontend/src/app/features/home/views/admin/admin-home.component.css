@@ -111,6 +111,7 @@
 }
 
 .figure.small {
+  font-family: var(--font-body);
   font-size: 14px;
   line-height: 1.7;
 }
