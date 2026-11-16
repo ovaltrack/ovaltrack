@@ -28,18 +28,18 @@ export class PlayerHomeDataService {
   private readonly connectivity = inject(ConnectivityService);
 
   /** Último partido y temporada del jugador; vacío si todavía no jugó ninguno. */
-  summary(now: Date): Observable<WidgetState<PlayerSummary>> {
+  summary(): Observable<WidgetState<PlayerSummary>> {
     const userId = this.userContext.userContext()?.userId;
     return this.statistics.loadAllMatchStatistics().pipe(
       switchMap(unordered => {
         const stats = newestFirst(unordered);
         const latest = stats[0];
-        if (!latest) return of(buildPlayerSummary(stats, 100, now));
+        if (!latest) return of(buildPlayerSummary(stats, 100));
         // El % de análisis es del partido completo (no solo de las jugadas del jugador).
         return this.statistics.loadMatchSource(latest.match.matchId).pipe(
           map(source => analysisCoverage(source.events, activeTypeIdsOf(source.eventTypes)).percent),
           catchError(() => of(100)),
-          map(percent => buildPlayerSummary(stats, percent, now))
+          map(percent => buildPlayerSummary(stats, percent))
         );
       }),
       toWidgetState<PlayerSummary | null>({

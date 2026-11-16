@@ -2,7 +2,6 @@ import { shortTeamName } from '../../match/post-match/utils/zone-grid';
 import { PlayerMatchStatistic } from '../../player-statistics/types/player-statistics.types';
 import { toResult, valueByCode } from '../../player-statistics/utils/player-statistics.utils';
 import { playedAt } from './division-match-state';
-import { FormEntry } from './form-record';
 import { dayLabel, parseWallClock } from './match-time';
 
 export interface PlayerLastMatch {
@@ -24,24 +23,9 @@ export interface PlayerLastMatch {
   analysisPercent: number;
 }
 
-export interface PlayerSeason {
-  year: number;
-  points: number;
-  tries: number;
-  matches: number;
-  starts: number;
-  /** Tackles hechos sobre intentados; `null` si no intentó ninguno. */
-  tacklePercent: number | null;
-  /** Últimos partidos de la temporada, del más viejo al más reciente. */
-  last: FormEntry[];
-}
-
 export interface PlayerSummary {
   last: PlayerLastMatch;
-  season: PlayerSeason;
 }
-
-export const PLAYER_LAST_COUNT = 5;
 
 /** Con el análisis incompleto, un 0 no es un dato: puede ser una acción que todavía nadie asignó. */
 const provisionalZero = (value: number, analysisPercent: number): number | null =>
@@ -60,7 +44,7 @@ export function newestFirst(statistics: readonly PlayerMatchStatistic[]): Player
  * Resumen del jugador a partir de sus partidos, en cualquier orden. El último es el que se jugó más tarde
  * (un terminado con fecha futura cuenta como jugado). `analysisPercent` es el de ese partido. `null` si todavía no jugó ninguno.
  */
-export function buildPlayerSummary(unordered: readonly PlayerMatchStatistic[], analysisPercent: number, now: Date): PlayerSummary | null {
+export function buildPlayerSummary(unordered: readonly PlayerMatchStatistic[], analysisPercent: number): PlayerSummary | null {
   const statistics = newestFirst(unordered);
   const latest = statistics[0];
   if (!latest) return null;
@@ -70,10 +54,6 @@ export function buildPlayerSummary(unordered: readonly PlayerMatchStatistic[], a
   const tacklesMade = count(latest, 'TACKLE_MADE');
   const tackleAttempts = tacklesMade + count(latest, 'TACKLE_MISSED');
   const tackles = provisionalZero(tacklesMade, analysisPercent);
-
-  const ofSeason = statistics.filter(entry => playedAt(entry.match)?.getFullYear() === now.getFullYear());
-  const made = ofSeason.reduce((sum, entry) => sum + count(entry, 'TACKLE_MADE'), 0);
-  const attempts = made + ofSeason.reduce((sum, entry) => sum + count(entry, 'TACKLE_MISSED'), 0);
 
   return {
     last: {
@@ -89,20 +69,6 @@ export function buildPlayerSummary(unordered: readonly PlayerMatchStatistic[], a
       tacklePercent: tackles === null || tackleAttempts === 0 ? null : Math.round((tacklesMade / tackleAttempts) * 100),
       slotNumber: match.slotNumber,
       analysisPercent
-    },
-    season: {
-      year: now.getFullYear(),
-      points: ofSeason.reduce((sum, entry) => sum + entry.stat.totalPoints, 0),
-      tries: ofSeason.reduce((sum, entry) => sum + count(entry, 'TRY'), 0),
-      matches: ofSeason.length,
-      starts: ofSeason.filter(entry => entry.match.role === 'TITULAR').length,
-      tacklePercent: attempts === 0 ? null : Math.round((made / attempts) * 100),
-      last: ofSeason.slice(0, PLAYER_LAST_COUNT).reverse().map(entry => ({
-        matchId: entry.match.matchId,
-        result: toResult(entry.match),
-        score: `${entry.match.homeScore}-${entry.match.awayScore}`,
-        opponent: shortTeamName(entry.match.opponentName)
-      }))
     }
   };
 }

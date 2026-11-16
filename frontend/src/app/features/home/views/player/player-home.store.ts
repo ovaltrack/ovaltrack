@@ -71,7 +71,7 @@ export class PlayerHomeStore {
 
   constructor() {
     this.load$.pipe(
-      switchMap(() => this.data.summary(this.now()).pipe(tap(state => this.summaryState.set(state)))),
+      switchMap(() => this.data.summary().pipe(tap(state => this.summaryState.set(state)))),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe();
 

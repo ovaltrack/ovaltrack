@@ -15,8 +15,7 @@ describe('PlayerHomeStore', () => {
     last: {
       matchId: 'm2', dateLabel: 'Dom 1 nov', opponent: 'Draig Goch', ownScore: 22, opponentScore: 14, result: 'win',
       role: 'TITULAR', tries: 1, tackles: 6, tacklePercent: 86, slotNumber: 14, analysisPercent: 78
-    },
-    season: { year: 2026, points: 25, tries: 5, matches: 8, starts: 7, tacklePercent: 81, last: [] }
+    }
   };
 
   const zero = {
