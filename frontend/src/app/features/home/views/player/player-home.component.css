@@ -26,21 +26,12 @@
   color: var(--text-secondary);
 }
 
-.kpi.highlight {
-  background: var(--btn-primary-bg);
-  color: var(--btn-primary-fg);
-}
-
 .kpi-value {
   margin: 0;
   font-family: var(--font-mono);
   font-weight: 700;
   font-size: 34px;
   line-height: 1.1;
-  color: inherit;
-}
-
-.kpi:not(.highlight) .kpi-value {
   color: var(--text-primary);
 }
 
