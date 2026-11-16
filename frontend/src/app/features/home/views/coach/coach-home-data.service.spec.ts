@@ -94,4 +94,12 @@ describe('CoachHomeDataService · eventos del último partido', () => {
     service.focus('d1', now).subscribe(state => states.push(state.status));
     expect(states).toEqual(['loading', 'error']);
   });
+
+  it('los snapshots de Forma y Deuda son por división, para no mostrar sin red el dato de otra pestaña', () => {
+    service.form(matches, now).subscribe();
+    service.debt(matches).subscribe();
+    const keys = cacheWrites.map(([widget]) => widget);
+    expect(keys).toContain('coach.form.d1');
+    expect(keys).toContain('coach.debt.d1');
+  });
 });

@@ -150,7 +150,7 @@ export class CoachHomeDataService {
           minutesWithoutZone: zones ? minutesWithoutZone(zones.assignments) : null
         };
       }),
-      toWidgetState<DebtData>(this.options('debt', { isEmpty: () => false }))
+      toWidgetState<DebtData>(this.options(`debt.${last.divisionId}`, { isEmpty: () => false }))
     );
   }
 
@@ -158,7 +158,7 @@ export class CoachHomeDataService {
   playersWithoutJersey(divisionId: string): Observable<WidgetState<number>> {
     return this.playerService.getActiveByDivisionId(divisionId, 1, JERSEY_PAGE_SIZE).pipe(
       map(page => (page.content as DivisionPlayerResponse[]).filter(player => player.jerseyNumber == null).length),
-      toWidgetState<number>(this.options('jerseys', { isEmpty: () => false }))
+      toWidgetState<number>(this.options(`jerseys.${divisionId}`, { isEmpty: () => false }))
     );
   }
 
@@ -172,7 +172,7 @@ export class CoachHomeDataService {
     ));
     return forkJoin(percents$).pipe(
       map((pairs): FormData => ({ record, percents: Object.fromEntries(pairs) })),
-      toWidgetState<FormData>(this.options('form', { isEmpty: () => false }))
+      toWidgetState<FormData>(this.options(`form.${matches[0].divisionId}`, { isEmpty: () => false }))
     );
   }
 
