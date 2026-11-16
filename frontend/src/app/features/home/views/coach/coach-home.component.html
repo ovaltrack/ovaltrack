@@ -64,7 +64,7 @@
                 <span>{{ item.detail }}</span>
               </div>
               @if (store.online()) {
-                <a class="btn btn-outline inbox-btn" [routerLink]="item.route" [attr.aria-label]="item.actionLabel + ': ' + item.text + ', ' + item.detail">{{ item.actionLabel }}</a>
+                <a class="btn btn-outline inbox-btn" [routerLink]="item.route" [queryParams]="item.queryParams" [attr.aria-label]="item.actionLabel + ': ' + item.text + ', ' + item.detail">{{ item.actionLabel }}</a>
               } @else {
                 <button type="button" class="btn btn-outline inbox-btn" disabled [attr.aria-label]="item.actionLabel + ': ' + item.text + ', requiere conexión'">Requiere conexión</button>
               }

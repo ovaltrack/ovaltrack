@@ -12,22 +12,13 @@ import { FocusInput } from '../../domain/focus-rows';
 import { upcomingMatches } from '../../domain/division-match-state';
 import { greetingFor, hudDateLabel } from '../../domain/greeting';
 import { relativeMatchLabel, parseWallClock } from '../../domain/match-time';
+import { PendingRow, pendingRows } from '../../domain/pending-rows';
 import { coachRules, resolvePrimaryAction } from '../../domain/primary-action';
-import { BoardModel, PrimaryAction, SUBSTITUTES_TARGET, WidgetState } from '../../types/home.types';
+import { BoardModel, PrimaryAction, WidgetState } from '../../types/home.types';
 import { BoardExtras, CoachHomeDataService, DebtData, EMPTY_BOARD_EXTRAS, FormData } from './coach-home-data.service';
 
 const ACTIVE_DIVISION_WIDGET = 'active-division';
 const CLOCK_TICK_MS = 1000;
-
-export interface PendingItem {
-  kind: 'substitutes' | 'jerseys';
-  text: string;
-  detail: string;
-  /** Ruta a la que lleva el botón. */
-  route: string;
-  actionLabel: string;
-  requiresConnection: boolean;
-}
 
 export type CoachWidget = 'matches' | 'pending' | 'form' | 'focus';
 
@@ -116,43 +107,29 @@ export class CoachHomeStore {
   /** Mientras no llegan los partidos no hay tablero que mostrar. */
   readonly boardStatus = computed(() => this.divisions().length === 0 ? 'ready' : this.matchesState().status);
 
-  /** Pendientes de la división: suplentes que faltan en el próximo partido y jugadores sin dorsal. */
-  readonly pendingState = computed<WidgetState<PendingItem[]>>(() => {
+  /** Pendientes de la división (ver `pendingRows`): lo que el tablero ya pide no se repite acá. */
+  readonly pendingState = computed<WidgetState<PendingRow[]>>(() => {
     const jerseys = this.jerseyState();
-    if (jerseys.status === 'loading' || this.matchesState().status === 'loading') return { status: 'loading' };
+    if (jerseys.status === 'loading' || this.matchesState().status === 'loading' || this.debtState().status === 'loading') return { status: 'loading' };
     if (jerseys.status === 'error') return jerseys;
-    const items: PendingItem[] = [];
-    const next = this.upcoming();
-    const roster = this.extras().roster;
-    const substitutes = roster?.substitutes ?? 0;
-    const start = next && parseWallClock(next.date);
-    if (next && start && substitutes < SUBSTITUTES_TARGET) {
-      const missing = SUBSTITUTES_TARGET - substitutes;
-      items.push({
-        kind: 'substitutes',
-        text: `Faltan ${missing} ${missing === 1 ? 'suplente' : 'suplentes'}`,
-        detail: `vs ${shortTeamName(next.opponent.alias || next.opponent.name)} · ${relativeMatchLabel(start, this.now())}`,
-        route: `/selection-roster/${next.id}`,
-        actionLabel: 'Completar',
-        requiresConnection: true
-      });
-    }
-    const withoutJersey = jerseys.status === 'ready' ? jerseys.data : 0;
     const divisionId = this.activeDivisionId();
-    if (withoutJersey > 0 && divisionId) {
-      items.push({
-        kind: 'jerseys',
-        text: `${withoutJersey} ${withoutJersey === 1 ? 'jugador sin dorsal' : 'jugadores sin dorsal'}`,
-        detail: `Plantel ${this.activeDivision()?.name ?? ''}`,
-        route: `/divisions/${divisionId}/players`,
-        actionLabel: 'Asignar',
-        requiresConnection: true
-      });
-    }
-    if (items.length === 0) return { status: 'empty' };
+    if (!divisionId) return { status: 'empty' };
+    const next = this.upcoming();
+    const start = next && parseWallClock(next.date);
+    const debt = this.debtState();
+    const rows = pendingRows({
+      board: this.board(),
+      divisionId,
+      divisionName: this.activeDivision()?.name ?? '',
+      analysis: debt.status === 'ready' ? debt.data : null,
+      next: next && start ? { id: next.id, status: next.status, opponent: shortTeamName(next.opponent.alias || next.opponent.name), whenLabel: relativeMatchLabel(start, this.now()) } : null,
+      roster: this.extras().roster,
+      withoutJersey: jerseys.status === 'ready' ? jerseys.data : 0
+    });
+    if (rows.length === 0) return { status: 'empty' };
     return jerseys.status === 'ready'
-      ? { status: 'ready', data: items, fetchedAt: jerseys.fetchedAt, stale: jerseys.stale }
-      : { status: 'ready', data: items, fetchedAt: this.now().getTime(), stale: false };
+      ? { status: 'ready', data: rows, fetchedAt: jerseys.fetchedAt, stale: jerseys.stale }
+      : { status: 'ready', data: rows, fetchedAt: this.now().getTime(), stale: false };
   });
 
   readonly hudLabel = computed(() => `${hudDateLabel(this.now())} · ${this.userContext.currentClub()?.name ?? ''}`);

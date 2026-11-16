@@ -216,6 +216,34 @@ describe('CoachHomeStore', () => {
     }
   });
 
+  it('pendientes: el análisis pendiente aparece cuando el tablero está en Convocar y no cuando está en Analizar', () => {
+    const finishedMatch = match({ id: 'f1', status: 'finished', date: '2026-11-01T15:00:00' });
+    debt = { status: 'ready', data: { matchId: 'f1', opponent: 'Trelew', dateLabel: '1 nov', percent: 78, withoutPlayer: 12, minutesWithoutZone: 0 }, fetchedAt: 1, stale: false };
+    matches = { status: 'ready', data: [finishedMatch, match({ id: 'n1', status: 'not_started', date: '2026-11-08T15:00:00' })], fetchedAt: 1, stale: false };
+    extras = { ...EMPTY_BOARD_EXTRAS, roster: { starters: 15, substitutes: 6 } };
+    let store = createStore();
+    store.reload();
+    expect(store.board().kind).toBe('next');
+    const convocar = store.pendingState();
+    expect(convocar.status === 'ready' && convocar.data.map(row => row.kind)).toEqual(['analysis', 'substitutes']);
+    injector.destroy();
+
+    extras = { ...EMPTY_BOARD_EXTRAS, roster: { starters: 15, substitutes: 8 } };
+    matches = { status: 'ready', data: [finishedMatch, match({ id: 'n1', status: 'not_started', date: '2026-11-20T15:00:00' })], fetchedAt: 1, stale: false };
+    store = createStore();
+    store.reload();
+    expect(store.board().kind).toBe('analysis');
+    expect(store.pendingState().status).toBe('empty');
+  });
+
+  it('pendientes: la nómina sin armar no se repite cuando el tablero ya pide «Armá la nómina»', () => {
+    matches = { status: 'ready', data: [match({ status: 'empty_roster', date: '2026-11-08T15:00:00' })], fetchedAt: 1, stale: false };
+    const store = createStore();
+    store.reload();
+    expect(store.board()).toEqual(jasmine.objectContaining({ kind: 'next', callUp: jasmine.anything() }));
+    expect(store.pendingState().status).toBe('empty');
+  });
+
   it('pendientes vacío cuando la nómina está completa y todos tienen dorsal', () => {
     matches = { status: 'ready', data: [match({ status: 'not_started', date: '2026-11-07T15:00:00' })], fetchedAt: 1, stale: false };
     extras = { ...EMPTY_BOARD_EXTRAS, roster: { starters: 15, substitutes: 8 } };
