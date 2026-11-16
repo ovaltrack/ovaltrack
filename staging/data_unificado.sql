@@ -27,6 +27,9 @@ TRUNCATE TABLE match_zone_assignments, events, matches_players, event_types, mat
 ALTER TABLE matches DROP CONSTRAINT IF EXISTS matches_status_check;
 ALTER TABLE matches ADD CONSTRAINT matches_status_check CHECK (status IN ('EMPTY_ROSTER', 'NOT_STARTED', 'IN_PROGRESS', 'HALFTIME', 'FINISHED', 'CANCELLED'));
 
+-- Guía de funcionalidades: pendiente solo para cuentas nuevas (User.@PrePersist).
+ALTER TABLE users ADD COLUMN IF NOT EXISTS tutorial_pending BOOLEAN;
+
 ALTER TABLE matches ADD COLUMN IF NOT EXISTS clock_elapsed_seconds INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE matches ADD COLUMN IF NOT EXISTS clock_paused BOOLEAN NOT NULL DEFAULT TRUE;
 ALTER TABLE matches ADD COLUMN IF NOT EXISTS clock_updated_at TIMESTAMP;
@@ -2485,6 +2488,10 @@ INSERT INTO users (id, login_email, password_hash, role, person_id, active, crea
     ('33333333-1111-1111-1111-000000000135', 'player20@ovaltrack.com', '$2a$10$rfosuoBOENyuQRIy6eCSX.RVjuk2ZrLtlz7NdGpBlxrqviDJflWiG', 'PLAYER', '33333333-1111-1111-1111-000000000135', true, CURRENT_TIMESTAMP),
     ('33333333-1111-1111-1111-000000000136', 'player21@ovaltrack.com', '$2a$10$rfosuoBOENyuQRIy6eCSX.RVjuk2ZrLtlz7NdGpBlxrqviDJflWiG', 'PLAYER', '33333333-1111-1111-1111-000000000136', true, CURRENT_TIMESTAMP),
     ('33333333-1111-1111-1111-000000000137', 'player22@ovaltrack.com', '$2a$10$rfosuoBOENyuQRIy6eCSX.RVjuk2ZrLtlz7NdGpBlxrqviDJflWiG', 'PLAYER', '33333333-1111-1111-1111-000000000137', true, CURRENT_TIMESTAMP);
+
+-- Las cuentas del seed ya conocen OvalTrack: la guía no arranca sola. Para probarla con una cuenta:
+-- UPDATE users SET tutorial_pending = true WHERE login_email = 'gonzalo@mail.com';
+UPDATE users SET tutorial_pending = false;
 
 
 -- =========================================
