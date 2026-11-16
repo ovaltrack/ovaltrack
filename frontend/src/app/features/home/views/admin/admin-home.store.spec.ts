@@ -24,12 +24,16 @@ describe('AdminHomeStore', () => {
   let matches: WidgetState<Match[]>;
   let stats: WidgetState<DivisionStat[]>;
   let rosters: RosterCounts;
+  let requestedRosters: string[];
   const divisions = signal<Division[]>([]);
   let injector: Injector & { destroy(): void };
 
   const data = {
     matches: (): Observable<WidgetState<Match[]>> => of(matches),
-    rosters: () => of(rosters),
+    rosters: (requested: readonly Match[]) => {
+      requestedRosters = requested.map(candidate => candidate.id);
+      return of(rosters);
+    },
     divisionStats: () => of(stats)
   };
 
@@ -54,6 +58,7 @@ describe('AdminHomeStore', () => {
     matches = ready([]);
     stats = ready([stat('d1', 2), stat('d2', 1)]);
     rosters = {};
+    requestedRosters = [];
     divisions.set([division('d1', 'Superior'), division('d2', 'M15')]);
   });
 
@@ -114,6 +119,26 @@ describe('AdminHomeStore', () => {
     store.reload();
     const first = store.cards()[0];
     expect(first).toEqual(jasmine.objectContaining({ name: 'Superior', staffLabel: '2 en staff', players: 20, nextLabel: 'Sáb 14 nov · 14:30', analysisPercent: 78, tone: 'warn' }));
+  });
+
+  it('pide la nómina de todos los pendientes dentro de las 72 h, no solo de hoy y mañana', () => {
+    matches = ready([
+      match({ id: 'hoy', status: 'not_started', date: '2026-11-06T20:00:00' }),
+      match({ id: 'a60h', status: 'not_started', date: '2026-11-09T06:00:00' }),
+      match({ id: 'a80h', status: 'not_started', date: '2026-11-09T22:00:00' }),
+      match({ id: 'jugado', status: 'finished', date: '2026-11-07T10:00:00' })
+    ]);
+    createStore().reload();
+    expect(requestedRosters).toEqual(['hoy', 'a60h']);
+  });
+
+  it('un partido en curso con fecha de mañana: tablero de hoy y tarjeta de la división en curso, no "sin partido"', () => {
+    matches = ready([match({ id: 'vivo', status: 'in_progress', date: '2026-11-07T14:30:00' })]);
+    const store = createStore();
+    store.reload();
+    expect(store.board()).toEqual(jasmine.objectContaining({ kind: 'club-day', title: 'Hoy en el club' }));
+    expect(store.cards()[0]).toEqual(jasmine.objectContaining({ name: 'Superior', liveLabel: 'En curso', nextLabel: null }));
+    expect(store.cards()[1].liveLabel).toBeNull();
   });
 
   it('el encabezado resume el club y las divisiones', () => {

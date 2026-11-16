@@ -46,6 +46,24 @@ describe('admin-board', () => {
     expect(board).toEqual(jasmine.objectContaining({ kind: 'club-day', title: 'Hoy en el club', nowMinute: 18 * 60 }));
   });
 
+  it('un partido en curso con fecha de mañana es de "hoy" y va primero, no en "Mañana en el club"', () => {
+    const board = buildAdminBoard(context([
+      match({ id: 'h', date: '2026-11-06T20:00:00' }),
+      match({ id: 'vivo', status: 'in_progress', date: '2026-11-07T14:30:00', divisionId: 'd2' }),
+      match({ id: 't', date: '2026-11-07T10:00:00' })
+    ]));
+    expect(board.kind).toBe('club-day');
+    if (board.kind === 'club-day') {
+      expect(board.title).toBe('Hoy en el club');
+      expect(board.items.map(item => [item.id, item.status, item.detail])).toEqual([['vivo', 'live', 'En curso'], ['h', 'alert', 'Sin nómina']]);
+    }
+  });
+
+  it('un partido en curso con fecha de otro día alcanza para armar el día, sin caer en club-idle', () => {
+    const board = buildAdminBoard(context([match({ id: 'vivo', status: 'halftime', date: '2026-11-01T10:00:00' })]));
+    expect(board).toEqual(jasmine.objectContaining({ kind: 'club-day', title: 'Hoy en el club' }));
+  });
+
   it('sin partidos hoy ni mañana muestra la próxima fecha', () => {
     const board = buildAdminBoard(context([match({ id: 'a', date: '2026-11-14T10:00:00' }), match({ id: 'b', date: '2026-11-14T13:00:00' })]));
     expect(board).toEqual({ kind: 'club-idle', nextLabel: 'Sáb 14 nov · 2 partidos' });

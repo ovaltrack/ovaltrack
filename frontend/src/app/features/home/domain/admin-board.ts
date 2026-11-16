@@ -2,7 +2,7 @@ import { Match } from '../../match/types/match.types';
 import { BoardModel, ClubDayItemStatus, ClubDayTimelineItem, STARTERS_TARGET, SUBSTITUTES_TARGET } from '../types/home.types';
 import { toClubDayItem } from './club-day-lanes';
 import { dayLabel, parseWallClock } from './match-time';
-import { upcomingMatches } from './division-match-state';
+import { isLiveMatch, upcomingMatches } from './division-match-state';
 
 export interface AdminBoardContext {
   now: Date;
@@ -15,8 +15,6 @@ export interface AdminBoardContext {
 
 const DAY_MS = 86_400_000;
 
-const isLive = (match: Match) => match.status === 'in_progress' || match.status === 'halftime';
-
 function sameDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
@@ -26,7 +24,7 @@ const pad = (value: number) => String(value).padStart(2, '0');
 /** Estado y texto de un partido en el timeline: alerta si falta entrenador, nómina o suplentes. */
 export function clubDayItemState(match: Match, hasCoach: boolean, roster: { starters: number; substitutes: number } | undefined): { status: ClubDayItemStatus; detail: string } {
   if (match.status === 'finished') return { status: 'final', detail: `${match.homeScore}-${match.awayScore}` };
-  if (isLive(match)) return { status: 'live', detail: match.status === 'halftime' ? 'Entretiempo' : 'En curso' };
+  if (isLiveMatch(match)) return { status: 'live', detail: match.status === 'halftime' ? 'Entretiempo' : 'En curso' };
   if (!hasCoach) return { status: 'alert', detail: 'Sin entrenador asignado' };
   if (match.status === 'empty_roster' || !roster || roster.starters === 0) return { status: 'alert', detail: 'Sin nómina' };
   if (roster.starters < STARTERS_TARGET) return { status: 'alert', detail: `Titulares ${roster.starters}/${STARTERS_TARGET}` };
@@ -34,7 +32,10 @@ export function clubDayItemState(match: Match, hasCoach: boolean, roster: { star
   return { status: 'ok', detail: 'Nómina lista' };
 }
 
-/** Tablero del administrador: partidos de hoy o de mañana; si no hay, la próxima fecha; sin nada, primeros pasos. */
+/**
+ * Tablero del administrador: partidos de hoy o de mañana; si no hay, la próxima fecha; sin nada, primeros pasos.
+ * Un partido en curso es de "hoy" aunque su fecha sea otra (el estado del servidor manda) y va primero.
+ */
 export function buildAdminBoard(ctx: AdminBoardContext): BoardModel {
   if (ctx.divisions.length === 0) return { kind: 'onboarding', step: 'create-division' };
 
@@ -47,7 +48,9 @@ export function buildAdminBoard(ctx: AdminBoardContext): BoardModel {
   const tomorrow = new Date(ctx.now.getTime() + DAY_MS);
 
   for (const [day, reference] of [['today', ctx.now], ['tomorrow', tomorrow]] as const) {
-    const ofDay = dated.filter(entry => sameDay(entry.start, reference)).sort((a, b) => a.start.getTime() - b.start.getTime());
+    const ofDay = dated
+      .filter(entry => day === 'today' ? isLiveMatch(entry.match) || sameDay(entry.start, reference) : !isLiveMatch(entry.match) && sameDay(entry.start, reference))
+      .sort((a, b) => Number(isLiveMatch(b.match)) - Number(isLiveMatch(a.match)) || a.start.getTime() - b.start.getTime());
     if (ofDay.length === 0) continue;
     const items: ClubDayTimelineItem[] = ofDay.map(({ match, start }) => {
       const division = ctx.divisions.find(candidate => candidate.id === match.divisionId);

@@ -148,6 +148,13 @@ describe('adminRules', () => {
     expect(action).toEqual(jasmine.objectContaining({ kind: 'define-lineup', route: '/selection-roster/m1' }));
   });
 
+  it('1 · un partido sin nómina a 60 h (pasado mañana) también pide la alineación', () => {
+    const action = resolve(admin({
+      matches: [clubMatch('lejos', 'd1', 'not_started', at(3, 6))], rosters: { lejos: { starters: 0 } }
+    }));
+    expect(action).toEqual(jasmine.objectContaining({ kind: 'define-lineup', route: '/selection-roster/lejos' }));
+  });
+
   it('1 · gana la división que juega primero sin nómina', () => {
     const action = resolve(admin({
       divisions: [division('d1'), division('d2')],

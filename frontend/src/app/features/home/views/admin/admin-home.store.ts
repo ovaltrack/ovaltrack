@@ -7,15 +7,14 @@ import { Match } from '../../../match/types/match.types';
 import { analysisTone, AnalysisTone } from '../../domain/analysis-coverage';
 import { buildAdminBoard } from '../../domain/admin-board';
 import { FormEntry, formRecord } from '../../domain/form-record';
-import { upcomingMatches } from '../../domain/division-match-state';
+import { divisionMatchState } from '../../domain/division-match-state';
 import { greetingFor, hudDateLabel } from '../../domain/greeting';
 import { dayLabel, formatLocalClock, parseWallClock } from '../../domain/match-time';
-import { adminRules, resolvePrimaryAction } from '../../domain/primary-action';
+import { LINEUP_WINDOW_MS, adminRules, resolvePrimaryAction } from '../../domain/primary-action';
 import { BoardModel, PrimaryAction, WidgetState, dataOf } from '../../types/home.types';
 import { AdminHomeDataService, DivisionStat, RosterCounts } from './admin-home-data.service';
 
 const CLOCK_TICK_MS = 1000;
-const DAY_MS = 86_400_000;
 
 export interface InboxItem {
   divisionId: string;
@@ -32,6 +31,8 @@ export interface DivisionCard {
   players: number | null;
   /** "Sáb 7 nov · 14:30"; `null` si no hay partido programado. */
   nextLabel: string | null;
+  /** "En curso" o "Entretiempo" si la división tiene un partido jugándose, sea cual sea su fecha; si no, `null`. */
+  liveLabel: string | null;
   last: FormEntry[];
   analysisPercent: number | null;
   tone: AnalysisTone;
@@ -95,7 +96,7 @@ export class AdminHomeStore {
   readonly cards = computed<DivisionCard[]>(() => this.divisions().map(division => {
     const stat = this.stats().find(candidate => candidate.divisionId === division.id);
     const ofDivision = this.matches().filter(match => match.divisionId === division.id);
-    const next = upcomingMatches(ofDivision, this.now())[0];
+    const { live, next } = divisionMatchState(ofDivision, null, this.now());
     const start = next && parseWallClock(next.date);
     const analysis = stat?.analysisPercent ?? null;
     return {
@@ -104,6 +105,7 @@ export class AdminHomeStore {
       noCoach: stat?.staff === 0,
       staffLabel: stat?.staff == null ? '' : `${stat.staff} en staff`,
       players: stat?.players ?? null,
+      liveLabel: live ? (live.status === 'halftime' ? 'Entretiempo' : 'En curso') : null,
       nextLabel: start ? `${dayLabel(start)} · ${formatLocalClock(start.getTime())}` : null,
       last: formRecord(ofDivision, this.now())?.last ?? [],
       analysisPercent: analysis,
@@ -138,7 +140,7 @@ export class AdminHomeStore {
       takeUntilDestroyed(this.destroyRef)
     ).subscribe();
 
-    this.bind(() => this.data.rosters(this.pendingOfTheDay()), this.rosters);
+    this.bind(() => this.data.rosters(this.pendingInLineupWindow()), this.rosters);
     this.bind(() => this.data.divisionStats(this.divisions(), this.matches()), this.statsState);
   }
 
@@ -160,9 +162,9 @@ export class AdminHomeStore {
     else this.derive$.next();
   }
 
-  /** Partidos de hoy y de mañana todavía sin jugar: los únicos cuya nómina muestra el timeline. */
-  private pendingOfTheDay(): Match[] {
-    const limit = this.now().getTime() + 2 * DAY_MS;
+  /** Partidos sin iniciar dentro de las 72 h de la alta de nómina: los únicos cuya nómina necesitan el tablero y las reglas. */
+  private pendingInLineupWindow(): Match[] {
+    const limit = this.now().getTime() + LINEUP_WINDOW_MS;
     return this.matches().filter(match => {
       const start = parseWallClock(match.date);
       return start !== null && (match.status === 'not_started' || match.status === 'empty_roster') && start.getTime() < limit;
