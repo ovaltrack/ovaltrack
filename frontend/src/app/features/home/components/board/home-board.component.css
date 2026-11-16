@@ -273,6 +273,21 @@
   align-items: start;
 }
 
+.agenda-title {
+  margin-bottom: 16px;
+}
+
+.agenda-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.agenda-urgent .board-btn {
+  margin-top: 12px;
+}
+
 .agenda-score {
   margin: 0 0 4px;
   display: flex;

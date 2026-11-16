@@ -125,7 +125,7 @@ export const adminRules: readonly PrimaryRule<AdminRuleContext>[] = [
   ctx => {
     const orphan = ctx.divisions.find(division => !division.hasCoach);
     return orphan
-      ? { kind: 'assign-coach', label: 'Asignar entrenador', route: `/divisions/${orphan.id}/coaches`, target: 'inbox-tile', requiresConnection: true }
+      ? { kind: 'assign-coach', label: 'Asignar entrenador', route: `/divisions/${orphan.id}/coaches`, target: 'board', requiresConnection: true }
       : null;
   },
   // 3. Onboarding: club sin divisiones, o con divisiones pero sin partidos.

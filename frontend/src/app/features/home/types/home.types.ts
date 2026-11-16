@@ -25,7 +25,7 @@ export type PrimaryActionKind =
   | 'view-my-match';
 
 /** Dónde se dibuja el único botón primario de la pantalla. */
-export type PrimaryActionTarget = 'board' | 'inbox-tile';
+export type PrimaryActionTarget = 'board';
 
 export interface PrimaryAction {
   kind: PrimaryActionKind;
@@ -82,6 +82,12 @@ export interface ClubAgendaSection {
   rows: ClubAgendaRow[];
 }
 
+/** «Lo más urgente» del administrador: qué falta y dónde; el botón es la acción primaria de la pantalla. */
+export interface ClubUrgent {
+  title: string;
+  detail: string;
+}
+
 /** El partido en curso del club, para el panel «<división> · en vivo». */
 export interface ClubAgendaLive {
   division: string;
@@ -127,7 +133,7 @@ export type BoardModel =
   | { kind: 'live-elsewhere'; matchId: string; opponent: string; periodLabel: string; ownScore: number; opponentScore: number; lastDataAt: string | null; week: BoardWeek | null }
   | { kind: 'onboarding'; step: 'create-division' | 'schedule-match' | 'await-division' | 'no-matches-player' }
   | { kind: 'club-day'; title: string; label: string; items: ClubDayTimelineItem[]; nowMinute: number | null }
-  | { kind: 'club-agenda'; mode: 'week' | 'day'; label: string; title: string; sections: ClubAgendaSection[]; live: ClubAgendaLive | null }
+  | { kind: 'club-agenda'; mode: 'week' | 'day'; label: string; title: string; sections: ClubAgendaSection[]; live: ClubAgendaLive | null; urgent: ClubUrgent | null }
   | { kind: 'club-idle'; nextLabel: string | null }
   | { kind: 'team-idle'; divisionName: string; last: { opponent: string; dateLabel: string; ownScore: number; opponentScore: number; result: 'win' | 'loss' | 'draw' } }
   | { kind: 'player-last'; matchId: string; dateLabel: string; opponent: string; ownScore: number; opponentScore: number; result: 'win' | 'loss' | 'draw'; role: 'TITULAR' | 'SUPLENTE'; tries: number | null; tackles: number | null; analysisPercent: number; slotNumber: number | null };

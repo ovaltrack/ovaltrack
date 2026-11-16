@@ -110,11 +110,6 @@ describe('HomeBoardComponent', () => {
     expect(el().querySelector('app-board-steps')).toBeNull();
   });
 
-  it('no dibuja el primario si su destino es otra tarjeta', () => {
-    render(next, { ...capture, target: 'inbox-tile' });
-    expect(el().querySelectorAll('.btn-on-board').length).toBe(0);
-  });
-
   it('sin conexión deshabilita lo que necesita red y avisa', () => {
     render(next, lineup, false);
     expect(el().querySelector<HTMLButtonElement>('button.btn-on-board')?.disabled).toBeTrue();
@@ -150,7 +145,7 @@ describe('HomeBoardComponent', () => {
       { matchId: 'a', dayLabel: 'Sáb 21', timeLabel: '10:00', division: 'M15', opponent: 'TRC', chip: { label: 'Sin entrenador', tone: 'warn' as const } },
       { matchId: 'b', dayLabel: 'Sáb 21', timeLabel: '14:30', division: 'Superior', opponent: 'CRC', chip: { label: 'Nómina lista', tone: 'ok' as const } }
     ];
-    const week: BoardModel = { kind: 'club-agenda', mode: 'week', label: 'Fin de semana · Sáb 21', title: '2 partidos este fin de semana', sections: [{ key: 'week', label: null, rows }], live: null };
+    const week: BoardModel = { kind: 'club-agenda', mode: 'week', label: 'Fin de semana · Sáb 21', title: '2 partidos este fin de semana', sections: [{ key: 'week', label: null, rows }], live: null, urgent: null };
 
     it('semana: rótulo, título y una fila por partido con su chip de texto', () => {
       render(week, null);
@@ -165,12 +160,34 @@ describe('HomeBoardComponent', () => {
       render({
         kind: 'club-agenda', mode: 'day', label: 'Hoy en el club · Sáb 21 nov · 1 hoy, 1 mañana', title: 'Hoy en el club',
         sections: [{ key: 'now', label: 'Ahora', rows: [rows[0]] }, { key: 'tomorrow', label: 'Mañana', rows: [rows[1]] }],
-        live: { division: 'M15', opponent: 'TRC', ownScore: 10, opponentScore: 7, periodLabel: "2T 52'", lastDataAt: '14:05' }
+        live: { division: 'M15', opponent: 'TRC', ownScore: 10, opponentScore: 7, periodLabel: "2T 52'", lastDataAt: '14:05' }, urgent: null
       }, null);
       expect(Array.from(el().querySelectorAll('.agenda-sep')).map(node => node.textContent?.trim())).toEqual(['Ahora', 'Mañana']);
       expect(el().textContent).toContain('M15 · en vivo');
       expect(el().textContent).toContain('Último dato 14:05');
       expect(el().querySelectorAll('.btn-on-board').length).toBe(0);
+    });
+
+    it('Lo más urgente: explica el motivo y lleva el único primario de la pantalla', () => {
+      render({ ...week, urgent: { title: 'Falta la alineación de Superior', detail: 'vs CRC · Sáb 21 · Sin nómina' } } as BoardModel, { ...lineup, label: 'Definir alineación Superior' });
+      const panel = el().querySelector('.agenda-urgent') as HTMLElement;
+      expect(panel.textContent).toContain('Lo más urgente');
+      expect(panel.textContent).toContain('Falta la alineación de Superior');
+      expect(panel.querySelector('.btn-on-board')?.textContent).toContain('Definir alineación Superior');
+      expect(el().querySelectorAll('.btn-on-board').length).toBe(1);
+    });
+
+    it('Lo más urgente sin urgencias dice que está todo listo y no dibuja botón', () => {
+      render(week, null);
+      expect(el().querySelector('.agenda-urgent')?.textContent).toContain('Está todo listo');
+      expect(el().querySelectorAll('.btn-on-board').length).toBe(0);
+    });
+
+    it('Lo más urgente sin conexión deshabilita el botón y avisa «Requiere conexión»', () => {
+      render({ ...week, urgent: { title: 'M15 no tiene entrenador', detail: 'Nadie puede capturar sus partidos.' } } as BoardModel,
+        { kind: 'assign-coach', label: 'Asignar entrenador', route: '/divisions/d2/coaches', target: 'board', requiresConnection: true }, false);
+      expect((el().querySelector('.agenda-urgent .btn-on-board') as HTMLButtonElement).disabled).toBeTrue();
+      expect(el().querySelector('.agenda-urgent')?.textContent).toContain('Requiere conexión');
     });
 
     it('sin partidos en la ventana: club-idle con la próxima fecha', () => {

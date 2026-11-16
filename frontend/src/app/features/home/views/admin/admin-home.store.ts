@@ -7,6 +7,7 @@ import { Match } from '../../../match/types/match.types';
 import { analysisTone, AnalysisTone } from '../../domain/analysis-coverage';
 import { buildAdminBoard } from '../../domain/admin-board';
 import { rosterWindowMatches } from '../../domain/club-agenda';
+import { urgentOf } from '../../domain/club-urgent';
 import { FormEntry, formRecord } from '../../domain/form-record';
 import { divisionMatchState } from '../../domain/division-match-state';
 import { greetingFor, hudDateLabel } from '../../domain/greeting';
@@ -67,7 +68,8 @@ export class AdminHomeStore {
   }));
 
   readonly board = computed<BoardModel>(() => buildAdminBoard({
-    now: this.now(), divisions: this.divisionsForRules(), matches: this.matches(), rosters: this.rosters()
+    now: this.now(), divisions: this.divisionsForRules(), matches: this.matches(), rosters: this.rosters(),
+    urgent: urgentOf(this.primary(), { now: this.now(), divisions: this.divisions(), matches: this.matches(), rosters: this.rosters() })
   }));
 
   readonly boardStatus = computed(() => this.divisions().length === 0 ? 'ready' : this.matchesState().status);

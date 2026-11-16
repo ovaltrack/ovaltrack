@@ -1,6 +1,6 @@
 import { shortTeamName } from '../../match/post-match/utils/zone-grid';
 import { Match } from '../../match/types/match.types';
-import { AgendaChip, BoardModel, ClubAgendaLive, ClubAgendaRow, ClubAgendaSection } from '../types/home.types';
+import { AgendaChip, BoardModel, ClubAgendaLive, ClubAgendaRow, ClubAgendaSection, ClubUrgent } from '../types/home.types';
 import { remotePeriodText } from './coach-board';
 import { isLiveMatch, upcomingMatches } from './division-match-state';
 import { clockLabel, dayLabel, formatUtcAsArgentina, parseWallClock, weekdayDayLabel } from './match-time';
@@ -13,6 +13,8 @@ export interface ClubAgendaContext {
   matches: readonly Match[];
   /** Nómina de los partidos pendientes de la ventana; los que no se pudieron leer no están. */
   rosters: Readonly<Record<string, RosterCount>>;
+  /** Lo más urgente según las reglas del administrador; `null` si no hay nada. */
+  urgent?: ClubUrgent | null;
 }
 
 type ClubAgendaBoard = Extract<BoardModel, { kind: 'club-agenda' | 'club-idle' }>;
@@ -104,7 +106,8 @@ export function buildClubAgenda(ctx: ClubAgendaContext): ClubAgendaBoard {
         ...section('today', live.length > 0 ? 'Hoy' : null, ofToday),
         ...section('tomorrow', 'Mañana', ofTomorrow)
       ],
-      live: live.length > 0 ? liveOf(live[0].match, ctx) : null
+      live: live.length > 0 ? liveOf(live[0].match, ctx) : null,
+      urgent: ctx.urgent ?? null
     };
   }
 
@@ -119,7 +122,8 @@ export function buildClubAgenda(ctx: ClubAgendaContext): ClubAgendaBoard {
       label: `${weekend ? 'Fin de semana' : 'Esta semana'} · ${joinDays(days)}`,
       title: `${count} ${count === 1 ? 'partido' : 'partidos'} ${weekend ? 'este fin de semana' : 'esta semana'}`,
       sections: section('week', null, ofWindow),
-      live: null
+      live: null,
+      urgent: ctx.urgent ?? null
     };
   }
 

@@ -191,7 +191,7 @@ describe('adminRules', () => {
       divisions: [division('d1'), division('d2', false)],
       matches: [clubMatch('m', 'd1', 'not_started', at(5, 10))]
     }));
-    expect(action).toEqual(jasmine.objectContaining({ kind: 'assign-coach', route: '/divisions/d2/coaches', target: 'inbox-tile' }));
+    expect(action).toEqual(jasmine.objectContaining({ kind: 'assign-coach', route: '/divisions/d2/coaches', target: 'board' }));
   });
 
   it('3 · club sin divisiones: crear división', () => {

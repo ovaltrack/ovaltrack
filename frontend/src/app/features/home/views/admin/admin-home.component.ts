@@ -25,12 +25,6 @@ export class AdminHomeComponent {
   readonly cards = computed(() => dataOf(this.store.divisionsState()) ?? []);
   readonly divisionCount = computed(() => this.store.divisions().length);
 
-  /** El botón "Asignar" es el primario solo para la división que eligen las reglas; el resto, outline. */
-  isPrimaryAssign(route: string): boolean {
-    const primary = this.store.primary();
-    return primary?.target === 'inbox-tile' && primary.route === route;
-  }
-
   constructor() {
     this.store.start();
 

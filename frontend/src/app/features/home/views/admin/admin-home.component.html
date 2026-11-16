@@ -33,8 +33,7 @@
                 <span>Nadie puede capturar sus partidos</span>
               </div>
               @if (store.online()) {
-                <a class="btn inbox-btn" [class.btn-invite]="isPrimaryAssign(item.route)" [class.btn-outline]="!isPrimaryAssign(item.route)"
-                   [routerLink]="item.route" [attr.aria-label]="'Asignar entrenador a ' + item.divisionName">Asignar</a>
+                <a class="btn btn-outline inbox-btn" [routerLink]="item.route" [attr.aria-label]="'Asignar entrenador a ' + item.divisionName">Asignar</a>
               } @else {
                 <button type="button" class="btn btn-outline inbox-btn" disabled [attr.aria-label]="'Asignar entrenador a ' + item.divisionName + ', requiere conexión'">Requiere conexión</button>
               }

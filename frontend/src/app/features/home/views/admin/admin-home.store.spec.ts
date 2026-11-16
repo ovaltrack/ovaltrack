@@ -88,7 +88,32 @@ describe('AdminHomeStore', () => {
     const inbox = store.inboxState();
     expect(inbox.status).toBe('ready');
     if (inbox.status === 'ready') expect(inbox.data.map(item => item.route)).toEqual(['/divisions/d2/coaches']);
-    expect(store.primary()).toEqual(jasmine.objectContaining({ kind: 'assign-coach', target: 'inbox-tile' }));
+    expect(store.primary()).toEqual(jasmine.objectContaining({ kind: 'assign-coach', target: 'board' }));
+  });
+
+  it('«Lo más urgente» explica la alineación pendiente y la división sin entrenador, y queda vacío sin urgencias', () => {
+    matches = ready([match({ id: 'm1', status: 'empty_roster', date: '2026-11-07T14:30:00' })]);
+    let store = createStore();
+    store.reload();
+    const lineup = store.board();
+    expect(lineup.kind === 'club-agenda' && lineup.urgent).toEqual({ title: 'Falta la alineación de Superior', detail: 'vs Trelew · Sáb 7 nov · mañana · 14:30 · Sin nómina' });
+    injector.destroy();
+
+    matches = ready([match({ id: 'ok', status: 'not_started', date: '2026-11-07T14:30:00' })]);
+    rosters = { ok: { starters: 15, substitutes: 8 } };
+    stats = ready([stat('d1', 2), stat('d2', 0)]);
+    store = createStore();
+    store.reload();
+    const coach = store.board();
+    expect(coach.kind === 'club-agenda' && coach.urgent).toEqual({ title: 'M15 no tiene entrenador', detail: 'Nadie puede capturar sus partidos.' });
+    injector.destroy();
+
+    stats = ready([stat('d1', 2), stat('d2', 1)]);
+    store = createStore();
+    store.reload();
+    const calm = store.board();
+    expect(calm.kind === 'club-agenda' && calm.urgent).toBeNull();
+    expect(store.primary()).toBeNull();
   });
 
   it('mientras no se conocen los entrenadores no se acusa a nadie', () => {
