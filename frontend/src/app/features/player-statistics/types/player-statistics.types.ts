@@ -20,6 +20,8 @@ export interface PlayerMatchDTO {
   role: MatchPlayerRole;
   /** Número de slot en la planilla (titulares 1-15, suplentes 16-23). */
   slotNumber: number | null;
+  /** Cuándo terminó el partido (UTC, sin zona); `null` si no se registró. */
+  finishedAt?: string | null;
 }
 
 /** Datos base de un partido para calcular estadísticas: se cargan una vez por partido. */

@@ -7,7 +7,7 @@ import { DashboardSnapshotCache } from '../../data/dashboard-snapshot.cache';
 import { toWidgetState } from '../../data/to-widget-state';
 import { activeTypeIdsOf } from '../../../match/post-match/utils/review-coverage';
 import { analysisCoverage } from '../../domain/analysis-coverage';
-import { PlayerSummary, buildPlayerSummary } from '../../domain/player-summary';
+import { PlayerSummary, buildPlayerSummary, newestFirst } from '../../domain/player-summary';
 import { WidgetState } from '../../types/home.types';
 
 /** Lecturas del Inicio del jugador: reutiliza `PlayerStatisticsService` sin escrituras nuevas en Dexie. */
@@ -22,7 +22,8 @@ export class PlayerHomeDataService {
   summary(now: Date): Observable<WidgetState<PlayerSummary>> {
     const userId = this.userContext.userContext()?.userId;
     return this.statistics.loadAllMatchStatistics().pipe(
-      switchMap(stats => {
+      switchMap(unordered => {
+        const stats = newestFirst(unordered);
         const latest = stats[0];
         if (!latest) return of(buildPlayerSummary(stats, 100, now));
         // El % de análisis es del partido completo (no solo de las jugadas del jugador).

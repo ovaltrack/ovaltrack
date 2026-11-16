@@ -7,7 +7,7 @@ describe('buildPlayerSummary', () => {
   const columns: PlayerStatColumn[] = ['TRY', 'TACKLE_MADE', 'TACKLE_MISSED'].map(code => ({
     eventTypeId: code, code, label: code, groupName: 'g', isScoring: false, hasAttempts: false
   }));
-  const entry = (id: string, date: string, home: number, away: number, values: { tries?: number; made?: number; missed?: number; points?: number }, role: 'TITULAR' | 'SUPLENTE' = 'TITULAR'): PlayerMatchStatistic => {
+  const entry = (id: string, date: string, home: number, away: number, values: { tries?: number; made?: number; missed?: number; points?: number }, role: 'TITULAR' | 'SUPLENTE' = 'TITULAR', finishedAt: string | null = null): PlayerMatchStatistic => {
     const stat = {
       playerId: 'p', jerseyNumber: 14, playerName: 'Lucas', isStarter: role === 'TITULAR', minutesPlayed: 80,
       totalPoints: values.points ?? 0, hasActivity: true,
@@ -17,7 +17,7 @@ describe('buildPlayerSummary', () => {
         TACKLE_MISSED: { count: values.missed ?? 0, made: null }
       }
     } as PlayerStatistic;
-    const match: PlayerMatchDTO = { matchId: id, date, opponentName: 'Draig Goch', divisionName: 'M18', homeScore: home, awayScore: away, role, slotNumber: 14 };
+    const match: PlayerMatchDTO = { matchId: id, date, opponentName: 'Draig Goch', divisionName: 'M18', homeScore: home, awayScore: away, role, slotNumber: 14, finishedAt };
     return { match, columns, stat };
   };
 
@@ -46,6 +46,28 @@ describe('buildPlayerSummary', () => {
   it('con el análisis completo el 0 es un dato', () => {
     const summary = buildPlayerSummary([entry('m2', '2026-11-01T15:00:00', 22, 14, {})], 100, now);
     expect(summary?.last).toEqual(jasmine.objectContaining({ tries: 0, tackles: 0 }));
+  });
+
+  it('el último es el que se jugó más tarde: un terminado con fecha futura y finishedAt viejo no gana', () => {
+    const summary = buildPlayerSummary([
+      entry('futuro', '2026-12-15T15:00:00', 1, 0, {}, 'TITULAR', '2026-10-10T19:00:00'),
+      entry('reciente', '2026-11-01T15:00:00', 22, 14, {}, 'TITULAR', '2026-11-01T19:00:00')
+    ], 100, now);
+    expect(summary?.last.matchId).toBe('reciente');
+  });
+
+  it('un terminado con fecha futura que terminó hoy cuenta como jugado y como último', () => {
+    const summary = buildPlayerSummary([
+      entry('viejo', '2026-10-01T15:00:00', 1, 0, {}, 'TITULAR', '2026-10-01T19:00:00'),
+      entry('futuro', '2026-12-15T15:00:00', 5, 3, {}, 'TITULAR', '2026-11-06T20:00:00')
+    ], 100, now);
+    expect(summary?.last.matchId).toBe('futuro');
+    expect(summary?.season.last.map(item => item.matchId)).toEqual(['viejo', 'futuro']);
+  });
+
+  it('sin finishedAt manda la fecha, sin importar el orden en que llegan', () => {
+    const summary = buildPlayerSummary([entry('a', '2026-02-01T15:00:00', 1, 0, {}), entry('b', '2026-03-01T15:00:00', 1, 0, {})], 100, now);
+    expect(summary?.last.matchId).toBe('b');
   });
 
   it('la temporada suma solo el año en curso', () => {

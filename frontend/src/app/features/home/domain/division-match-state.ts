@@ -23,7 +23,7 @@ export function upcomingMatches<T extends RuleMatch>(matches: readonly T[], now:
 }
 
 /** Cuándo se jugó de verdad: `finishedAt` y, si falta o no se lee, la fecha programada. */
-export function playedAt(match: StateMatch): Date | null {
+export function playedAt(match: Pick<StateMatch, 'date' | 'finishedAt'>): Date | null {
   return (match.finishedAt ? parseBackendInstant(match.finishedAt) : null) ?? parseWallClock(match.date);
 }
 
