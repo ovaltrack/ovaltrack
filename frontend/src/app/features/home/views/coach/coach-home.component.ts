@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, untracked
 import { RouterLink } from '@angular/router';
 import { DexieOfflineMatchReader } from '../../data/dexie-offline-match-reader';
 import { OfflineMatchReader } from '../../data/offline-match-reader';
+import { formAverages } from '../../domain/form-record';
 import { dataOf } from '../../types/home.types';
 import { HomeBoardComponent } from '../../components/board/home-board.component';
 import { HomeHudComponent } from '../../components/hud/home-hud.component';
@@ -25,6 +26,10 @@ export class CoachHomeComponent {
   readonly store = inject(CoachHomeStore);
 
   readonly form = computed(() => dataOf(this.store.formState()));
+  readonly averages = computed(() => {
+    const form = this.form();
+    return form ? formAverages(form.record) : null;
+  });
   readonly pending = computed(() => dataOf(this.store.pendingState()) ?? []);
   readonly seasonYear = computed(() => this.store.now().getFullYear());
 

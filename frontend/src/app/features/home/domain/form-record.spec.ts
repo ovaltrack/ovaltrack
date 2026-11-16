@@ -1,4 +1,4 @@
-import { FormMatch, finishedOfSeason, formRecord, resultOf } from './form-record';
+import { FormMatch, finishedOfSeason, formAverages, formRecord, resultOf } from './form-record';
 
 describe('form-record', () => {
   const now = new Date(2026, 10, 6, 18, 0);
@@ -66,5 +66,14 @@ describe('form-record', () => {
 
   it('sin partidos jugados no hay forma', () => {
     expect(formRecord([match('n', '2026-11-07T15:00:00', 0, 0, 'not_started')], now)).toBeNull();
+  });
+
+  it('formAverages formatea con coma decimal', () => {
+    expect(formAverages({ averageFor: 24.1, averageAgainst: 18 })).toEqual({ for: '24,1', against: '18' });
+  });
+
+  it('formAverages tolera un snapshot viejo sin promedios', () => {
+    expect(formAverages({})).toBeNull();
+    expect(formAverages({ averageFor: 10 })).toBeNull();
   });
 });

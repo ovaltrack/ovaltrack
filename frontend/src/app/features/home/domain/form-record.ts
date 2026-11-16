@@ -1,6 +1,7 @@
 import { Match } from '../../match/types/match.types';
 import { shortTeamName } from '../../match/post-match/utils/zone-grid';
 import { finishedInPlayOrder, playedAt } from './division-match-state';
+import { formatDecimal } from './number-format';
 
 export type FormResult = 'win' | 'draw' | 'loss';
 
@@ -60,4 +61,15 @@ export function formRecord(matches: readonly FormMatch[], now: Date): FormRecord
       opponent: shortTeamName(match.opponent.alias || match.opponent.name)
     }))
   };
+}
+
+/**
+ * Promedios por partido ya formateados («24,1»). Los récords guardados antes de la Fase 6 no los traen: sin ellos devuelve
+ * `null` y la tarjeta no dibuja el promedio.
+ */
+export function formAverages(record: Partial<Pick<FormRecord, 'averageFor' | 'averageAgainst'>>): { for: string; against: string } | null {
+  const { averageFor, averageAgainst } = record;
+  return typeof averageFor === 'number' && typeof averageAgainst === 'number'
+    ? { for: formatDecimal(averageFor), against: formatDecimal(averageAgainst) }
+    : null;
 }

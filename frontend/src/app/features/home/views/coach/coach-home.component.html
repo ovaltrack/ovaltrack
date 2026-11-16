@@ -36,15 +36,21 @@
       <app-home-tile class="s4" [label]="'Forma · ' + seasonYear()" title="Últimos partidos" [state]="store.formState()" (retry)="store.retry('form')">
         @if (form(); as f) {
           <div class="record">
-            <div><span class="label-mono">Récord</span><p class="kpi">{{ f.record.wins }}-{{ f.record.draws }}-{{ f.record.losses }}</p></div>
+            <div><span class="label-mono">G – E – P</span><p class="kpi">{{ f.record.wins }}–{{ f.record.draws }}–{{ f.record.losses }}</p></div>
             <div><span class="label-mono">Dif.</span>
               <p class="kpi" [class.positive]="f.record.diff > 0" [class.negative]="f.record.diff < 0">{{ f.record.diff > 0 ? '+' : '' }}{{ f.record.diff }}</p></div>
           </div>
-          <div class="last">
+          <div class="last" role="group" aria-label="Últimos partidos">
             @for (entry of f.record.last; track entry.matchId) {
               <app-result-pill [result]="entry.result" [score]="entry.score" [opponent]="entry.opponent" [analysisPercent]="f.percents[entry.matchId] ?? null" />
             }
           </div>
+          @if (averages(); as avg) {
+            <div class="averages">
+              <div><p class="average">{{ avg.for }}</p><span class="average-label">a favor por partido</span></div>
+              <div><p class="average">{{ avg.against }}</p><span class="average-label">en contra por partido</span></div>
+            </div>
+          }
         }
         <p tileEmpty>Sin partidos jugados en {{ seasonYear() }}.</p>
       </app-home-tile>
