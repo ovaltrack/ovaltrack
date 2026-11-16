@@ -3,6 +3,7 @@ import { Observable, catchError, forkJoin, from, map, of, shareReplay } from 'rx
 import { UserContextService } from '../../../../core/services/user-context.service';
 import { ConnectivityService } from '../../../../core/services/connectivity.service';
 import { DivisionPlayerService } from '../../../../services/division-player.service';
+import { DivisionStatisticsService } from '../../../division-statistics/services/division-statistics.service';
 import { Division } from '../../../division/types/division.types';
 import { DivisionPlayerResponse } from '../../../division-player/type/division-player.types';
 import { EventService } from '../../../match/services/event.service';
@@ -17,9 +18,11 @@ import { DashboardSnapshotCache } from '../../data/dashboard-snapshot.cache';
 import { OfflineMatchReader } from '../../data/offline-match-reader';
 import { ToWidgetStateOptions, toWidgetState } from '../../data/to-widget-state';
 import { AnalysisCoverage, analysisCoverage, minutesWithoutZone } from '../../domain/analysis-coverage';
+import { FocusInput } from '../../domain/focus-rows';
+import { focusInputOf } from '../../domain/focus-series';
 import { FormRecord, formRecord } from '../../domain/form-record';
 import { lastFinishedOf, playedAt } from '../../domain/division-match-state';
-import { shortDateLabel } from '../../domain/match-time';
+import { seasonRange, shortDateLabel } from '../../domain/match-time';
 import { LiveEventLine, WidgetState } from '../../types/home.types';
 import { shortTeamName } from '../../../match/post-match/utils/zone-grid';
 import { CaptureProgress } from '../../data/offline-match-reader';
@@ -66,6 +69,7 @@ export class CoachHomeDataService {
   private readonly eventTypeService = inject(EventTypeService);
   private readonly zoneService = inject(ZoneService);
   private readonly playerService = inject(DivisionPlayerService);
+  private readonly statisticsService = inject(DivisionStatisticsService);
   private readonly reader = inject(OfflineMatchReader);
   private readonly cache = inject(DashboardSnapshotCache);
   private readonly userContext = inject(UserContextService);
@@ -169,6 +173,15 @@ export class CoachHomeDataService {
     return forkJoin(percents$).pipe(
       map((pairs): FormData => ({ record, percents: Object.fromEntries(pairs) })),
       toWidgetState<FormData>(this.options('form', { isEmpty: () => false }))
+    );
+  }
+
+  /** «Qué trabajar»: una sola llamada de estadísticas de la división en la temporada; el snapshot es por división. */
+  focus(divisionId: string, now: Date): Observable<WidgetState<FocusInput>> {
+    const { from, to } = seasonRange(now);
+    return this.statisticsService.getDivisionStatistics(divisionId, from, to).pipe(
+      map(response => focusInputOf(response.matches)),
+      toWidgetState<FocusInput>(this.options(`focus.${divisionId}`, { isEmpty: () => false }))
     );
   }
 

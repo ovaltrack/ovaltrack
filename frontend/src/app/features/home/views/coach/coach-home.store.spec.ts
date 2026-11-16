@@ -9,6 +9,7 @@ import { UserContextService } from '../../../../core/services/user-context.servi
 import { Division } from '../../../division/types/division.types';
 import { Match } from '../../../match/types/match.types';
 import { DashboardSnapshotCache } from '../../data/dashboard-snapshot.cache';
+import { FocusInput } from '../../domain/focus-rows';
 import { WidgetState } from '../../types/home.types';
 import { BoardExtras, CoachHomeDataService, DebtData, EMPTY_BOARD_EXTRAS, FormData } from './coach-home-data.service';
 import { CoachHomeStore } from './coach-home.store';
@@ -26,6 +27,7 @@ describe('CoachHomeStore', () => {
   let debt: WidgetState<DebtData>;
   let jerseys: WidgetState<number>;
   let form: WidgetState<FormData>;
+  let focus: WidgetState<FocusInput>;
   let extras: BoardExtras;
   const liveMatch = signal<LiveMatchSummary | null>(null);
   const online = signal(true);
@@ -40,7 +42,8 @@ describe('CoachHomeStore', () => {
     invalidateEvents: () => undefined,
     debt: () => of(debt),
     playersWithoutJersey: () => of(jerseys),
-    form: () => of(form)
+    form: () => of(form),
+    focus: () => of(focus)
   };
 
   function createStore(): CoachHomeStore {
@@ -70,6 +73,7 @@ describe('CoachHomeStore', () => {
     debt = { status: 'empty' };
     jerseys = { status: 'ready', data: 0, fetchedAt: 1, stale: false };
     form = { status: 'empty' };
+    focus = { status: 'empty' };
     extras = EMPTY_BOARD_EXTRAS;
     liveMatch.set(null);
     online.set(true);
@@ -95,6 +99,29 @@ describe('CoachHomeStore', () => {
     expect(store.pendingState().status).toBe('error');
     expect(store.matchesState().status).toBe('ready');
     expect(store.board().kind).toBe('next');
+  });
+
+  it('«Qué trabajar» en error no afecta a Forma, Pendientes ni al tablero, y cada uno se reintenta por separado', () => {
+    focus = { status: 'error', message: 'No pudimos cargar esto' };
+    form = { status: 'ready', data: { record: { wins: 1, draws: 0, losses: 0, diff: 3, averageFor: 10, averageAgainst: 7, last: [] }, percents: {} }, fetchedAt: 1, stale: false };
+    const store = createStore();
+    store.reload();
+    expect(store.focusState().status).toBe('error');
+    expect(store.formState().status).toBe('ready');
+    expect(store.pendingState().status).toBe('empty');
+    expect(store.board().kind).toBe('onboarding');
+    focus = { status: 'ready', data: { series: { lineout: [], tackle: [], penalties: [] }, lineoutLast: null }, fetchedAt: 2, stale: false };
+    store.retry('focus');
+    expect(store.focusState().status).toBe('ready');
+  });
+
+  it('sin conexión «Qué trabajar» muestra la última vista guardada con su sello', () => {
+    const snapshot: FocusInput = { series: { lineout: [70, 72, 60], tackle: [], penalties: [] }, lineoutLast: { won: 6, total: 10 } };
+    focus = { status: 'ready', data: snapshot, fetchedAt: 1_000, stale: true };
+    online.set(false);
+    const store = createStore();
+    store.reload();
+    expect(store.focusState()).toEqual({ status: 'ready', data: snapshot, fetchedAt: 1_000, stale: true });
   });
 
   it('la pestaña activa: la elegida gana, luego la del partido que captura, luego la recordada y la primera', () => {

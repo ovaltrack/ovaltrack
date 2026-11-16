@@ -8,6 +8,7 @@ import { Match } from '../../../match/types/match.types';
 import { shortTeamName } from '../../../match/post-match/utils/zone-grid';
 import { DashboardSnapshotCache } from '../../data/dashboard-snapshot.cache';
 import { buildCoachBoard } from '../../domain/coach-board';
+import { FocusInput } from '../../domain/focus-rows';
 import { upcomingMatches } from '../../domain/division-match-state';
 import { greetingFor, hudDateLabel } from '../../domain/greeting';
 import { relativeMatchLabel, parseWallClock } from '../../domain/match-time';
@@ -28,7 +29,7 @@ export interface PendingItem {
   requiresConnection: boolean;
 }
 
-export type CoachWidget = 'matches' | 'pending' | 'form';
+export type CoachWidget = 'matches' | 'pending' | 'form' | 'focus';
 
 const loading = <T>(): WritableSignal<WidgetState<T>> => signal<WidgetState<T>>({ status: 'loading' });
 
@@ -48,6 +49,7 @@ export class CoachHomeStore {
   readonly debtState = loading<DebtData>();
   readonly jerseyState = loading<number>();
   readonly formState = loading<FormData>();
+  readonly focusState = loading<FocusInput>();
   readonly extras = signal<BoardExtras>(EMPTY_BOARD_EXTRAS);
 
   readonly divisions = computed(() => this.userContext.activeDivisions().filter(division => division.active));
@@ -177,6 +179,10 @@ export class CoachHomeStore {
       return id ? this.data.playersWithoutJersey(id) : of<WidgetState<number>>({ status: 'empty' });
     }, this.jerseyState);
     this.bind(() => this.data.form(this.divisionMatches(), this.now()), this.formState);
+    this.bind(() => {
+      const id = this.activeDivisionId();
+      return id ? this.data.focus(id, this.now()) : of<WidgetState<FocusInput>>({ status: 'empty' });
+    }, this.focusState);
   }
 
   /** Arranca la carga y el reloj de 1 s; el reloj se corta al destruirse la vista. */

@@ -1,0 +1,7 @@
+<svg class="spark" [attr.viewBox]="'0 0 ' + width + ' ' + height" role="img" [attr.aria-label]="ariaLabel()">
+  @if (geometry(); as g) {
+    <line class="spark-avg" x1="0" [attr.x2]="width" [attr.y1]="g.averageY" [attr.y2]="g.averageY" />
+    <polyline class="spark-line" [attr.points]="g.points" />
+    <circle class="spark-dot" [attr.cx]="g.last.x" [attr.cy]="g.last.y" r="3.5" />
+  }
+</svg>

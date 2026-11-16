@@ -7,8 +7,16 @@
   max-width: 100%;
 }
 
+.s4 {
+  grid-column: span 4;
+}
+
 .s6 {
   grid-column: span 6;
+}
+
+.s8 {
+  grid-column: span 8;
 }
 
 .board-skeleton {
@@ -54,7 +62,11 @@
 }
 
 @media (max-width: 1120px) {
-  .s6 {
+  .s4 {
+    grid-column: span 6;
+  }
+
+  .s8 {
     grid-column: span 12;
   }
 }
@@ -74,7 +86,9 @@
     text-align: center;
   }
 
-  .s6 {
+  .s4,
+  .s6,
+  .s8 {
     grid-column: span 12;
   }
 }

@@ -29,6 +29,26 @@
 
   @if (store.divisions().length > 0) {
     <div class="grid">
+      @if (store.activeDivisionId(); as divisionId) {
+        <app-focus-card class="s8" [state]="store.focusState()" [seasonYear]="seasonYear()" [divisionId]="divisionId" [online]="store.online()" (retry)="store.retry('focus')" />
+      }
+
+      <app-home-tile class="s4" [label]="'Forma · ' + seasonYear()" title="Últimos partidos" [state]="store.formState()" (retry)="store.retry('form')">
+        @if (form(); as f) {
+          <div class="record">
+            <div><span class="label-mono">Récord</span><p class="kpi">{{ f.record.wins }}-{{ f.record.draws }}-{{ f.record.losses }}</p></div>
+            <div><span class="label-mono">Dif.</span>
+              <p class="kpi" [class.positive]="f.record.diff > 0" [class.negative]="f.record.diff < 0">{{ f.record.diff > 0 ? '+' : '' }}{{ f.record.diff }}</p></div>
+          </div>
+          <div class="last">
+            @for (entry of f.record.last; track entry.matchId) {
+              <app-result-pill [result]="entry.result" [score]="entry.score" [opponent]="entry.opponent" [analysisPercent]="f.percents[entry.matchId] ?? null" />
+            }
+          </div>
+        }
+        <p tileEmpty>Sin partidos jugados en {{ seasonYear() }}.</p>
+      </app-home-tile>
+
       <app-home-tile class="s6" label="Pendientes" title="Antes del partido" [state]="store.pendingState()" (retry)="store.retry('pending')">
         <ul class="pending">
           @for (item of pending(); track item.kind) {
@@ -46,22 +66,6 @@
           }
         </ul>
         <p tileEmpty>No hay nada pendiente.</p>
-      </app-home-tile>
-
-      <app-home-tile class="s6" [label]="'Forma · ' + seasonYear()" title="Últimos partidos" [state]="store.formState()" (retry)="store.retry('form')">
-        @if (form(); as f) {
-          <div class="record">
-            <div><span class="label-mono">Récord</span><p class="kpi">{{ f.record.wins }}-{{ f.record.draws }}-{{ f.record.losses }}</p></div>
-            <div><span class="label-mono">Dif.</span>
-              <p class="kpi" [class.positive]="f.record.diff > 0" [class.negative]="f.record.diff < 0">{{ f.record.diff > 0 ? '+' : '' }}{{ f.record.diff }}</p></div>
-          </div>
-          <div class="last">
-            @for (entry of f.record.last; track entry.matchId) {
-              <app-result-pill [result]="entry.result" [score]="entry.score" [opponent]="entry.opponent" [analysisPercent]="f.percents[entry.matchId] ?? null" />
-            }
-          </div>
-        }
-        <p tileEmpty>Sin partidos jugados en {{ seasonYear() }}.</p>
       </app-home-tile>
     </div>
   }

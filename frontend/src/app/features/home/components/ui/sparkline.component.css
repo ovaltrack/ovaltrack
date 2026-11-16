@@ -1,0 +1,29 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.spark {
+  display: block;
+  width: 100%;
+  max-width: 140px;
+  height: 40px;
+}
+
+.spark-line {
+  fill: none;
+  stroke: var(--btn-primary-bg);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.spark-avg {
+  stroke: var(--text-muted);
+  stroke-width: 1.2;
+  stroke-dasharray: 3 3;
+}
+
+.spark-dot {
+  fill: var(--btn-primary-bg);
+}
