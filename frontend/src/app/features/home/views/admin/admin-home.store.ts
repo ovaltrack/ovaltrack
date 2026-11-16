@@ -141,7 +141,8 @@ export class AdminHomeStore {
     ).subscribe();
 
     this.bind(() => this.data.rosters(this.pendingInLineupWindow()), this.rosters);
-    this.bind(() => this.data.divisionStats(this.divisions(), this.matches()), this.statsState);
+    this.bind(() => this.data.divisionStats(this.divisions(), this.matches()), this.statsState,
+      (next, current) => !(next.status === 'loading' && current.status === 'ready'));
   }
 
   /** Arranca la carga y el reloj de 1 s; el reloj se corta al destruirse la vista. */
@@ -171,9 +172,12 @@ export class AdminHomeStore {
     });
   }
 
-  private bind<T>(load: () => Observable<T>, target: WritableSignal<T>): void {
+  /** `accept` decide si un valor nuevo reemplaza al actual: así un refresco no vuelve a "loading" lo que ya tiene datos. */
+  private bind<T>(load: () => Observable<T>, target: WritableSignal<T>, accept: (next: T, current: T) => boolean = () => true): void {
     this.derive$.pipe(
-      switchMap(() => load().pipe(tap(value => target.set(value)))),
+      switchMap(() => load().pipe(tap(value => {
+        if (accept(value, target())) target.set(value);
+      }))),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe();
   }

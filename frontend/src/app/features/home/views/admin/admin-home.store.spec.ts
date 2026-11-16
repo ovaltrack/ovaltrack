@@ -59,6 +59,7 @@ describe('AdminHomeStore', () => {
     stats = ready([stat('d1', 2), stat('d2', 1)]);
     rosters = {};
     requestedRosters = [];
+    data.divisionStats = () => of(stats);
     divisions.set([division('d1', 'Superior'), division('d2', 'M15')]);
   });
 
@@ -139,6 +140,27 @@ describe('AdminHomeStore', () => {
     expect(store.board()).toEqual(jasmine.objectContaining({ kind: 'club-day', title: 'Hoy en el club' }));
     expect(store.cards()[0]).toEqual(jasmine.objectContaining({ name: 'Superior', liveLabel: 'En curso', nextLabel: null }));
     expect(store.cards()[1].liveLabel).toBeNull();
+  });
+
+  it('un refresco de las estadísticas no vuelve a "loading" lo que ya tiene datos', () => {
+    const emissions: WidgetState<DivisionStat[]>[] = [{ status: 'loading' }, stats];
+    data.divisionStats = () => of(...emissions);
+    const store = createStore();
+    store.reload();
+    expect(store.statsState().status).toBe('ready');
+    store.retry('divisions');
+    expect(store.statsState().status).toBe('ready');
+  });
+
+  it('un error posterior sí reemplaza los datos, y reintentar muestra la carga', () => {
+    const store = createStore();
+    store.reload();
+    data.divisionStats = () => of<WidgetState<DivisionStat[]>>({ status: 'loading' }, { status: 'error', message: 'No pudimos cargar esto' });
+    store.retry('divisions');
+    expect(store.statsState().status).toBe('error');
+    data.divisionStats = () => of<WidgetState<DivisionStat[]>>({ status: 'loading' });
+    store.retry('divisions');
+    expect(store.statsState().status).toBe('loading');
   });
 
   it('el encabezado resume el club y las divisiones', () => {
