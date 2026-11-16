@@ -136,6 +136,29 @@ describe('PlayerHomeStore', () => {
     expect(store.board().kind).toBe('player-last');
   });
 
+  it('«Tus tackles» sale de la misma temporada: columnas con el último en el color propio; vacío y error sin afectar a las demás', () => {
+    state = { status: 'ready', data: summary, fetchedAt: 1, stale: false };
+    let store = createStore();
+    store.reload();
+    const tackles = store.tacklesState();
+    expect(tackles.status === 'ready' && tackles.data.chart.groups.map(group => group.values[0].display)).toEqual(['5', '6', '16']);
+    expect(tackles.status === 'ready' && tackles.data.chart.groups[2].values[0].color).toBe('var(--btn-primary-bg)');
+    injector.destroy();
+
+    season = { status: 'empty' };
+    store = createStore();
+    store.reload();
+    expect(store.tacklesState().status).toBe('empty');
+    injector.destroy();
+
+    season = { status: 'error', message: 'No pudimos cargar esto' };
+    store = createStore();
+    store.reload();
+    expect(store.tacklesState().status).toBe('error');
+    expect(store.seasonKpisState().status).toBe('error');
+    expect(store.board().kind).toBe('player-last');
+  });
+
   it('un snapshot guardado antes de la Fase 12 no trae comparaciones: la tarjeta queda vacía', () => {
     state = { status: 'ready', data: summary, fetchedAt: 1, stale: false };
     const { comparisons: _omitted, ...legacy } = seasonData;

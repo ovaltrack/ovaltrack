@@ -20,5 +20,6 @@
     <app-season-card class="s12" [state]="store.seasonKpisState()" [label]="store.seasonLabel()" [year]="store.now().getFullYear()"
                      [provisional]="store.seasonProvisional()" (retry)="store.reload()" />
     <app-squad-comparison-card class="s7" [state]="store.comparisonState()" (retry)="store.reload()" />
+    <app-tackles-card class="s5" [state]="store.tacklesState()" (retry)="store.reload()" />
   </div>
 </main>

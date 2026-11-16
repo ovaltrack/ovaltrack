@@ -10,6 +10,7 @@ import { PlayerSummary } from '../../domain/player-summary';
 import { matchTakeaways } from '../../domain/match-takeaways';
 import { SeasonKpi, seasonKpis } from '../../domain/season-kpis';
 import { SquadComparison, squadComparison } from '../../domain/squad-comparison';
+import { TackleColumns, tackleColumns } from '../../domain/tackle-columns';
 import { PlayerHomeDataService, PlayerSeasonData } from './player-home-data.service';
 
 const CLOCK_TICK_MS = 1000;
@@ -49,6 +50,14 @@ export class PlayerHomeStore {
     if (state.status !== 'ready') return state as WidgetState<SquadComparison>;
     const comparison = squadComparison(state.data.comparisons ?? []);
     return comparison ? { status: 'ready', data: comparison, fetchedAt: state.fetchedAt, stale: state.stale } : { status: 'empty' };
+  });
+
+  /** «Tus tackles»: los últimos partidos de la misma respuesta de temporada. */
+  readonly tacklesState = computed<WidgetState<TackleColumns>>(() => {
+    const state = this.seasonState();
+    if (state.status !== 'ready') return state as WidgetState<TackleColumns>;
+    const columns = tackleColumns(state.data.matches, state.data.comparisons ?? []);
+    return columns ? { status: 'ready', data: columns, fetchedAt: state.fetchedAt, stale: state.stale } : { status: 'empty' };
   });
 
   /** La temporada incluye el último partido y su análisis todavía no está completo: sus números pueden cambiar. */

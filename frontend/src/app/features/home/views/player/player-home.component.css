@@ -6,11 +6,16 @@
   grid-column: span 12;
 }
 
+.s5 {
+  grid-column: span 5;
+}
+
 .s7 {
   grid-column: span 7;
 }
 
 @media (max-width: 1120px) {
+  .s5,
   .s7 {
     grid-column: span 12;
   }
