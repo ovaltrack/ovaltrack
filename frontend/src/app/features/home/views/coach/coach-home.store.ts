@@ -8,9 +8,10 @@ import { Match } from '../../../match/types/match.types';
 import { shortTeamName } from '../../../match/post-match/utils/zone-grid';
 import { DashboardSnapshotCache } from '../../data/dashboard-snapshot.cache';
 import { buildCoachBoard } from '../../domain/coach-board';
+import { upcomingMatches } from '../../domain/division-match-state';
 import { greetingFor, hudDateLabel } from '../../domain/greeting';
 import { relativeMatchLabel, parseWallClock } from '../../domain/match-time';
-import { coachRules, resolvePrimaryAction, upcomingMatches } from '../../domain/primary-action';
+import { coachRules, resolvePrimaryAction } from '../../domain/primary-action';
 import { BoardModel, PrimaryAction, SUBSTITUTES_TARGET, WidgetState } from '../../types/home.types';
 import { BoardExtras, CoachHomeDataService, DebtData, EMPTY_BOARD_EXTRAS, FormData } from './coach-home-data.service';
 

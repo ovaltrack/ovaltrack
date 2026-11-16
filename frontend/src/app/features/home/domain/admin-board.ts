@@ -2,7 +2,7 @@ import { Match } from '../../match/types/match.types';
 import { BoardModel, ClubDayItemStatus, ClubDayTimelineItem, STARTERS_TARGET, SUBSTITUTES_TARGET } from '../types/home.types';
 import { toClubDayItem } from './club-day-lanes';
 import { dayLabel, parseWallClock } from './match-time';
-import { upcomingMatches } from './primary-action';
+import { upcomingMatches } from './division-match-state';
 
 export interface AdminBoardContext {
   now: Date;

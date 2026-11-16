@@ -1,11 +1,26 @@
 import { Match } from '../../match/types/match.types';
-import { parseBackendInstant, parseWallClock } from './match-time';
-import { RuleMatch, upcomingMatches } from './primary-action';
+import { msUntil, parseBackendInstant, parseWallClock } from './match-time';
 
+/** Un partido sin iniciar sigue siendo "el próximo" hasta 12 h después de su hora (demoras, lluvia). */
+export const UPCOMING_GRACE_MS = 12 * 3_600_000;
+
+export type RuleMatch = Pick<Match, 'id' | 'status' | 'date'>;
 export type StateMatch = RuleMatch & { finishedAt?: string | null };
 
 /** El estado del servidor manda sobre la fecha: en curso es `in_progress` o `halftime`, sea cual sea su fecha. */
 export const isLiveMatch = (match: Pick<Match, 'status'>): boolean => match.status === 'in_progress' || match.status === 'halftime';
+
+/** Próximos partidos sin iniciar (con o sin nómina), el más cercano primero. */
+export function upcomingMatches<T extends RuleMatch>(matches: readonly T[], now: Date): T[] {
+  return matches
+    .map(match => ({ match, start: parseWallClock(match.date) }))
+    .filter((entry): entry is { match: T; start: Date } =>
+      entry.start !== null
+      && (entry.match.status === 'not_started' || entry.match.status === 'empty_roster')
+      && msUntil(entry.start, now) > -UPCOMING_GRACE_MS)
+    .sort((a, b) => a.start.getTime() - b.start.getTime())
+    .map(entry => entry.match);
+}
 
 /** Cuándo se jugó de verdad: `finishedAt` y, si falta o no se lee, la fecha programada. */
 export function playedAt(match: StateMatch): Date | null {

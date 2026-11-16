@@ -1,4 +1,5 @@
-import { AdminRuleContext, CoachRuleContext, RuleMatch, adminRules, coachRules, isActionEnabled, playerRules, resolvePrimaryAction, upcomingMatches } from './primary-action';
+import { RuleMatch, upcomingMatches } from './division-match-state';
+import { AdminRuleContext, CoachRuleContext, adminRules, coachRules, isActionEnabled, playerRules, resolvePrimaryAction } from './primary-action';
 
 const now = new Date(2026, 10, 6, 18, 0); // vie 6 nov, 18:00
 

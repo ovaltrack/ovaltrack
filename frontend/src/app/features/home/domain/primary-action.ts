@@ -1,6 +1,6 @@
-import { Match } from '../../match/types/match.types';
 import { PrimaryAction, STARTERS_TARGET } from '../types/home.types';
 import { MATCH_DAY_WINDOW_MS } from './countdown';
+import { RuleMatch, divisionMatchState, upcomingMatches } from './division-match-state';
 import { msUntil, parseWallClock } from './match-time';
 
 /** Una regla devuelve la acción primaria si aplica, o `null` para pasar a la siguiente. */
@@ -22,27 +22,9 @@ export function isActionEnabled(action: PrimaryAction, online: boolean): boolean
 
 /** El alta de nómina se ofrece hasta 72 h antes del partido. */
 export const LINEUP_WINDOW_MS = 72 * 3_600_000;
-/** Un partido sin iniciar sigue siendo "el próximo" hasta 12 h después de su hora (demoras, lluvia). */
-export const UPCOMING_GRACE_MS = 12 * 3_600_000;
-
-export type RuleMatch = Pick<Match, 'id' | 'status' | 'date'>;
-
-const isLive = (match: RuleMatch) => match.status === 'in_progress' || match.status === 'halftime';
 
 function startOf(match: RuleMatch): Date | null {
   return parseWallClock(match.date);
-}
-
-/** Próximos partidos sin iniciar (con o sin nómina), el más cercano primero. */
-export function upcomingMatches<T extends RuleMatch>(matches: readonly T[], now: Date): T[] {
-  return matches
-    .map(match => ({ match, start: startOf(match) }))
-    .filter((entry): entry is { match: T; start: Date } =>
-      entry.start !== null
-      && (entry.match.status === 'not_started' || entry.match.status === 'empty_roster')
-      && msUntil(entry.start, now) > -UPCOMING_GRACE_MS)
-    .sort((a, b) => a.start.getTime() - b.start.getTime())
-    .map(entry => entry.match);
 }
 
 /** Titulares cargados en la nómina de un partido; `null`/ausente = no se conoce (sin red o sin respuesta). */
@@ -72,33 +54,30 @@ export interface CoachRuleContext {
   lastFinished: { id: string; analysisPercent: number } | null;
 }
 
-/** Hay un partido en curso que se está capturando en otro dispositivo: desde acá nunca se ofrece capturar. */
-function liveElsewhere(ctx: CoachRuleContext): boolean {
-  return ctx.matches.some(match => isLive(match) && match.id !== ctx.captureMatchId);
-}
+const stateOf = (ctx: CoachRuleContext) => divisionMatchState(ctx.matches, ctx.captureMatchId, ctx.now);
 
 /** Reglas del entrenador, en orden de prioridad. */
 export const coachRules: readonly PrimaryRule<CoachRuleContext>[] = [
   // 1. Partido en curso que captura este dispositivo.
   ctx => {
-    const here = ctx.matches.find(match => isLive(match) && match.id === ctx.captureMatchId);
-    if (!here) return null;
+    const { live: here, liveHere } = stateOf(ctx);
+    if (!here || !liveHere) return null;
     return here.status === 'halftime'
       ? { kind: 'go-halftime', label: 'Ir al entretiempo', route: `/live-capture/${here.id}/halftime`, target: 'board', requiresConnection: false }
       : { kind: 'continue-capture', label: 'Continuar captura', route: `/live-capture/${here.id}`, target: 'board', requiresConnection: false };
   },
   // 2. Próximo partido con la alineación completa a menos de 24 h: se ofrece capturar.
   ctx => {
-    if (liveElsewhere(ctx)) return null;
-    const next = upcomingMatches(ctx.matches, ctx.now)[0];
+    const { live, next } = stateOf(ctx);
+    if (live) return null;
     const start = next && startOf(next);
     if (!next || !start || msUntil(start, ctx.now) >= MATCH_DAY_WINDOW_MS || lineupIncomplete(next, ctx.nextRoster)) return null;
     return { kind: 'capture-live', label: 'Capturar en vivo', route: `/live-capture/${next.id}`, target: 'board', requiresConnection: false };
   },
   // 3. Próximo partido con la alineación incompleta a 72 h o menos.
   ctx => {
-    if (liveElsewhere(ctx)) return null;
-    const next = upcomingMatches(ctx.matches, ctx.now)[0];
+    const { live, next } = stateOf(ctx);
+    if (live) return null;
     const start = next && startOf(next);
     return next && start && lineupIncomplete(next, ctx.nextRoster) && msUntil(start, ctx.now) <= LINEUP_WINDOW_MS ? defineLineup(next.id) : null;
   },
@@ -107,9 +86,12 @@ export const coachRules: readonly PrimaryRule<CoachRuleContext>[] = [
     ? { kind: 'complete-analysis', label: 'Completar análisis', route: `/post-match/${ctx.lastFinished.id}`, target: 'debt-tile', requiresConnection: true }
     : null,
   // 5. Nada programado ni en curso.
-  ctx => ctx.matches.some(isLive) || upcomingMatches(ctx.matches, ctx.now).length > 0
-    ? null
-    : { kind: 'schedule-match', label: 'Programar partido', route: '/match-selection', target: 'board', requiresConnection: true }
+  ctx => {
+    const { live, next } = stateOf(ctx);
+    return live || next
+      ? null
+      : { kind: 'schedule-match', label: 'Programar partido', route: '/match-selection', target: 'board', requiresConnection: true };
+  }
 ];
 
 export interface AdminRuleContext {

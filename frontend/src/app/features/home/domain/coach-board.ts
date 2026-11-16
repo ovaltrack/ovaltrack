@@ -2,9 +2,9 @@ import { Match } from '../../match/types/match.types';
 import { shortTeamName } from '../../match/post-match/utils/zone-grid';
 import { BoardModel, LiveEventLine } from '../types/home.types';
 import { MATCH_DAY_WINDOW_MS } from './countdown';
+import { divisionMatchState } from './division-match-state';
 import { resultOf } from './form-record';
 import { formatUtcAsArgentina, msUntil, parseWallClock, relativeMatchLabel, shortDateLabel } from './match-time';
-import { upcomingMatches } from './primary-action';
 
 export interface CoachBoardContext {
   now: Date;
@@ -19,8 +19,6 @@ export interface CoachBoardContext {
   roster: { starters: number; substitutes: number } | null;
   readyOffline: boolean;
 }
-
-const isLive = (match: Match) => match.status === 'in_progress' || match.status === 'halftime';
 
 const opponentName = (match: Match) => shortTeamName(match.opponent.alias || match.opponent.name);
 
@@ -43,9 +41,9 @@ function lastFinished(matches: readonly Match[]): { match: Match; start: Date } 
 
 /** Elige la variante del tablero del entrenador: en curso, día de partido, próximo, sin partido programado o primeros pasos. */
 export function buildCoachBoard(ctx: CoachBoardContext): BoardModel {
-  const live = ctx.matches.find(isLive);
+  const { live, liveHere, next } = divisionMatchState(ctx.matches, ctx.captureMatchId, ctx.now);
   if (live) {
-    if (live.id === ctx.captureMatchId) {
+    if (liveHere) {
       return {
         kind: 'live-here', matchId: live.id, opponent: opponentName(live), periodLabel: periodText(live, ctx.progress),
         ownScore: live.homeScore, opponentScore: live.awayScore, halftime: live.status === 'halftime', recent: [...ctx.recent]
@@ -57,7 +55,6 @@ export function buildCoachBoard(ctx: CoachBoardContext): BoardModel {
     };
   }
 
-  const next = upcomingMatches(ctx.matches, ctx.now)[0];
   const start = next && parseWallClock(next.date);
   if (!next || !start) {
     // Con partidos ya jugados no se "arranca la temporada": solo falta programar el siguiente.

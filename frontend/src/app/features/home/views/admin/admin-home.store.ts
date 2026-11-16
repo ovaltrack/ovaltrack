@@ -7,9 +7,10 @@ import { Match } from '../../../match/types/match.types';
 import { analysisTone, AnalysisTone } from '../../domain/analysis-coverage';
 import { buildAdminBoard } from '../../domain/admin-board';
 import { FormEntry, formRecord } from '../../domain/form-record';
+import { upcomingMatches } from '../../domain/division-match-state';
 import { greetingFor, hudDateLabel } from '../../domain/greeting';
 import { dayLabel, formatLocalClock, parseWallClock } from '../../domain/match-time';
-import { adminRules, resolvePrimaryAction, upcomingMatches } from '../../domain/primary-action';
+import { adminRules, resolvePrimaryAction } from '../../domain/primary-action';
 import { BoardModel, PrimaryAction, WidgetState, dataOf } from '../../types/home.types';
 import { AdminHomeDataService, DivisionStat, RosterCounts } from './admin-home-data.service';
 
