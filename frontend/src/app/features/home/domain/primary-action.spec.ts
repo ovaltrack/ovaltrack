@@ -67,12 +67,12 @@ describe('coachRules', () => {
     expect(action).toBeNull();
   });
 
-  it('4 · último partido con análisis incompleto: completar análisis en la tarjeta de deuda', () => {
+  it('4 · último partido con análisis incompleto: completar análisis en el tablero', () => {
     const action = resolve(coach({
       matches: [match('m4', 'not_started', at(5, 14))],
       lastFinished: { id: 'm0', analysisPercent: 82 }
     }));
-    expect(action).toEqual(jasmine.objectContaining({ kind: 'complete-analysis', route: '/post-match/m0', target: 'debt-tile' }));
+    expect(action).toEqual(jasmine.objectContaining({ kind: 'complete-analysis', route: '/post-match/m0', queryParams: { pendientes: 1 }, target: 'board' }));
   });
 
   it('4 · con el análisis al 100 % no hay deuda', () => {

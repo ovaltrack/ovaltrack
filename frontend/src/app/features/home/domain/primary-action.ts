@@ -81,9 +81,9 @@ export const coachRules: readonly PrimaryRule<CoachRuleContext>[] = [
     const start = next && startOf(next);
     return next && start && lineupIncomplete(next, ctx.nextRoster) && msUntil(start, ctx.now) <= LINEUP_WINDOW_MS ? defineLineup(next.id) : null;
   },
-  // 4. El último partido jugado todavía tiene jugadas sin jugador.
+  // 4. El último partido jugado todavía tiene jugadas sin jugador: se completa desde el tablero, abriendo Eventos con «Solo sin jugador».
   ctx => ctx.lastFinished && ctx.lastFinished.analysisPercent < 100
-    ? { kind: 'complete-analysis', label: 'Completar análisis', route: `/post-match/${ctx.lastFinished.id}`, target: 'debt-tile', requiresConnection: true }
+    ? { kind: 'complete-analysis', label: 'Completar análisis', route: `/post-match/${ctx.lastFinished.id}`, queryParams: { pendientes: 1 }, target: 'board', requiresConnection: true }
     : null,
   // 5. Nada programado ni en curso.
   ctx => {

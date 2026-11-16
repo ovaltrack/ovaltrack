@@ -135,7 +135,7 @@ describe('CoachHomeStore', () => {
     debt = { status: 'ready', data: { matchId: 'f1', opponent: 'Trelew', dateLabel: '1 nov', percent: 78, withoutPlayer: 12, minutesWithoutZone: 35 }, fetchedAt: 1, stale: false };
     const store = createStore();
     store.reload();
-    expect(store.primary()).toEqual(jasmine.objectContaining({ kind: 'complete-analysis', target: 'debt-tile' }));
+    expect(store.primary()).toEqual(jasmine.objectContaining({ kind: 'complete-analysis', target: 'board' }));
   });
 
   it('pendientes: suplentes que faltan y jugadores sin dorsal', () => {

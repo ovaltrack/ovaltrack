@@ -22,12 +22,14 @@ export type PrimaryActionKind =
   | 'view-my-match';
 
 /** Dónde se dibuja el único botón primario de la pantalla. */
-export type PrimaryActionTarget = 'board' | 'debt-tile' | 'inbox-tile';
+export type PrimaryActionTarget = 'board' | 'inbox-tile';
 
 export interface PrimaryAction {
   kind: PrimaryActionKind;
   label: string;
   route: string;
+  /** Parámetros de la URL de destino, p. ej. `pendientes=1` para abrir Eventos con «Solo sin jugador». */
+  queryParams?: Record<string, string | number>;
   target: PrimaryActionTarget;
   /** Sin conexión queda deshabilitada con "Requiere conexión"; capturar nunca la necesita. */
   requiresConnection: boolean;

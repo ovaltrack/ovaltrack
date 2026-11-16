@@ -211,7 +211,7 @@
   <ng-template #actions>
     @if (boardAction(); as action) {
       @if (actionEnabled()) {
-        <a class="btn btn-on-board board-btn" [routerLink]="action.route">{{ action.label }}</a>
+        <a class="btn btn-on-board board-btn" [routerLink]="action.route" [queryParams]="action.queryParams">{{ action.label }}</a>
       } @else {
         <button type="button" class="btn btn-on-board board-btn" disabled>{{ action.label }}</button>
         <p class="board-offline">Requiere conexión</p>

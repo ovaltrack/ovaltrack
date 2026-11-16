@@ -36,7 +36,6 @@ export class CoachHomeComponent {
   readonly debtTone = computed(() => analysisTone(this.debt()?.percent ?? 100));
   readonly ringDash = computed(() => `${((this.debt()?.percent ?? 0) / 100) * RING_LENGTH} ${RING_LENGTH}`);
   /** El botón de Deuda es el primario solo si las reglas lo eligen; si no, es outline. */
-  readonly debtIsPrimary = computed(() => this.store.primary()?.target === 'debt-tile');
   readonly seasonYear = computed(() => this.store.now().getFullYear());
 
   constructor() {

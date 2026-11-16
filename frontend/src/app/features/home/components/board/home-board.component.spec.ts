@@ -34,7 +34,7 @@ describe('HomeBoardComponent', () => {
   });
 
   it('no dibuja el primario si su destino es otra tarjeta', () => {
-    render(next, { ...capture, target: 'debt-tile' });
+    render(next, { ...capture, target: 'inbox-tile' });
     expect(el().querySelectorAll('.btn-on-board').length).toBe(0);
   });
 
