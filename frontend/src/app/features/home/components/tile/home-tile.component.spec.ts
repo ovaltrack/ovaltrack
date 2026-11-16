@@ -35,6 +35,14 @@ describe('HomeTileComponent', () => {
     host = fixture.componentInstance;
   });
 
+  it('cargando no dibuja el título (no puede afirmar nada que todavía no sabe)', () => {
+    render({ status: 'loading' });
+    expect(has('.tile-title')).toBeFalse();
+    expect(has('.tile-title-sk')).toBeTrue();
+    render({ status: 'empty' });
+    expect(el().querySelector('.tile-title')?.textContent).toContain('Últimos partidos');
+  });
+
   it('cargando muestra el esqueleto y no el contenido', () => {
     render({ status: 'loading' });
     expect(has('.sk')).toBeTrue();

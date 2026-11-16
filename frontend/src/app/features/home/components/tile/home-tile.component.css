@@ -29,6 +29,12 @@
   color: var(--text-primary);
 }
 
+.tile-title-sk {
+  width: 55%;
+  height: 24px;
+  border-radius: 6px;
+}
+
 .tile-seal {
   flex-shrink: 0;
   font-family: var(--font-mono);

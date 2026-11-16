@@ -2,7 +2,11 @@
   <div class="tile-head">
     <div class="tile-heading">
       <p class="label-mono tile-label">{{ label() }}</p>
-      <h2 class="tile-title">{{ title() }}</h2>
+      @if (state().status === 'loading') {
+        <div class="sk tile-title-sk" aria-hidden="true"></div>
+      } @else {
+        <h2 class="tile-title">{{ title() }}</h2>
+      }
     </div>
     @if (staleSeal(); as seal) {
       <span class="tile-seal"><i class="bi bi-clock-history" aria-hidden="true"></i> {{ seal }}</span>
