@@ -45,7 +45,8 @@ public final class MatchDTOMapper {
             mp.getMatch().getHomeScore(),
             mp.getMatch().getAwayScore(),
             mp.getRole(),
-            mp.getNumber()
+            mp.getNumber(),
+            mp.getMatch().getFinishedAt()
         );
     }
 }

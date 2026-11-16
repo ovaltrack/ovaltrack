@@ -14,6 +14,8 @@ public record PlayerMatchResponseDTO(
     Integer awayScore,
     MatchPlayerRole role,
     /** Número de slot en la planilla (titulares 1-15, suplentes 16-23). Null en planteles sin orden. */
-    Integer slotNumber
+    Integer slotNumber,
+    /** Cuándo terminó el partido (UTC, sin zona); null si no se registró. Define cuál fue el último jugado. */
+    LocalDateTime finishedAt
 ) {
 }

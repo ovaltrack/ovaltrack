@@ -16,6 +16,13 @@ Then('la lista incluye el partido contra el rival de alias {string} con el rol {
   assert.ok(found, `La lista no incluye un partido contra ${alias} como ${rol}`);
 });
 
+Then('el partido contra el rival de alias {string} informa su fecha de finalización', function (alias) {
+  const match = this.response.body.find((m) => m.opponentName === alias);
+  assert.ok(match, `La lista no incluye un partido contra ${alias}`);
+  assert.ok(match.finishedAt, 'El partido jugado no informa finishedAt');
+  assert.ok(!Number.isNaN(Date.parse(`${match.finishedAt}Z`)), `finishedAt no es una fecha: ${match.finishedAt}`);
+});
+
 Then('la lista de partidos jugados está vacía', function () {
   assert.deepEqual(this.response.body, []);
 });
