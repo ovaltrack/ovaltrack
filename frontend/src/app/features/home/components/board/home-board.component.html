@@ -164,16 +164,24 @@
 
       @if (m.kind === 'live-elsewhere') {
         <div class="board-main">
-          <p class="label-mono on-board">En curso · otro dispositivo</p>
-          <p class="score dim">
+          <p class="label-mono on-board"><span class="pulse" aria-hidden="true"></span> En curso · {{ m.periodLabel }}</p>
+          <p class="score dim" [attr.aria-label]="'Marcador ' + m.ownScore + ' a ' + m.opponentScore">
             <span>{{ m.ownScore }}</span><span class="score-sep" aria-hidden="true">·</span><span>{{ m.opponentScore }}</span>
           </p>
           <p class="board-meta">vs {{ m.opponent }}</p>
-          <p class="board-note">
-            <i class="bi bi-broadcast" aria-hidden="true"></i>
-            Capturando en otro dispositivo@if (m.lastDataAt) { · último dato {{ m.lastDataAt }} }.
-            Desde acá no se puede capturar para no duplicar eventos.
-          </p>
+          <ul class="chips">
+            <li class="chip-board">
+              <i class="bi bi-broadcast" aria-hidden="true"></i>
+              Capturando en otro dispositivo@if (m.lastDataAt) { · último dato {{ m.lastDataAt }} }
+            </li>
+          </ul>
+          <p class="board-note">Desde acá no se puede capturar, para no duplicar eventos.</p>
+        </div>
+        <div class="board-side board-side-left">
+          <app-board-panel class="board-panel" label="Qué pasa después">
+            <p>El marcador se actualiza cuando el otro dispositivo sincroniza.</p>
+            <p class="panel-muted">Cuando termine el partido, el paso 1 de la semana siguiente (Analizar) aparece acá.</p>
+          </app-board-panel>
         </div>
       }
 

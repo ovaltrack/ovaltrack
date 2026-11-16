@@ -136,4 +136,12 @@ describe('HomeBoardComponent', () => {
     expect(el().querySelectorAll('.btn-on-board').length).toBe(0);
     expect(el().textContent).toContain('otro dispositivo');
   });
+
+  it('en otro dispositivo muestra el período del último dato, la hora y el panel «Qué pasa después»', () => {
+    render({ kind: 'live-elsewhere', matchId: 'm1', opponent: 'Trelew RC', periodLabel: "2T 52'", ownScore: 7, opponentScore: 3, lastDataAt: '14:05', week: null }, null);
+    expect(el().textContent).toContain("En curso · 2T 52'");
+    expect(el().textContent).toContain('último dato 14:05');
+    expect(el().querySelector('app-board-panel')?.textContent).toContain('Qué pasa después');
+    expect(el().querySelector('.score')?.getAttribute('aria-label')).toBe('Marcador 7 a 3');
+  });
 });
