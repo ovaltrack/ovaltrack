@@ -15,7 +15,8 @@ import { OfflineMatchReader } from '../../data/offline-match-reader';
 import { ToWidgetStateOptions, toWidgetState } from '../../data/to-widget-state';
 import { analysisCoverage, minutesWithoutZone } from '../../domain/analysis-coverage';
 import { FormRecord, formRecord } from '../../domain/form-record';
-import { parseWallClock, shortDateLabel } from '../../domain/match-time';
+import { lastFinishedOf, playedAt } from '../../domain/division-match-state';
+import { shortDateLabel } from '../../domain/match-time';
 import { LiveEventLine, WidgetState } from '../../types/home.types';
 import { shortTeamName } from '../../../match/post-match/utils/zone-grid';
 import { CaptureProgress } from '../../data/offline-match-reader';
@@ -108,9 +109,9 @@ export class CoachHomeDataService {
 
   /** Deuda de análisis del último partido jugado; vacío si todavía no hubo ninguno. */
   debt(matches: readonly Match[]): Observable<WidgetState<DebtData>> {
-    const last = this.lastFinished(matches);
+    const last = lastFinishedOf(matches);
     if (!last) return of<WidgetState<DebtData>>({ status: 'empty' });
-    const start = parseWallClock(last.date);
+    const played = playedAt(last);
     return forkJoin({
       events: this.eventService.getByMatchPostMatch(last.id),
       zones: this.zoneService.list(last.id).pipe(catchError(() => of(null)))
@@ -120,7 +121,7 @@ export class CoachHomeDataService {
         return {
           matchId: last.id,
           opponent: shortTeamName(last.opponent.alias || last.opponent.name),
-          dateLabel: start ? shortDateLabel(start) : '',
+          dateLabel: played ? shortDateLabel(played) : '',
           percent: coverage.percent,
           withoutPlayer: coverage.withoutPlayer,
           minutesWithoutZone: zones ? minutesWithoutZone(zones.assignments) : null
@@ -150,12 +151,6 @@ export class CoachHomeDataService {
       map((pairs): FormData => ({ record, percents: Object.fromEntries(pairs) })),
       toWidgetState<FormData>(this.options('form', { isEmpty: () => false }))
     );
-  }
-
-  private lastFinished(matches: readonly Match[]): Match | null {
-    const finished = matches.filter(match => match.status === 'finished' && parseWallClock(match.date) !== null);
-    finished.sort((a, b) => (parseWallClock(b.date)?.getTime() ?? 0) - (parseWallClock(a.date)?.getTime() ?? 0));
-    return finished[0] ?? null;
   }
 
   /** Snapshot por usuario y modo offline para el widget indicado. */

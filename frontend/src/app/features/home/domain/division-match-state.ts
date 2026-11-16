@@ -38,6 +38,11 @@ export function finishedInPlayOrder<T extends StateMatch>(matches: readonly T[])
     .map(entry => entry.match);
 }
 
+/** Último partido jugado según `playedAt`; `null` si todavía no se jugó ninguno. */
+export function lastFinishedOf<T extends StateMatch>(matches: readonly T[]): T | null {
+  return finishedInPlayOrder(matches).at(-1) ?? null;
+}
+
 export interface DivisionMatchState<T extends StateMatch> {
   /** Partido en curso, acá o en otro dispositivo; si hay más de uno, el que captura este dispositivo. */
   live: T | null;
@@ -59,6 +64,6 @@ export function divisionMatchState<T extends StateMatch>(matches: readonly T[], 
     liveHere: live !== null && live.id === captureMatchId,
     upcoming,
     next: upcoming[0] ?? null,
-    lastFinished: finishedInPlayOrder(matches).at(-1) ?? null
+    lastFinished: lastFinishedOf(matches)
   };
 }

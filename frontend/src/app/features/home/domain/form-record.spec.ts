@@ -23,6 +23,15 @@ describe('form-record', () => {
     expect(finishedOfSeason(matches, now).map(m => m.id)).toEqual(['a', 'b']);
   });
 
+  it('ordena por cuándo se jugó: un terminado con fecha futura entra en la temporada en que terminó', () => {
+    const matches = [
+      { ...match('futuro', '2027-01-15T15:00:00', 3, 0), finishedAt: '2026-11-01T19:00:00Z' },
+      { ...match('mar', '2026-03-10T15:00:00', 1, 0), finishedAt: null },
+      { ...match('otroAnio', '2026-12-20T15:00:00', 9, 0), finishedAt: '2027-01-02T10:00:00Z' }
+    ];
+    expect(finishedOfSeason(matches, now).map(m => m.id)).toEqual(['mar', 'futuro']);
+  });
+
   it('arma récord, diferencia y últimos 5', () => {
     const matches = [
       match('1', '2026-01-01T15:00:00', 24, 17),

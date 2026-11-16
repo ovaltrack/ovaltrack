@@ -12,7 +12,7 @@ import { Match } from '../../../match/types/match.types';
 import { DashboardSnapshotCache } from '../../data/dashboard-snapshot.cache';
 import { ToWidgetStateOptions, toWidgetState } from '../../data/to-widget-state';
 import { analysisCoverage } from '../../domain/analysis-coverage';
-import { parseWallClock } from '../../domain/match-time';
+import { lastFinishedOf } from '../../domain/division-match-state';
 import { WidgetState } from '../../types/home.types';
 
 /** Lo que el administrador ve de cada división; `null` = no se pudo leer. */
@@ -66,9 +66,7 @@ export class AdminHomeDataService {
   }
 
   private lastFinishedAnalysis(divisionId: string, matches: readonly Match[]): Observable<number | null> {
-    const last = matches
-      .filter(match => match.divisionId === divisionId && match.status === 'finished' && parseWallClock(match.date) !== null)
-      .sort((a, b) => (parseWallClock(b.date)?.getTime() ?? 0) - (parseWallClock(a.date)?.getTime() ?? 0))[0];
+    const last = lastFinishedOf(matches.filter(match => match.divisionId === divisionId));
     if (!last) return of(null);
     return this.eventService.getByMatchPostMatch(last.id).pipe(map(events => analysisCoverage(events).percent), catchError(() => of(null)));
   }

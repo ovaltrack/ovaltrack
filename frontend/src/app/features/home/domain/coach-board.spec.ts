@@ -57,6 +57,28 @@ describe('coach-board', () => {
     });
   });
 
+  it('team-idle: un terminado con fecha futura que se jugó antes no es el último, y con finishedAt nulo manda la fecha', () => {
+    const board = buildCoachBoard(context([
+      match({ id: 'a', status: 'finished', date: '2026-12-15T15:00:00', finishedAt: '2026-10-10T19:00:00Z', homeScore: 10, awayScore: 20 }),
+      match({ id: 'b', status: 'finished', date: '2026-10-17T15:00:00', finishedAt: null, homeScore: 32, awayScore: 21 })
+    ]));
+    expect(board).toEqual(jasmine.objectContaining({ kind: 'team-idle', last: jasmine.objectContaining({ dateLabel: '17 oct', ownScore: 32 }) }));
+  });
+
+  it('team-idle: un terminado con fecha futura cuenta como jugado y se rotula con el día en que terminó', () => {
+    const board = buildCoachBoard(context([
+      match({ id: 'a', status: 'finished', date: '2026-10-10T15:00:00', finishedAt: '2026-10-10T19:00:00Z' }),
+      match({ id: 'b', status: 'finished', date: '2026-12-15T15:00:00', finishedAt: '2026-11-06T15:00:00Z', homeScore: 5, awayScore: 3 })
+    ]));
+    expect(board).toEqual(jasmine.objectContaining({ kind: 'team-idle', last: jasmine.objectContaining({ dateLabel: '6 nov', ownScore: 5 }) }));
+  });
+
+  it('en curso con fecha de mañana: live-elsewhere / live-here, no "next"', () => {
+    const tomorrow = match({ status: 'in_progress', date: '2026-11-07T14:30:00' });
+    expect(buildCoachBoard(context([tomorrow])).kind).toBe('live-elsewhere');
+    expect(buildCoachBoard(context([tomorrow], { captureMatchId: 'm1' })).kind).toBe('live-here');
+  });
+
   it('team-idle también si el último fue derrota o empate', () => {
     const lost = buildCoachBoard(context([match({ status: 'finished', date: '2026-10-10T15:00:00', homeScore: 10, awayScore: 20 })]));
     const drawn = buildCoachBoard(context([match({ status: 'finished', date: '2026-10-10T15:00:00', homeScore: 20, awayScore: 20 })]));
