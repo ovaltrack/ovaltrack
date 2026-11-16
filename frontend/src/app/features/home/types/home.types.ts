@@ -55,6 +55,45 @@ export interface ClubDayTimelineItem {
   status: ClubDayItemStatus;
 }
 
+export type AgendaChipTone = 'ok' | 'warn' | 'live' | 'neutral';
+
+/** Estado de un partido en la agenda del club; siempre con texto, el color solo acompaña. */
+export interface AgendaChip {
+  label: string;
+  tone: AgendaChipTone;
+}
+
+export interface ClubAgendaRow {
+  matchId: string;
+  /** «Sáb 21». */
+  dayLabel: string;
+  /** «15:30». */
+  timeLabel: string;
+  division: string;
+  /** Rival corto. */
+  opponent: string;
+  chip: AgendaChip;
+}
+
+export interface ClubAgendaSection {
+  key: 'now' | 'today' | 'tomorrow' | 'week';
+  /** Separador sobre las filas («Ahora», «Hoy», «Mañana»); `null` si no lleva. */
+  label: string | null;
+  rows: ClubAgendaRow[];
+}
+
+/** El partido en curso del club, para el panel «<división> · en vivo». */
+export interface ClubAgendaLive {
+  division: string;
+  opponent: string;
+  ownScore: number;
+  opponentScore: number;
+  /** «2T 52'»: el último dato sincronizado, sin extrapolar (D6). */
+  periodLabel: string;
+  /** Hora de Argentina del último dato; `null` si no se conoce. */
+  lastDataAt: string | null;
+}
+
 export interface LiveEventLine {
   label: string;
   /** Minuto de juego, "38'". */
@@ -88,6 +127,7 @@ export type BoardModel =
   | { kind: 'live-elsewhere'; matchId: string; opponent: string; periodLabel: string; ownScore: number; opponentScore: number; lastDataAt: string | null; week: BoardWeek | null }
   | { kind: 'onboarding'; step: 'create-division' | 'schedule-match' | 'await-division' | 'no-matches-player' }
   | { kind: 'club-day'; title: string; label: string; items: ClubDayTimelineItem[]; nowMinute: number | null }
+  | { kind: 'club-agenda'; mode: 'week' | 'day'; label: string; title: string; sections: ClubAgendaSection[]; live: ClubAgendaLive | null }
   | { kind: 'club-idle'; nextLabel: string | null }
   | { kind: 'team-idle'; divisionName: string; last: { opponent: string; dateLabel: string; ownScore: number; opponentScore: number; result: 'win' | 'loss' | 'draw' } }
   | { kind: 'player-last'; matchId: string; dateLabel: string; opponent: string; ownScore: number; opponentScore: number; result: 'win' | 'loss' | 'draw'; role: 'TITULAR' | 'SUPLENTE'; tries: number | null; tackles: number | null; analysisPercent: number; slotNumber: number | null };

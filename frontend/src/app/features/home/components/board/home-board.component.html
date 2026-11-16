@@ -216,21 +216,32 @@
         </div>
       }
 
-      @if (m.kind === 'club-day') {
+      @if (m.kind === 'club-agenda') {
         <div class="board-wide">
           <p class="label-mono on-board">{{ m.label }}</p>
           <div class="board-row">
             <h2 class="board-title">{{ m.title }}</h2>
             <ng-container *ngTemplateOutlet="actions" />
           </div>
-          <app-club-day-timeline [items]="m.items" [nowMinute]="m.nowMinute" />
+          <div class="agenda">
+            <app-club-agenda [sections]="m.sections" />
+            @if (m.live; as live) {
+              <app-board-panel class="board-panel agenda-live" [label]="live.division + ' · en vivo'">
+                <p class="agenda-score" [attr.aria-label]="'Marcador ' + live.ownScore + ' a ' + live.opponentScore">
+                  <span>{{ live.ownScore }}</span><span class="score-sep" aria-hidden="true">·</span><span>{{ live.opponentScore }}</span>
+                </p>
+                <p class="panel-strong">vs {{ live.opponent }} · {{ live.periodLabel }}</p>
+                <p class="panel-muted">@if (live.lastDataAt) { Último dato {{ live.lastDataAt }} } @else { Sin datos del reloj }</p>
+              </app-board-panel>
+            }
+          </div>
         </div>
       }
 
       @if (m.kind === 'club-idle') {
         <div class="board-main">
           <p class="label-mono on-board">Club</p>
-          <h2 class="board-title">Sin partidos hoy ni mañana</h2>
+          <h2 class="board-title">Sin partidos esta semana</h2>
           @if (m.nextLabel) {
             <p class="board-meta"><i class="bi bi-calendar-event" aria-hidden="true"></i> Próxima fecha: {{ m.nextLabel }}</p>
           }

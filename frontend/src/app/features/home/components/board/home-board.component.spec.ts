@@ -144,4 +144,39 @@ describe('HomeBoardComponent', () => {
     expect(el().querySelector('app-board-panel')?.textContent).toContain('Qué pasa después');
     expect(el().querySelector('.score')?.getAttribute('aria-label')).toBe('Marcador 7 a 3');
   });
+
+  describe('club-agenda', () => {
+    const rows = [
+      { matchId: 'a', dayLabel: 'Sáb 21', timeLabel: '10:00', division: 'M15', opponent: 'TRC', chip: { label: 'Sin entrenador', tone: 'warn' as const } },
+      { matchId: 'b', dayLabel: 'Sáb 21', timeLabel: '14:30', division: 'Superior', opponent: 'CRC', chip: { label: 'Nómina lista', tone: 'ok' as const } }
+    ];
+    const week: BoardModel = { kind: 'club-agenda', mode: 'week', label: 'Fin de semana · Sáb 21', title: '2 partidos este fin de semana', sections: [{ key: 'week', label: null, rows }], live: null };
+
+    it('semana: rótulo, título y una fila por partido con su chip de texto', () => {
+      render(week, null);
+      expect(el().textContent).toContain('Fin de semana · Sáb 21');
+      expect(el().querySelector('.board-title')?.textContent).toContain('2 partidos este fin de semana');
+      expect(el().querySelectorAll('.agenda-row').length).toBe(2);
+      expect(el().querySelector('.agenda-row .agenda-chip')?.textContent).toContain('Sin entrenador');
+      expect(el().querySelector('.agenda-sep')).toBeNull();
+    });
+
+    it('día de partido: separadores «Ahora» y «Mañana» y panel «<división> · en vivo»', () => {
+      render({
+        kind: 'club-agenda', mode: 'day', label: 'Hoy en el club · Sáb 21 nov · 1 hoy, 1 mañana', title: 'Hoy en el club',
+        sections: [{ key: 'now', label: 'Ahora', rows: [rows[0]] }, { key: 'tomorrow', label: 'Mañana', rows: [rows[1]] }],
+        live: { division: 'M15', opponent: 'TRC', ownScore: 10, opponentScore: 7, periodLabel: "2T 52'", lastDataAt: '14:05' }
+      }, null);
+      expect(Array.from(el().querySelectorAll('.agenda-sep')).map(node => node.textContent?.trim())).toEqual(['Ahora', 'Mañana']);
+      expect(el().textContent).toContain('M15 · en vivo');
+      expect(el().textContent).toContain('Último dato 14:05');
+      expect(el().querySelectorAll('.btn-on-board').length).toBe(0);
+    });
+
+    it('sin partidos en la ventana: club-idle con la próxima fecha', () => {
+      render({ kind: 'club-idle', nextLabel: 'Sáb 14 nov · 2 partidos' }, null);
+      expect(el().textContent).toContain('Sin partidos esta semana');
+      expect(el().textContent).toContain('Sáb 14 nov · 2 partidos');
+    });
+  });
 });

@@ -266,6 +266,30 @@
   margin-top: 18px;
 }
 
+.agenda {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
+  gap: 20px 32px;
+  align-items: start;
+}
+
+.agenda-score {
+  margin: 0 0 4px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 40px;
+  opacity: 0.72;
+}
+
+@media (max-width: 1120px) {
+  .agenda {
+    grid-template-columns: 1fr;
+  }
+}
+
 .board-side-left {
   align-items: stretch;
   text-align: left;

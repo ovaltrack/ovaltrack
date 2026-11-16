@@ -6,6 +6,7 @@ import { UserContextService } from '../../../../core/services/user-context.servi
 import { Match } from '../../../match/types/match.types';
 import { analysisTone, AnalysisTone } from '../../domain/analysis-coverage';
 import { buildAdminBoard } from '../../domain/admin-board';
+import { rosterWindowMatches } from '../../domain/club-agenda';
 import { FormEntry, formRecord } from '../../domain/form-record';
 import { divisionMatchState } from '../../domain/division-match-state';
 import { greetingFor, hudDateLabel } from '../../domain/greeting';
@@ -140,7 +141,7 @@ export class AdminHomeStore {
       takeUntilDestroyed(this.destroyRef)
     ).subscribe();
 
-    this.bind(() => this.data.rosters(this.pendingInLineupWindow()), this.rosters);
+    this.bind(() => this.data.rosters(rosterWindowMatches(this.matches(), this.now(), LINEUP_WINDOW_MS)), this.rosters);
     this.bind(() => this.data.divisionStats(this.divisions(), this.matches()), this.statsState,
       (next, current) => !(next.status === 'loading' && current.status === 'ready'));
   }
@@ -161,15 +162,6 @@ export class AdminHomeStore {
   retry(widget: AdminWidget): void {
     if (widget === 'matches') this.reload();
     else this.derive$.next();
-  }
-
-  /** Partidos sin iniciar dentro de las 72 h de la alta de nómina: los únicos cuya nómina necesitan el tablero y las reglas. */
-  private pendingInLineupWindow(): Match[] {
-    const limit = this.now().getTime() + LINEUP_WINDOW_MS;
-    return this.matches().filter(match => {
-      const start = parseWallClock(match.date);
-      return start !== null && (match.status === 'not_started' || match.status === 'empty_roster') && start.getTime() < limit;
-    });
   }
 
   /** `accept` decide si un valor nuevo reemplaza al actual: así un refresco no vuelve a "loading" lo que ya tiene datos. */

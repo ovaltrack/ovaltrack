@@ -8,7 +8,7 @@ import { BoardModel, PrimaryAction, STARTERS_TARGET, SUBSTITUTES_TARGET } from '
 import { BoardPanelComponent } from './board-panel.component';
 import { BoardStepsComponent } from './board-steps.component';
 import { AnalysisRingComponent } from '../ui/analysis-ring.component';
-import { ClubDayTimelineComponent } from './club-day-timeline.component';
+import { ClubAgendaComponent } from './club-agenda.component';
 
 const ONBOARDING_STEPS = ['Crear división', 'Programar partido', 'Capturar en vivo'] as const;
 
@@ -16,7 +16,7 @@ const ONBOARDING_STEPS = ['Crear división', 'Programar partido', 'Capturar en v
 @Component({
   selector: 'app-home-board',
   standalone: true,
-  imports: [NgTemplateOutlet, RouterLink, AnalysisRingComponent, BoardPanelComponent, BoardStepsComponent, ClubDayTimelineComponent],
+  imports: [NgTemplateOutlet, RouterLink, AnalysisRingComponent, BoardPanelComponent, BoardStepsComponent, ClubAgendaComponent],
   templateUrl: './home-board.component.html',
   styleUrl: './home-board.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush

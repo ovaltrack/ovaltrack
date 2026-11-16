@@ -111,7 +111,7 @@ describe('AdminHomeStore', () => {
     const store = createStore();
     store.reload();
     expect(store.divisionsState().status).toBe('error');
-    expect(store.board().kind).toBe('club-day');
+    expect(store.board().kind).toBe('club-agenda');
   });
 
   it('las tarjetas traen staff, jugadores, próximo partido y análisis', () => {
@@ -122,7 +122,7 @@ describe('AdminHomeStore', () => {
     expect(first).toEqual(jasmine.objectContaining({ name: 'Superior', staffLabel: '2 en staff', players: 20, nextLabel: 'Sáb 14 nov · 14:30', analysisPercent: 78, tone: 'warn' }));
   });
 
-  it('pide la nómina de todos los pendientes dentro de las 72 h, no solo de hoy y mañana', () => {
+  it('pide la nómina de todos los pendientes de la ventana de la agenda o de las 72 h, no solo de hoy y mañana', () => {
     matches = ready([
       match({ id: 'hoy', status: 'not_started', date: '2026-11-06T20:00:00' }),
       match({ id: 'a60h', status: 'not_started', date: '2026-11-09T06:00:00' }),
@@ -137,7 +137,7 @@ describe('AdminHomeStore', () => {
     matches = ready([match({ id: 'vivo', status: 'in_progress', date: '2026-11-07T14:30:00' })]);
     const store = createStore();
     store.reload();
-    expect(store.board()).toEqual(jasmine.objectContaining({ kind: 'club-day', title: 'Hoy en el club' }));
+    expect(store.board()).toEqual(jasmine.objectContaining({ kind: 'club-agenda', title: 'Hoy en el club' }));
     expect(store.cards()[0]).toEqual(jasmine.objectContaining({ name: 'Superior', liveLabel: 'En curso', nextLabel: null }));
     expect(store.cards()[1].liveLabel).toBeNull();
   });

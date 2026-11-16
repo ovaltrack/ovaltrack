@@ -1,0 +1,29 @@
+@for (section of sections(); track section.key) {
+  <section class="agenda-section">
+    @if (section.label) {
+      <h3 class="agenda-sep label-mono" [class.accent]="section.key === 'now'">{{ section.label }}</h3>
+    }
+    <ul class="agenda-rows">
+      @for (row of section.rows; track row.matchId) {
+        <li class="agenda-row">
+          <span class="agenda-when">
+            <span class="agenda-time">{{ row.timeLabel }}</span>
+            <span class="agenda-day">{{ row.dayLabel }}</span>
+          </span>
+          <span class="agenda-match">
+            <strong class="agenda-division">{{ row.division }}</strong>
+            <span class="agenda-opponent">vs {{ row.opponent }}</span>
+          </span>
+          <span class="agenda-chip" [class.ok]="row.chip.tone === 'ok'" [class.warn]="row.chip.tone === 'warn'" [class.live]="row.chip.tone === 'live'">
+            @if (row.chip.tone === 'warn') {
+              <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+            } @else if (row.chip.tone === 'ok') {
+              <i class="bi bi-check2" aria-hidden="true"></i>
+            }
+            {{ row.chip.label }}
+          </span>
+        </li>
+      }
+    </ul>
+  </section>
+}
