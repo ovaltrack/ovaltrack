@@ -1,21 +1,28 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, forkJoin, from, map, of } from 'rxjs';
+import { Observable, catchError, forkJoin, from, map, of, shareReplay } from 'rxjs';
 import { UserContextService } from '../../../../core/services/user-context.service';
 import { ConnectivityService } from '../../../../core/services/connectivity.service';
 import { DivisionPlayerService } from '../../../../services/division-player.service';
+import { DivisionStatisticsService } from '../../../division-statistics/services/division-statistics.service';
 import { Division } from '../../../division/types/division.types';
 import { DivisionPlayerResponse } from '../../../division-player/type/division-player.types';
 import { EventService } from '../../../match/services/event.service';
+import { EventTypeService } from '../../../match/services/event-type.service';
 import { MatchService } from '../../../match/services/match.service';
 import { RosterService } from '../../../match/services/roster.service';
 import { ZoneService } from '../../../match/services/zone.service';
+import { MatchTimelineEventResponse } from '../../../match/types/event.types';
 import { Match } from '../../../match/types/match.types';
+import { loadActiveTypeIds } from '../../data/active-type-ids';
 import { DashboardSnapshotCache } from '../../data/dashboard-snapshot.cache';
 import { OfflineMatchReader } from '../../data/offline-match-reader';
 import { ToWidgetStateOptions, toWidgetState } from '../../data/to-widget-state';
-import { analysisCoverage, minutesWithoutZone } from '../../domain/analysis-coverage';
+import { AnalysisCoverage, analysisCoverage, minutesWithoutZone } from '../../domain/analysis-coverage';
+import { FocusInput } from '../../domain/focus-rows';
+import { focusInputOf } from '../../domain/focus-series';
 import { FormRecord, formRecord } from '../../domain/form-record';
-import { parseWallClock, shortDateLabel } from '../../domain/match-time';
+import { lastFinishedOf, playedAt } from '../../domain/division-match-state';
+import { seasonRange, shortDateLabel } from '../../domain/match-time';
 import { LiveEventLine, WidgetState } from '../../types/home.types';
 import { shortTeamName } from '../../../match/post-match/utils/zone-grid';
 import { CaptureProgress } from '../../data/offline-match-reader';
@@ -42,11 +49,13 @@ export interface FormData {
 export interface BoardExtras {
   roster: { starters: number; substitutes: number } | null;
   readyOffline: boolean;
+  /** Jugadores activos de la división del próximo partido. */
+  squadSize: number | null;
   progress: CaptureProgress | null;
   recent: LiveEventLine[];
 }
 
-export const EMPTY_BOARD_EXTRAS: BoardExtras = { roster: null, readyOffline: false, progress: null, recent: [] };
+export const EMPTY_BOARD_EXTRAS: BoardExtras = { roster: null, readyOffline: false, squadSize: null, progress: null, recent: [] };
 
 const JERSEY_PAGE_SIZE = 200;
 const RECENT_EVENTS = 3;
@@ -57,12 +66,25 @@ export class CoachHomeDataService {
   private readonly matchService = inject(MatchService);
   private readonly rosterService = inject(RosterService);
   private readonly eventService = inject(EventService);
+  private readonly eventTypeService = inject(EventTypeService);
   private readonly zoneService = inject(ZoneService);
   private readonly playerService = inject(DivisionPlayerService);
+  private readonly statisticsService = inject(DivisionStatisticsService);
   private readonly reader = inject(OfflineMatchReader);
   private readonly cache = inject(DashboardSnapshotCache);
   private readonly userContext = inject(UserContextService);
   private readonly connectivity = inject(ConnectivityService);
+
+  /** Eventos post-partido por partido, compartidos entre Deuda y Forma dentro de una misma recarga. */
+  private readonly eventsByMatch = new Map<string, Observable<MatchTimelineEventResponse[]>>();
+
+  private activeTypeIds: Observable<ReadonlySet<string> | null> | null = null;
+
+  /** Descarta los eventos y el catálogo guardados: lo llama el store al arrancar cada recarga, así Deuda y Forma piden una sola vez. */
+  invalidateEvents(): void {
+    this.eventsByMatch.clear();
+    this.activeTypeIds = null;
+  }
 
   /** Partidos de todas las divisiones; una división que falla no tumba a las demás, salvo que fallen todas. */
   matches(divisions: readonly Division[]): Observable<WidgetState<Match[]>> {
@@ -87,6 +109,9 @@ export class CoachHomeDataService {
           catchError(() => of(null)))
       : of(null);
     const ready$ = next ? from(this.reader.isReadyOffline(next)) : of(false);
+    const squad$ = next
+      ? this.playerService.getActiveByDivisionId(next.divisionId, 1, 1).pipe(map(page => page.totalElements), catchError(() => of(null)))
+      : of(null);
     const live$ = capture
       ? from(Promise.all([
           this.reader.captureProgress(capture.id),
@@ -100,33 +125,32 @@ export class CoachHomeDataService {
           }))
         })))
       : of({ progress: null, recent: [] as LiveEventLine[] });
-    return forkJoin({ roster: roster$, readyOffline: ready$, live: live$ }).pipe(
-      map(({ roster, readyOffline, live }) => ({ roster, readyOffline, progress: live.progress, recent: live.recent })),
+    return forkJoin({ roster: roster$, readyOffline: ready$, squadSize: squad$, live: live$ }).pipe(
+      map(({ roster, readyOffline, squadSize, live }) => ({ roster, readyOffline, squadSize, progress: live.progress, recent: live.recent })),
       catchError(() => of(EMPTY_BOARD_EXTRAS))
     );
   }
 
-  /** Deuda de análisis del último partido jugado; vacío si todavía no hubo ninguno. */
+  /** Análisis del último partido jugado (alimenta el tablero y el primario); vacío si todavía no hubo ninguno. */
   debt(matches: readonly Match[]): Observable<WidgetState<DebtData>> {
-    const last = this.lastFinished(matches);
+    const last = lastFinishedOf(matches);
     if (!last) return of<WidgetState<DebtData>>({ status: 'empty' });
-    const start = parseWallClock(last.date);
+    const played = playedAt(last);
     return forkJoin({
-      events: this.eventService.getByMatchPostMatch(last.id),
+      coverage: this.coverageOf(last.id),
       zones: this.zoneService.list(last.id).pipe(catchError(() => of(null)))
     }).pipe(
-      map(({ events, zones }): DebtData => {
-        const coverage = analysisCoverage(events);
+      map(({ coverage, zones }): DebtData => {
         return {
           matchId: last.id,
           opponent: shortTeamName(last.opponent.alias || last.opponent.name),
-          dateLabel: start ? shortDateLabel(start) : '',
+          dateLabel: played ? shortDateLabel(played) : '',
           percent: coverage.percent,
           withoutPlayer: coverage.withoutPlayer,
           minutesWithoutZone: zones ? minutesWithoutZone(zones.assignments) : null
         };
       }),
-      toWidgetState<DebtData>(this.options('debt', { isEmpty: () => false }))
+      toWidgetState<DebtData>(this.options(`debt.${last.divisionId}`, { isEmpty: () => false }))
     );
   }
 
@@ -134,7 +158,7 @@ export class CoachHomeDataService {
   playersWithoutJersey(divisionId: string): Observable<WidgetState<number>> {
     return this.playerService.getActiveByDivisionId(divisionId, 1, JERSEY_PAGE_SIZE).pipe(
       map(page => (page.content as DivisionPlayerResponse[]).filter(player => player.jerseyNumber == null).length),
-      toWidgetState<number>(this.options('jerseys', { isEmpty: () => false }))
+      toWidgetState<number>(this.options(`jerseys.${divisionId}`, { isEmpty: () => false }))
     );
   }
 
@@ -142,20 +166,39 @@ export class CoachHomeDataService {
   form(matches: readonly Match[], now: Date): Observable<WidgetState<FormData>> {
     const record = formRecord(matches, now);
     if (!record) return of<WidgetState<FormData>>({ status: 'empty' });
-    const percents$ = record.last.map(entry => this.eventService.getByMatchPostMatch(entry.matchId).pipe(
-      map(events => [entry.matchId, analysisCoverage(events).percent] as const),
+    const percents$ = record.last.map(entry => this.coverageOf(entry.matchId).pipe(
+      map(coverage => [entry.matchId, coverage.percent] as const),
       catchError(() => of([entry.matchId, null] as const))
     ));
     return forkJoin(percents$).pipe(
       map((pairs): FormData => ({ record, percents: Object.fromEntries(pairs) })),
-      toWidgetState<FormData>(this.options('form', { isEmpty: () => false }))
+      toWidgetState<FormData>(this.options(`form.${matches[0].divisionId}`, { isEmpty: () => false }))
     );
   }
 
-  private lastFinished(matches: readonly Match[]): Match | null {
-    const finished = matches.filter(match => match.status === 'finished' && parseWallClock(match.date) !== null);
-    finished.sort((a, b) => (parseWallClock(b.date)?.getTime() ?? 0) - (parseWallClock(a.date)?.getTime() ?? 0));
-    return finished[0] ?? null;
+  /** «Qué trabajar»: una sola llamada de estadísticas de la división en la temporada; el snapshot es por división. */
+  focus(divisionId: string, now: Date): Observable<WidgetState<FocusInput>> {
+    const { from, to } = seasonRange(now);
+    return this.statisticsService.getDivisionStatistics(divisionId, from, to).pipe(
+      map(response => focusInputOf(response.matches)),
+      toWidgetState<FocusInput>(this.options(`focus.${divisionId}`, { isEmpty: () => false }))
+    );
+  }
+
+  /** Cobertura con la misma regla que post-partido: eventos del partido y catálogo de tipos activos, ambos compartidos. */
+  private coverageOf(matchId: string): Observable<AnalysisCoverage> {
+    this.activeTypeIds ??= loadActiveTypeIds(this.eventTypeService).pipe(shareReplay({ bufferSize: 1, refCount: false }));
+    return forkJoin({ events: this.eventsOf(matchId), activeTypeIds: this.activeTypeIds }).pipe(
+      map(({ events, activeTypeIds }) => analysisCoverage(events, activeTypeIds))
+    );
+  }
+
+  private eventsOf(matchId: string): Observable<MatchTimelineEventResponse[]> {
+    const cached = this.eventsByMatch.get(matchId);
+    if (cached) return cached;
+    const shared = this.eventService.getByMatchPostMatch(matchId).pipe(shareReplay({ bufferSize: 1, refCount: false }));
+    this.eventsByMatch.set(matchId, shared);
+    return shared;
   }
 
   /** Snapshot por usuario y modo offline para el widget indicado. */

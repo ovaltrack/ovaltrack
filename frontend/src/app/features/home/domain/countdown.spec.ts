@@ -1,4 +1,4 @@
-import { formatCountdown, isMatchDay } from './countdown';
+import { formatCountdown } from './countdown';
 
 describe('countdown', () => {
   it('formatea HH:MM:SS', () => {
@@ -12,10 +12,5 @@ describe('countdown', () => {
 
   it('descarta los milisegundos sobrantes', () => {
     expect(formatCountdown(1999)).toBe('00:00:01');
-  });
-
-  it('es día de partido con menos de 24 h', () => {
-    expect(isMatchDay(23 * 3_600_000)).toBeTrue();
-    expect(isMatchDay(24 * 3_600_000)).toBeFalse();
   });
 });

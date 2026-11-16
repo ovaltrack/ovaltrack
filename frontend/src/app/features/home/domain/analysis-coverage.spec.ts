@@ -1,36 +1,36 @@
+import { CoverageEvent } from '../../match/post-match/utils/review-coverage';
 import { analysisCoverage, analysisTone, minutesWithoutZone } from './analysis-coverage';
 
 describe('analysisCoverage', () => {
+  const event = (playerId: string | null, teamPossession: CoverageEvent['teamPossession'], eventTypeId = 't'): CoverageEvent => ({ eventTypeId, playerId, teamPossession });
+  const all = null;
+
   it('sin eventos es 100 %', () => {
-    expect(analysisCoverage([])).toEqual({ totalEvents: 0, withoutPlayer: 0, percent: 100 });
+    expect(analysisCoverage([], all)).toEqual({ totalEvents: 0, withoutPlayer: 0, percent: 100 });
   });
 
   it('cuenta las jugadas propias sin jugador', () => {
-    const result = analysisCoverage([
-      { playerId: 'p1', teamPossession: 'OWN' },
-      { playerId: null, teamPossession: 'OWN' },
-      { playerId: '  ', teamPossession: 'NEUTRAL' },
-      { playerId: 'p2', teamPossession: 'OWN' }
-    ]);
+    const result = analysisCoverage([event('p1', 'OWN'), event(null, 'OWN'), event('  ', 'NEUTRAL'), event('p2', 'OWN')], all);
     expect(result).toEqual({ totalEvents: 4, withoutPlayer: 2, percent: 50 });
   });
 
   it('los eventos del rival no cuentan como pendientes', () => {
-    const result = analysisCoverage([
-      { playerId: null, teamPossession: 'OPPONENT' },
-      { playerId: null, teamPossession: 'OPPONENT' },
-      { playerId: 'p1', teamPossession: 'OWN' }
-    ]);
+    const result = analysisCoverage([event(null, 'OPPONENT'), event(null, 'OPPONENT'), event('p1', 'OWN')], all);
     expect(result.withoutPlayer).toBe(0);
     expect(result.percent).toBe(100);
   });
 
   it('redondea el porcentaje', () => {
+    expect(analysisCoverage([event('p', 'OWN'), event('p', 'OWN'), event(null, 'OWN')], all).percent).toBe(67);
+  });
+
+  it('coincide con post-partido: los eventos de tipos inactivos no cuentan (78 % y no 70 %)', () => {
     const events = [
-      ...Array.from({ length: 2 }, () => ({ playerId: 'p', teamPossession: 'OWN' as const })),
-      { playerId: null, teamPossession: 'OWN' as const }
+      ...Array.from({ length: 6 }, () => event('p1', 'OWN', 'activo')),
+      event(null, 'OWN', 'activo'), event(null, 'OWN', 'baja'), event(null, 'OPPONENT', 'activo'), event('', 'NEUTRAL', 'activo')
     ];
-    expect(analysisCoverage(events).percent).toBe(67);
+    expect(analysisCoverage(events, new Set(['activo'])).percent).toBe(78);
+    expect(analysisCoverage(events, all).percent).toBe(70);
   });
 });
 

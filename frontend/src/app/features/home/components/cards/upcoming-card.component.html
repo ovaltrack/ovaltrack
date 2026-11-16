@@ -1,0 +1,20 @@
+<app-home-tile [label]="'Fixture · ' + divisionName()" title="Próximas fechas" [state]="state()" (retry)="retry.emit()">
+  <ul class="fixtures">
+    @for (fixture of fixtures(); track fixture.matchId) {
+      <li class="fixture" [attr.aria-label]="fixture.ariaLabel">
+        <span class="date-block" aria-hidden="true">
+          <span class="date-day">{{ fixture.day }}</span>
+          <span class="date-month">{{ fixture.month }}</span>
+        </span>
+        <span class="fixture-text">
+          <strong>{{ fixture.opponent }}</strong>
+          <span class="fixture-when">{{ fixture.when }}</span>
+        </span>
+        @if (fixture.rosterChip; as chip) {
+          <span class="fixture-chip"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ chip }}</span>
+        }
+      </li>
+    }
+  </ul>
+  <p tileEmpty>No hay partidos programados.</p>
+</app-home-tile>

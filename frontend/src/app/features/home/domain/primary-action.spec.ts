@@ -1,4 +1,5 @@
-import { AdminRuleContext, CoachRuleContext, RuleMatch, adminRules, coachRules, isActionEnabled, playerRules, resolvePrimaryAction, upcomingMatches } from './primary-action';
+import { RuleMatch, upcomingMatches } from './division-match-state';
+import { AdminRuleContext, CoachRuleContext, adminRules, coachRules, isActionEnabled, playerRules, resolvePrimaryAction } from './primary-action';
 
 const now = new Date(2026, 10, 6, 18, 0); // vie 6 nov, 18:00
 
@@ -47,12 +48,12 @@ describe('coachRules', () => {
   });
 
   it('2/3 · partido en not_started con 0 titulares cargados: definir alineación, no capturar', () => {
-    const action = resolve(coach({ matches: [match('m2', 'not_started', at(1, 14))], nextRoster: { starters: 0 } }));
+    const action = resolve(coach({ matches: [match('m2', 'not_started', at(1, 14))], nextRoster: { starters: 0, substitutes: 0 } }));
     expect(action).toEqual(jasmine.objectContaining({ kind: 'define-lineup', route: '/selection-roster/m2' }));
   });
 
   it('2 · con 15 titulares cargados ofrece capturar', () => {
-    const action = resolve(coach({ matches: [match('m2', 'not_started', at(1, 14))], nextRoster: { starters: 15 } }));
+    const action = resolve(coach({ matches: [match('m2', 'not_started', at(1, 14))], nextRoster: { starters: 15, substitutes: 8 } }));
     expect(action?.kind).toBe('capture-live');
   });
 
@@ -66,12 +67,35 @@ describe('coachRules', () => {
     expect(action).toBeNull();
   });
 
-  it('4 · último partido con análisis incompleto: completar análisis en la tarjeta de deuda', () => {
+  it('3 · con 15 titulares pero suplentes 3/8 a más de 24 h: definir alineación (Convocar)', () => {
+    const action = resolve(coach({ matches: [match('m2', 'not_started', at(2, 14))], nextRoster: { starters: 15, substitutes: 3 } }));
+    expect(action).toEqual(jasmine.objectContaining({ kind: 'define-lineup', route: '/selection-roster/m2' }));
+  });
+
+  it('2 · con suplentes incompletos a menos de 24 h se ofrece capturar (Jugar le gana a Convocar)', () => {
+    const action = resolve(coach({ matches: [match('m2', 'not_started', at(0, 20))], nextRoster: { starters: 15, substitutes: 3 } }));
+    expect(action?.kind).toBe('capture-live');
+  });
+
+  it('3 · una nómina que no se pudo leer en un not_started no pide alineación', () => {
+    const action = resolve(coach({ matches: [match('m2', 'not_started', at(2, 14))], nextRoster: null }));
+    expect(action?.kind).not.toBe('define-lineup');
+  });
+
+  it('4 · último partido con análisis incompleto: completar análisis en el tablero', () => {
     const action = resolve(coach({
       matches: [match('m4', 'not_started', at(5, 14))],
       lastFinished: { id: 'm0', analysisPercent: 82 }
     }));
-    expect(action).toEqual(jasmine.objectContaining({ kind: 'complete-analysis', route: '/post-match/m0', target: 'debt-tile' }));
+    expect(action).toEqual(jasmine.objectContaining({ kind: 'complete-analysis', route: '/post-match/m0', queryParams: { pendientes: 1 }, target: 'board' }));
+  });
+
+  it('4 · con el 100 % pero minutos sin zona: completar zonas', () => {
+    const action = resolve(coach({
+      matches: [match('m4', 'not_started', at(5, 14))],
+      lastFinished: { id: 'm0', analysisPercent: 100, minutesWithoutZone: 9 }
+    }));
+    expect(action).toEqual(jasmine.objectContaining({ kind: 'complete-analysis', label: 'Completar zonas', route: '/post-match/m0/zones', target: 'board' }));
   });
 
   it('4 · con el análisis al 100 % no hay deuda', () => {
@@ -147,6 +171,13 @@ describe('adminRules', () => {
     expect(action).toEqual(jasmine.objectContaining({ kind: 'define-lineup', route: '/selection-roster/m1' }));
   });
 
+  it('1 · un partido sin nómina a 60 h (pasado mañana) también pide la alineación', () => {
+    const action = resolve(admin({
+      matches: [clubMatch('lejos', 'd1', 'not_started', at(3, 6))], rosters: { lejos: { starters: 0 } }
+    }));
+    expect(action).toEqual(jasmine.objectContaining({ kind: 'define-lineup', route: '/selection-roster/lejos' }));
+  });
+
   it('1 · gana la división que juega primero sin nómina', () => {
     const action = resolve(admin({
       divisions: [division('d1'), division('d2')],
@@ -160,7 +191,7 @@ describe('adminRules', () => {
       divisions: [division('d1'), division('d2', false)],
       matches: [clubMatch('m', 'd1', 'not_started', at(5, 10))]
     }));
-    expect(action).toEqual(jasmine.objectContaining({ kind: 'assign-coach', route: '/divisions/d2/coaches', target: 'inbox-tile' }));
+    expect(action).toEqual(jasmine.objectContaining({ kind: 'assign-coach', route: '/divisions/d2/coaches', target: 'board' }));
   });
 
   it('3 · club sin divisiones: crear división', () => {

@@ -10,7 +10,7 @@ describe('HomeBoardComponent', () => {
   const lineup: PrimaryAction = { kind: 'define-lineup', label: 'Definir alineación', route: '/selection-roster/m1', target: 'board', requiresConnection: true };
   const next: BoardModel = {
     kind: 'next', matchId: 'm1', divisionName: 'Superior', opponent: 'Trelew RC', city: null,
-    dateLabel: 'Sáb 7 nov · mañana', time: '14:30', starters: 15, substitutes: 6, readyOffline: true
+    dateLabel: 'Sáb 7 nov · mañana', time: '14:30', starters: 15, substitutes: 6, rosterGaps: { kind: 'substitutes', count: 2, label: 'Suplentes 6/8', missing: '2 suplentes' }, readyOffline: true, squadSize: null, callUp: null, week: null
   };
 
   const render = (model: BoardModel, primary: PrimaryAction | null, online = true): void => {
@@ -33,9 +33,81 @@ describe('HomeBoardComponent', () => {
     expect(el().querySelectorAll('.btn-on-board').length).toBe(1);
   });
 
-  it('no dibuja el primario si su destino es otra tarjeta', () => {
-    render(next, { ...capture, target: 'debt-tile' });
-    expect(el().querySelectorAll('.btn-on-board').length).toBe(0);
+  it('con semana de juego dibuja los 4 pasos, el actual con aria-current y los hechos con texto', () => {
+    const steps = [
+      { stage: 'analyze' as const, number: 1, name: 'Analizar', status: 'done' as const, subtitle: 'vs TRC · 100 %' },
+      { stage: 'train' as const, number: 2, name: 'Entrenar', status: 'done' as const, subtitle: 'Hecho' },
+      { stage: 'call-up' as const, number: 3, name: 'Convocar', status: 'current' as const, subtitle: 'Suplentes 6/8' },
+      { stage: 'play' as const, number: 4, name: 'Jugar', status: 'pending' as const, subtitle: 'Sáb 7 · 14:30' }
+    ];
+    render({ ...next, week: { stage: 'call-up', label: 'Semana de juego · Superior · paso 3 de 4', steps } } as BoardModel, capture);
+    expect(el().querySelectorAll('.step').length).toBe(4);
+    expect(el().querySelector('.step.current')?.getAttribute('aria-current')).toBe('step');
+    expect(el().querySelectorAll('.step[aria-current]').length).toBe(1);
+    expect(el().textContent).toContain('paso 3 de 4');
+    expect(el().querySelector('.step.done')?.textContent).toContain('hecho');
+  });
+
+  it('en curso acá: los últimos eventos van en un panel lateral y el chip dice «Sin señal: listo»', () => {
+    render({
+      kind: 'live-here', matchId: 'm1', opponent: 'Trelew RC', periodLabel: "2T 52'", ownScore: 21, opponentScore: 13, halftime: false,
+      recent: [{ label: 'Try', minute: "51'" }, { label: 'Penal', minute: "47'" }], week: null
+    }, capture);
+    expect(el().querySelector('app-board-panel')?.textContent).toContain('Últimos eventos');
+    expect(el().querySelectorAll('app-board-panel li').length).toBe(2);
+    expect(el().textContent).toContain('Sin señal: listo');
+  });
+
+  it('analysis: título, chips de lo que falta, anillo, «Ver resumen» y panel «Después»', () => {
+    render({
+      kind: 'analysis', matchId: 'm9', divisionName: 'Superior', title: 'Cerrá el análisis del sábado', subtitle: 'vs Trelew · Ganado 21–13 · Sáb 14 nov',
+      percent: 85, withoutPlayer: 12, minutesWithoutZone: 9, after: { title: 'vs CRC · Sáb 21 nov · 15:30', detail: 'En 5 días · nómina sin armar todavía' }, week: null
+    }, { kind: 'complete-analysis', label: 'Completar análisis', route: '/post-match/m9', queryParams: { pendientes: 1 }, target: 'board', requiresConnection: true });
+    expect(el().textContent).toContain('Cerrá el análisis del sábado');
+    expect(el().textContent).toContain('12 jugadas sin jugador');
+    expect(el().textContent).toContain('9′ sin zona');
+    expect(el().querySelector('app-analysis-ring [role="img"]')?.getAttribute('aria-label')).toBe('Análisis cargado al 85 por ciento');
+    expect(el().querySelector('a.btn-on-board-outline')?.getAttribute('href')).toBe('/post-match/m9/statistics');
+    expect(el().querySelector('a.btn-on-board')?.getAttribute('href')).toBe('/post-match/m9?pendientes=1');
+    expect(el().querySelectorAll('.btn-on-board').length).toBe(1);
+    expect(el().querySelector('app-board-panel')?.textContent).toContain('Después: paso 4');
+  });
+
+  it('analysis sin partido próximo no dibuja el panel «Después»', () => {
+    render({
+      kind: 'analysis', matchId: 'm9', divisionName: 'Superior', title: 'Cerrá el análisis', subtitle: 'vs Trelew', percent: 100, withoutPlayer: 0, minutesWithoutZone: 4, after: null, week: null
+    }, null);
+    expect(el().querySelector('app-board-panel')).toBeNull();
+    expect(el().textContent).not.toContain('sin jugador');
+  });
+
+  it('Convocar: título, chips de lo que falta, plantel, nota de conexión y panel «Faltan en la nómina»', () => {
+    render({
+      ...next, squadSize: 52, rosterGaps: { kind: 'substitutes', count: 5, label: 'Suplentes 3/8', missing: '5 suplentes' },
+      callUp: { title: 'Armá la nómina del sábado', subtitle: 'vs CRC · Sáb 21 nov · 15:30', dayLabel: 'Sáb 21 nov', inLabel: 'En 2 días · vs CRC' }
+    } as BoardModel, lineup);
+    expect(el().textContent).toContain('Armá la nómina del sábado');
+    expect(el().textContent).toContain('Suplentes 3/8');
+    expect(el().textContent).toContain('52 en el plantel');
+    expect(el().textContent).toContain('Guardar la nómina requiere conexión.');
+    const panels = Array.from(el().querySelectorAll('app-board-panel')).map(panel => panel.textContent ?? '');
+    expect(panels.some(text => text.includes('Próximo partido') && text.includes('En 2 días · vs CRC'))).toBeTrue();
+    expect(panels.some(text => text.includes('Faltan en la nómina') && text.includes('5 suplentes'))).toBeTrue();
+    expect(el().querySelectorAll('.btn-on-board').length).toBe(1);
+  });
+
+  it('Convocar sin conexión: «Definir alineación» deshabilitado con «Requiere conexión»', () => {
+    render({
+      ...next, callUp: { title: 'Armá la nómina del sábado', subtitle: 'vs CRC', dayLabel: 'Sáb 21 nov', inLabel: 'En 2 días · vs CRC' },
+      rosterGaps: { kind: 'none', label: 'Sin nómina', missing: '15 titulares y hasta 8 suplentes' }
+    } as BoardModel, lineup, false);
+    expect(el().querySelector<HTMLButtonElement>('button.btn-on-board')?.disabled).toBeTrue();
+    expect(el().textContent).toContain('Requiere conexión');
+  });
+
+  it('sin semana no dibuja pasos', () => {
+    render(next, capture);
+    expect(el().querySelector('app-board-steps')).toBeNull();
   });
 
   it('sin conexión deshabilita lo que necesita red y avisa', () => {
@@ -50,13 +122,120 @@ describe('HomeBoardComponent', () => {
   });
 
   it('el día de partido muestra la cuenta regresiva como timer', () => {
-    render({ kind: 'match-day', matchId: 'm1', divisionName: 'Superior', opponent: 'Trelew RC', startsAt: new Date(2026, 10, 6, 20, 30, 15), starters: 15, substitutes: 8 }, capture);
+    render({ kind: 'match-day', matchId: 'm1', divisionName: 'Superior', opponent: 'Trelew RC', startsAt: new Date(2026, 10, 6, 20, 30, 15), starters: 15, substitutes: 8, week: null }, capture);
     expect(el().querySelector('[role="timer"]')?.textContent?.replace(/\s/g, '')).toBe('023015');
   });
 
   it('con el partido en otro dispositivo no ofrece capturar', () => {
-    render({ kind: 'live-elsewhere', matchId: 'm1', opponent: 'Trelew RC', ownScore: 7, opponentScore: 3, lastDataAt: '14:05' }, null);
+    render({ kind: 'live-elsewhere', matchId: 'm1', opponent: 'Trelew RC', periodLabel: "2T 52'", ownScore: 7, opponentScore: 3, lastDataAt: '14:05', week: null }, null);
     expect(el().querySelectorAll('.btn-on-board').length).toBe(0);
     expect(el().textContent).toContain('otro dispositivo');
+  });
+
+  it('en otro dispositivo muestra el período del último dato, la hora y el panel «Qué pasa después»', () => {
+    render({ kind: 'live-elsewhere', matchId: 'm1', opponent: 'Trelew RC', periodLabel: "2T 52'", ownScore: 7, opponentScore: 3, lastDataAt: '14:05', week: null }, null);
+    expect(el().textContent).toContain("En curso · 2T 52'");
+    expect(el().textContent).toContain('último dato 14:05');
+    expect(el().querySelector('app-board-panel')?.textContent).toContain('Qué pasa después');
+    expect(el().querySelector('.score')?.getAttribute('aria-label')).toBe('Marcador 7 a 3');
+  });
+
+  describe('club-agenda', () => {
+    const rows = [
+      { matchId: 'a', dayLabel: 'Sáb 21', timeLabel: '10:00', division: 'M15', opponent: 'TRC', chip: { label: 'Sin entrenador', tone: 'warn' as const } },
+      { matchId: 'b', dayLabel: 'Sáb 21', timeLabel: '14:30', division: 'Superior', opponent: 'CRC', chip: { label: 'Nómina lista', tone: 'ok' as const } }
+    ];
+    const week: BoardModel = { kind: 'club-agenda', mode: 'week', label: 'Fin de semana · Sáb 21', title: '2 partidos este fin de semana', sections: [{ key: 'week', label: null, rows }], live: null, urgent: null };
+
+    it('semana: rótulo, título y una fila por partido con su chip de texto', () => {
+      render(week, null);
+      expect(el().textContent).toContain('Fin de semana · Sáb 21');
+      expect(el().querySelector('.board-title')?.textContent).toContain('2 partidos este fin de semana');
+      expect(el().querySelectorAll('.agenda-row').length).toBe(2);
+      expect(el().querySelector('.agenda-row .agenda-chip')?.textContent).toContain('Sin entrenador');
+      expect(el().querySelector('.agenda-sep')).toBeNull();
+    });
+
+    it('día de partido: separadores «Ahora» y «Mañana» y panel «<división> · en vivo»', () => {
+      render({
+        kind: 'club-agenda', mode: 'day', label: 'Hoy en el club · Sáb 21 nov · 1 hoy, 1 mañana', title: 'Hoy en el club',
+        sections: [{ key: 'now', label: 'Ahora', rows: [rows[0]] }, { key: 'tomorrow', label: 'Mañana', rows: [rows[1]] }],
+        live: { division: 'M15', opponent: 'TRC', ownScore: 10, opponentScore: 7, periodLabel: "2T 52'", lastDataAt: '14:05' }, urgent: null
+      }, null);
+      expect(Array.from(el().querySelectorAll('.agenda-sep')).map(node => node.textContent?.trim())).toEqual(['Ahora', 'Mañana']);
+      expect(el().textContent).toContain('M15 · en vivo');
+      expect(el().textContent).toContain('Último dato 14:05');
+      expect(el().querySelectorAll('.btn-on-board').length).toBe(0);
+    });
+
+    it('Lo más urgente: explica el motivo y lleva el único primario de la pantalla', () => {
+      render({ ...week, urgent: { title: 'Falta la alineación de Superior', detail: 'vs CRC · Sáb 21 · Sin nómina' } } as BoardModel, { ...lineup, label: 'Definir alineación Superior' });
+      const panel = el().querySelector('.agenda-urgent') as HTMLElement;
+      expect(panel.textContent).toContain('Lo más urgente');
+      expect(panel.textContent).toContain('Falta la alineación de Superior');
+      expect(panel.querySelector('.btn-on-board')?.textContent).toContain('Definir alineación Superior');
+      expect(el().querySelectorAll('.btn-on-board').length).toBe(1);
+    });
+
+    it('Lo más urgente sin urgencias dice que está todo listo y no dibuja botón', () => {
+      render(week, null);
+      expect(el().querySelector('.agenda-urgent')?.textContent).toContain('Está todo listo');
+      expect(el().querySelectorAll('.btn-on-board').length).toBe(0);
+    });
+
+    it('Lo más urgente sin conexión deshabilita el botón y avisa «Requiere conexión»', () => {
+      render({ ...week, urgent: { title: 'M15 no tiene entrenador', detail: 'Nadie puede capturar sus partidos.' } } as BoardModel,
+        { kind: 'assign-coach', label: 'Asignar entrenador', route: '/divisions/d2/coaches', target: 'board', requiresConnection: true }, false);
+      expect((el().querySelector('.agenda-urgent .btn-on-board') as HTMLButtonElement).disabled).toBeTrue();
+      expect(el().querySelector('.agenda-urgent')?.textContent).toContain('Requiere conexión');
+    });
+
+    it('sin partidos en la ventana: club-idle con la próxima fecha', () => {
+      render({ kind: 'club-idle', nextLabel: 'Sáb 14 nov · 2 partidos' }, null);
+      expect(el().textContent).toContain('Sin partidos esta semana');
+      expect(el().textContent).toContain('Sáb 14 nov · 2 partidos');
+    });
+  });
+
+  describe('player-last', () => {
+    const view: PrimaryAction = { kind: 'view-my-match', label: 'Ver mi partido', route: '/player-statistics/m2', target: 'board', requiresConnection: true };
+    const last: Extract<BoardModel, { kind: 'player-last' }> = {
+      kind: 'player-last', matchId: 'm2', dateLabel: 'Dom 1 nov', opponent: 'DRA', ownScore: 22, opponentScore: 14, result: 'win', role: 'TITULAR',
+      tries: 2, tackles: 7, tacklePercent: 88, analysisPercent: 100, slotNumber: 14,
+      takeaways: { lines: ['Tu mejor partido en tackles de la temporada: 7', '2 penales cometidos · tu promedio es 1,5'], provisionalNote: null }
+    };
+
+    it('sin camiseta grande: la camiseta va en el chip «Titular · camiseta n» y los tackles con su efectividad', () => {
+      render(last, view);
+      expect(el().querySelector('.jersey')).toBeNull();
+      const chips = el().querySelector('.chips')?.textContent ?? '';
+      expect(chips).toContain('Titular · camiseta 14');
+      expect(chips).toContain('2 tries');
+      expect(chips).toContain('7 tackles (88 %)');
+      expect(chips).not.toContain('Análisis');
+    });
+
+    it('«Lo que dejó el partido» lista las líneas y deja un solo primario', () => {
+      render(last, view);
+      const panel = el().querySelector('app-board-panel') as HTMLElement;
+      expect(panel.textContent).toContain('Lo que dejó el partido');
+      expect(panel.querySelectorAll('.takeaways li').length).toBe(2);
+      expect(el().querySelectorAll('.btn-on-board').length).toBe(1);
+    });
+
+    it('análisis incompleto con ceros: «Tus acciones todavía se están cargando» y el chip ámbar «Análisis n % · puede cambiar»', () => {
+      render({ ...last, tries: null, tackles: null, tacklePercent: null, analysisPercent: 78, takeaways: { lines: [], provisionalNote: 'Tus acciones todavía se están cargando: estos números pueden cambiar.' } }, view);
+      const chips = el().querySelector('.chips')?.textContent ?? '';
+      expect(chips).toContain('Tus acciones todavía se están cargando');
+      expect(el().querySelector('.chip-board.warn')?.textContent).toContain('Análisis 78 % · puede cambiar');
+      expect(el().querySelector('.takeaways')).toBeNull();
+    });
+
+    it('un suplente no muestra camiseta, y sin takeaways no hay panel', () => {
+      render({ ...last, role: 'SUPLENTE', slotNumber: 20, takeaways: null }, view);
+      expect(el().querySelector('.chips')?.textContent).toContain('Suplente');
+      expect(el().querySelector('.chips')?.textContent).not.toContain('camiseta');
+      expect(el().querySelector('app-board-panel')).toBeNull();
+    });
   });
 });

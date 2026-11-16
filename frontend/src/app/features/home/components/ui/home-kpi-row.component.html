@@ -1,0 +1,12 @@
+<app-home-tile [label]="'Temporada ' + seasonYear()" title="Resumen del club" [state]="state()" (retry)="retry.emit()">
+  <dl class="kpis">
+    @for (kpi of kpis(); track kpi.key) {
+      <div class="kpi">
+        <dt class="kpi-label">{{ kpi.label }}</dt>
+        <dd class="kpi-value" [class.warn]="kpi.warn">{{ kpi.value }}</dd>
+        <dd class="kpi-sub">{{ kpi.sub }}</dd>
+      </div>
+    }
+  </dl>
+  <p tileEmpty>Todavía no hay divisiones.</p>
+</app-home-tile>

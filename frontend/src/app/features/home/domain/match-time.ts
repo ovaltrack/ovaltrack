@@ -47,15 +47,56 @@ export function dayLabel(date: Date): string {
   return `${WEEKDAYS[date.getDay()]} ${date.getDate()} ${MONTHS[date.getMonth()]}`;
 }
 
+const WEEKDAY_NAMES = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'] as const;
+
+/** "sábado": día de la semana en minúscula, para frases como "Cerrá el análisis del sábado". */
+export function weekdayName(date: Date): string {
+  return WEEKDAY_NAMES[date.getDay()];
+}
+
+/** "Hoy", "Mañana" o "En 5 días": días de calendario hasta un partido (uno ya empezado cuenta como hoy). */
+export function daysUntilLabel(start: Date, now: Date): string {
+  const days = Math.max(0, calendarDaysBetween(now, start));
+  return days === 0 ? 'Hoy' : days === 1 ? 'Mañana' : `En ${days} días`;
+}
+
+/** "Sáb 21": día de la semana y del mes, para los subtítulos de los pasos. */
+export function weekdayDayLabel(date: Date): string {
+  return `${WEEKDAYS[date.getDay()]} ${date.getDate()}`;
+}
+
+/** "15:30": hora de pared de una fecha de partido. */
+export function clockLabel(date: Date): string {
+  return hhmm(date);
+}
+
 /** "1 nov": fecha corta de un partido ya jugado. */
 export function shortDateLabel(date: Date): string {
   return `${date.getDate()} ${MONTHS[date.getMonth()]}`;
 }
 
+/** "nov": mes abreviado, para el bloque de fecha de las tarjetas. */
+export function monthLabel(date: Date): string {
+  return MONTHS[date.getMonth()];
+}
+
+const HAS_ZONE = /(Z|[+-]\d{2}:?\d{2})$/i;
+
+/**
+ * Instante de un campo `LocalDateTime` del backend (`clockUpdatedAt`, `startedAt`, `finishedAt`): llega en UTC pero sin zona,
+ * y `Date.parse` lo tomaría como hora local del navegador. Si ya trae `Z` u offset (Dexie guarda `toISOString()`) se respeta.
+ * `null` si el texto no es una fecha.
+ */
+export function parseBackendInstant(value: string): Date | null {
+  const text = value.trim();
+  const instant = new Date(HAS_ZONE.test(text) ? text : `${text}Z`);
+  return Number.isNaN(instant.getTime()) ? null : instant;
+}
+
 /** `clockUpdatedAt`, `startedAt` y `finishedAt` llegan en UTC y se muestran en hora de Argentina. */
 export function formatUtcAsArgentina(iso: string): string | null {
-  const instant = new Date(iso);
-  if (Number.isNaN(instant.getTime())) return null;
+  const instant = parseBackendInstant(iso);
+  if (!instant) return null;
   return new Intl.DateTimeFormat('es-AR', {
     timeZone: ARGENTINA_TZ, hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
   }).format(instant);

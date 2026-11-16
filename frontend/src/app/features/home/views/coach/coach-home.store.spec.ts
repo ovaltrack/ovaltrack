@@ -9,6 +9,7 @@ import { UserContextService } from '../../../../core/services/user-context.servi
 import { Division } from '../../../division/types/division.types';
 import { Match } from '../../../match/types/match.types';
 import { DashboardSnapshotCache } from '../../data/dashboard-snapshot.cache';
+import { FocusInput } from '../../domain/focus-rows';
 import { WidgetState } from '../../types/home.types';
 import { BoardExtras, CoachHomeDataService, DebtData, EMPTY_BOARD_EXTRAS, FormData } from './coach-home-data.service';
 import { CoachHomeStore } from './coach-home.store';
@@ -26,6 +27,7 @@ describe('CoachHomeStore', () => {
   let debt: WidgetState<DebtData>;
   let jerseys: WidgetState<number>;
   let form: WidgetState<FormData>;
+  let focus: WidgetState<FocusInput>;
   let extras: BoardExtras;
   const liveMatch = signal<LiveMatchSummary | null>(null);
   const online = signal(true);
@@ -37,9 +39,11 @@ describe('CoachHomeStore', () => {
   const data = {
     matches: (): Observable<WidgetState<Match[]>> => of(matches),
     boardExtras: () => of(extras),
+    invalidateEvents: () => undefined,
     debt: () => of(debt),
     playersWithoutJersey: () => of(jerseys),
-    form: () => of(form)
+    form: () => of(form),
+    focus: () => of(focus)
   };
 
   function createStore(): CoachHomeStore {
@@ -69,6 +73,7 @@ describe('CoachHomeStore', () => {
     debt = { status: 'empty' };
     jerseys = { status: 'ready', data: 0, fetchedAt: 1, stale: false };
     form = { status: 'empty' };
+    focus = { status: 'empty' };
     extras = EMPTY_BOARD_EXTRAS;
     liveMatch.set(null);
     online.set(true);
@@ -94,6 +99,29 @@ describe('CoachHomeStore', () => {
     expect(store.pendingState().status).toBe('error');
     expect(store.matchesState().status).toBe('ready');
     expect(store.board().kind).toBe('next');
+  });
+
+  it('«Qué trabajar» en error no afecta a Forma, Pendientes ni al tablero, y cada uno se reintenta por separado', () => {
+    focus = { status: 'error', message: 'No pudimos cargar esto' };
+    form = { status: 'ready', data: { record: { wins: 1, draws: 0, losses: 0, diff: 3, averageFor: 10, averageAgainst: 7, last: [] }, percents: {} }, fetchedAt: 1, stale: false };
+    const store = createStore();
+    store.reload();
+    expect(store.focusState().status).toBe('error');
+    expect(store.formState().status).toBe('ready');
+    expect(store.pendingState().status).toBe('empty');
+    expect(store.board().kind).toBe('onboarding');
+    focus = { status: 'ready', data: { series: { lineout: [], tackle: [], penalties: [] }, lineoutLast: null }, fetchedAt: 2, stale: false };
+    store.retry('focus');
+    expect(store.focusState().status).toBe('ready');
+  });
+
+  it('sin conexión «Qué trabajar» muestra la última vista guardada con su sello', () => {
+    const snapshot: FocusInput = { series: { lineout: [70, 72, 60], tackle: [], penalties: [] }, lineoutLast: { won: 6, total: 10 } };
+    focus = { status: 'ready', data: snapshot, fetchedAt: 1_000, stale: true };
+    online.set(false);
+    const store = createStore();
+    store.reload();
+    expect(store.focusState()).toEqual({ status: 'ready', data: snapshot, fetchedAt: 1_000, stale: true });
   });
 
   it('la pestaña activa: la elegida gana, luego la del partido que captura, luego la recordada y la primera', () => {
@@ -134,7 +162,44 @@ describe('CoachHomeStore', () => {
     debt = { status: 'ready', data: { matchId: 'f1', opponent: 'Trelew', dateLabel: '1 nov', percent: 78, withoutPlayer: 12, minutesWithoutZone: 35 }, fetchedAt: 1, stale: false };
     const store = createStore();
     store.reload();
-    expect(store.primary()).toEqual(jasmine.objectContaining({ kind: 'complete-analysis', target: 'debt-tile' }));
+    expect(store.primary()).toEqual(jasmine.objectContaining({ kind: 'complete-analysis', target: 'board' }));
+  });
+
+  it('el análisis pendiente del último partido es la variante «analysis» y el primario va al tablero', () => {
+    matches = { status: 'ready', data: [match({ id: 'f1', status: 'finished', date: '2026-11-01T15:00:00', homeScore: 21, awayScore: 13 }), match({ id: 'n1', status: 'not_started', date: '2026-11-20T15:00:00' })], fetchedAt: 1, stale: false };
+    debt = { status: 'ready', data: { matchId: 'f1', opponent: 'Trelew', dateLabel: '1 nov', percent: 78, withoutPlayer: 12, minutesWithoutZone: 35 }, fetchedAt: 1, stale: false };
+    extras = { ...EMPTY_BOARD_EXTRAS, roster: { starters: 15, substitutes: 8 } };
+    const store = createStore();
+    store.reload();
+    expect(store.board()).toEqual(jasmine.objectContaining({ kind: 'analysis', matchId: 'f1', percent: 78, withoutPlayer: 12, minutesWithoutZone: 35 }));
+    expect(store.primary()).toEqual(jasmine.objectContaining({ kind: 'complete-analysis', target: 'board', queryParams: { pendientes: 1 } }));
+  });
+
+  it('Convocar: con suplentes 6/8 a menos de 72 h el tablero y el primario piden la alineación, aunque el análisis esté pendiente', () => {
+    matches = { status: 'ready', data: [match({ id: 'f1', status: 'finished', date: '2026-11-01T15:00:00' }), match({ id: 'n1', status: 'not_started', date: '2026-11-08T15:00:00' })], fetchedAt: 1, stale: false };
+    debt = { status: 'ready', data: { matchId: 'f1', opponent: 'Trelew', dateLabel: '1 nov', percent: 78, withoutPlayer: 12, minutesWithoutZone: 0 }, fetchedAt: 1, stale: false };
+    extras = { ...EMPTY_BOARD_EXTRAS, roster: { starters: 15, substitutes: 6 }, squadSize: 52 };
+    const store = createStore();
+    store.reload();
+    expect(store.board()).toEqual(jasmine.objectContaining({ kind: 'next', squadSize: 52, callUp: jasmine.objectContaining({ title: 'Armá la nómina del domingo' }) }));
+    expect(store.primary()).toEqual(jasmine.objectContaining({ kind: 'define-lineup', target: 'board' }));
+  });
+
+  it('el primario siempre cae en el tablero, en cada variante', () => {
+    const scenarios: Match[][] = [
+      [match({ status: 'in_progress', date: '2026-11-07T14:30:00' })],
+      [match({ status: 'not_started', date: '2026-11-06T20:00:00' })],
+      [match({ status: 'empty_roster', date: '2026-11-08T15:00:00' })],
+      [match({ status: 'finished', date: '2026-11-01T15:00:00' })],
+      []
+    ];
+    for (const data of scenarios) {
+      matches = { status: 'ready', data, fetchedAt: 1, stale: false };
+      const store = createStore();
+      store.reload();
+      const primary = store.primary();
+      expect(primary === null || primary.target === 'board').toBeTrue();
+    }
   });
 
   it('pendientes: suplentes que faltan y jugadores sin dorsal', () => {
@@ -149,6 +214,62 @@ describe('CoachHomeStore', () => {
       expect(state.data.map(item => item.text)).toEqual(['Faltan 2 suplentes', '2 jugadores sin dorsal']);
       expect(state.data[1].route).toBe('/divisions/d1/players');
     }
+  });
+
+  it('pendientes: el análisis pendiente aparece cuando el tablero está en Convocar y no cuando está en Analizar', () => {
+    const finishedMatch = match({ id: 'f1', status: 'finished', date: '2026-11-01T15:00:00' });
+    debt = { status: 'ready', data: { matchId: 'f1', opponent: 'Trelew', dateLabel: '1 nov', percent: 78, withoutPlayer: 12, minutesWithoutZone: 0 }, fetchedAt: 1, stale: false };
+    matches = { status: 'ready', data: [finishedMatch, match({ id: 'n1', status: 'not_started', date: '2026-11-08T15:00:00' })], fetchedAt: 1, stale: false };
+    extras = { ...EMPTY_BOARD_EXTRAS, roster: { starters: 15, substitutes: 6 } };
+    let store = createStore();
+    store.reload();
+    expect(store.board().kind).toBe('next');
+    const convocar = store.pendingState();
+    expect(convocar.status === 'ready' && convocar.data.map(row => row.kind)).toEqual(['analysis', 'substitutes']);
+    injector.destroy();
+
+    extras = { ...EMPTY_BOARD_EXTRAS, roster: { starters: 15, substitutes: 8 } };
+    matches = { status: 'ready', data: [finishedMatch, match({ id: 'n1', status: 'not_started', date: '2026-11-20T15:00:00' })], fetchedAt: 1, stale: false };
+    store = createStore();
+    store.reload();
+    expect(store.board().kind).toBe('analysis');
+    expect(store.pendingState().status).toBe('empty');
+  });
+
+  it('pendientes: la nómina sin armar no se repite cuando el tablero ya pide «Armá la nómina»', () => {
+    matches = { status: 'ready', data: [match({ status: 'empty_roster', date: '2026-11-08T15:00:00' })], fetchedAt: 1, stale: false };
+    const store = createStore();
+    store.reload();
+    expect(store.board()).toEqual(jasmine.objectContaining({ kind: 'next', callUp: jasmine.anything() }));
+    expect(store.pendingState().status).toBe('empty');
+  });
+
+  it('próximas fechas: hasta 3 de la división activa, con el chip de nómina en la primera', () => {
+    matches = { status: 'ready', data: [
+      match({ id: 'a', date: '2026-11-10T15:00:00' }), match({ id: 'b', date: '2026-11-17T15:00:00' }),
+      match({ id: 'c', date: '2026-11-24T15:00:00' }), match({ id: 'd', date: '2026-12-01T15:00:00' }),
+      match({ id: 'x', divisionId: 'd2', date: '2026-11-09T15:00:00' })
+    ], fetchedAt: 1, stale: false };
+    extras = { ...EMPTY_BOARD_EXTRAS, roster: { starters: 15, substitutes: 6 } };
+    const store = createStore();
+    store.reload();
+    const state = store.upcomingState();
+    expect(state.status).toBe('ready');
+    if (state.status === 'ready') {
+      expect(state.data.map(fixture => fixture.matchId)).toEqual(['a', 'b', 'c']);
+      expect(state.data[0].rosterChip).toBe('Suplentes 6/8');
+      expect(state.data[1].rosterChip).toBeNull();
+    }
+  });
+
+  it('próximas fechas: sin partidos por jugar está vacío, y el error de partidos se propaga sin tocar a los demás', () => {
+    const store = createStore();
+    store.reload();
+    expect(store.upcomingState().status).toBe('empty');
+    matches = { status: 'error', message: 'No pudimos cargar esto' };
+    store.reload();
+    expect(store.upcomingState().status).toBe('error');
+    expect(store.formState().status).toBe('empty');
   });
 
   it('pendientes vacío cuando la nómina está completa y todos tienen dorsal', () => {

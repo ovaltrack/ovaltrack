@@ -15,20 +15,20 @@ Fase actual: Fase 1 (un club por instalación lógica; multi-club/Bounded Contex
 - **`./ds` es el único entrypoint** (no existe `ds.sh`; ignorar esa referencia en `docs/REFACTORING.md`).
 - **No ejecutar `mvn`/`npm`/`ng` en el host.** Todo corre en contenedores (solo `./backend/mvnw` sirve en el host si es estrictamente necesario).
 
-| Comando | Qué hace |
-|---|---|
-| `./ds up` / `down` / `ps` / `restart [svc]` / `build [svc]` | Ciclo de vida de contenedores (`up` crea `.env` desde `.env.example`) |
-| `./ds logs [svc]` | Logs (`backend`, `frontend`, `db`) |
-| `./ds compile` | `mvn compile -DskipTests` dentro del contenedor backend |
-| `./ds mvn <args>` | Maven arbitrario en el contenedor (ej. `./ds mvn test`) |
-| `./ds test` | Suite Cucumber contra el backend vivo (ejecuta antes `staging/clean.sql`) |
-| `./ds staging <file.sql>` | Carga un script de `staging/` (`data.sql`, `data_trelew.sql`, `event_type.sql`, `clean.sql`) |
-| `./ds db` | `psql` interactivo |
-| `./ds backend` / `frontend` | Shell dentro del contenedor |
-| `./ds pwa` / `pwa-down` | PWA de producción con Nginx en `:4201` (probar Service Worker/offline) |
-| `./ds install` | `npm install --legacy-peer-deps` en el contenedor frontend |
-| `./ds sync-node` | Copia `node_modules` al host (solo autocompletado IDE) |
-| `./ds reset` | Borra contenedores y volúmenes (pide confirmación) |
+| Comando                                                     | Qué hace                                                                                     |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `./ds up` / `down` / `ps` / `restart [svc]` / `build [svc]` | Ciclo de vida de contenedores (`up` crea `.env` desde `.env.example`)                        |
+| `./ds logs [svc]`                                           | Logs (`backend`, `frontend`, `db`)                                                           |
+| `./ds compile`                                              | `mvn compile -DskipTests` dentro del contenedor backend                                      |
+| `./ds mvn <args>`                                           | Maven arbitrario en el contenedor (ej. `./ds mvn test`)                                      |
+| `./ds test`                                                 | Suite Cucumber contra el backend vivo (ejecuta antes `staging/clean.sql`)                    |
+| `./ds staging <file.sql>`                                   | Carga un script de `staging/` (`data.sql`, `data_trelew.sql`, `event_type.sql`, `clean.sql`) |
+| `./ds db`                                                   | `psql` interactivo                                                                           |
+| `./ds backend` / `frontend`                                 | Shell dentro del contenedor                                                                  |
+| `./ds pwa` / `pwa-down`                                     | PWA de producción con Nginx en `:4201` (probar Service Worker/offline)                       |
+| `./ds install`                                              | `npm install --legacy-peer-deps` en el contenedor frontend                                   |
+| `./ds sync-node`                                            | Copia `node_modules` al host (solo autocompletado IDE)                                       |
+| `./ds reset`                                                | Borra contenedores y volúmenes (pide confirmación)                                           |
 
 Puertos: backend `8080` (Swagger `/swagger-ui`, health `/actuator/health`), frontend `4200`, PWA `4201`, Postgres `5432` (test `5433`).
 Variables en `.env` (ignorado por git): `DB_*`, `OVALTRACK_BOOTSTRAP_ADMIN_EMAIL/PASSWORD`, `MAIL_PROVIDER` (`brevo` por defecto | `log`, que no envía), `MAIL_FROM_ADDRESS/NAME`, `BREVO_API_KEY`, `APP_FRONTEND_URL` (enlaces de los correos). El correo sale solo por la API HTTP de Brevo (Render bloquea SMTP); no hay SMTP. **Nunca commitear ni mostrar secretos.**
@@ -41,6 +41,7 @@ Variables en `.env` (ignorado por git): `DB_*`, `OVALTRACK_BOOTSTRAP_ADMIN_EMAIL
 `admin`, `auth` (config/controller/dto/registration/security/service), `club`, `common` (config/exceptions, dto/response, mail), `division`, `event`, `invitations`, `match`, `person`, `statistic`, `token`, `user`. Capas típicas: `controller/`, `business/` (services), `domain/` (entidades, enums, `dto/`), `repository/`.
 
 **Reglas**
+
 - Separación estricta Entity ↔ DTO/Mapper ↔ Service ↔ Controller. Inyección con `@RequiredArgsConstructor`.
 - Esquema con `ddl-auto=update`: **no hay migraciones**. Renombrar/eliminar/cambiar tipo de campos de entidad altera la BD real sin rollback → avisar antes (ver `docs/REFACTORING.md` §6).
 - Errores: `GlobalExceptionHandler` → `BusinessException` 409, `EntityNotFoundException` 404, `AccessDeniedException` 401/403, `HttpMessageNotReadableException` 400. Cuerpo `{ "message": "..." }`.
@@ -51,6 +52,7 @@ Variables en `.env` (ignorado por git): `DB_*`, `OVALTRACK_BOOTSTRAP_ADMIN_EMAIL
 - `User` (cuenta/login) y `Person` (identidad deportiva) están separados; `User` ↔ `Person` es `@OneToOne`. Una `Person` puede existir sin `User`. El JWT lleva `sub`, `userId`, `personId`, `role`.
 
 **Enums reales (fuente de verdad)**
+
 - `UserRole`: `ADMIN_OVALTRACK, ADMIN_CLUB, COACH_ANALYST, PLAYER, NO_ROLE`
 - `UserStatus`: `PENDING_APPROVAL, ACTIVE, REJECTED, SUSPENDED, DEACTIVATED`
 - `ClubStatus`: `PENDING, ACTIVE, REJECTED`
@@ -60,6 +62,7 @@ Variables en `.env` (ignorado por git): `DB_*`, `OVALTRACK_BOOTSTRAP_ADMIN_EMAIL
 - `EventPossession`: `OWN, OPPONENT, NEUTRAL`; `EventCategory`: `ATTACK, DEFENSE, NEUTRAL, SET_PIECE, POSSESSION`; además `Actor`, `PossessionAfter`, `FollowUpChoice`, `TemplateField`.
 
 **Endpoints (prefijos reales, inconsistentes a propósito del historial)**
+
 - `/api/auth`, `/api/me` (contexto de usuario), `/api/admin/ovaltrack`, `/api/invitation`
 - `/club`, `/division`, `/players`, `/coaches`, `/person`, `/user`
 - `/matches` — `GET /club?clubId`, `GET /division?divisionId`, `GET|PUT /{id}`, `POST`, `PUT /{id}/start`, `/finish`, `/close-first-half`, `/start-second-half`, `DELETE /{id}/cancel`, `GET|PUT /{id}/live-state`, `GET /{id}/live-bootstrap`, `GET|POST /{id}/roster`, `GET /{id}/roster/players`
@@ -87,6 +90,7 @@ Variables en `.env` (ignorado por git): `DB_*`, `OVALTRACK_BOOTSTRAP_ADMIN_EMAIL
 ## 5. UI / Design System "Cal y botella" (claro) y "Grafito" (oscuro)
 
 Fuente de verdad: `docs/DESIGN_SYSTEM.md` + `frontend/src/styles.css`. Bootstrap 5 y Bootstrap Icons disponibles globalmente **como subconjuntos generados y commiteados** (`frontend/src/icons/` y `frontend/src/bootstrap/bootstrap-subset.css`): al usar un ícono o una clase de Bootstrap nuevos hay que regenerarlos y commitear el resultado (comandos en `AGENTS.md`); si no, `npm run build` falla.
+
 - **No inventar colores ni sombras**; usar tokens (`--bg-canvas: #eef0ea`, `--btn-primary-bg: #204b22`, `--border-sport`, `--surface`, etc.). El verde botella es el único color de marca; el lima (`--brand-signature`) va solo sobre superficies verde botella.
 - **Un solo botón primario sólido verde por pantalla**; el resto `outline`; rojo solo destructivo.
 - Tarjetas/tablas: borde 2px, radio 16–20px, sombra de elevación. Hit-targets táctiles **44–48px**.
@@ -125,6 +129,7 @@ S: una razón de cambio por clase. O: DTOs desacoplan API de persistencia. L: re
 ## 10. Discrepancias conocidas entre docs y código
 
 Si algo no coincide, **el código manda**. Corregir el doc cuando se detecte:
+
 - `supp/contexto.md` describe `MatchStatus` como `CREATED→IN_PROGRESS→FINISHED`, rutas `/match`, `/division-player`, `/division-coach`, `/statistic` y `STARTER/BENCH`; el código usa los valores/prefijos de la sección 3.
 - `docs/api-reference.md` usa `NOT_STARTED` como único estado inicial (el código también tiene `EMPTY_ROSTER`), lista rol `COMMISSION` (no existe en `UserRole`) y categorías `SENIOR` solamente en ejemplos; `POST` de club/división devuelven 200 (no 201). No cubre event/statistics/opponents/invitation.
 - `docs/auth-architecture.md` y `AGENTS.md` mencionan `DevMockAuthFilter`/perfiles `dev`: **no existe en el código**; hoy todas las rutas privadas exigen JWT. `docs/auth-architecture.md` lista `UserRole` sin `NO_ROLE`.
@@ -138,11 +143,11 @@ Si algo no coincide, **el código manda**. Corregir el doc cuando se detecte:
 - Responder en español. Commits en español siguiendo el estilo existente (`feat:`, `update(...)`, `refactor(...)`).
 - Antes de proponer cambios, verificar en el código que clases/archivos/endpoints citados existan.
 - Cambios mínimos y enfocados; no crear archivos de documentación salvo que se pidan.
-- Subagentes (herramienta Agent): lanzarlos siempre con `model: "sonnet"` y `effort: "medium"`, salvo que se pida otra cosa.
+- Subagentes (herramienta Agent): encargados de tareas de busqueda lanzarlos en `model: "haiku 5.5"` y `effort: "medium"`, y subagentes encargados de escritura de código lanzarlos en `model: "haiku 5.5"` y `effort: "medium"` salvo que se pida otra cosa.
 
 ## 12. Zonas de cancha (post-partido)
 
-- **Vocabulario**: *tramo* = rango de tiempo + zona (entidad `ZoneAssignment`, tabla `match_zone_assignments`); *zona* = celda de la cancha. UI: "Nuevo tramo", "Tramos asignados".
+- **Vocabulario**: _tramo_ = rango de tiempo + zona (entidad `ZoneAssignment`, tabla `match_zone_assignments`); _zona_ = celda de la cancha. UI: "Nuevo tramo", "Tramos asignados".
 - **Grilla 3x6 fija** (fuente única: `frontend/.../post-match/utils/zone-grid.ts`): columnas `10/22/28/28/22/10 m` (in-goal propio, 22 propio, campo propio, campo rival, 22 rival, in-goal rival) y filas `15/40/15 m` (izquierda, centro, derecha) alineadas con las líneas de 15 m. Etiqueta de zona = letra de fila + columna (`I1`…`D6`).
 - **Vista relativa**: siempre se ataca hacia la derecha; en el 2T **no se espeja**. Izquierda/derecha se leen mirando al ataque.
 - **Rangos**: minutos acumulados de partido, 1T 0–40 y 2T 40–80, semiabiertos `[inicio, fin)` (el minuto 25 pertenece al tramo que empieza en 25). Sin solapes dentro de un mismo tiempo; solo editables con el partido `FINISHED`.

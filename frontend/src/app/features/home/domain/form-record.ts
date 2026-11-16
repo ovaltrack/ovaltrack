@@ -1,6 +1,7 @@
 import { Match } from '../../match/types/match.types';
 import { shortTeamName } from '../../match/post-match/utils/zone-grid';
-import { parseWallClock } from './match-time';
+import { finishedInPlayOrder, playedAt } from './division-match-state';
+import { formatDecimal } from './number-format';
 
 export type FormResult = 'win' | 'draw' | 'loss';
 
@@ -18,29 +19,30 @@ export interface FormRecord {
   losses: number;
   /** Tantos a favor menos tantos en contra de toda la temporada. */
   diff: number;
+  /** Tantos a favor por partido de la temporada, con 1 decimal. */
+  averageFor: number;
+  /** Tantos en contra por partido de la temporada, con 1 decimal. */
+  averageAgainst: number;
   /** Últimos partidos jugados, del más viejo al más reciente. */
   last: FormEntry[];
 }
 
 export const FORM_LAST_COUNT = 5;
 
-export type FormMatch = Pick<Match, 'id' | 'date' | 'status' | 'homeScore' | 'awayScore' | 'opponent'>;
+export type FormMatch = Pick<Match, 'id' | 'date' | 'status' | 'homeScore' | 'awayScore' | 'opponent' | 'finishedAt'>;
+
+const round1 = (value: number) => Math.round(value * 10) / 10;
 
 export function resultOf(ownScore: number, opponentScore: number): FormResult {
   return ownScore > opponentScore ? 'win' : ownScore < opponentScore ? 'loss' : 'draw';
 }
 
-/** Partidos FINISHED de la temporada (año de `now`) en orden cronológico; el club siempre es local: `homeScore` es el propio. */
+/** Partidos FINISHED de la temporada (año en que se jugaron) en el orden en que se jugaron; el club siempre es local: `homeScore` es el propio. */
 export function finishedOfSeason<T extends FormMatch>(matches: readonly T[], now: Date): T[] {
-  return matches
-    .map(match => ({ match, start: parseWallClock(match.date) }))
-    .filter((entry): entry is { match: T; start: Date } =>
-      entry.start !== null && entry.match.status === 'finished' && entry.start.getFullYear() === now.getFullYear())
-    .sort((a, b) => a.start.getTime() - b.start.getTime())
-    .map(entry => entry.match);
+  return finishedInPlayOrder(matches).filter(match => playedAt(match)?.getFullYear() === now.getFullYear());
 }
 
-/** Récord G-E-P, diferencia y últimos 5; `null` si todavía no se jugó ningún partido de la temporada. */
+/** Récord G-E-P, diferencia, promedios a favor y en contra y últimos 5; `null` si todavía no se jugó ningún partido de la temporada. */
 export function formRecord(matches: readonly FormMatch[], now: Date): FormRecord | null {
   const finished = finishedOfSeason(matches, now);
   if (finished.length === 0) return null;
@@ -50,6 +52,8 @@ export function formRecord(matches: readonly FormMatch[], now: Date): FormRecord
     draws: results.filter(result => result === 'draw').length,
     losses: results.filter(result => result === 'loss').length,
     diff: finished.reduce((sum, match) => sum + match.homeScore - match.awayScore, 0),
+    averageFor: round1(finished.reduce((sum, match) => sum + match.homeScore, 0) / finished.length),
+    averageAgainst: round1(finished.reduce((sum, match) => sum + match.awayScore, 0) / finished.length),
     last: finished.slice(-FORM_LAST_COUNT).map(match => ({
       matchId: match.id,
       result: resultOf(match.homeScore, match.awayScore),
@@ -57,4 +61,15 @@ export function formRecord(matches: readonly FormMatch[], now: Date): FormRecord
       opponent: shortTeamName(match.opponent.alias || match.opponent.name)
     }))
   };
+}
+
+/**
+ * Promedios por partido ya formateados («24,1»). Los récords guardados antes de la Fase 6 no los traen: sin ellos devuelve
+ * `null` y la tarjeta no dibuja el promedio.
+ */
+export function formAverages(record: Partial<Pick<FormRecord, 'averageFor' | 'averageAgainst'>>): { for: string; against: string } | null {
+  const { averageFor, averageAgainst } = record;
+  return typeof averageFor === 'number' && typeof averageAgainst === 'number'
+    ? { for: formatDecimal(averageFor), against: formatDecimal(averageAgainst) }
+    : null;
 }

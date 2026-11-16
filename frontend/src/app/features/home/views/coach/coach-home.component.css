@@ -11,107 +11,18 @@
   grid-column: span 4;
 }
 
+.s6 {
+  grid-column: span 6;
+}
+
+.s8 {
+  grid-column: span 8;
+}
+
 .board-skeleton {
   height: 220px;
   margin-bottom: 20px;
   border-radius: 24px;
-}
-
-.debt {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-}
-
-.ring {
-  position: relative;
-  flex-shrink: 0;
-  width: 124px;
-  height: 124px;
-}
-
-.ring-track,
-.ring-value {
-  fill: none;
-  stroke-width: 12;
-}
-
-.ring-track {
-  stroke: var(--surface-alt);
-}
-
-.ring-value {
-  stroke: var(--success);
-  stroke-linecap: round;
-}
-
-.tone-warn .ring-value {
-  stroke: var(--warning);
-}
-
-.tone-bad .ring-value {
-  stroke: var(--error);
-}
-
-.ring-text {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.ring-percent {
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: 28px;
-  color: var(--text-primary);
-}
-
-.ring-caption {
-  font-size: 10px;
-}
-
-.debt-rows {
-  flex: 1;
-  min-width: 0;
-  margin: 0;
-  font-size: 14px;
-}
-
-.debt-rows div {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 6px 0;
-  border-bottom: 1px dashed var(--border);
-}
-
-.debt-rows dt {
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
-.debt-rows dd {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-weight: 700;
-}
-
-.debt-btn {
-  margin-top: 14px;
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.offline-note {
-  margin: 6px 0 0;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--text-muted);
 }
 
 .pending {
@@ -143,6 +54,27 @@
   color: var(--error);
 }
 
+.averages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-top: auto;
+}
+
+.average {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+.average-label {
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
 .last {
   display: flex;
   flex-wrap: wrap;
@@ -155,7 +87,8 @@
     grid-column: span 6;
   }
 
-  .form-tile {
+  .s8,
+  .s6-wide {
     grid-column: span 12;
   }
 }
@@ -176,12 +109,8 @@
   }
 
   .s4,
-  .form-tile {
+  .s6,
+  .s8 {
     grid-column: span 12;
-  }
-
-  .debt {
-    flex-direction: column;
-    align-items: flex-start;
   }
 }

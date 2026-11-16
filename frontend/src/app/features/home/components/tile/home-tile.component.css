@@ -1,10 +1,11 @@
 :host {
-  display: block;
+  display: flex;
+  flex-direction: column;
   min-width: 0;
 }
 
 .tile {
-  height: 100%;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -27,6 +28,12 @@
   font-weight: 800;
   font-size: 20px;
   color: var(--text-primary);
+}
+
+.tile-title-sk {
+  width: 55%;
+  height: 24px;
+  border-radius: 6px;
 }
 
 .tile-seal {

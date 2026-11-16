@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { ComparisonRow, toneCounts } from '../../utils/player-comparison';
+import { ComparisonListComponent } from '../comparison-list/comparison-list.component';
 
 /** Métricas del jugador frente al promedio del plantel: valor, barras y si está por encima o por debajo. */
 @Component({
   selector: 'app-player-comparison-card',
   standalone: true,
+  imports: [ComparisonListComponent],
   templateUrl: './player-comparison-card.component.html',
   styleUrl: './player-comparison-card.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

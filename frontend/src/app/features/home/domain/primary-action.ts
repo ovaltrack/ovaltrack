@@ -1,7 +1,8 @@
-import { Match } from '../../match/types/match.types';
 import { PrimaryAction, STARTERS_TARGET } from '../types/home.types';
 import { MATCH_DAY_WINDOW_MS } from './countdown';
+import { RuleMatch, divisionMatchState, upcomingMatches } from './division-match-state';
 import { msUntil, parseWallClock } from './match-time';
+import { RosterCount, needsCallUp, rosterGaps } from './roster-gaps';
 
 /** Una regla devuelve la acción primaria si aplica, o `null` para pasar a la siguiente. */
 export type PrimaryRule<Ctx> = (ctx: Ctx) => PrimaryAction | null;
@@ -22,27 +23,9 @@ export function isActionEnabled(action: PrimaryAction, online: boolean): boolean
 
 /** El alta de nómina se ofrece hasta 72 h antes del partido. */
 export const LINEUP_WINDOW_MS = 72 * 3_600_000;
-/** Un partido sin iniciar sigue siendo "el próximo" hasta 12 h después de su hora (demoras, lluvia). */
-export const UPCOMING_GRACE_MS = 12 * 3_600_000;
-
-export type RuleMatch = Pick<Match, 'id' | 'status' | 'date'>;
-
-const isLive = (match: RuleMatch) => match.status === 'in_progress' || match.status === 'halftime';
 
 function startOf(match: RuleMatch): Date | null {
   return parseWallClock(match.date);
-}
-
-/** Próximos partidos sin iniciar (con o sin nómina), el más cercano primero. */
-export function upcomingMatches<T extends RuleMatch>(matches: readonly T[], now: Date): T[] {
-  return matches
-    .map(match => ({ match, start: startOf(match) }))
-    .filter((entry): entry is { match: T; start: Date } =>
-      entry.start !== null
-      && (entry.match.status === 'not_started' || entry.match.status === 'empty_roster')
-      && msUntil(entry.start, now) > -UPCOMING_GRACE_MS)
-    .sort((a, b) => a.start.getTime() - b.start.getTime())
-    .map(entry => entry.match);
 }
 
 /** Titulares cargados en la nómina de un partido; `null`/ausente = no se conoce (sin red o sin respuesta). */
@@ -65,51 +48,58 @@ export interface CoachRuleContext {
   /** Partidos de la división activa. */
   matches: readonly RuleMatch[];
   /** Nómina del próximo partido sin iniciar de la división (el primero de `upcomingMatches`). */
-  nextRoster?: KnownRoster;
+  nextRoster?: RosterCount | null;
   /** Partido que captura este dispositivo (`LiveMatchSource`), si hay uno. */
   captureMatchId: string | null;
   /** Último partido FINISHED con su % de análisis. */
-  lastFinished: { id: string; analysisPercent: number } | null;
+  lastFinished: { id: string; analysisPercent: number; minutesWithoutZone?: number | null } | null;
 }
 
-/** Hay un partido en curso que se está capturando en otro dispositivo: desde acá nunca se ofrece capturar. */
-function liveElsewhere(ctx: CoachRuleContext): boolean {
-  return ctx.matches.some(match => isLive(match) && match.id !== ctx.captureMatchId);
-}
+const stateOf = (ctx: CoachRuleContext) => divisionMatchState(ctx.matches, ctx.captureMatchId, ctx.now);
 
 /** Reglas del entrenador, en orden de prioridad. */
 export const coachRules: readonly PrimaryRule<CoachRuleContext>[] = [
   // 1. Partido en curso que captura este dispositivo.
   ctx => {
-    const here = ctx.matches.find(match => isLive(match) && match.id === ctx.captureMatchId);
-    if (!here) return null;
+    const { live: here, liveHere } = stateOf(ctx);
+    if (!here || !liveHere) return null;
     return here.status === 'halftime'
       ? { kind: 'go-halftime', label: 'Ir al entretiempo', route: `/live-capture/${here.id}/halftime`, target: 'board', requiresConnection: false }
       : { kind: 'continue-capture', label: 'Continuar captura', route: `/live-capture/${here.id}`, target: 'board', requiresConnection: false };
   },
   // 2. Próximo partido con la alineación completa a menos de 24 h: se ofrece capturar.
   ctx => {
-    if (liveElsewhere(ctx)) return null;
-    const next = upcomingMatches(ctx.matches, ctx.now)[0];
+    const { live, next } = stateOf(ctx);
+    if (live) return null;
     const start = next && startOf(next);
     if (!next || !start || msUntil(start, ctx.now) >= MATCH_DAY_WINDOW_MS || lineupIncomplete(next, ctx.nextRoster)) return null;
     return { kind: 'capture-live', label: 'Capturar en vivo', route: `/live-capture/${next.id}`, target: 'board', requiresConnection: false };
   },
-  // 3. Próximo partido con la alineación incompleta a 72 h o menos.
+  // 3. Próximo partido a 72 h o menos sin nómina o con menos de 8 suplentes (la etapa Convocar de la semana de juego).
   ctx => {
-    if (liveElsewhere(ctx)) return null;
-    const next = upcomingMatches(ctx.matches, ctx.now)[0];
+    const { live, next } = stateOf(ctx);
+    if (live) return null;
     const start = next && startOf(next);
-    return next && start && lineupIncomplete(next, ctx.nextRoster) && msUntil(start, ctx.now) <= LINEUP_WINDOW_MS ? defineLineup(next.id) : null;
+    return next && start && needsCallUp(rosterGaps(ctx.nextRoster ?? null, next.status)) && msUntil(start, ctx.now) <= LINEUP_WINDOW_MS ? defineLineup(next.id) : null;
   },
-  // 4. El último partido jugado todavía tiene jugadas sin jugador.
-  ctx => ctx.lastFinished && ctx.lastFinished.analysisPercent < 100
-    ? { kind: 'complete-analysis', label: 'Completar análisis', route: `/post-match/${ctx.lastFinished.id}`, target: 'debt-tile', requiresConnection: true }
-    : null,
+  // 4. El último partido jugado tiene jugadas sin jugador (se abre Eventos con «Solo sin jugador») o minutos sin zona (se abre Zonas).
+  ctx => {
+    const last = ctx.lastFinished;
+    if (!last) return null;
+    if (last.analysisPercent < 100) {
+      return { kind: 'complete-analysis', label: 'Completar análisis', route: `/post-match/${last.id}`, queryParams: { pendientes: 1 }, target: 'board', requiresConnection: true };
+    }
+    return (last.minutesWithoutZone ?? 0) > 0
+      ? { kind: 'complete-analysis', label: 'Completar zonas', route: `/post-match/${last.id}/zones`, target: 'board', requiresConnection: true }
+      : null;
+  },
   // 5. Nada programado ni en curso.
-  ctx => ctx.matches.some(isLive) || upcomingMatches(ctx.matches, ctx.now).length > 0
-    ? null
-    : { kind: 'schedule-match', label: 'Programar partido', route: '/match-selection', target: 'board', requiresConnection: true }
+  ctx => {
+    const { live, next } = stateOf(ctx);
+    return live || next
+      ? null
+      : { kind: 'schedule-match', label: 'Programar partido', route: '/match-selection', target: 'board', requiresConnection: true };
+  }
 ];
 
 export interface AdminRuleContext {
@@ -135,7 +125,7 @@ export const adminRules: readonly PrimaryRule<AdminRuleContext>[] = [
   ctx => {
     const orphan = ctx.divisions.find(division => !division.hasCoach);
     return orphan
-      ? { kind: 'assign-coach', label: 'Asignar entrenador', route: `/divisions/${orphan.id}/coaches`, target: 'inbox-tile', requiresConnection: true }
+      ? { kind: 'assign-coach', label: 'Asignar entrenador', route: `/divisions/${orphan.id}/coaches`, target: 'board', requiresConnection: true }
       : null;
   },
   // 3. Onboarding: club sin divisiones, o con divisiones pero sin partidos.

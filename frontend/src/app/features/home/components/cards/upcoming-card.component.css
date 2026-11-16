@@ -1,0 +1,96 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+:host > app-home-tile {
+  flex: 1 1 auto;
+}
+
+.fixtures {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.fixture {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border-top: 1px solid var(--border);
+}
+
+.fixture:first-child {
+  border-top: 0;
+}
+
+.date-block {
+  flex: none;
+  width: 52px;
+  height: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-sport);
+  background: var(--surface-alt);
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.date-day {
+  font-size: 20px;
+  line-height: 1;
+  color: var(--text-primary);
+}
+
+.date-month {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.fixture-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14px;
+}
+
+.fixture-when {
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.fixture-chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--warning-tint);
+  color: var(--warning);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .fixture {
+    flex-wrap: wrap;
+  }
+
+  .fixture-chip {
+    margin-left: 64px;
+  }
+}

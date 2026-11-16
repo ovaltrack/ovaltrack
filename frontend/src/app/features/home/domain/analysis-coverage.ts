@@ -1,8 +1,6 @@
-import { MatchTimelineEventResponse } from '../../match/types/event.types';
+import { CoverageEvent, reviewCoverage } from '../../match/post-match/utils/review-coverage';
 import { ZONE_HALF_MINUTES, ZoneAssignmentResponse } from '../../match/types/zone.types';
 import { coverageMinutes } from '../../match/post-match/utils/zone-stats';
-
-export type CoverageEvent = Pick<MatchTimelineEventResponse, 'playerId' | 'teamPossession'>;
 
 export interface AnalysisCoverage {
   totalEvents: number;
@@ -13,14 +11,12 @@ export interface AnalysisCoverage {
 }
 
 /**
- * Misma regla que `MatchReviewStore`: una jugada está "sin jugador" si no tiene `playerId`
- * y no es del rival (`OPPONENT` nunca lleva jugador del plantel).
+ * Cobertura de análisis de un partido con la misma regla y el mismo conjunto de eventos que post-partido
+ * (`reviewCoverage`): los eventos de tipos dados de baja no cuentan. `activeTypeIds` `null` = sin catálogo, todos cuentan.
  */
-export function analysisCoverage(events: readonly CoverageEvent[]): AnalysisCoverage {
-  const totalEvents = events.length;
-  const withoutPlayer = events.filter(event => !event.playerId?.trim() && event.teamPossession !== 'OPPONENT').length;
-  const percent = totalEvents > 0 ? Math.round(((totalEvents - withoutPlayer) / totalEvents) * 100) : 100;
-  return { totalEvents, withoutPlayer, percent };
+export function analysisCoverage(events: readonly CoverageEvent[], activeTypeIds: ReadonlySet<string> | null): AnalysisCoverage {
+  const { totalEvents, unassigned, percent } = reviewCoverage(events, activeTypeIds);
+  return { totalEvents, withoutPlayer: unassigned, percent };
 }
 
 /** Minutos del partido (de 80) que todavía no tienen un tramo de zona asignado. */

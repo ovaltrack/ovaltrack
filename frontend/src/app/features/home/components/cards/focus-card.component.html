@@ -1,0 +1,38 @@
+<app-home-tile [label]="'Último partido vs promedio · ' + seasonYear()" title="Qué trabajar esta semana" [state]="state()" (retry)="retry.emit()">
+  <div class="focus-actions">
+    @if (online()) {
+      <a class="btn btn-outline focus-link" [routerLink]="statisticsRoute()">Ver estadísticas de la división <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+    } @else {
+      <button type="button" class="btn btn-outline focus-link" disabled aria-label="Ver estadísticas de la división: requiere conexión">Requiere conexión</button>
+    }
+  </div>
+
+  @switch (view()?.status) {
+    @case ('not-enough') {
+      <p class="focus-note">Todavía no hay 3 partidos.</p>
+    }
+    @case ('stable') {
+      <p class="focus-note">Sin desvíos importantes.</p>
+    }
+    @case ('rows') {
+      <ul class="focus-list">
+        @for (row of rowsOf(); track row.metric) {
+          <li class="focus-row">
+            <div class="focus-text">
+              <strong class="focus-name">{{ row.name }}</strong>
+              <span class="focus-sub">{{ row.subtitle }}</span>
+            </div>
+            <span class="focus-value">{{ row.valueLabel }}</span>
+            <app-sparkline class="focus-spark" [values]="row.spark" [average]="row.average" [ariaLabel]="row.ariaLabel" />
+            <span class="focus-chip" [class.worse]="row.chip.tone === 'worse'" [class.better]="row.chip.tone === 'better'">{{ row.chip.text }}</span>
+          </li>
+        }
+      </ul>
+    }
+  }
+  @if (stableFoot(); as foot) {
+    <p class="focus-foot">{{ foot }}</p>
+  }
+
+  <p tileEmpty>Todavía no hay 3 partidos.</p>
+</app-home-tile>

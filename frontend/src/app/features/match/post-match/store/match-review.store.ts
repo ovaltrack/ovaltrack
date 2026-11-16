@@ -23,6 +23,7 @@ import {
   formatOnlyTime
 } from '../utils/match-review.utils';
 import { zoneForEvent } from '../utils/zone-event-link';
+import { activeTypeIdsOf, coveragePercent, isUnassignedEvent, reviewableEvents } from '../utils/review-coverage';
 import { ScoringTypesById, ZoneRulesByType, isFixedZone } from '../utils/zone-rule';
 import { eventsInRange } from '../utils/zone-stats';
 import { TramoTrim, predictTramoTrim } from '../utils/zone-track-layout';
@@ -99,11 +100,7 @@ export class MatchReviewStore {
    * catálogo (inactivos o que ya no devuelve el servidor). Sin catálogo cargado se muestran todos.
    */
   readonly reviewEvents = computed<MatchTimelineEventResponse[]>(() => {
-    const types = this.eventTypesList();
-    const raw = this.rawEvents();
-    if (types.length === 0) return raw;
-    const activeTypeIds = new Set(types.filter(type => type.isActive !== false).map(type => type.id));
-    return raw.filter(event => activeTypeIds.has(event.eventTypeId));
+    return reviewableEvents(this.rawEvents(), activeTypeIdsOf(this.eventTypesList()));
   });
 
   // --- Tanteador Reactivo Oficial ---
@@ -243,9 +240,7 @@ export class MatchReviewStore {
     const all = this.allViewModels();
     const totalEvents = all.length;
     const unassignedEvents = all.filter(e => e.isUnassigned).length;
-    const coveragePercentage = totalEvents > 0
-      ? Math.round(((totalEvents - unassignedEvents) / totalEvents) * 100)
-      : 100;
+    const coveragePercentage = coveragePercent(totalEvents, unassignedEvents);
 
     const startTimeFormatted = this.resolveMatchStartTimeFormatted(all, this.matchStartTime());
 
@@ -612,7 +607,7 @@ export class MatchReviewStore {
       : this.estimateAbsoluteTime(seconds, (e.period === 2 ? 2 : 1));
     const minute = seconds / 60;
     const pct = Math.min(100, Math.max(0, (minute / scale) * 100));
-    const isUnassigned = !hasPlayer && e.teamPossession !== 'OPPONENT';
+    const isUnassigned = isUnassignedEvent(e);
     const isPostMatch = e.origin === 'post_capture';
 
     return {

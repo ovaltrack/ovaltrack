@@ -1,0 +1,10 @@
+<div class="ring" role="img" [attr.aria-label]="ariaLabel()">
+  <svg viewBox="0 0 124 124" width="124" height="124" aria-hidden="true">
+    <circle class="ring-track" cx="62" cy="62" [attr.r]="radius" />
+    <circle class="ring-value" cx="62" cy="62" [attr.r]="radius" [attr.stroke-dasharray]="dash()" transform="rotate(-90 62 62)" />
+  </svg>
+  <div class="ring-text" aria-hidden="true">
+    <span class="ring-percent">{{ percent() }}%</span>
+    <span class="label-mono ring-caption">Cargado</span>
+  </div>
+</div>

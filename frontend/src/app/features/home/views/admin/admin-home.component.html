@@ -22,70 +22,9 @@
 
   @if (divisionCount() > 0) {
     <div class="grid">
-      <app-home-tile class="s5" label="Bandeja del club"
-                     [title]="inbox().length === 0 ? 'Todo en orden' : inbox().length + (inbox().length === 1 ? ' tarea abierta' : ' tareas abiertas')"
-                     [state]="store.inboxState()" (retry)="store.retry('divisions')">
-        <ul class="inbox">
-          @for (item of inbox(); track item.divisionId) {
-            <li class="inbox-item">
-              <div class="inbox-text">
-                <strong>{{ item.divisionName }} sin entrenador</strong>
-                <span>Nadie puede capturar sus partidos</span>
-              </div>
-              @if (store.online()) {
-                <a class="btn inbox-btn" [class.btn-invite]="isPrimaryAssign(item.route)" [class.btn-outline]="!isPrimaryAssign(item.route)"
-                   [routerLink]="item.route" [attr.aria-label]="'Asignar entrenador a ' + item.divisionName">Asignar</a>
-              } @else {
-                <button type="button" class="btn btn-outline inbox-btn" disabled [attr.aria-label]="'Asignar entrenador a ' + item.divisionName + ', requiere conexión'">Requiere conexión</button>
-              }
-            </li>
-          }
-        </ul>
-        <p tileEmpty>Todas las divisiones tienen entrenador.</p>
-      </app-home-tile>
+      <app-home-kpi-row class="s12" [state]="store.kpisState()" [seasonYear]="seasonYear()" (retry)="store.retry('divisions')" />
 
-      <app-home-tile class="s7" label="Divisiones"
-                     [title]="divisionCount() + (divisionCount() === 1 ? ' división activa' : ' divisiones activas')"
-                     [state]="store.divisionsState()" (retry)="store.retry('divisions')">
-        <ul class="cards">
-          @for (card of cards(); track card.id) {
-            <li class="card-division" [class.alert]="card.noCoach">
-              <div class="card-head">
-                <h3 class="card-name">{{ card.name }}</h3>
-                @if (card.noCoach) {
-                  <span class="badge-alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Sin entrenador</span>
-                } @else if (card.staffLabel) {
-                  <span class="badge-staff">{{ card.staffLabel }}</span>
-                }
-              </div>
-              <div class="card-figures">
-                <div><p class="figure">{{ card.players ?? '–' }}</p><span>jugadores</span></div>
-                @if (card.nextLabel) {
-                  <div><p class="figure small">{{ card.nextLabel }}</p><span>próximo</span></div>
-                } @else {
-                  <div><p class="figure small">Sin partido programado</p></div>
-                }
-              </div>
-              @if (card.last.length > 0) {
-                <div class="card-last">
-                  @for (entry of card.last; track entry.matchId) {
-                    <app-result-pill [result]="entry.result" [score]="entry.score" [opponent]="entry.opponent" />
-                  }
-                </div>
-              }
-              @if (card.analysisPercent !== null) {
-                <div class="analysis" [class]="'analysis tone-' + card.tone">
-                  <div class="analysis-bar" role="img" [attr.aria-label]="'Análisis ' + card.analysisPercent + ' %'">
-                    <div class="analysis-fill" [style.width.%]="card.analysisPercent"></div>
-                  </div>
-                  <span class="analysis-text">{{ card.analysisPercent }}%</span>
-                </div>
-              }
-            </li>
-          }
-        </ul>
-        <p tileEmpty>Todavía no hay divisiones.</p>
-      </app-home-tile>
+      <app-division-status-table class="s12" [state]="store.statusState()" [online]="store.online()" (retry)="store.retry('divisions')" />
     </div>
   }
 </main>

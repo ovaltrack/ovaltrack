@@ -17,25 +17,9 @@
   }
 
   <div class="grid">
-    <app-home-tile class="s12" [label]="'Mi temporada ' + store.now().getFullYear()" title="Tus números" [state]="seasonState()" (retry)="store.reload()">
-      @if (season(); as s) {
-        <div class="kpis">
-          <div class="kpi highlight"><p class="kpi-value">{{ s.points }}</p><span>Puntos</span></div>
-          <div class="kpi"><p class="kpi-value">{{ s.tries }}</p><span>Tries</span></div>
-          <div class="kpi"><p class="kpi-value">{{ s.matches }}</p><span>Partidos</span></div>
-          <div class="kpi"><p class="kpi-value">{{ s.starts }}</p><span>Titular</span></div>
-          <div class="kpi"><p class="kpi-value">{{ s.tacklePercent === null ? '–' : s.tacklePercent + '%' }}</p><span>Tackle</span></div>
-        </div>
-        @if (s.last.length > 0) {
-          <div class="last">
-            <span class="label-mono">Últimos {{ s.last.length }}</span>
-            @for (entry of s.last; track entry.matchId) {
-              <app-result-pill [result]="entry.result" [score]="entry.score" [opponent]="entry.opponent" />
-            }
-          </div>
-        }
-      }
-      <p tileEmpty>Todavía no jugaste partidos en {{ store.now().getFullYear() }}.</p>
-    </app-home-tile>
+    <app-season-card class="s12" [state]="store.seasonKpisState()" [label]="store.seasonLabel()" [year]="store.now().getFullYear()"
+                     [provisional]="store.seasonProvisional()" (retry)="store.reload()" />
+    <app-squad-comparison-card class="s7" [state]="store.comparisonState()" (retry)="store.reload()" />
+    <app-tackles-card class="s5" [state]="store.tacklesState()" (retry)="store.reload()" />
   </div>
 </main>

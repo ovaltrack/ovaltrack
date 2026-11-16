@@ -1,0 +1,161 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+:host > app-home-tile {
+  flex: 1 1 auto;
+}
+
+.table-note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.mx-wrap {
+  overflow-x: auto;
+}
+
+.mx {
+  min-width: 1080px;
+}
+
+.mx-row {
+  display: grid;
+  grid-template-columns: 110px 140px 120px minmax(150px, 1.2fr) 140px 260px minmax(140px, 1fr) 190px;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.mx-row:last-child {
+  border-bottom: 0;
+}
+
+.mx-row > span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 10px;
+  font-size: 14px;
+}
+
+.mx-head {
+  background: var(--surface-alt);
+  border-bottom: 2px solid var(--border-sport);
+}
+
+.mx-head > span {
+  padding: 8px 10px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.mx-division {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.cell.mono {
+  font-family: var(--font-mono);
+}
+
+.cell.error {
+  color: var(--error);
+}
+
+.cell.warn {
+  color: var(--warning);
+}
+
+.sub {
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--btn-primary-bg);
+}
+
+.last {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+}
+
+.analysis {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.analysis-bar {
+  flex: 1;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.analysis-fill {
+  display: block;
+  height: 100%;
+  background: var(--success);
+}
+
+.tone-warn .analysis-fill {
+  background: var(--warning);
+}
+
+.tone-bad .analysis-fill {
+  background: var(--error);
+}
+
+.analysis-text {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.mx-action {
+  align-items: flex-end;
+}
+
+.action-btn {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Modo oscuro: el avance del análisis usa el acento (el verde de estado queda para resultados) */
+:host-context([data-theme="dark"]) .analysis:not(.tone-warn):not(.tone-bad) .analysis-fill {
+  background: var(--grass);
+}

@@ -1,0 +1,25 @@
+:host {
+  display: block;
+  min-width: 0;
+  text-align: left;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px;
+  border: 1px solid var(--board-digit-border);
+  border-radius: 16px;
+  background: var(--board-digit-bg);
+  color: var(--on-board);
+}
+
+.panel-label {
+  margin: 0;
+  color: var(--on-board-muted);
+}
+
+:host ::ng-deep .panel p {
+  margin: 0;
+}

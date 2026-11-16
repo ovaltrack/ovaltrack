@@ -11,7 +11,7 @@ describe('coach-board', () => {
   });
   const context = (matches: Match[], overrides: Partial<CoachBoardContext> = {}): CoachBoardContext => ({
     now, divisionName: 'Superior', matches, captureMatchId: null, progress: null, recent: [],
-    roster: { starters: 15, substitutes: 6 }, readyOffline: true, ...overrides
+    roster: { starters: 15, substitutes: 6 }, readyOffline: true, squadSize: 52, analysis: null, ...overrides
   });
 
   it('partido en curso que captura este dispositivo: live-here con período y reloj', () => {
@@ -24,6 +24,25 @@ describe('coach-board', () => {
   it('partido en curso en otro dispositivo: live-elsewhere con el último dato en hora de Argentina', () => {
     const board = buildCoachBoard(context([match({ status: 'in_progress', clockUpdatedAt: '2026-11-06T17:05:00Z' })]));
     expect(board).toEqual(jasmine.objectContaining({ kind: 'live-elsewhere', lastDataAt: '14:05' }));
+  });
+
+  it('live-elsewhere trae el período y el minuto del último dato, sin extrapolar', () => {
+    const second = buildCoachBoard(context([match({ status: 'in_progress', currentPeriod: 2, clockElapsedSeconds: 52 * 60 + 40 })]));
+    const first = buildCoachBoard(context([match({ status: 'in_progress', currentPeriod: 1, clockElapsedSeconds: 7 * 60 })]));
+    const halftime = buildCoachBoard(context([match({ status: 'halftime', currentPeriod: 1, clockElapsedSeconds: 40 * 60 })]));
+    expect(second).toEqual(jasmine.objectContaining({ periodLabel: "2T 52'" }));
+    expect(first).toEqual(jasmine.objectContaining({ periodLabel: "1T 7'" }));
+    expect(halftime).toEqual(jasmine.objectContaining({ periodLabel: 'Entretiempo' }));
+  });
+
+  it('next lleva los huecos de la nómina: sin nómina, suplentes 3/8 y completa', () => {
+    const date = '2026-11-12T14:30:00';
+    const none = buildCoachBoard(context([match({ status: 'empty_roster', date })], { roster: null }));
+    const short = buildCoachBoard(context([match({ status: 'not_started', date })], { roster: { starters: 15, substitutes: 3 } }));
+    const full = buildCoachBoard(context([match({ status: 'not_started', date })], { roster: { starters: 15, substitutes: 8 } }));
+    expect(none).toEqual(jasmine.objectContaining({ kind: 'next', rosterGaps: jasmine.objectContaining({ kind: 'none' }) }));
+    expect(short).toEqual(jasmine.objectContaining({ rosterGaps: jasmine.objectContaining({ kind: 'substitutes', label: 'Suplentes 3/8' }) }));
+    expect(full).toEqual(jasmine.objectContaining({ rosterGaps: { kind: 'complete' } }));
   });
 
   it('con menos de 24 h y nómina: match-day', () => {
@@ -42,6 +61,104 @@ describe('coach-board', () => {
     expect(buildCoachBoard(context([match({ status: 'empty_roster' })])).kind).toBe('next');
   });
 
+  describe('semana de juego', () => {
+    const stages = (board: ReturnType<typeof buildCoachBoard>) => board.kind !== 'onboarding' && 'week' in board ? board.week : null;
+
+    it('next lleva la semana: Entrenar con el rótulo de la división y el paso', () => {
+      const week = stages(buildCoachBoard(context([match({ date: '2026-11-12T14:30:00', status: 'not_started' })], { roster: { starters: 15, substitutes: 8 } })));
+      expect(week?.stage).toBe('train');
+      expect(week?.label).toBe('Semana de juego · Superior · paso 2 de 4');
+      expect(week?.steps.map(step => step.status)).toEqual(['done', 'current', 'done', 'pending']);
+    });
+
+    it('con suplentes 6/8 a menos de 72 h la etapa es Convocar', () => {
+      const week = stages(buildCoachBoard(context([match({ date: '2026-11-08T14:30:00', status: 'not_started' })])));
+      expect(week?.stage).toBe('call-up');
+      expect(week?.steps[2]).toEqual(jasmine.objectContaining({ status: 'current', subtitle: 'Suplentes 6/8' }));
+    });
+
+    it('el día de partido (match-day) y los partidos en curso son la etapa Jugar', () => {
+      expect(stages(buildCoachBoard(context([match({ status: 'not_started' })])))?.stage).toBe('play');
+      expect(stages(buildCoachBoard(context([match({ status: 'in_progress', date: '2026-11-07T14:30:00' })])))?.stage).toBe('play');
+      expect(stages(buildCoachBoard(context([match({ status: 'in_progress' })], { captureMatchId: 'm1', progress: null })))?.stage).toBe('play');
+    });
+
+    it('un análisis incompleto del último partido hace de Analizar el paso actual y muestra su rival y %', () => {
+      const board = buildCoachBoard(context([
+        match({ id: 'f', status: 'finished', date: '2026-11-01T15:00:00' }),
+        match({ id: 'n', status: 'not_started', date: '2026-11-20T15:00:00' })
+      ], { analysis: { percent: 85, withoutPlayer: 3, minutesWithoutZone: 0 } }));
+      const week = stages(board);
+      expect(week?.stage).toBe('analyze');
+      expect(week?.steps[0].subtitle).toBe('vs Trelew · 85 %');
+    });
+
+    it('sin partido por jugar ni análisis pendiente no hay semana', () => {
+      expect(stages(buildCoachBoard(context([match({ status: 'finished', date: '2026-11-01T15:00:00' })])))).toBeNull();
+    });
+  });
+
+  describe('variante Convocar (next con callUp)', () => {
+    it('sin nómina a 72 h o menos: «Armá la nómina del sábado» con rival, fecha, hora y días que faltan', () => {
+      const board = buildCoachBoard(context([match({ status: 'empty_roster', date: '2026-11-08T15:30:00' })], { roster: null }));
+      expect(board).toEqual(jasmine.objectContaining({
+        kind: 'next', squadSize: 52, rosterGaps: jasmine.objectContaining({ kind: 'none', missing: '15 titulares y hasta 8 suplentes' }),
+        callUp: { title: 'Armá la nómina del domingo', subtitle: 'vs Trelew · Dom 8 nov · 15:30', dayLabel: 'Dom 8 nov', inLabel: 'En 2 días · vs Trelew' }
+      }));
+    });
+
+    it('con suplentes 3/8 también es Convocar, con los huecos', () => {
+      const board = buildCoachBoard(context([match({ status: 'not_started', date: '2026-11-08T15:30:00' })], { roster: { starters: 15, substitutes: 3 } }));
+      expect(board).toEqual(jasmine.objectContaining({ kind: 'next', rosterGaps: jasmine.objectContaining({ kind: 'substitutes', count: 5, missing: '5 suplentes' }) }));
+      expect(board.kind === 'next' && board.callUp?.title).toBe('Armá la nómina del domingo');
+    });
+
+    it('con nómina completa o a más de 72 h no es Convocar', () => {
+      const full = buildCoachBoard(context([match({ status: 'not_started', date: '2026-11-08T15:30:00' })], { roster: { starters: 15, substitutes: 8 } }));
+      const far = buildCoachBoard(context([match({ status: 'empty_roster', date: '2026-11-14T15:30:00' })], { roster: null }));
+      expect(full.kind === 'next' && full.callUp).toBeNull();
+      expect(far.kind === 'next' && far.callUp).toBeNull();
+    });
+  });
+
+  describe('variante analysis', () => {
+    const finished = match({ id: 'f', status: 'finished', date: '2026-11-01T15:00:00', homeScore: 21, awayScore: 13, finishedAt: '2026-11-01T18:00:00Z' });
+    const analysis = { percent: 85, withoutPlayer: 12, minutesWithoutZone: 9 };
+
+    it('con análisis incompleto y próximo partido lejano: «Cerrá el análisis del domingo», resultado y qué viene después', () => {
+      const board = buildCoachBoard(context([finished, match({ id: 'n', status: 'empty_roster', date: '2026-11-20T15:30:00' })], { analysis }));
+      expect(board).toEqual(jasmine.objectContaining({
+        kind: 'analysis', matchId: 'f', title: 'Cerrá el análisis del domingo', subtitle: 'vs Trelew · Ganado 21–13 · Dom 1 nov',
+        percent: 85, withoutPlayer: 12, minutesWithoutZone: 9,
+        after: { title: 'vs Trelew · Vie 20 nov · 15:30', detail: 'En 14 días · nómina sin armar todavía' }
+      }));
+    });
+
+    it('sin próximo partido igual se cierra el análisis; el panel «Después» no aparece', () => {
+      const board = buildCoachBoard(context([finished], { analysis }));
+      expect(board).toEqual(jasmine.objectContaining({ kind: 'analysis', after: null }));
+    });
+
+    it('solo minutos sin zona también es Analizar', () => {
+      const board = buildCoachBoard(context([finished], { analysis: { percent: 100, withoutPlayer: 0, minutesWithoutZone: 12 } }));
+      expect(board.kind).toBe('analysis');
+    });
+
+    it('con el análisis completo vuelve a team-idle / next', () => {
+      expect(buildCoachBoard(context([finished], { analysis: { percent: 100, withoutPlayer: 0, minutesWithoutZone: 0 } })).kind).toBe('team-idle');
+    });
+
+    it('sin lectura del análisis (null) no se acusa: team-idle', () => {
+      expect(buildCoachBoard(context([finished], { analysis: null })).kind).toBe('team-idle');
+    });
+
+    it('Convocar y Jugar le ganan a Analizar', () => {
+      const next = match({ id: 'n', status: 'empty_roster', date: '2026-11-08T14:30:00' });
+      expect(buildCoachBoard(context([finished, next], { analysis, roster: null })).kind).toBe('next');
+      expect(buildCoachBoard(context([finished, match({ id: 'v', status: 'in_progress' })], { analysis })).kind).toBe('live-elsewhere');
+    });
+  });
+
   it('sin partidos: primeros pasos para programar uno', () => {
     expect(buildCoachBoard(context([]))).toEqual({ kind: 'onboarding', step: 'schedule-match' });
   });
@@ -55,6 +172,28 @@ describe('coach-board', () => {
       kind: 'team-idle', divisionName: 'Superior',
       last: { opponent: 'Trelew', dateLabel: '17 oct', ownScore: 32, opponentScore: 21, result: 'win' }
     });
+  });
+
+  it('team-idle: un terminado con fecha futura que se jugó antes no es el último, y con finishedAt nulo manda la fecha', () => {
+    const board = buildCoachBoard(context([
+      match({ id: 'a', status: 'finished', date: '2026-12-15T15:00:00', finishedAt: '2026-10-10T19:00:00Z', homeScore: 10, awayScore: 20 }),
+      match({ id: 'b', status: 'finished', date: '2026-10-17T15:00:00', finishedAt: null, homeScore: 32, awayScore: 21 })
+    ]));
+    expect(board).toEqual(jasmine.objectContaining({ kind: 'team-idle', last: jasmine.objectContaining({ dateLabel: '17 oct', ownScore: 32 }) }));
+  });
+
+  it('team-idle: un terminado con fecha futura cuenta como jugado y se rotula con el día en que terminó', () => {
+    const board = buildCoachBoard(context([
+      match({ id: 'a', status: 'finished', date: '2026-10-10T15:00:00', finishedAt: '2026-10-10T19:00:00Z' }),
+      match({ id: 'b', status: 'finished', date: '2026-12-15T15:00:00', finishedAt: '2026-11-06T15:00:00Z', homeScore: 5, awayScore: 3 })
+    ]));
+    expect(board).toEqual(jasmine.objectContaining({ kind: 'team-idle', last: jasmine.objectContaining({ dateLabel: '6 nov', ownScore: 5 }) }));
+  });
+
+  it('en curso con fecha de mañana: live-elsewhere / live-here, no "next"', () => {
+    const tomorrow = match({ status: 'in_progress', date: '2026-11-07T14:30:00' });
+    expect(buildCoachBoard(context([tomorrow])).kind).toBe('live-elsewhere');
+    expect(buildCoachBoard(context([tomorrow], { captureMatchId: 'm1' })).kind).toBe('live-here');
   });
 
   it('team-idle también si el último fue derrota o empate', () => {

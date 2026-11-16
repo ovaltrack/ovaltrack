@@ -29,37 +29,33 @@
 
   @if (store.divisions().length > 0) {
     <div class="grid">
-      <app-home-tile class="s4" label="Deuda de análisis" [title]="debt() ? 'vs ' + debt()!.opponent + ' · ' + debt()!.dateLabel : 'Último partido'"
-                     [state]="store.debtState()" (retry)="store.retry('debt')">
-        @if (debt(); as d) {
-          <div class="debt">
-            <div class="ring" [class]="'ring tone-' + debtTone()">
-              <svg viewBox="0 0 124 124" width="124" height="124" role="img" [attr.aria-label]="d.percent + ' % cargado'">
-                <circle class="ring-track" cx="62" cy="62" [attr.r]="ringRadius" />
-                <circle class="ring-value" cx="62" cy="62" [attr.r]="ringRadius" [attr.stroke-dasharray]="ringDash()" transform="rotate(-90 62 62)" />
-              </svg>
-              <div class="ring-text"><span class="ring-percent">{{ d.percent }}%</span><span class="label-mono ring-caption">Cargado</span></div>
-            </div>
-            <dl class="debt-rows">
-              <div><dt>Jugadas sin jugador</dt><dd>{{ d.withoutPlayer }}</dd></div>
-              @if (d.minutesWithoutZone !== null) {
-                <div><dt>Minutos sin zona</dt><dd>{{ d.minutesWithoutZone }}'</dd></div>
-              }
-            </dl>
+      @if (store.activeDivisionId(); as divisionId) {
+        <app-focus-card class="s8" [state]="store.focusState()" [seasonYear]="seasonYear()" [divisionId]="divisionId" [online]="store.online()" (retry)="store.retry('focus')" />
+      }
+
+      <app-home-tile class="s4" [label]="'Forma · ' + seasonYear()" title="Últimos partidos" [state]="store.formState()" (retry)="store.retry('form')">
+        @if (form(); as f) {
+          <div class="record">
+            <div><span class="label-mono">G – E – P</span><p class="kpi">{{ f.record.wins }}–{{ f.record.draws }}–{{ f.record.losses }}</p></div>
+            <div><span class="label-mono">Dif.</span>
+              <p class="kpi" [class.positive]="f.record.diff > 0" [class.negative]="f.record.diff < 0">{{ f.record.diff > 0 ? '+' : '' }}{{ f.record.diff }}</p></div>
           </div>
-          @if (d.percent < 100) {
-            @if (store.online()) {
-              <a class="btn debt-btn" [class.btn-invite]="debtIsPrimary()" [class.btn-outline]="!debtIsPrimary()" [routerLink]="['/post-match', d.matchId]">Completar análisis</a>
-            } @else {
-              <button type="button" class="btn btn-outline debt-btn" disabled>Completar análisis</button>
-              <p class="offline-note">Requiere conexión</p>
+          <div class="last" role="group" aria-label="Últimos partidos">
+            @for (entry of f.record.last; track entry.matchId) {
+              <app-result-pill [result]="entry.result" [score]="entry.score" [opponent]="entry.opponent" [analysisPercent]="f.percents[entry.matchId] ?? null" />
             }
+          </div>
+          @if (averages(); as avg) {
+            <div class="averages">
+              <div><p class="average">{{ avg.for }}</p><span class="average-label">a favor por partido</span></div>
+              <div><p class="average">{{ avg.against }}</p><span class="average-label">en contra por partido</span></div>
+            </div>
           }
         }
-        <p tileEmpty>Todavía no jugaron ningún partido.</p>
+        <p tileEmpty>Sin partidos jugados en {{ seasonYear() }}.</p>
       </app-home-tile>
 
-      <app-home-tile class="s4" label="Pendientes" title="Antes del partido" [state]="store.pendingState()" (retry)="store.retry('pending')">
+      <app-home-tile class="s6" label="Pendientes" title="Antes del partido" [state]="store.pendingState()" (retry)="store.retry('pending')">
         <ul class="pending">
           @for (item of pending(); track item.kind) {
             <li class="inbox-item">
@@ -68,7 +64,7 @@
                 <span>{{ item.detail }}</span>
               </div>
               @if (store.online()) {
-                <a class="btn btn-outline inbox-btn" [routerLink]="item.route" [attr.aria-label]="item.actionLabel + ': ' + item.text + ', ' + item.detail">{{ item.actionLabel }}</a>
+                <a class="btn btn-outline inbox-btn" [routerLink]="item.route" [queryParams]="item.queryParams" [attr.aria-label]="item.actionLabel + ': ' + item.text + ', ' + item.detail">{{ item.actionLabel }}</a>
               } @else {
                 <button type="button" class="btn btn-outline inbox-btn" disabled [attr.aria-label]="item.actionLabel + ': ' + item.text + ', requiere conexión'">Requiere conexión</button>
               }
@@ -78,21 +74,7 @@
         <p tileEmpty>No hay nada pendiente.</p>
       </app-home-tile>
 
-      <app-home-tile class="s4 form-tile" [label]="'Forma · ' + seasonYear()" title="Últimos partidos" [state]="store.formState()" (retry)="store.retry('form')">
-        @if (form(); as f) {
-          <div class="record">
-            <div><span class="label-mono">Récord</span><p class="kpi">{{ f.record.wins }}-{{ f.record.draws }}-{{ f.record.losses }}</p></div>
-            <div><span class="label-mono">Dif.</span>
-              <p class="kpi" [class.positive]="f.record.diff > 0" [class.negative]="f.record.diff < 0">{{ f.record.diff > 0 ? '+' : '' }}{{ f.record.diff }}</p></div>
-          </div>
-          <div class="last">
-            @for (entry of f.record.last; track entry.matchId) {
-              <app-result-pill [result]="entry.result" [score]="entry.score" [opponent]="entry.opponent" [analysisPercent]="f.percents[entry.matchId] ?? null" />
-            }
-          </div>
-        }
-        <p tileEmpty>Sin partidos jugados en {{ seasonYear() }}.</p>
-      </app-home-tile>
+      <app-upcoming-card class="s6 s6-wide" [state]="store.upcomingState()" [divisionName]="store.activeDivision()?.name ?? ''" (retry)="store.retry('matches')" />
     </div>
   }
 </main>

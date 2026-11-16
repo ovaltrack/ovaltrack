@@ -1,0 +1,26 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+:host > app-home-tile {
+  flex: 1 1 auto;
+}
+
+.tackles-chart {
+  min-width: 0;
+}
+
+.tackles-foot {
+  margin: auto 0 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.tackles-num {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}

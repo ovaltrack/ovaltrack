@@ -418,7 +418,7 @@ Cada nivel es más claro que el anterior: lo que está más cerca del usuario re
 - Selección: `--grass-tint-strong` (`#223f26`) de fondo (filtro activo, fila seleccionada, módulo activo del navbar) y `--grass-border` (`rgba(140,201,143,.55)`). `--grass-tint` (`rgba(140,201,143,.15)`) para fondos suaves.
 - Foco: borde `--grass` más `--focus-ring` (`0 0 0 3px rgba(140,201,143,.28)`).
 - El botón outline es neutro: fondo `--btn-outline-bg`, borde `--btn-outline-border`, texto `--btn-outline-fg` y hover con borde `--text-secondary`; no lleva verde.
-- El tablero de Inicio (§9): el fondo es igual en los dos temas; el acento (`--on-board-accent`) es `#91da40` en claro y `#8cc98f` en oscuro, y los tokens del tablero tienen valor propio (no siguen a `--grass`).
+- El tablero de Inicio (§9): el fondo es igual en los dos temas; el acento (`--on-board-accent`) es el lima de marca (`--brand-signature`, `#a3e635`) en claro y `#8cc98f` en oscuro, y los tokens del tablero tienen valor propio (no siguen a `--grass`).
 
 ### 5.4 Equipos y estados
 
@@ -685,7 +685,8 @@ El fondo y los rótulos del tablero son iguales en claro y oscuro. Sus tokens ti
 | `--btn-on-board-outline` | `rgba(255,255,255,.55)` |
 
 ### 9.2 Color de los datos
-- Propio: `--btn-primary-bg`. Rival y promedio: `--text-muted`.
+- Propio: `--btn-primary-bg` en rellenos de barras y columnas; `--grass` en textos y líneas finas (un relleno verde botella no se lee como texto en oscuro). Rival y promedio: `--text-muted`.
+- Para atenuar lo propio (las columnas anteriores de una serie) se usa `color-mix(in srgb, var(--btn-primary-bg) 55%, transparent)`; no hay un color aparte.
 - Mejor: `--success`. Peor: `--error`. Pendiente: `--warning`.
 - Las variaciones siempre llevan texto (`▼ −17 p.p. · peor`); el color solo no alcanza.
 - La barra de análisis usa `--success` (≥ 90 %), `--warning` (≥ 60 %) y `--error`, con el porcentaje escrito.
@@ -694,6 +695,25 @@ El fondo y los rótulos del tablero son iguales en claro y oscuro. Sus tokens ti
 - h1 (`.hud-title`, global desde §3.2): Hanken 800, 44/32px, tracking −.03em. Título del tablero: Hanken 800, 52/36px. Título de tarjeta: Hanken 800, 20px.
 - Rótulo (`.label-mono`): Mono 700, 12px, mayúsculas, tracking .12em. Los encabezados no llevan píldoras: `.eyebrow` ya no existe.
 - Marcador: Mono 700, 104/72px tabular. Cuenta regresiva: Mono 52/36px en cajas de 84/64px. Hora de inicio: Mono 60px. KPIs: Mono 34–44px.
+
+### 9.4 Semana de juego (entrenador)
+Cuatro pasos —Convocar, Entrenar, Jugar, Analizar— en `app-board-steps`, arriba de la variante del tablero. Cada paso es una tarjeta sobre el tablero con su estado (hecho, actual o pendiente); el actual lleva `aria-current="step"` y los hechos agregan «, hecho» para lectores. La etapa la decide `gameWeek` (Jugar → Convocar → Analizar → Entrenar); Entrenar no se marca como hecho: es un paso pasivo. `team-idle` y `onboarding` no llevan semana. Colores solo con `--board-*` y `--on-board*`.
+
+### 9.5 Panel lateral del tablero
+Panel translúcido a la derecha del tablero (`app-board-panel`: `--board-digit-bg`, borde `--board-line`) con datos que explican la variante: «Después: paso 4», «Faltan en la nómina», «Últimos eventos», «Lo que dejó el partido» (jugador) o «Lo más urgente» (administrador). Puede llevar el primario blanco del tablero. En ≤ 1120 px baja debajo del contenido. Sin datos, no se dibuja.
+
+### 9.6 Agenda del club (administrador)
+Lista dentro del tablero (`app-club-agenda`), una fila por partido: día y hora en Mono, división, rival corto y un chip de estado. Prioridad del chip: final con resultado, en curso con período, sin entrenador, nómina. Separadores «Ahora», «Hoy» y «Mañana» con `--on-board-accent`; líneas con `--board-line`. La ventana llega hasta el domingo próximo. Un dato ilegible va con chip neutro, nunca como alarma.
+
+### 9.7 Estado de las divisiones (administrador)
+Tarjeta con tabla (`roles table/row/columnheader/cell`): División · Staff · Plantel · Próximo partido · Nómina · Últimos 5 · Análisis · Acción, en el orden del club. Solo se marca lo que no está bien, con ícono y texto (`--error`, `--warning`); lo correcto va sin marca y un dato no leído es «–». Una acción por fila como mucho, outline, con `aria-label` completo y «Requiere conexión» sin red. Ancho mínimo 1080 px con `overflow-x: auto` dentro de la tarjeta (la página no scrollea).
+
+### 9.8 Gráficos y tarjetas de datos
+- **Mini gráfico (`app-sparkline`):** SVG con `role="img"` y la serie en `aria-label`; línea y punto en `--btn-primary-bg`, promedio previo punteado en `--text-muted`.
+- **Qué trabajar (`app-focus-card`):** hasta 4 métricas de `trend-rules`; cada fila lleva nombre, valor Mono, mini gráfico y un chip con texto («▼ −17 p.p. · peor»). Penales: subir es peor.
+- **Vos contra el plantel (`app-squad-comparison-card` sobre `app-comparison-list`):** barras «Vos» (`--btn-primary-bg`) y «Promedio del plantel» (`--text-muted`, variante `neutralSquad`) con el valor escrito, veredicto con color y texto y borde izquierdo de tono. Donde menos es mejor (penales) `higherIsBetter = false` invierte el tono. Píldora «n a favor · n a mejorar» sobre la lista. La misma lista sirve a `/player-statistics` con su azul atenuado por defecto.
+- **Tus tackles (`app-tackles-card` sobre `app-stat-columns`):** últimos 8 partidos, fecha y sigla del rival en el eje, el último en `--btn-primary-bg` y los anteriores atenuados (§9.2); pie «Promedio n por partido · el plantel hace n». El gráfico va dentro de un `role="img"` con la serie en `aria-label`.
+- **Estados:** toda tarjeta (`app-home-tile`) resuelve cargando (esqueleto), vacío, error con «Reintentar» y, si el dato salió del snapshot, el sello «Datos de hh:mm»; un widget en error no afecta a los demás.
 
 ---
 

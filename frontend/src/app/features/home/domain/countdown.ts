@@ -11,7 +11,3 @@ export function formatCountdown(remainingMs: number): string {
   const seconds = totalSeconds % 60;
   return [hours, minutes, seconds].map(part => String(part).padStart(2, '0')).join(':');
 }
-
-export function isMatchDay(remainingMs: number): boolean {
-  return remainingMs < MATCH_DAY_WINDOW_MS;
-}

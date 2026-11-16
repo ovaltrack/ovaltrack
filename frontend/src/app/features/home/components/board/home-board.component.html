@@ -9,7 +9,11 @@
 
   @if (model(); as m) {
     <div class="board-body">
-      @if (m.kind === 'next') {
+      @if (week(); as w) {
+        <app-board-steps class="board-week" [label]="w.label" [steps]="w.steps" />
+      }
+
+      @if (m.kind === 'next' && !m.callUp) {
         <div class="board-main">
           <p class="label-mono on-board">Próximo partido · {{ m.divisionName }}</p>
           <h2 class="board-title"><span class="board-vs">vs</span> {{ m.opponent }}</h2>
@@ -35,6 +39,77 @@
           <p class="board-time">{{ m.time }}</p>
           <ng-container *ngTemplateOutlet="actions" />
           <a class="btn btn-on-board-outline board-btn" [routerLink]="['/selection-roster', m.matchId]">Ver alineación</a>
+        </div>
+      }
+
+      @if (m.kind === 'next' && m.callUp; as callUp) {
+        <div class="board-main">
+          <h2 class="board-title">{{ callUp.title }}</h2>
+          <p class="board-meta">{{ callUp.subtitle }}</p>
+          <ul class="chips">
+            @if (m.rosterGaps.kind !== 'complete' && m.rosterGaps.kind !== 'unknown') {
+              <li class="chip-board warn"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ m.rosterGaps.label }}</li>
+            }
+            @if (m.squadSize !== null) {
+              <li class="chip-board">{{ m.squadSize }} en el plantel</li>
+            }
+          </ul>
+          <div class="board-actions">
+            <ng-container *ngTemplateOutlet="actions" />
+          </div>
+          <p class="board-meta">Guardar la nómina requiere conexión.</p>
+        </div>
+        <div class="board-side board-side-left">
+          <app-board-panel class="board-panel" label="Próximo partido">
+            <p class="panel-time">{{ m.time }}</p>
+            <p class="panel-strong">{{ callUp.dayLabel }}</p>
+            <p class="panel-muted">{{ callUp.inLabel }}</p>
+          </app-board-panel>
+          @if (m.rosterGaps.kind !== 'complete' && m.rosterGaps.kind !== 'unknown') {
+            <app-board-panel class="board-panel" label="Faltan en la nómina">
+              <p>{{ m.rosterGaps.missing }}</p>
+            </app-board-panel>
+          }
+        </div>
+      }
+
+      @if (m.kind === 'analysis') {
+        <div class="board-main">
+          <h2 class="board-title">{{ m.title }}</h2>
+          <p class="board-meta">{{ m.subtitle }}</p>
+          <ul class="chips">
+            @if (m.withoutPlayer > 0) {
+              <li class="chip-board warn"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ m.withoutPlayer }} {{ m.withoutPlayer === 1 ? 'jugada sin jugador' : 'jugadas sin jugador' }}</li>
+            }
+            @if (m.minutesWithoutZone) {
+              <li class="chip-board warn"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ m.minutesWithoutZone }}′ sin zona</li>
+            }
+          </ul>
+          <div class="board-actions">
+            <ng-container *ngTemplateOutlet="actions" />
+            <a class="btn btn-on-board-outline board-btn" [routerLink]="['/post-match', m.matchId, 'statistics']">Ver resumen</a>
+          </div>
+        </div>
+        <div class="board-side board-side-left">
+          <div class="ring-row">
+            <app-analysis-ring [percent]="m.percent" />
+            <div class="ring-missing">
+              <p class="label-mono on-board">Lo que falta</p>
+              @if (m.withoutPlayer > 0) {
+                <p>{{ m.withoutPlayer }} {{ m.withoutPlayer === 1 ? 'jugada propia sin jugador' : 'jugadas propias sin jugador' }}</p>
+              }
+              @if (m.minutesWithoutZone) {
+                <p>{{ m.minutesWithoutZone }} {{ m.minutesWithoutZone === 1 ? 'minuto sin zona asignada' : 'minutos sin zona asignada' }}</p>
+              }
+              <p class="board-meta">Sin esto, Foco y Mi temporada de los jugadores quedan provisorios.</p>
+            </div>
+          </div>
+          @if (m.after; as after) {
+            <app-board-panel class="board-panel" label="Después: paso 4">
+              <p class="panel-strong">{{ after.title }}</p>
+              <p class="panel-muted">{{ after.detail }}</p>
+            </app-board-panel>
+          }
         </div>
       }
 
@@ -69,31 +144,44 @@
             <span>{{ m.ownScore }}</span><span class="score-sep" aria-hidden="true">·</span><span>{{ m.opponentScore }}</span>
           </p>
           <p class="board-meta">vs {{ m.opponent }}</p>
-          @if (m.recent.length > 0) {
-            <ul class="ticker" aria-label="Últimos eventos">
-              @for (line of m.recent; track $index) {
-                <li><span class="ticker-minute">{{ line.minute }}</span> {{ line.label }}</li>
-              }
-            </ul>
-          }
+          <ul class="chips">
+            <li class="chip-board ok"><i class="bi bi-wifi-off" aria-hidden="true"></i> Sin señal: listo</li>
+          </ul>
         </div>
         <div class="board-side">
           <ng-container *ngTemplateOutlet="actions" />
+          @if (m.recent.length > 0) {
+            <app-board-panel class="board-panel" label="Últimos eventos">
+              <ul class="ticker">
+                @for (line of m.recent; track $index) {
+                  <li><span class="ticker-minute">{{ line.minute }}</span> {{ line.label }}</li>
+                }
+              </ul>
+            </app-board-panel>
+          }
         </div>
       }
 
       @if (m.kind === 'live-elsewhere') {
         <div class="board-main">
-          <p class="label-mono on-board">En curso · otro dispositivo</p>
-          <p class="score dim">
+          <p class="label-mono on-board"><span class="pulse" aria-hidden="true"></span> En curso · {{ m.periodLabel }}</p>
+          <p class="score dim" [attr.aria-label]="'Marcador ' + m.ownScore + ' a ' + m.opponentScore">
             <span>{{ m.ownScore }}</span><span class="score-sep" aria-hidden="true">·</span><span>{{ m.opponentScore }}</span>
           </p>
           <p class="board-meta">vs {{ m.opponent }}</p>
-          <p class="board-note">
-            <i class="bi bi-broadcast" aria-hidden="true"></i>
-            Capturando en otro dispositivo@if (m.lastDataAt) { · último dato {{ m.lastDataAt }} }.
-            Desde acá no se puede capturar para no duplicar eventos.
-          </p>
+          <ul class="chips">
+            <li class="chip-board">
+              <i class="bi bi-broadcast" aria-hidden="true"></i>
+              Capturando en otro dispositivo@if (m.lastDataAt) { · último dato {{ m.lastDataAt }} }
+            </li>
+          </ul>
+          <p class="board-note">Desde acá no se puede capturar, para no duplicar eventos.</p>
+        </div>
+        <div class="board-side board-side-left">
+          <app-board-panel class="board-panel" label="Qué pasa después">
+            <p>El marcador se actualiza cuando el otro dispositivo sincroniza.</p>
+            <p class="panel-muted">Cuando termine el partido, el paso 1 de la semana siguiente (Analizar) aparece acá.</p>
+          </app-board-panel>
         </div>
       }
 
@@ -128,21 +216,41 @@
         </div>
       }
 
-      @if (m.kind === 'club-day') {
+      @if (m.kind === 'club-agenda') {
         <div class="board-wide">
           <p class="label-mono on-board">{{ m.label }}</p>
-          <div class="board-row">
-            <h2 class="board-title">{{ m.title }}</h2>
-            <ng-container *ngTemplateOutlet="actions" />
+          <h2 class="board-title agenda-title">{{ m.title }}</h2>
+          <div class="agenda">
+            <app-club-agenda [sections]="m.sections" />
+            <div class="agenda-side">
+            <app-board-panel class="board-panel agenda-urgent" label="Lo más urgente">
+              @if (m.urgent; as urgent) {
+                <p class="panel-strong">{{ urgent.title }}</p>
+                <p class="panel-muted">{{ urgent.detail }}</p>
+                <ng-container *ngTemplateOutlet="actions" />
+              } @else {
+                <p class="panel-strong">Está todo listo</p>
+                <p class="panel-muted">Nóminas completas y entrenadores asignados.</p>
+              }
+            </app-board-panel>
+            @if (m.live; as live) {
+              <app-board-panel class="board-panel agenda-live" [label]="live.division + ' · en vivo'">
+                <p class="agenda-score" [attr.aria-label]="'Marcador ' + live.ownScore + ' a ' + live.opponentScore">
+                  <span>{{ live.ownScore }}</span><span class="score-sep" aria-hidden="true">·</span><span>{{ live.opponentScore }}</span>
+                </p>
+                <p class="panel-strong">vs {{ live.opponent }} · {{ live.periodLabel }}</p>
+                <p class="panel-muted">@if (live.lastDataAt) { Último dato {{ live.lastDataAt }} } @else { Sin datos del reloj }</p>
+              </app-board-panel>
+            }
+            </div>
           </div>
-          <app-club-day-timeline [items]="m.items" [nowMinute]="m.nowMinute" />
         </div>
       }
 
       @if (m.kind === 'club-idle') {
         <div class="board-main">
           <p class="label-mono on-board">Club</p>
-          <h2 class="board-title">Sin partidos hoy ni mañana</h2>
+          <h2 class="board-title">Sin partidos esta semana</h2>
           @if (m.nextLabel) {
             <p class="board-meta"><i class="bi bi-calendar-event" aria-hidden="true"></i> Próxima fecha: {{ m.nextLabel }}</p>
           }
@@ -182,21 +290,37 @@
             <li class="chip-board" [class.ok]="m.result === 'win'">
               {{ m.result === 'win' ? 'Ganado' : m.result === 'loss' ? 'Perdido' : 'Empatado' }}
             </li>
-            <li class="chip-board">{{ m.role === 'TITULAR' ? 'Titular' : 'Suplente' }}</li>
-            <li class="chip-board">{{ m.tries }} {{ m.tries === 1 ? 'try' : 'tries' }} · {{ m.tackles }} tackles</li>
-            @if (m.analysisPercent < 100) {
-              <li class="chip-board warn has-tip" tabindex="0" aria-describedby="provisional-tip">
-                <i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Estadísticas provisorias
-                <span class="chip-tip" id="provisional-tip" role="tooltip">El entrenador todavía está terminando de cargar los datos de este partido. Tus números pueden cambiar.</span>
+            <li class="chip-board">{{ m.role === 'TITULAR' ? 'Titular' + (m.slotNumber !== null ? ' · camiseta ' + m.slotNumber : '') : 'Suplente' }}</li>
+            @if (m.tries !== null || m.tackles !== null) {
+              <li class="chip-board">
+                @if (m.tries !== null) { {{ m.tries }} {{ m.tries === 1 ? 'try' : 'tries' }} }
+                @if (m.tries !== null && m.tackles !== null) { · }
+                @if (m.tackles !== null) { {{ m.tackles }} {{ m.tackles === 1 ? 'tackle' : 'tackles' }}@if (m.tacklePercent !== null) { ({{ m.tacklePercent }} %) } }
               </li>
+            } @else if (m.analysisPercent < 100) {
+              <li class="chip-board">Tus acciones todavía se están cargando</li>
+            }
+            @if (m.analysisPercent < 100) {
+              <li class="chip-board warn"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Análisis {{ m.analysisPercent }} % · puede cambiar</li>
             }
           </ul>
         </div>
-        <div class="board-side">
-          @if (m.slotNumber !== null) {
-            <p class="jersey" aria-hidden="true">{{ m.slotNumber }}</p>
-          }
+        <div class="board-side board-side-left">
           <ng-container *ngTemplateOutlet="actions" />
+          @if (m.takeaways; as takeaways) {
+            <app-board-panel class="board-panel" label="Lo que dejó el partido">
+              @if (takeaways.lines.length > 0) {
+                <ul class="takeaways">
+                  @for (line of takeaways.lines; track line) {
+                    <li>{{ line }}</li>
+                  }
+                </ul>
+              }
+              @if (takeaways.provisionalNote) {
+                <p class="panel-muted">{{ takeaways.provisionalNote }}</p>
+              }
+            </app-board-panel>
+          }
         </div>
       }
     </div>
@@ -205,7 +329,7 @@
   <ng-template #actions>
     @if (boardAction(); as action) {
       @if (actionEnabled()) {
-        <a class="btn btn-on-board board-btn" [routerLink]="action.route">{{ action.label }}</a>
+        <a class="btn btn-on-board board-btn" [routerLink]="action.route" [queryParams]="action.queryParams">{{ action.label }}</a>
       } @else {
         <button type="button" class="btn btn-on-board board-btn" disabled>{{ action.label }}</button>
         <p class="board-offline">Requiere conexión</p>
