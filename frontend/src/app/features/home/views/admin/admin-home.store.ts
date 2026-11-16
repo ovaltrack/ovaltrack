@@ -5,6 +5,8 @@ import { ConnectivityService } from '../../../../core/services/connectivity.serv
 import { UserContextService } from '../../../../core/services/user-context.service';
 import { Match } from '../../../match/types/match.types';
 import { analysisTone, AnalysisTone } from '../../domain/analysis-coverage';
+import { clubKpis, ClubKpi } from '../../domain/club-kpis';
+import { DivisionStat, DivisionStatusRow, divisionStatusRows } from '../../domain/division-status';
 import { buildAdminBoard } from '../../domain/admin-board';
 import { rosterWindowMatches } from '../../domain/club-agenda';
 import { urgentOf } from '../../domain/club-urgent';
@@ -14,7 +16,7 @@ import { greetingFor, hudDateLabel } from '../../domain/greeting';
 import { dayLabel, formatLocalClock, parseWallClock } from '../../domain/match-time';
 import { LINEUP_WINDOW_MS, adminRules, resolvePrimaryAction } from '../../domain/primary-action';
 import { BoardModel, PrimaryAction, WidgetState, dataOf } from '../../types/home.types';
-import { AdminHomeDataService, DivisionStat, RosterCounts } from './admin-home-data.service';
+import { AdminHomeDataService, RosterCounts } from './admin-home-data.service';
 
 const CLOCK_TICK_MS = 1000;
 
@@ -96,6 +98,22 @@ export class AdminHomeStore {
       : { status: 'ready', data: items, fetchedAt: state.fetchedAt, stale: state.stale };
   });
 
+  /** Una fila por división, en el orden del club (D4); sigue el estado de las estadísticas por división. */
+  readonly statusState = computed<WidgetState<DivisionStatusRow[]>>(() => {
+    const state = this.statsState();
+    if (state.status !== 'ready') return state as WidgetState<DivisionStatusRow[]>;
+    const rows = divisionStatusRows({ now: this.now(), divisions: this.divisions(), stats: state.data, matches: this.matches() });
+    return rows.length === 0 ? { status: 'empty' } : { status: 'ready', data: rows, fetchedAt: state.fetchedAt, stale: state.stale };
+  });
+
+  /** KPIs del club; mientras no se conocen las estadísticas no se dibuja ningún número (sin ceros provisorios). */
+  readonly kpisState = computed<WidgetState<ClubKpi[]>>(() => {
+    const status = this.statusState();
+    const stats = this.statsState();
+    if (status.status !== 'ready' || stats.status !== 'ready') return status as WidgetState<ClubKpi[]>;
+    return { status: 'ready', data: clubKpis(status.data, stats.data, this.matches(), this.now()), fetchedAt: status.fetchedAt, stale: status.stale };
+  });
+
   readonly cards = computed<DivisionCard[]>(() => this.divisions().map(division => {
     const stat = this.stats().find(candidate => candidate.divisionId === division.id);
     const ofDivision = this.matches().filter(match => match.divisionId === division.id);
@@ -144,7 +162,7 @@ export class AdminHomeStore {
     ).subscribe();
 
     this.bind(() => this.data.rosters(rosterWindowMatches(this.matches(), this.now(), LINEUP_WINDOW_MS)), this.rosters);
-    this.bind(() => this.data.divisionStats(this.divisions(), this.matches()), this.statsState,
+    this.bind(() => this.data.divisionStats(this.divisions(), this.matches(), this.now()), this.statsState,
       (next, current) => !(next.status === 'loading' && current.status === 'ready'));
   }
 

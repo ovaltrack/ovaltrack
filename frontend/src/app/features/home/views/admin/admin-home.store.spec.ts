@@ -190,6 +190,28 @@ describe('AdminHomeStore', () => {
     expect(store.statsState().status).toBe('loading');
   });
 
+  it('KPIs del club: salen de las estadísticas y de los partidos del año; en error o cargando no hay números', () => {
+    matches = ready([match({ id: 'f', status: 'finished', date: '2026-10-01T15:00:00', homeScore: 10, awayScore: 3 })]);
+    const store = createStore();
+    store.reload();
+    const kpis = store.kpisState();
+    expect(kpis.status).toBe('ready');
+    if (kpis.status === 'ready') expect(kpis.data.map(kpi => [kpi.key, kpi.value])).toEqual([['players', '40'], ['matches', '1'], ['analysis', '78 %'], ['pending', '2']]);
+    injector.destroy();
+
+    stats = { status: 'loading' };
+    const loading = createStore();
+    loading.reload();
+    expect(loading.kpisState().status).toBe('loading');
+    injector.destroy();
+
+    stats = { status: 'error', message: 'No pudimos cargar esto' };
+    const failing = createStore();
+    failing.reload();
+    expect(failing.kpisState().status).toBe('error');
+    expect(failing.board().kind).toBe('club-idle');
+  });
+
   it('el encabezado resume el club y las divisiones', () => {
     const store = createStore();
     expect(store.hudSubtitle()).toBe('Puerto Madryn RC · 2 divisiones');

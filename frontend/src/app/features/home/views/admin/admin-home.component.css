@@ -9,6 +9,10 @@
   gap: 6px;
 }
 
+.s12 {
+  grid-column: span 12;
+}
+
 .s5 {
   grid-column: span 5;
 }

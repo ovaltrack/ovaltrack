@@ -14,18 +14,11 @@ import { loadActiveTypeIds } from '../../data/active-type-ids';
 import { DashboardSnapshotCache } from '../../data/dashboard-snapshot.cache';
 import { ToWidgetStateOptions, toWidgetState } from '../../data/to-widget-state';
 import { analysisCoverage } from '../../domain/analysis-coverage';
-import { lastFinishedOf } from '../../domain/division-match-state';
+import { DivisionStat } from '../../domain/division-status';
+import { lastFinishedOf, upcomingMatches } from '../../domain/division-match-state';
 import { WidgetState } from '../../types/home.types';
 
-/** Lo que el administrador ve de cada división; `null` = no se pudo leer. */
-export interface DivisionStat {
-  divisionId: string;
-  /** Entrenadores activos. */
-  staff: number | null;
-  players: number | null;
-  /** % de análisis del último partido jugado. */
-  analysisPercent: number | null;
-}
+export type { DivisionStat };
 
 export type RosterCounts = Record<string, { starters: number; substitutes: number }>;
 
@@ -57,16 +50,27 @@ export class AdminHomeDataService {
     );
   }
 
-  divisionStats(divisions: readonly Division[], matches: readonly Match[]): Observable<WidgetState<DivisionStat[]>> {
+  divisionStats(divisions: readonly Division[], matches: readonly Match[], now: Date): Observable<WidgetState<DivisionStat[]>> {
     const activeTypeIds$ = loadActiveTypeIds(this.eventTypeService).pipe(shareReplay({ bufferSize: 1, refCount: false }));
     const loads = divisions.map(division => forkJoin({
       staff: this.coachService.getByDivisionId(division.id).pipe(
         map(coaches => coaches.filter(coach => !coach.endDate).length), catchError(() => of(null))),
       players: this.playerService.getActiveByDivisionId(division.id, 1, 1).pipe(
         map(page => page.totalElements), catchError(() => of(null))),
-      analysisPercent: this.lastFinishedAnalysis(division.id, matches, activeTypeIds$)
+      analysisPercent: this.lastFinishedAnalysis(division.id, matches, activeTypeIds$),
+      roster: this.nextRoster(division.id, matches, now)
     }).pipe(map(values => ({ divisionId: division.id, ...values }))));
     return (loads.length > 0 ? forkJoin(loads) : of([] as DivisionStat[])).pipe(toWidgetState<DivisionStat[]>(this.options('divisions')));
+  }
+
+  /** Nómina del próximo partido de la división; `null` si no hay próximo partido o no se pudo leer. */
+  private nextRoster(divisionId: string, matches: readonly Match[], now: Date): Observable<{ starters: number; substitutes: number } | null> {
+    const next = upcomingMatches(matches.filter(match => match.divisionId === divisionId), now)[0];
+    if (!next) return of(null);
+    return this.rosterService.getSavedRoster(next.id).pipe(
+      map(roster => roster ? { starters: roster.startingPlayers.length, substitutes: roster.substitutePlayers.length } : null),
+      catchError(() => of(null))
+    );
   }
 
   private lastFinishedAnalysis(divisionId: string, matches: readonly Match[], activeTypeIds$: Observable<ReadonlySet<string> | null>): Observable<number | null> {

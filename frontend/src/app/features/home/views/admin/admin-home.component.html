@@ -22,6 +22,8 @@
 
   @if (divisionCount() > 0) {
     <div class="grid">
+      <app-home-kpi-row class="s12" [state]="store.kpisState()" [seasonYear]="seasonYear()" (retry)="store.retry('divisions')" />
+
       <app-home-tile class="s5" label="Bandeja del club"
                      [title]="inbox().length === 0 ? 'Todo en orden' : inbox().length + (inbox().length === 1 ? ' tarea abierta' : ' tareas abiertas')"
                      [state]="store.inboxState()" (retry)="store.retry('divisions')">
