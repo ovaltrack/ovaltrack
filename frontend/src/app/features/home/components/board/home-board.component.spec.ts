@@ -199,14 +199,14 @@ describe('HomeBoardComponent', () => {
 
   describe('player-last', () => {
     const view: PrimaryAction = { kind: 'view-my-match', label: 'Ver mi partido', route: '/player-statistics/m2', target: 'board', requiresConnection: true };
-    const last = {
+    const last: Extract<BoardModel, { kind: 'player-last' }> = {
       kind: 'player-last', matchId: 'm2', dateLabel: 'Dom 1 nov', opponent: 'DRA', ownScore: 22, opponentScore: 14, result: 'win', role: 'TITULAR',
       tries: 2, tackles: 7, tacklePercent: 88, analysisPercent: 100, slotNumber: 14,
       takeaways: { lines: ['Tu mejor partido en tackles de la temporada: 7', '2 penales cometidos · tu promedio es 1,5'], provisionalNote: null }
-    } as const;
+    };
 
     it('sin camiseta grande: la camiseta va en el chip «Titular · camiseta n» y los tackles con su efectividad', () => {
-      render(last as BoardModel, view);
+      render(last, view);
       expect(el().querySelector('.jersey')).toBeNull();
       const chips = el().querySelector('.chips')?.textContent ?? '';
       expect(chips).toContain('Titular · camiseta 14');
@@ -216,7 +216,7 @@ describe('HomeBoardComponent', () => {
     });
 
     it('«Lo que dejó el partido» lista las líneas y deja un solo primario', () => {
-      render(last as BoardModel, view);
+      render(last, view);
       const panel = el().querySelector('app-board-panel') as HTMLElement;
       expect(panel.textContent).toContain('Lo que dejó el partido');
       expect(panel.querySelectorAll('.takeaways li').length).toBe(2);
@@ -224,7 +224,7 @@ describe('HomeBoardComponent', () => {
     });
 
     it('análisis incompleto con ceros: «Tus acciones todavía se están cargando» y el chip ámbar «Análisis n % · puede cambiar»', () => {
-      render({ ...last, tries: null, tackles: null, tacklePercent: null, analysisPercent: 78, takeaways: { lines: [], provisionalNote: 'Tus acciones todavía se están cargando: estos números pueden cambiar.' } } as BoardModel, view);
+      render({ ...last, tries: null, tackles: null, tacklePercent: null, analysisPercent: 78, takeaways: { lines: [], provisionalNote: 'Tus acciones todavía se están cargando: estos números pueden cambiar.' } }, view);
       const chips = el().querySelector('.chips')?.textContent ?? '';
       expect(chips).toContain('Tus acciones todavía se están cargando');
       expect(el().querySelector('.chip-board.warn')?.textContent).toContain('Análisis 78 % · puede cambiar');
@@ -232,7 +232,7 @@ describe('HomeBoardComponent', () => {
     });
 
     it('un suplente no muestra camiseta, y sin takeaways no hay panel', () => {
-      render({ ...last, role: 'SUPLENTE', slotNumber: 20, takeaways: null } as BoardModel, view);
+      render({ ...last, role: 'SUPLENTE', slotNumber: 20, takeaways: null }, view);
       expect(el().querySelector('.chips')?.textContent).toContain('Suplente');
       expect(el().querySelector('.chips')?.textContent).not.toContain('camiseta');
       expect(el().querySelector('app-board-panel')).toBeNull();
