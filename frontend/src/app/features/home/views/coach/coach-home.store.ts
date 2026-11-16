@@ -28,7 +28,7 @@ export interface PendingItem {
   requiresConnection: boolean;
 }
 
-export type CoachWidget = 'matches' | 'debt' | 'pending' | 'form';
+export type CoachWidget = 'matches' | 'pending' | 'form';
 
 const loading = <T>(): WritableSignal<WidgetState<T>> => signal<WidgetState<T>>({ status: 'loading' });
 

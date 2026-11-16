@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, untracked
 import { RouterLink } from '@angular/router';
 import { DexieOfflineMatchReader } from '../../data/dexie-offline-match-reader';
 import { OfflineMatchReader } from '../../data/offline-match-reader';
-import { analysisTone } from '../../domain/analysis-coverage';
 import { dataOf } from '../../types/home.types';
 import { HomeBoardComponent } from '../../components/board/home-board.component';
 import { HomeHudComponent } from '../../components/hud/home-hud.component';
@@ -11,10 +10,7 @@ import { ResultPillComponent } from '../../components/ui/result-pill.component';
 import { CoachHomeDataService } from './coach-home-data.service';
 import { CoachHomeStore } from './coach-home.store';
 
-const RING_RADIUS = 52;
-const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
-
-/** Inicio del entrenador / analista: tablero y tarjetas Deuda, Pendientes y Forma. */
+/** Inicio del entrenador / analista: tablero (con la semana de juego y el análisis pendiente) y tarjetas Pendientes y Forma. */
 @Component({
   selector: 'app-coach-home',
   standalone: true,
@@ -27,15 +23,8 @@ const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
 export class CoachHomeComponent {
   readonly store = inject(CoachHomeStore);
 
-  readonly ringRadius = RING_RADIUS;
-  readonly ringLength = RING_LENGTH;
-
-  readonly debt = computed(() => dataOf(this.store.debtState()));
   readonly form = computed(() => dataOf(this.store.formState()));
   readonly pending = computed(() => dataOf(this.store.pendingState()) ?? []);
-  readonly debtTone = computed(() => analysisTone(this.debt()?.percent ?? 100));
-  readonly ringDash = computed(() => `${((this.debt()?.percent ?? 0) / 100) * RING_LENGTH} ${RING_LENGTH}`);
-  /** El botón de Deuda es el primario solo si las reglas lo eligen; si no, es outline. */
   readonly seasonYear = computed(() => this.store.now().getFullYear());
 
   constructor() {

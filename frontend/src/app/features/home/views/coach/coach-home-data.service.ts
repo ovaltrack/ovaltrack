@@ -127,7 +127,7 @@ export class CoachHomeDataService {
     );
   }
 
-  /** Deuda de análisis del último partido jugado; vacío si todavía no hubo ninguno. */
+  /** Análisis del último partido jugado (alimenta el tablero y el primario); vacío si todavía no hubo ninguno. */
   debt(matches: readonly Match[]): Observable<WidgetState<DebtData>> {
     const last = lastFinishedOf(matches);
     if (!last) return of<WidgetState<DebtData>>({ status: 'empty' });

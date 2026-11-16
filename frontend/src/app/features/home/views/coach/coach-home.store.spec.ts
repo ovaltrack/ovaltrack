@@ -138,6 +138,43 @@ describe('CoachHomeStore', () => {
     expect(store.primary()).toEqual(jasmine.objectContaining({ kind: 'complete-analysis', target: 'board' }));
   });
 
+  it('el análisis pendiente del último partido es la variante «analysis» y el primario va al tablero', () => {
+    matches = { status: 'ready', data: [match({ id: 'f1', status: 'finished', date: '2026-11-01T15:00:00', homeScore: 21, awayScore: 13 }), match({ id: 'n1', status: 'not_started', date: '2026-11-20T15:00:00' })], fetchedAt: 1, stale: false };
+    debt = { status: 'ready', data: { matchId: 'f1', opponent: 'Trelew', dateLabel: '1 nov', percent: 78, withoutPlayer: 12, minutesWithoutZone: 35 }, fetchedAt: 1, stale: false };
+    extras = { ...EMPTY_BOARD_EXTRAS, roster: { starters: 15, substitutes: 8 } };
+    const store = createStore();
+    store.reload();
+    expect(store.board()).toEqual(jasmine.objectContaining({ kind: 'analysis', matchId: 'f1', percent: 78, withoutPlayer: 12, minutesWithoutZone: 35 }));
+    expect(store.primary()).toEqual(jasmine.objectContaining({ kind: 'complete-analysis', target: 'board', queryParams: { pendientes: 1 } }));
+  });
+
+  it('Convocar: con suplentes 6/8 a menos de 72 h el tablero y el primario piden la alineación, aunque el análisis esté pendiente', () => {
+    matches = { status: 'ready', data: [match({ id: 'f1', status: 'finished', date: '2026-11-01T15:00:00' }), match({ id: 'n1', status: 'not_started', date: '2026-11-08T15:00:00' })], fetchedAt: 1, stale: false };
+    debt = { status: 'ready', data: { matchId: 'f1', opponent: 'Trelew', dateLabel: '1 nov', percent: 78, withoutPlayer: 12, minutesWithoutZone: 0 }, fetchedAt: 1, stale: false };
+    extras = { ...EMPTY_BOARD_EXTRAS, roster: { starters: 15, substitutes: 6 }, squadSize: 52 };
+    const store = createStore();
+    store.reload();
+    expect(store.board()).toEqual(jasmine.objectContaining({ kind: 'next', squadSize: 52, callUp: jasmine.objectContaining({ title: 'Armá la nómina del domingo' }) }));
+    expect(store.primary()).toEqual(jasmine.objectContaining({ kind: 'define-lineup', target: 'board' }));
+  });
+
+  it('el primario siempre cae en el tablero, en cada variante', () => {
+    const scenarios: Match[][] = [
+      [match({ status: 'in_progress', date: '2026-11-07T14:30:00' })],
+      [match({ status: 'not_started', date: '2026-11-06T20:00:00' })],
+      [match({ status: 'empty_roster', date: '2026-11-08T15:00:00' })],
+      [match({ status: 'finished', date: '2026-11-01T15:00:00' })],
+      []
+    ];
+    for (const data of scenarios) {
+      matches = { status: 'ready', data, fetchedAt: 1, stale: false };
+      const store = createStore();
+      store.reload();
+      const primary = store.primary();
+      expect(primary === null || primary.target === 'board').toBeTrue();
+    }
+  });
+
   it('pendientes: suplentes que faltan y jugadores sin dorsal', () => {
     matches = { status: 'ready', data: [match({ status: 'not_started', date: '2026-11-07T15:00:00' })], fetchedAt: 1, stale: false };
     extras = { ...EMPTY_BOARD_EXTRAS, roster: { starters: 15, substitutes: 6 } };
