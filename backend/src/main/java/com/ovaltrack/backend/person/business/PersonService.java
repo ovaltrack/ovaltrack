@@ -86,6 +86,23 @@ public class PersonService {
         return personRepository.existsByContactPhone(contactPhone.trim());
     }
 
+    /** Persona con ese correo de contacto (sin distinguir mayúsculas), en cualquier club. */
+    public Person findPersonByContactEmail(String contactEmail) {
+        if (contactEmail == null || contactEmail.isBlank()) {
+            return null;
+        }
+        return personRepository.findFirstByContactEmailIgnoreCase(contactEmail.trim()).orElse(null);
+    }
+
+    /** Persona del club con el mismo nombre, apellido (sin distinguir mayúsculas) y fecha de nacimiento. */
+    public Person findClubPersonByNameAndBirthDate(UUID clubId, String firstName, String lastName, java.time.LocalDate birthDate) {
+        if (clubId == null || firstName == null || lastName == null || birthDate == null) {
+            return null;
+        }
+        return personRepository.findFirstByClubIdAndFirstNameIgnoreCaseAndLastNameIgnoreCaseAndBirthDate(
+                clubId, firstName.trim(), lastName.trim(), birthDate).orElse(null);
+    }
+
     @Transactional
     public Person savePersonEntity(Person person) {
         return personRepository.save(person);

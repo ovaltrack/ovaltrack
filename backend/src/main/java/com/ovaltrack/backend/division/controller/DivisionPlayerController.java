@@ -17,8 +17,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import com.ovaltrack.backend.division.business.DivisionPlayerImportService;
 import com.ovaltrack.backend.division.business.DivisionPlayerService;
 import com.ovaltrack.backend.division.domain.dto.divisionplayerdto.DivisionPlayerCreationDTO;
+import com.ovaltrack.backend.division.domain.dto.divisionplayerdto.DivisionPlayerImportRequestDTO;
+import com.ovaltrack.backend.division.domain.dto.divisionplayerdto.DivisionPlayerImportResultDTO;
 import com.ovaltrack.backend.division.domain.dto.divisionplayerdto.DivisionPlayerPersonUserResponseDTO;
 import com.ovaltrack.backend.division.domain.dto.divisionplayerdto.DivisionPlayerResponseDTO;
 import com.ovaltrack.backend.division.domain.dto.divisionplayerdto.DivisionPlayerUpdateDTO;
@@ -38,6 +41,7 @@ import lombok.RequiredArgsConstructor;
 public class DivisionPlayerController {
 
     private final DivisionPlayerService divisionPlayerService;
+    private final DivisionPlayerImportService divisionPlayerImportService;
    
     @Operation(
         summary = "List a page of the active players in a division",
@@ -129,6 +133,25 @@ public class DivisionPlayerController {
             @Valid @RequestBody DivisionPlayerCreationDTO aDivisionPlayerRequest,
             Authentication authentication) {
         return ResponseEntity.ok(divisionPlayerService.saveDivisionPlayer(aDivisionPlayerRequest, authentication));
+    }
+
+    @Operation(
+        summary = "Import a division's roster in bulk",
+        description = "Creates the players of a spreadsheet in the division. Each row is resolved on its own: "
+                + "IMPORTED, DUPLICATE (already in the club or repeated in the file) or INVALID (with the column and reason). "
+                + "With dryRun=true nothing is created and valid rows come back as READY (preview)."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Rows processed; the body reports the result of each one."),
+        @ApiResponse(responseCode = "403", description = "Only the club admin or an assigned coach of the division can import."),
+        @ApiResponse(responseCode = "409", description = "The division does not exist or the request is empty or too large.")
+    })
+    @PostMapping("/import")
+    @PreAuthorize("hasAnyRole('ADMIN_CLUB', 'COACH_ANALYST')")
+    public ResponseEntity<DivisionPlayerImportResultDTO> importDivisionPlayers(
+            @Valid @RequestBody DivisionPlayerImportRequestDTO request,
+            Authentication authentication) {
+        return ResponseEntity.ok(divisionPlayerImportService.importPlayers(request, authentication));
     }
 
     @Operation(
