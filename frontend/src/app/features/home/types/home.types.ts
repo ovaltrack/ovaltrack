@@ -69,9 +69,19 @@ export interface BoardWeek {
   steps: GameWeekStep[];
 }
 
+/** Textos de la etapa Convocar del próximo partido: «Armá la nómina del sábado». */
+export interface CallUpModel {
+  title: string;
+  /** "vs CRC · Sáb 21 nov · 15:30". */
+  subtitle: string;
+  dayLabel: string;
+  /** "En 2 días · vs CRC". */
+  inLabel: string;
+}
+
 /** Contenido del tablero verde; `kind` decide la variante que dibuja `home-board`. */
 export type BoardModel =
-  | { kind: 'next'; matchId: string; divisionName: string; opponent: string; city: string | null; dateLabel: string; time: string; starters: number; substitutes: number; rosterGaps: RosterGaps; readyOffline: boolean; week: BoardWeek | null }
+  | { kind: 'next'; matchId: string; divisionName: string; opponent: string; city: string | null; dateLabel: string; time: string; starters: number; substitutes: number; rosterGaps: RosterGaps; readyOffline: boolean; squadSize: number | null; callUp: CallUpModel | null; week: BoardWeek | null }
   | { kind: 'analysis'; matchId: string; divisionName: string; title: string; subtitle: string; percent: number; withoutPlayer: number; minutesWithoutZone: number | null; after: { title: string; detail: string } | null; week: BoardWeek | null }
   | { kind: 'match-day'; matchId: string; divisionName: string; opponent: string; startsAt: Date; starters: number; substitutes: number; week: BoardWeek | null }
   | { kind: 'live-here'; matchId: string; opponent: string; periodLabel: string; ownScore: number; opponentScore: number; halftime: boolean; recent: LiveEventLine[]; week: BoardWeek | null }

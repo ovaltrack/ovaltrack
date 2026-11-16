@@ -305,6 +305,13 @@
   font-size: 17px;
 }
 
+.panel-time {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 56px;
+  line-height: 1;
+}
+
 .panel-muted {
   font-size: 13.5px;
   color: var(--on-board-muted);
@@ -407,6 +414,10 @@
   }
 
   .board-time {
+    font-size: 44px;
+  }
+
+  .panel-time {
     font-size: 44px;
   }
 

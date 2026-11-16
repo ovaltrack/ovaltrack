@@ -1,6 +1,6 @@
 import { Match } from '../../match/types/match.types';
 import { shortTeamName } from '../../match/post-match/utils/zone-grid';
-import { BoardModel, BoardWeek, LiveEventLine } from '../types/home.types';
+import { BoardModel, BoardWeek, CallUpModel, LiveEventLine } from '../types/home.types';
 import { gameWeek } from './game-week';
 import { rosterGaps } from './roster-gaps';
 import { MATCH_DAY_WINDOW_MS } from './countdown';
@@ -20,6 +20,8 @@ export interface CoachBoardContext {
   recent: readonly LiveEventLine[];
   roster: { starters: number; substitutes: number } | null;
   readyOffline: boolean;
+  /** Jugadores activos de la división, para «n en el plantel»; `null` si no se sabe. */
+  squadSize: number | null;
   /** Análisis del último partido jugado; `null` si no hay o no se pudo leer. */
   analysis: { percent: number; withoutPlayer: number; minutesWithoutZone: number | null } | null;
 }
@@ -128,11 +130,19 @@ export function buildCoachBoard(ctx: CoachBoardContext): BoardModel {
   if (next.status === 'not_started' && msUntil(start, ctx.now) < MATCH_DAY_WINDOW_MS) {
     return { kind: 'match-day', matchId: next.id, divisionName: ctx.divisionName, opponent: opponentName(next), startsAt: start, starters, substitutes, week };
   }
+  const callUp: CallUpModel | null = week?.stage === 'call-up'
+    ? {
+        title: `Armá la nómina del ${weekdayName(start)}`,
+        subtitle: `vs ${opponentName(next)} · ${dayLabel(start)} · ${clockLabel(start)}`,
+        dayLabel: dayLabel(start),
+        inLabel: `${daysUntilLabel(start, ctx.now)} · vs ${opponentName(next)}`
+      }
+    : null;
   const label = relativeMatchLabel(start, ctx.now);
   const parts = label.split(' · ');
   return {
     kind: 'next', matchId: next.id, divisionName: ctx.divisionName, opponent: opponentName(next), city: next.opponent.city,
     dateLabel: parts.slice(0, -1).join(' · '), time: parts[parts.length - 1], starters, substitutes,
-    rosterGaps: rosterGaps(ctx.roster, next.status), readyOffline: ctx.readyOffline, week
+    rosterGaps: rosterGaps(ctx.roster, next.status), readyOffline: ctx.readyOffline, squadSize: ctx.squadSize, callUp, week
   };
 }

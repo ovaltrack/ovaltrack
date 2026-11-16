@@ -48,12 +48,12 @@ describe('coachRules', () => {
   });
 
   it('2/3 · partido en not_started con 0 titulares cargados: definir alineación, no capturar', () => {
-    const action = resolve(coach({ matches: [match('m2', 'not_started', at(1, 14))], nextRoster: { starters: 0 } }));
+    const action = resolve(coach({ matches: [match('m2', 'not_started', at(1, 14))], nextRoster: { starters: 0, substitutes: 0 } }));
     expect(action).toEqual(jasmine.objectContaining({ kind: 'define-lineup', route: '/selection-roster/m2' }));
   });
 
   it('2 · con 15 titulares cargados ofrece capturar', () => {
-    const action = resolve(coach({ matches: [match('m2', 'not_started', at(1, 14))], nextRoster: { starters: 15 } }));
+    const action = resolve(coach({ matches: [match('m2', 'not_started', at(1, 14))], nextRoster: { starters: 15, substitutes: 8 } }));
     expect(action?.kind).toBe('capture-live');
   });
 
@@ -65,6 +65,21 @@ describe('coachRules', () => {
   it('3 · sin nómina a más de 72 h no es primario', () => {
     const action = resolve(coach({ matches: [match('m3', 'empty_roster', at(5, 14))] }));
     expect(action).toBeNull();
+  });
+
+  it('3 · con 15 titulares pero suplentes 3/8 a más de 24 h: definir alineación (Convocar)', () => {
+    const action = resolve(coach({ matches: [match('m2', 'not_started', at(2, 14))], nextRoster: { starters: 15, substitutes: 3 } }));
+    expect(action).toEqual(jasmine.objectContaining({ kind: 'define-lineup', route: '/selection-roster/m2' }));
+  });
+
+  it('2 · con suplentes incompletos a menos de 24 h se ofrece capturar (Jugar le gana a Convocar)', () => {
+    const action = resolve(coach({ matches: [match('m2', 'not_started', at(0, 20))], nextRoster: { starters: 15, substitutes: 3 } }));
+    expect(action?.kind).toBe('capture-live');
+  });
+
+  it('3 · una nómina que no se pudo leer en un not_started no pide alineación', () => {
+    const action = resolve(coach({ matches: [match('m2', 'not_started', at(2, 14))], nextRoster: null }));
+    expect(action?.kind).not.toBe('define-lineup');
   });
 
   it('4 · último partido con análisis incompleto: completar análisis en el tablero', () => {

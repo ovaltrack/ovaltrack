@@ -2,6 +2,7 @@ import { PrimaryAction, STARTERS_TARGET } from '../types/home.types';
 import { MATCH_DAY_WINDOW_MS } from './countdown';
 import { RuleMatch, divisionMatchState, upcomingMatches } from './division-match-state';
 import { msUntil, parseWallClock } from './match-time';
+import { RosterCount, needsCallUp, rosterGaps } from './roster-gaps';
 
 /** Una regla devuelve la acción primaria si aplica, o `null` para pasar a la siguiente. */
 export type PrimaryRule<Ctx> = (ctx: Ctx) => PrimaryAction | null;
@@ -47,7 +48,7 @@ export interface CoachRuleContext {
   /** Partidos de la división activa. */
   matches: readonly RuleMatch[];
   /** Nómina del próximo partido sin iniciar de la división (el primero de `upcomingMatches`). */
-  nextRoster?: KnownRoster;
+  nextRoster?: RosterCount | null;
   /** Partido que captura este dispositivo (`LiveMatchSource`), si hay uno. */
   captureMatchId: string | null;
   /** Último partido FINISHED con su % de análisis. */
@@ -74,12 +75,12 @@ export const coachRules: readonly PrimaryRule<CoachRuleContext>[] = [
     if (!next || !start || msUntil(start, ctx.now) >= MATCH_DAY_WINDOW_MS || lineupIncomplete(next, ctx.nextRoster)) return null;
     return { kind: 'capture-live', label: 'Capturar en vivo', route: `/live-capture/${next.id}`, target: 'board', requiresConnection: false };
   },
-  // 3. Próximo partido con la alineación incompleta a 72 h o menos.
+  // 3. Próximo partido a 72 h o menos sin nómina o con menos de 8 suplentes (la etapa Convocar de la semana de juego).
   ctx => {
     const { live, next } = stateOf(ctx);
     if (live) return null;
     const start = next && startOf(next);
-    return next && start && lineupIncomplete(next, ctx.nextRoster) && msUntil(start, ctx.now) <= LINEUP_WINDOW_MS ? defineLineup(next.id) : null;
+    return next && start && needsCallUp(rosterGaps(ctx.nextRoster ?? null, next.status)) && msUntil(start, ctx.now) <= LINEUP_WINDOW_MS ? defineLineup(next.id) : null;
   },
   // 4. El último partido jugado tiene jugadas sin jugador (se abre Eventos con «Solo sin jugador») o minutos sin zona (se abre Zonas).
   ctx => {

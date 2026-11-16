@@ -106,6 +106,7 @@ export class CoachHomeStore {
       recent: extras.recent,
       roster: extras.roster,
       readyOffline: extras.readyOffline,
+      squadSize: extras.squadSize,
       analysis: this.analysis()
     });
   });

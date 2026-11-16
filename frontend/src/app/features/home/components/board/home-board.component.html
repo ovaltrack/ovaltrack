@@ -13,7 +13,7 @@
         <app-board-steps class="board-week" [label]="w.label" [steps]="w.steps" />
       }
 
-      @if (m.kind === 'next') {
+      @if (m.kind === 'next' && !m.callUp) {
         <div class="board-main">
           <p class="label-mono on-board">Próximo partido · {{ m.divisionName }}</p>
           <h2 class="board-title"><span class="board-vs">vs</span> {{ m.opponent }}</h2>
@@ -39,6 +39,37 @@
           <p class="board-time">{{ m.time }}</p>
           <ng-container *ngTemplateOutlet="actions" />
           <a class="btn btn-on-board-outline board-btn" [routerLink]="['/selection-roster', m.matchId]">Ver alineación</a>
+        </div>
+      }
+
+      @if (m.kind === 'next' && m.callUp; as callUp) {
+        <div class="board-main">
+          <h2 class="board-title">{{ callUp.title }}</h2>
+          <p class="board-meta">{{ callUp.subtitle }}</p>
+          <ul class="chips">
+            @if (m.rosterGaps.kind !== 'complete' && m.rosterGaps.kind !== 'unknown') {
+              <li class="chip-board warn"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ m.rosterGaps.label }}</li>
+            }
+            @if (m.squadSize !== null) {
+              <li class="chip-board">{{ m.squadSize }} en el plantel</li>
+            }
+          </ul>
+          <div class="board-actions">
+            <ng-container *ngTemplateOutlet="actions" />
+          </div>
+          <p class="board-meta">Guardar la nómina requiere conexión.</p>
+        </div>
+        <div class="board-side board-side-left">
+          <app-board-panel class="board-panel" label="Próximo partido">
+            <p class="panel-time">{{ m.time }}</p>
+            <p class="panel-strong">{{ callUp.dayLabel }}</p>
+            <p class="panel-muted">{{ callUp.inLabel }}</p>
+          </app-board-panel>
+          @if (m.rosterGaps.kind !== 'complete' && m.rosterGaps.kind !== 'unknown') {
+            <app-board-panel class="board-panel" label="Faltan en la nómina">
+              <p>{{ m.rosterGaps.missing }}</p>
+            </app-board-panel>
+          }
         </div>
       }
 

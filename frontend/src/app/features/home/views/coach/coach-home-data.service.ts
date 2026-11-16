@@ -46,11 +46,13 @@ export interface FormData {
 export interface BoardExtras {
   roster: { starters: number; substitutes: number } | null;
   readyOffline: boolean;
+  /** Jugadores activos de la división del próximo partido. */
+  squadSize: number | null;
   progress: CaptureProgress | null;
   recent: LiveEventLine[];
 }
 
-export const EMPTY_BOARD_EXTRAS: BoardExtras = { roster: null, readyOffline: false, progress: null, recent: [] };
+export const EMPTY_BOARD_EXTRAS: BoardExtras = { roster: null, readyOffline: false, squadSize: null, progress: null, recent: [] };
 
 const JERSEY_PAGE_SIZE = 200;
 const RECENT_EVENTS = 3;
@@ -103,6 +105,9 @@ export class CoachHomeDataService {
           catchError(() => of(null)))
       : of(null);
     const ready$ = next ? from(this.reader.isReadyOffline(next)) : of(false);
+    const squad$ = next
+      ? this.playerService.getActiveByDivisionId(next.divisionId, 1, 1).pipe(map(page => page.totalElements), catchError(() => of(null)))
+      : of(null);
     const live$ = capture
       ? from(Promise.all([
           this.reader.captureProgress(capture.id),
@@ -116,8 +121,8 @@ export class CoachHomeDataService {
           }))
         })))
       : of({ progress: null, recent: [] as LiveEventLine[] });
-    return forkJoin({ roster: roster$, readyOffline: ready$, live: live$ }).pipe(
-      map(({ roster, readyOffline, live }) => ({ roster, readyOffline, progress: live.progress, recent: live.recent })),
+    return forkJoin({ roster: roster$, readyOffline: ready$, squadSize: squad$, live: live$ }).pipe(
+      map(({ roster, readyOffline, squadSize, live }) => ({ roster, readyOffline, squadSize, progress: live.progress, recent: live.recent })),
       catchError(() => of(EMPTY_BOARD_EXTRAS))
     );
   }

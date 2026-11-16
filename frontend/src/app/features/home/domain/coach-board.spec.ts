@@ -11,7 +11,7 @@ describe('coach-board', () => {
   });
   const context = (matches: Match[], overrides: Partial<CoachBoardContext> = {}): CoachBoardContext => ({
     now, divisionName: 'Superior', matches, captureMatchId: null, progress: null, recent: [],
-    roster: { starters: 15, substitutes: 6 }, readyOffline: true, analysis: null, ...overrides
+    roster: { starters: 15, substitutes: 6 }, readyOffline: true, squadSize: 52, analysis: null, ...overrides
   });
 
   it('partido en curso que captura este dispositivo: live-here con período y reloj', () => {
@@ -95,6 +95,29 @@ describe('coach-board', () => {
 
     it('sin partido por jugar ni análisis pendiente no hay semana', () => {
       expect(stages(buildCoachBoard(context([match({ status: 'finished', date: '2026-11-01T15:00:00' })])))).toBeNull();
+    });
+  });
+
+  describe('variante Convocar (next con callUp)', () => {
+    it('sin nómina a 72 h o menos: «Armá la nómina del sábado» con rival, fecha, hora y días que faltan', () => {
+      const board = buildCoachBoard(context([match({ status: 'empty_roster', date: '2026-11-08T15:30:00' })], { roster: null }));
+      expect(board).toEqual(jasmine.objectContaining({
+        kind: 'next', squadSize: 52, rosterGaps: jasmine.objectContaining({ kind: 'none', missing: '15 titulares y hasta 8 suplentes' }),
+        callUp: { title: 'Armá la nómina del domingo', subtitle: 'vs Trelew · Dom 8 nov · 15:30', dayLabel: 'Dom 8 nov', inLabel: 'En 2 días · vs Trelew' }
+      }));
+    });
+
+    it('con suplentes 3/8 también es Convocar, con los huecos', () => {
+      const board = buildCoachBoard(context([match({ status: 'not_started', date: '2026-11-08T15:30:00' })], { roster: { starters: 15, substitutes: 3 } }));
+      expect(board).toEqual(jasmine.objectContaining({ kind: 'next', rosterGaps: jasmine.objectContaining({ kind: 'substitutes', count: 5, missing: '5 suplentes' }) }));
+      expect(board.kind === 'next' && board.callUp?.title).toBe('Armá la nómina del domingo');
+    });
+
+    it('con nómina completa o a más de 72 h no es Convocar', () => {
+      const full = buildCoachBoard(context([match({ status: 'not_started', date: '2026-11-08T15:30:00' })], { roster: { starters: 15, substitutes: 8 } }));
+      const far = buildCoachBoard(context([match({ status: 'empty_roster', date: '2026-11-14T15:30:00' })], { roster: null }));
+      expect(full.kind === 'next' && full.callUp).toBeNull();
+      expect(far.kind === 'next' && far.callUp).toBeNull();
     });
   });
 

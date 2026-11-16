@@ -10,7 +10,7 @@ describe('HomeBoardComponent', () => {
   const lineup: PrimaryAction = { kind: 'define-lineup', label: 'Definir alineación', route: '/selection-roster/m1', target: 'board', requiresConnection: true };
   const next: BoardModel = {
     kind: 'next', matchId: 'm1', divisionName: 'Superior', opponent: 'Trelew RC', city: null,
-    dateLabel: 'Sáb 7 nov · mañana', time: '14:30', starters: 15, substitutes: 6, rosterGaps: { kind: 'substitutes', count: 2, label: 'Suplentes 6/8', missing: '2 suplentes' }, readyOffline: true, week: null
+    dateLabel: 'Sáb 7 nov · mañana', time: '14:30', starters: 15, substitutes: 6, rosterGaps: { kind: 'substitutes', count: 2, label: 'Suplentes 6/8', missing: '2 suplentes' }, readyOffline: true, squadSize: null, callUp: null, week: null
   };
 
   const render = (model: BoardModel, primary: PrimaryAction | null, online = true): void => {
@@ -79,6 +79,30 @@ describe('HomeBoardComponent', () => {
     }, null);
     expect(el().querySelector('app-board-panel')).toBeNull();
     expect(el().textContent).not.toContain('sin jugador');
+  });
+
+  it('Convocar: título, chips de lo que falta, plantel, nota de conexión y panel «Faltan en la nómina»', () => {
+    render({
+      ...next, squadSize: 52, rosterGaps: { kind: 'substitutes', count: 5, label: 'Suplentes 3/8', missing: '5 suplentes' },
+      callUp: { title: 'Armá la nómina del sábado', subtitle: 'vs CRC · Sáb 21 nov · 15:30', dayLabel: 'Sáb 21 nov', inLabel: 'En 2 días · vs CRC' }
+    } as BoardModel, lineup);
+    expect(el().textContent).toContain('Armá la nómina del sábado');
+    expect(el().textContent).toContain('Suplentes 3/8');
+    expect(el().textContent).toContain('52 en el plantel');
+    expect(el().textContent).toContain('Guardar la nómina requiere conexión.');
+    const panels = Array.from(el().querySelectorAll('app-board-panel')).map(panel => panel.textContent ?? '');
+    expect(panels.some(text => text.includes('Próximo partido') && text.includes('En 2 días · vs CRC'))).toBeTrue();
+    expect(panels.some(text => text.includes('Faltan en la nómina') && text.includes('5 suplentes'))).toBeTrue();
+    expect(el().querySelectorAll('.btn-on-board').length).toBe(1);
+  });
+
+  it('Convocar sin conexión: «Definir alineación» deshabilitado con «Requiere conexión»', () => {
+    render({
+      ...next, callUp: { title: 'Armá la nómina del sábado', subtitle: 'vs CRC', dayLabel: 'Sáb 21 nov', inLabel: 'En 2 días · vs CRC' },
+      rosterGaps: { kind: 'none', label: 'Sin nómina', missing: '15 titulares y hasta 8 suplentes' }
+    } as BoardModel, lineup, false);
+    expect(el().querySelector<HTMLButtonElement>('button.btn-on-board')?.disabled).toBeTrue();
+    expect(el().textContent).toContain('Requiere conexión');
   });
 
   it('sin semana no dibuja pasos', () => {
