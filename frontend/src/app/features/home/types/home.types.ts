@@ -66,7 +66,7 @@ export type BoardModel =
   | { kind: 'club-day'; title: string; label: string; items: ClubDayTimelineItem[]; nowMinute: number | null }
   | { kind: 'club-idle'; nextLabel: string | null }
   | { kind: 'team-idle'; divisionName: string; last: { opponent: string; dateLabel: string; ownScore: number; opponentScore: number; result: 'win' | 'loss' | 'draw' } }
-  | { kind: 'player-last'; matchId: string; dateLabel: string; opponent: string; ownScore: number; opponentScore: number; result: 'win' | 'loss' | 'draw'; role: 'TITULAR' | 'SUPLENTE'; tries: number; tackles: number; analysisPercent: number; slotNumber: number | null };
+  | { kind: 'player-last'; matchId: string; dateLabel: string; opponent: string; ownScore: number; opponentScore: number; result: 'win' | 'loss' | 'draw'; role: 'TITULAR' | 'SUPLENTE'; tries: number | null; tackles: number | null; analysisPercent: number; slotNumber: number | null };
 
 export const STARTERS_TARGET = 15;
 export const SUBSTITUTES_TARGET = 8;

@@ -34,9 +34,14 @@ export class PlayerHomeStore {
   readonly primary = computed<PrimaryAction | null>(() =>
     resolvePrimaryAction(playerRules, { lastMatchId: this.summary()?.last.matchId ?? null }));
 
+  private readonly division = computed(() => this.userContext.activeDivisions()[0]?.name);
+
+  /** "M18 · 2026": rótulo de la tarjeta de temporada. */
+  readonly seasonLabel = computed(() => [this.division(), this.now().getFullYear()].filter(Boolean).join(' · '));
+
   /** "M18 · Puerto Madryn RC": la división sale del contexto del usuario. */
   readonly hudSubtitle = computed(() => {
-    const division = this.userContext.activeDivisions()[0]?.name;
+    const division = this.division();
     const club = this.userContext.currentClub()?.name;
     return [division, club].filter(Boolean).join(' · ');
   });

@@ -183,11 +183,17 @@
               {{ m.result === 'win' ? 'Ganado' : m.result === 'loss' ? 'Perdido' : 'Empatado' }}
             </li>
             <li class="chip-board">{{ m.role === 'TITULAR' ? 'Titular' : 'Suplente' }}</li>
-            <li class="chip-board">{{ m.tries }} {{ m.tries === 1 ? 'try' : 'tries' }} · {{ m.tackles }} tackles</li>
+            @if (m.tries !== null || m.tackles !== null) {
+              <li class="chip-board">
+                @if (m.tries !== null) { {{ m.tries }} {{ m.tries === 1 ? 'try' : 'tries' }} }
+                @if (m.tries !== null && m.tackles !== null) { · }
+                @if (m.tackles !== null) { {{ m.tackles }} {{ m.tackles === 1 ? 'tackle' : 'tackles' }} }
+              </li>
+            }
             @if (m.analysisPercent < 100) {
               <li class="chip-board warn has-tip" tabindex="0" aria-describedby="provisional-tip">
                 <i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Estadísticas provisorias
-                <span class="chip-tip" id="provisional-tip" role="tooltip">El entrenador todavía está terminando de cargar los datos de este partido. Tus números pueden cambiar.</span>
+                <span class="chip-tip" id="provisional-tip" role="tooltip">Tus acciones todavía se están cargando. Tus números pueden cambiar.</span>
               </li>
             }
           </ul>

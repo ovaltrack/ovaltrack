@@ -12,8 +12,9 @@ export interface PlayerLastMatch {
   opponentScore: number;
   result: 'win' | 'loss' | 'draw';
   role: 'TITULAR' | 'SUPLENTE';
-  tries: number;
-  tackles: number;
+  /** `null` mientras el análisis está incompleto y todavía no hay ninguno: un 0 ahí es solo "no cargado". */
+  tries: number | null;
+  tackles: number | null;
   slotNumber: number | null;
   /** % de jugadas del partido con jugador asignado. */
   analysisPercent: number;
@@ -37,6 +38,10 @@ export interface PlayerSummary {
 }
 
 export const PLAYER_LAST_COUNT = 5;
+
+/** Con el análisis incompleto, un 0 no es un dato: puede ser una acción que todavía nadie asignó. */
+const provisionalZero = (value: number, analysisPercent: number): number | null =>
+  value === 0 && analysisPercent < 100 ? null : value;
 
 const count = (stat: PlayerMatchStatistic, code: string) => valueByCode(stat.stat, stat.columns, code).count;
 
@@ -65,8 +70,8 @@ export function buildPlayerSummary(statistics: readonly PlayerMatchStatistic[], 
       opponentScore: match.awayScore,
       result: toResult(match),
       role: match.role,
-      tries: count(latest, 'TRY'),
-      tackles,
+      tries: provisionalZero(count(latest, 'TRY'), analysisPercent),
+      tackles: provisionalZero(tackles, analysisPercent),
       slotNumber: match.slotNumber,
       analysisPercent
     },

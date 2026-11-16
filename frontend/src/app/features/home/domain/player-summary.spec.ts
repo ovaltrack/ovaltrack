@@ -33,6 +33,21 @@ describe('buildPlayerSummary', () => {
     });
   });
 
+  it('con el análisis incompleto un 0 no es un dato: tries y tackles quedan en null', () => {
+    const summary = buildPlayerSummary([entry('m2', '2026-11-01T15:00:00', 22, 14, {})], 78, now);
+    expect(summary?.last).toEqual(jasmine.objectContaining({ tries: null, tackles: null, analysisPercent: 78 }));
+  });
+
+  it('con el análisis incompleto los valores mayores que 0 se muestran', () => {
+    const summary = buildPlayerSummary([entry('m2', '2026-11-01T15:00:00', 22, 14, { tries: 2 })], 78, now);
+    expect(summary?.last).toEqual(jasmine.objectContaining({ tries: 2, tackles: null }));
+  });
+
+  it('con el análisis completo el 0 es un dato', () => {
+    const summary = buildPlayerSummary([entry('m2', '2026-11-01T15:00:00', 22, 14, {})], 100, now);
+    expect(summary?.last).toEqual(jasmine.objectContaining({ tries: 0, tackles: 0 }));
+  });
+
   it('la temporada suma solo el año en curso', () => {
     const summary = buildPlayerSummary([
       entry('m3', '2026-03-01T15:00:00', 10, 12, { tries: 0, made: 4, missed: 1, points: 0 }, 'SUPLENTE'),
