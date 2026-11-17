@@ -1,5 +1,6 @@
 import { When, Then } from '@cucumber/cucumber';
 import assert from 'node:assert/strict';
+import { getUserToken } from '../../support/auth_helper.js';
 import { MISSING_UUID } from '../../support/ids.js';
 import { makeHttpRequest } from '../../support/httpRequest.js';
 import { getDivisionStarters, saveRoster } from '../../support/match_helper.js';
@@ -32,6 +33,27 @@ When('intenta guardar un plantel con dos titulares con el mismo número', async 
 When('intenta guardar un plantel con un titular que no pertenece a la division', async function () {
   const starters = await getDivisionStarters(this.match.divisionId, this.token);
   await saveStartersRoster.call(this, [...starters.slice(0, -1), { ...starters.at(-1), playerId: MISSING_UUID }]);
+});
+
+// <==================== Acceso desde otro club ====================>
+
+const loginAsOtherClubAdmin = async (email, contraseña) => {
+  const token = await getUserToken(email, contraseña);
+  assert.ok(token, `Fallo de inicio de sesión para ${email}`);
+  return token;
+};
+
+When('el administrador del club con email {string} y contraseña {string} intenta consultar la nómina del partido', async function (email, contraseña) {
+  this.response = await makeHttpRequest('GET', `matches/${this.match.id}/roster`, null, await loginAsOtherClubAdmin(email, contraseña));
+});
+
+When('el administrador del club con email {string} y contraseña {string} intenta consultar el detalle de la nómina del partido', async function (email, contraseña) {
+  this.response = await makeHttpRequest('GET', `matches/${this.match.id}/roster/players`, null, await loginAsOtherClubAdmin(email, contraseña));
+});
+
+When('el administrador del club con email {string} y contraseña {string} intenta guardar la nómina del partido', async function (email, contraseña) {
+  const titulares = await getDivisionStarters(this.match.divisionId, this.token);
+  this.response = await saveRoster(this.match.id, { titulares, suplentes: [] }, await loginAsOtherClubAdmin(email, contraseña));
 });
 
 // <==================== Consultar la nómina ====================>

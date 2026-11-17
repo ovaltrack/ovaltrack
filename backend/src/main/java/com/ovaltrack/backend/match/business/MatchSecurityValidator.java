@@ -24,6 +24,11 @@ public class MatchSecurityValidator {
     private final ClubService clubService;
     private final DivisionCoachRepository divisionCoachRepository;
 
+    private static final String MANAGE_DENIED_MESSAGE =
+            "Acceso denegado: solo el entrenador asignado o el administrador del club pueden gestionar este partido";
+
+    private static final String VIEW_DENIED_MESSAGE = "Acceso denegado: el partido no pertenece a su club";
+
     public void validateCanManageMatch(Match match, Authentication authentication) {
         if (match == null) {
             return;
@@ -34,17 +39,7 @@ public class MatchSecurityValidator {
             return;
         }
 
-        Club userClub = clubService.findClubEntityForAuthenticatedUser(authentication);
-        if (match.getDivision() == null || match.getDivision().getClub() == null) {
-            throw new AccessDeniedException(
-                    "Acceso denegado: solo el entrenador asignado o el administrador del club pueden gestionar este partido");
-        }
-
-        UUID matchClubId = match.getDivision().getClub().getId();
-        if (userClub == null || !userClub.getId().equals(matchClubId)) {
-            throw new AccessDeniedException(
-                    "Acceso denegado: solo el entrenador asignado o el administrador del club pueden gestionar este partido");
-        }
+        validateMatchBelongsToUserClub(match, authentication, MANAGE_DENIED_MESSAGE);
 
         if (user.getRole() == UserRole.ADMIN_CLUB) {
             return;
@@ -57,8 +52,33 @@ public class MatchSecurityValidator {
             }
         }
 
-        throw new AccessDeniedException(
-                "Acceso denegado: solo el entrenador asignado o el administrador del club pueden gestionar este partido");
+        throw new AccessDeniedException(MANAGE_DENIED_MESSAGE);
+    }
+
+    /** Solo exige que el partido sea del club del usuario; no pide ser entrenador ni administrador. */
+    public void validateCanViewMatch(Match match, Authentication authentication) {
+        if (match == null) {
+            return;
+        }
+
+        User user = getAuthenticatedUser(authentication);
+        if (user.getRole() == UserRole.ADMIN_OVALTRACK) {
+            return;
+        }
+
+        validateMatchBelongsToUserClub(match, authentication, VIEW_DENIED_MESSAGE);
+    }
+
+    private void validateMatchBelongsToUserClub(Match match, Authentication authentication, String deniedMessage) {
+        Club userClub = clubService.findClubEntityForAuthenticatedUser(authentication);
+        if (match.getDivision() == null || match.getDivision().getClub() == null) {
+            throw new AccessDeniedException(deniedMessage);
+        }
+
+        UUID matchClubId = match.getDivision().getClub().getId();
+        if (userClub == null || !userClub.getId().equals(matchClubId)) {
+            throw new AccessDeniedException(deniedMessage);
+        }
     }
 
     private User getAuthenticatedUser(Authentication authentication) {

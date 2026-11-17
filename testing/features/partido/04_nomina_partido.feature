@@ -54,3 +54,23 @@ Característica: Nómina de un partido
     Y que el partido está en curso
     Cuando intenta guardar el plantel con 15 titulares de la division
     Entonces el sistema responde con 409 y "No se puede modificar el plantel después de iniciar el partido"
+
+
+  Escenario: Un administrador de otro club no puede consultar la nómina del partido
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Y que existe un partido programado para la división "Primera" contra "Patoruzú Rugby Club"
+    Cuando el administrador del club con email "admin_multiclub@test.com" y contraseña "PassSegura123!" intenta consultar la nómina del partido
+    Entonces el sistema responde con 403 y "Acceso denegado: el partido no pertenece a su club"
+
+  Escenario: Un administrador de otro club no puede consultar el detalle de la nómina del partido
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Y que existe un partido programado para la división "Primera" contra "Patoruzú Rugby Club"
+    Cuando el administrador del club con email "admin_multiclub@test.com" y contraseña "PassSegura123!" intenta consultar el detalle de la nómina del partido
+    Entonces el sistema responde con 403 y "Acceso denegado: el partido no pertenece a su club"
+
+  Escenario: Un administrador de otro club no puede guardar la nómina del partido
+    Dado que el coach con email "felipe.conte@test.com" y contraseña "PassSegura123!" ha iniciado sesión
+    Y que existe un partido programado para la división "Primera" contra "Patoruzú Rugby Club"
+    Cuando el administrador del club con email "admin_multiclub@test.com" y contraseña "PassSegura123!" intenta guardar la nómina del partido
+    Entonces el sistema responde con 403 y "Acceso denegado: solo el entrenador asignado o el administrador del club pueden gestionar este partido"
+    Y la nómina del partido tiene 0 titulares y 0 suplentes

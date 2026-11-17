@@ -301,11 +301,12 @@ public class MatchService {
 
     @Transactional
     public void saveMatchRoster(UUID matchId, List<MatchRosterEntryDTO> titulares,
-            List<MatchRosterEntryDTO> suplentes) {
+            List<MatchRosterEntryDTO> suplentes, Authentication authentication) {
         Match match = findMatchEntityByIdForUpdate(matchId);
         if (match == null) {
             throw new EntityNotFoundException("Partido no encontrado");
         }
+        matchSecurityValidator.validateCanManageMatch(match, authentication);
         if (match.getStatus() == MatchStatus.IN_PROGRESS
                 || match.getStatus() == MatchStatus.HALFTIME
                 || match.getStatus() == MatchStatus.FINISHED
@@ -432,6 +433,12 @@ public class MatchService {
     }
 
     @Transactional(readOnly = true)
+    public RosterDTO getSavedRoster(UUID matchId, Authentication authentication) {
+        validateCanViewMatch(matchId, authentication);
+        return getSavedRoster(matchId);
+    }
+
+    @Transactional(readOnly = true)
     public RosterDTO getSavedRoster(UUID matchId) {
         List<MatchPlayer> roster = List.copyOf(matchPlayerRepository.findRosterByMatchIds(List.of(matchId)));
 
@@ -446,6 +453,20 @@ public class MatchService {
                 .toList();
 
         return new RosterDTO(startingPlayers, substitutePlayers);
+    }
+
+    @Transactional(readOnly = true)
+    public List<MatchRosterPlayerDTO> getMatchRosterPlayers(UUID matchId, Authentication authentication) {
+        validateCanViewMatch(matchId, authentication);
+        return getMatchRosterPlayers(matchId);
+    }
+
+    private void validateCanViewMatch(UUID matchId, Authentication authentication) {
+        Match match = findMatchEntityById(matchId);
+        if (match == null) {
+            throw new EntityNotFoundException("Partido no encontrado");
+        }
+        matchSecurityValidator.validateCanViewMatch(match, authentication);
     }
 
     @Transactional(readOnly = true)
