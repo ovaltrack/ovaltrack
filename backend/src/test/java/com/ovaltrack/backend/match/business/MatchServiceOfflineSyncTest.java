@@ -50,6 +50,9 @@ class MatchServiceOfflineSyncTest {
     @Mock
     private DivisionPlayerRepository divisionPlayerRepository;
 
+    @Mock
+    private MatchSecurityValidator matchSecurityValidator;
+
     @InjectMocks
     private MatchService matchService;
 
@@ -210,7 +213,8 @@ class MatchServiceOfflineSyncTest {
                 matchId,
                 starterEntries,
                 List.of(new MatchRosterEntryDTO(substitute.getId(),
-                        com.fasterxml.jackson.databind.node.IntNode.valueOf(999))));
+                        com.fasterxml.jackson.databind.node.IntNode.valueOf(999))),
+                null);
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<List<MatchPlayer>> saved = ArgumentCaptor.forClass(List.class);

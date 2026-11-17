@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.ovaltrack.backend.club.business.ClubService;
 import com.ovaltrack.backend.common.config.exceptions.BusinessException;
 import com.ovaltrack.backend.common.config.exceptions.EntityNotFoundException;
+import com.ovaltrack.backend.division.business.DivisionPlayerService;
 import com.ovaltrack.backend.division.business.DivisionService;
 import com.ovaltrack.backend.division.domain.Division;
 import com.ovaltrack.backend.division.domain.DivisionPlayer;
@@ -49,6 +50,7 @@ import com.ovaltrack.backend.match.domain.dto.MatchRosterEntryDTO;
 import com.ovaltrack.backend.match.domain.dto.MatchRosterPlayerDTO;
 import com.ovaltrack.backend.match.domain.dto.MatchUpdateDTO;
 import com.ovaltrack.backend.match.domain.dto.PlayerMatchResponseDTO;
+import com.ovaltrack.backend.match.domain.dto.RosterBootstrapDTO;
 import com.ovaltrack.backend.match.domain.dto.RosterDTO;
 import com.ovaltrack.backend.match.domain.event.MatchPeriodClosedEvent;
 import com.ovaltrack.backend.match.repository.MatchPlayerRepository;
@@ -87,6 +89,7 @@ public class MatchService {
     private final LineupReplayer lineupReplayer;
 
     private final ClubService clubService;
+    private final DivisionPlayerService divisionPlayerService;
 
     @Transactional(readOnly = true)
     public Collection<MatchResponseDTO> findAllMatchesByClubId(UUID clubId) {
@@ -112,20 +115,14 @@ public class MatchService {
 
     @Transactional(readOnly = true)
     public MatchResponseDTO getLiveMatchState(UUID matchId) {
-        Match match = findMatchEntityById(matchId);
-        if (match == null) {
-            throw new EntityNotFoundException("Partido no encontrado");
-        }
+        Match match = requireMatch(matchId);
 
         return MatchDTOMapper.toResponseDTO(match);
     }
 
     @Transactional(readOnly = true)
     public LiveMatchBootstrapDTO getLiveMatchBootstrap(UUID matchId) {
-        Match match = findMatchEntityById(matchId);
-        if (match == null) {
-            throw new EntityNotFoundException("Partido no encontrado");
-        }
+        Match match = requireMatch(matchId);
 
         return new LiveMatchBootstrapDTO(
                 MatchDTOMapper.toResponseDTO(match),
@@ -139,10 +136,7 @@ public class MatchService {
 
     @Transactional
     public MatchResponseDTO updateLiveMatchState(UUID matchId, LiveMatchStateDTO request) {
-        Match match = findMatchEntityById(matchId);
-        if (match == null) {
-            throw new EntityNotFoundException("Partido no encontrado");
-        }
+        Match match = requireMatch(matchId);
 
         match.setClockElapsedSeconds(request.clockElapsedSeconds());
         match.setClockPaused(request.clockPaused());
@@ -154,6 +148,11 @@ public class MatchService {
 
     public Match findMatchEntityById(UUID matchId) {
         return matchRepository.findById(matchId).orElse(null);
+    }
+
+    private Match requireMatch(UUID matchId) {
+        return matchRepository.findById(matchId)
+                .orElseThrow(() -> new EntityNotFoundException("Partido no encontrado"));
     }
 
     @Transactional
@@ -192,10 +191,7 @@ public class MatchService {
 
     @Transactional
     public MatchResponseDTO updateMatch(UUID matchId, MatchUpdateDTO request) {
-        Match match = findMatchEntityById(matchId);
-        if (match == null) {
-            throw new EntityNotFoundException("Partido no encontrado");
-        }
+        Match match = requireMatch(matchId);
 
         Opponent opponent = opponentRepository.findById(request.opponentId())
                 .orElseThrow(() -> new EntityNotFoundException("Oponente no encontrado"));
@@ -218,10 +214,7 @@ public class MatchService {
      */
     @Transactional
     public MatchResponseDTO changeMatchStatus(UUID matchId, MatchStatus matchStatus, Instant occurredAt) {
-        Match match = findMatchEntityById(matchId);
-        if (match == null) {
-            throw new EntityNotFoundException("Partido no encontrado");
-        }
+        Match match = requireMatch(matchId);
 
         validateStatusChange(match, matchStatus);
         applyStatusChange(match, matchStatus, resolveTransitionTime(occurredAt));
@@ -301,11 +294,12 @@ public class MatchService {
 
     @Transactional
     public void saveMatchRoster(UUID matchId, List<MatchRosterEntryDTO> titulares,
-            List<MatchRosterEntryDTO> suplentes) {
+            List<MatchRosterEntryDTO> suplentes, Authentication authentication) {
         Match match = findMatchEntityByIdForUpdate(matchId);
         if (match == null) {
             throw new EntityNotFoundException("Partido no encontrado");
         }
+        matchSecurityValidator.validateCanManageMatch(match, authentication);
         if (match.getStatus() == MatchStatus.IN_PROGRESS
                 || match.getStatus() == MatchStatus.HALFTIME
                 || match.getStatus() == MatchStatus.FINISHED
@@ -432,7 +426,8 @@ public class MatchService {
     }
 
     @Transactional(readOnly = true)
-    public RosterDTO getSavedRoster(UUID matchId) {
+    public RosterDTO getSavedRoster(UUID matchId, Authentication authentication) {
+        validateCanViewMatch(matchId, authentication);
         List<MatchPlayer> roster = List.copyOf(matchPlayerRepository.findRosterByMatchIds(List.of(matchId)));
 
         List<UUID> startingPlayers = roster.stream()
@@ -449,12 +444,28 @@ public class MatchService {
     }
 
     @Transactional(readOnly = true)
-    public List<MatchRosterPlayerDTO> getMatchRosterPlayers(UUID matchId) {
-        Match match = findMatchEntityById(matchId);
-        if (match == null) {
-            throw new EntityNotFoundException("Partido no encontrado");
-        }
+    public List<MatchRosterPlayerDTO> getMatchRosterPlayers(UUID matchId, Authentication authentication) {
+        validateCanViewMatch(matchId, authentication);
+        return findRosterPlayers(matchId);
+    }
 
+    /** Partido, jugadores de su division y plantel guardado en una sola transaccion de lectura. */
+    @Transactional(readOnly = true)
+    public RosterBootstrapDTO getRosterBootstrap(UUID matchId, Authentication authentication) {
+        Match match = requireMatch(matchId);
+        matchSecurityValidator.validateCanManageMatch(match, authentication);
+
+        return new RosterBootstrapDTO(
+                MatchDTOMapper.toResponseDTO(match),
+                divisionPlayerService.findAvailablePlayersByDivisionId(match.getDivision().getId()),
+                findRosterPlayers(matchId));
+    }
+
+    private void validateCanViewMatch(UUID matchId, Authentication authentication) {
+        matchSecurityValidator.validateCanViewMatch(requireMatch(matchId), authentication);
+    }
+
+    private List<MatchRosterPlayerDTO> findRosterPlayers(UUID matchId) {
         return matchPlayerRepository.findRosterByMatchIds(List.of(matchId)).stream()
                 .map(this::toMatchRosterPlayerDTO)
                 .sorted(Comparator.comparing((MatchRosterPlayerDTO p) -> p.getRole() == MatchPlayerRole.TITULAR ? 0 : 1)
@@ -482,10 +493,7 @@ public class MatchService {
 
     @Transactional
     public MatchResponseDTO closeFirstHalf(UUID matchId, Authentication authentication) {
-        Match match = findMatchEntityById(matchId);
-        if (match == null) {
-            throw new EntityNotFoundException("Partido no encontrado");
-        }
+        Match match = requireMatch(matchId);
 
         matchSecurityValidator.validateCanManageMatch(match, authentication);
 
@@ -499,10 +507,7 @@ public class MatchService {
 
     @Transactional
     public MatchResponseDTO startSecondHalf(UUID matchId, Authentication authentication) {
-        Match match = findMatchEntityById(matchId);
-        if (match == null) {
-            throw new EntityNotFoundException("Partido no encontrado");
-        }
+        Match match = requireMatch(matchId);
 
         matchSecurityValidator.validateCanManageMatch(match, authentication);
 

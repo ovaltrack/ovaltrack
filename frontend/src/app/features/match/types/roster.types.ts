@@ -1,3 +1,5 @@
+import { BackendMatchResponse, Match } from './match.types';
+
 export interface AvailablePlayer {
   id: string;
   fullName: string;
@@ -37,6 +39,18 @@ export interface RosterValidationResult {
   readonly substituteCount: number;
   readonly missingStartingCount: number;
   readonly message?: string;
+}
+
+export interface RosterBootstrapResponse {
+  match: BackendMatchResponse;
+  players: AvailablePlayer[];
+  roster: MatchRosterPlayer[];
+}
+
+export interface RosterBootstrap {
+  match: Match;
+  players: AvailablePlayer[];
+  roster: SavedRoster;
 }
 
 export interface RosterPayload {

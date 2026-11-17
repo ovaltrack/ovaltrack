@@ -146,17 +146,17 @@ public class ClubService {
         if (authentication == null || authentication.getName() == null) {
             return null;
         }
-        String email = authentication.getName();
-        User user = userService.findUserByEmail(email);
-        if (user == null) {
-            return null;
-        }
+        User user = userService.findUserByEmail(authentication.getName());
+        return user == null ? null : findClubEntityForUser(user);
+    }
 
+    /** Igual que findClubEntityForAuthenticatedUser, para quien ya resolvio el usuario y evita buscarlo otra vez. */
+    public Club findClubEntityForUser(User user) {
         if (user.getPerson() != null && user.getPerson().getClub() != null) {
             return user.getPerson().getClub();
         }
 
-        return clubRepository.findByAdminUserLoginEmail(email)
+        return clubRepository.findByAdminUserLoginEmail(user.getLoginEmail())
                 .orElseGet(() -> clubRepository.findByAdminUserId(user.getId()).orElse(null));
     }
 }

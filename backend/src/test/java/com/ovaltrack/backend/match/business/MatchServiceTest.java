@@ -36,6 +36,9 @@ class MatchServiceTest {
     @Mock
     private MatchPlayerRepository matchPlayerRepository;
 
+    @Mock
+    private MatchSecurityValidator matchSecurityValidator;
+
     @InjectMocks
     private MatchService matchService;
 
@@ -67,7 +70,7 @@ class MatchServiceTest {
         when(matchRepository.findById(matchId)).thenReturn(Optional.of(match));
         when(matchPlayerRepository.findRosterByMatchIds(List.of(matchId))).thenReturn(List.of(mp1, mp2, mp3));
 
-        List<MatchRosterPlayerDTO> result = matchService.getMatchRosterPlayers(matchId);
+        List<MatchRosterPlayerDTO> result = matchService.getMatchRosterPlayers(matchId, null);
 
         assertNotNull(result);
         assertEquals(3, result.size());
@@ -93,7 +96,7 @@ class MatchServiceTest {
         when(matchRepository.findById(matchId)).thenReturn(Optional.of(match));
         when(matchPlayerRepository.findRosterByMatchIds(List.of(matchId))).thenReturn(List.of());
 
-        List<MatchRosterPlayerDTO> result = matchService.getMatchRosterPlayers(matchId);
+        List<MatchRosterPlayerDTO> result = matchService.getMatchRosterPlayers(matchId, null);
 
         assertNotNull(result);
         assertTrue(result.isEmpty());
@@ -105,6 +108,6 @@ class MatchServiceTest {
         UUID matchId = UUID.randomUUID();
         when(matchRepository.findById(matchId)).thenReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> matchService.getMatchRosterPlayers(matchId));
+        assertThrows(EntityNotFoundException.class, () -> matchService.getMatchRosterPlayers(matchId, null));
     }
 }

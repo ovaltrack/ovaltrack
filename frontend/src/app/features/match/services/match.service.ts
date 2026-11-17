@@ -82,7 +82,7 @@ export class MatchService {
     return this.statisticApiService.getPeriodStatistics(matchId, period);
   }
 
-  private normalizeMatch(match: BackendMatchResponse): Match {
+  normalizeMatch(match: BackendMatchResponse): Match {
     return {
       ...match,
       status: this.normalizeStatus(match.status),

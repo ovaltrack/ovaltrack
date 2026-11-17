@@ -23,6 +23,7 @@ import com.ovaltrack.backend.match.domain.MatchStatus;
 import com.ovaltrack.backend.match.domain.dto.MatchCreationDTO;
 import com.ovaltrack.backend.match.domain.dto.MatchResponseDTO;
 import com.ovaltrack.backend.match.domain.dto.MatchUpdateDTO;
+import com.ovaltrack.backend.match.domain.dto.RosterBootstrapDTO;
 import com.ovaltrack.backend.match.domain.dto.RosterDTO;
 import com.ovaltrack.backend.match.domain.dto.MatchRosterDTO;
 import com.ovaltrack.backend.match.domain.dto.MatchRosterPlayerDTO;
@@ -171,17 +172,30 @@ public class MatchController {
         return ResponseEntity.ok(matchService.changeMatchStatus(matchId, MatchStatus.CANCELLED));
     }
 
+    @Operation(summary = "Get the roster screen bootstrap", description = "Returns the match, the players of its division and the saved roster needed to build the roster in a single request.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Roster bootstrap returned successfully."),
+            @ApiResponse(responseCode = "403", description = "Access denied: insufficient permissions."),
+            @ApiResponse(responseCode = "404", description = "Match not found.")
+    })
+    @GetMapping("/{matchId}/roster-bootstrap")
+    public ResponseEntity<RosterBootstrapDTO> getRosterBootstrap(
+            @PathVariable UUID matchId, Authentication authentication) {
+        return ResponseEntity.ok(matchService.getRosterBootstrap(matchId, authentication));
+    }
+
     @PostMapping("/{matchId}/roster")
     public ResponseEntity<Void> saveMatchRoster(
             @PathVariable UUID matchId,
-            @RequestBody MatchRosterDTO request) {
-        matchService.saveMatchRoster(matchId, request.titulares(), request.suplentes());
+            @RequestBody MatchRosterDTO request,
+            Authentication authentication) {
+        matchService.saveMatchRoster(matchId, request.titulares(), request.suplentes(), authentication);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/{matchId}/roster")
-    public ResponseEntity<RosterDTO> getMatchRoster(@PathVariable UUID matchId) {
-        RosterDTO roster = matchService.getSavedRoster(matchId);
+    public ResponseEntity<RosterDTO> getMatchRoster(@PathVariable UUID matchId, Authentication authentication) {
+        RosterDTO roster = matchService.getSavedRoster(matchId, authentication);
         return ResponseEntity.ok(roster);
     }
 
@@ -191,8 +205,9 @@ public class MatchController {
             @ApiResponse(responseCode = "404", description = "Match not found.")
     })
     @GetMapping("/{matchId}/roster/players")
-    public ResponseEntity<List<MatchRosterPlayerDTO>> getMatchRosterPlayers(@PathVariable UUID matchId) {
-        return ResponseEntity.ok(matchService.getMatchRosterPlayers(matchId));
+    public ResponseEntity<List<MatchRosterPlayerDTO>> getMatchRosterPlayers(
+            @PathVariable UUID matchId, Authentication authentication) {
+        return ResponseEntity.ok(matchService.getMatchRosterPlayers(matchId, authentication));
     }
 
     @Operation(summary = "Close first half of a match", description = "Closes the first half of an in-progress match, transitioning to HALFTIME.")

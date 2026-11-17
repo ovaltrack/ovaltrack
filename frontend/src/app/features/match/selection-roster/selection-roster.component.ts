@@ -1,13 +1,11 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { catchError, forkJoin, of } from 'rxjs';
-import { MatchService } from '../services/match.service';
 import { RosterService } from '../services/roster.service';
 import { ToastService } from 'src/app/core/services/toast.service';
 import { Match } from '../types/match.types';
-import { AvailablePlayer, MatchRosterPlayer, RosterPayload, RosterSlot, RosterStep, SavedRoster } from '../types/roster.types';
+import { AvailablePlayer, RosterEntry, RosterPayload, RosterSlot, RosterStep, SavedRoster } from '../types/roster.types';
 import { createInitialStartingSlots, createInitialSubstituteSlots } from '../data/match.constants';
 
 @Component({
@@ -15,12 +13,12 @@ import { createInitialStartingSlots, createInitialSubstituteSlots } from '../dat
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './selection-roster.component.html',
-  styleUrl: './selection-roster.component.css'
+  styleUrl: './selection-roster.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SelectionRosterComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly matchService = inject(MatchService);
   private readonly rosterService = inject(RosterService);
   private readonly toastService = inject(ToastService);
 
@@ -35,6 +33,7 @@ export class SelectionRosterComponent implements OnInit {
   readonly activeSlotIndex = signal<number | null>(null);
   readonly searchTerm = signal<string>('');
   readonly isLoading = signal<boolean>(true);
+  readonly loadError = signal<boolean>(false);
   readonly isSaving = signal<boolean>(false);
   readonly validatedDuplicateSlotIndex = signal<number | null>(null);
 
@@ -90,6 +89,16 @@ export class SelectionRosterComponent implements OnInit {
     );
   });
 
+  readonly poolItems = computed(() => {
+    const assigned = this.assignedPlayerMap();
+    return this.filteredAvailablePlayers().map(player => ({ player, dorsal: assigned.get(player.id) }));
+  });
+
+  readonly duplicateSlotIndex = computed(() => {
+    const index = this.validatedDuplicateSlotIndex();
+    return index !== null && this.isSlotNumberDuplicated(index) ? index : null;
+  });
+
   readonly opponentName = computed(() => this.match()?.opponent.name || 'Rival');
 
   ngOnInit(): void {
@@ -105,69 +114,30 @@ export class SelectionRosterComponent implements OnInit {
 
   loadAllData(matchId: string): void {
     this.isLoading.set(true);
+    this.loadError.set(false);
 
-    forkJoin({
-      match: this.matchService.getMatchById(matchId),
-      players: this.rosterService.getAvailablePlayers(matchId),
-      savedRoster: this.rosterService.getSavedRoster(matchId),
-      rosterPlayers: this.rosterService.getMatchRosterPlayers(matchId).pipe(catchError(() => of([])))
-    }).subscribe({
-      next: ({ match, players, savedRoster, rosterPlayers }) => {
+    this.rosterService.getRosterBootstrap(matchId).subscribe({
+      next: ({ match, players, roster }) => {
         this.match.set(match);
-        this.availablePlayers.set(players || []);
-
-        if (savedRoster) {
-          this.applySavedRoster(savedRoster, players || [], rosterPlayers);
-        } else {
-          // Pre-seleccionar primera casilla titular
-          this.autoSelectFirstEmptySlot('titulares', this.startingSlots());
-        }
-
+        this.availablePlayers.set(players);
+        this.applySavedRoster(roster, players);
         this.isLoading.set(false);
       },
       error: (err) => {
         console.error('Error al cargar datos del plantel:', err);
         this.toastService.error('No se pudo cargar la información del partido o jugadores.');
+        this.loadError.set(true);
         this.isLoading.set(false);
       }
     });
   }
 
-  private applySavedRoster(
-    savedRoster: SavedRoster,
-    players: AvailablePlayer[],
-    rosterPlayers: MatchRosterPlayer[],
-  ): void {
+  private applySavedRoster(savedRoster: SavedRoster, players: AvailablePlayer[]): void {
     const starting = createInitialStartingSlots();
     const subs = createInitialSubstituteSlots();
 
-    savedRoster.startingPlayers.forEach((entry, index) => {
-      if (starting[index]) {
-        const found = players.find(p => p.id === entry.playerId);
-        if (found) {
-          const saved = rosterPlayers.find(player => player.id === entry.playerId);
-          const target = saved?.slotOrder != null ? starting[saved.slotOrder] : undefined;
-          if (target) {
-            target.player = found;
-            target.matchNumber = entry.number;
-          }
-        }
-      }
-    });
-
-    savedRoster.substitutePlayers.forEach((entry, index) => {
-      if (subs[index]) {
-        const found = players.find(p => p.id === entry.playerId);
-        if (found) {
-          const saved = rosterPlayers.find(player => player.id === entry.playerId);
-          const target = saved?.slotOrder != null ? subs[saved.slotOrder] : undefined;
-          if (target) {
-            target.player = found;
-            target.matchNumber = entry.number;
-          }
-        }
-      }
-    });
+    this.fillSlots(starting, savedRoster.startingPlayers, players);
+    this.fillSlots(subs, savedRoster.substitutePlayers, players);
 
     this.startingSlots.set(starting);
     this.substituteSlots.set(subs);
@@ -186,6 +156,17 @@ export class SelectionRosterComponent implements OnInit {
     }
   }
 
+  private fillSlots(slots: RosterSlot[], entries: RosterEntry[], players: AvailablePlayer[]): void {
+    entries.forEach(entry => {
+      const player = players.find(p => p.id === entry.playerId);
+      const target = entry.slotOrder != null ? slots[entry.slotOrder] : undefined;
+      if (player && target) {
+        target.player = player;
+        target.matchNumber = entry.number;
+      }
+    });
+  }
+
   setStep(step: RosterStep): void {
     this.currentStep.set(step);
     this.validatedDuplicateSlotIndex.set(null);
@@ -198,6 +179,14 @@ export class SelectionRosterComponent implements OnInit {
     this.activeSlotIndex.set(firstEmpty !== -1 ? firstEmpty : null);
   }
 
+  onSlotKeydown(event: Event, index: number): void {
+    // El dorsal y el botón de quitar viven dentro de la casilla: sus teclas no la seleccionan.
+    if (event.target === event.currentTarget) {
+      event.preventDefault();
+      this.selectSlot(index);
+    }
+  }
+
   selectSlot(index: number): void {
     if (this.activeSlotIndex() === index) {
       this.activeSlotIndex.set(null);
@@ -207,8 +196,8 @@ export class SelectionRosterComponent implements OnInit {
   }
 
   selectAvailablePlayer(player: AvailablePlayer): void {
-    if (this.isPlayerAssigned(player.id)) {
-      const assignedSlot = this.assignedPlayerMap().get(player.id);
+    const assignedSlot = this.assignedPlayerMap().get(player.id);
+    if (assignedSlot !== undefined) {
       this.toastService.info(`${player.fullName} ya está asignado en el número #${assignedSlot}`);
       return;
     }
@@ -314,14 +303,6 @@ export class SelectionRosterComponent implements OnInit {
     }
   }
 
-  isPlayerAssigned(playerId: string): boolean {
-    return this.assignedPlayerMap().has(playerId);
-  }
-
-  getPlayerDorsal(playerId: string): number | undefined {
-    return this.assignedPlayerMap().get(playerId);
-  }
-
   updateSlotNumber(index: number, rawValue: number | string | null): void {
     const slots = this.currentStep() === 'titulares' ? [...this.startingSlots()] : [...this.substituteSlots()];
     const slot = slots[index];
@@ -332,22 +313,6 @@ export class SelectionRosterComponent implements OnInit {
     if (this.validatedDuplicateSlotIndex() === index) {
       this.validatedDuplicateSlotIndex.set(null);
     }
-  }
-
-  isDuplicateSlotNumber(index: number): boolean {
-    if (this.validatedDuplicateSlotIndex() !== index) {
-      return false;
-    }
-
-    const slots = this.currentStep() === 'titulares' ? this.startingSlots() : this.substituteSlots();
-    const number = slots[index]?.matchNumber;
-    if (number === null || number === undefined || !Number.isInteger(number) || number <= 0) {
-      return false;
-    }
-
-    return [...this.startingSlots(), ...this.substituteSlots()]
-      .filter(slot => slot.matchNumber === number)
-      .length > 1;
   }
 
   finishSlotNumberEdit(index: number): void {

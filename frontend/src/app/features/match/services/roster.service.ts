@@ -3,7 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, map, of, switchMap, throwError, from } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { Match } from '../types/match.types';
-import { AvailablePlayer, MatchRosterPlayer, RosterPayload, SavedRoster } from '../types/roster.types';
+import { MatchService } from './match.service';
+import { AvailablePlayer, MatchRosterPlayer, RosterBootstrap, RosterBootstrapResponse, RosterPayload, SavedRoster } from '../types/roster.types';
 import { LocalDatabaseService } from '../../local-database/services/local-database.service';
 
 @Injectable({ providedIn: 'root' })
@@ -11,7 +12,23 @@ export class RosterService {
   private readonly http = inject(HttpClient);
   private readonly matchesUrl = `${environment.apiUrl}/matches`;
   private readonly cache = inject(LocalDatabaseService);
-  
+  private readonly matchService = inject(MatchService);
+
+  /** Partido, jugadores de la división y plantel en una sola petición; sin red lee lo guardado en Dexie. */
+  getRosterBootstrap(matchId: string): Observable<RosterBootstrap> {
+    return this.http.get<RosterBootstrapResponse>(`${this.matchesUrl}/${matchId}/roster-bootstrap`).pipe(
+      map(response => ({
+        match: this.matchService.normalizeMatch(response.match),
+        players: response.players,
+        roster: this.toSavedRoster(response.roster),
+      })),
+      switchMap(bootstrap => from(this.cacheBootstrap(bootstrap)).pipe(map(() => bootstrap))),
+      catchError(error => from(this.readCachedBootstrap(matchId)).pipe(
+        switchMap(cached => cached ? of(cached) : throwError(() => error))
+      ))
+    );
+  }
+
   getAvailablePlayers(matchId: string): Observable<AvailablePlayer[]> {
     return this.http.get<Match>(`${this.matchesUrl}/${matchId}`).pipe(
       switchMap(match => {
@@ -49,14 +66,7 @@ export class RosterService {
 
   getSavedRoster(matchId: string): Observable<SavedRoster | null> {
     return this.getMatchRosterPlayers(matchId).pipe(
-      map(players => ({
-        startingPlayers: players
-          .filter(player => player.role === 'TITULAR')
-          .map(player => this.toRosterEntry(player)),
-        substitutePlayers: players
-          .filter(player => player.role === 'SUPLENTE')
-          .map(player => this.toRosterEntry(player)),
-      })),
+      map(players => this.toSavedRoster(players)),
       switchMap(roster =>
         from(this.cache.saveRoster(matchId, roster)).pipe(
           map(() => roster)
@@ -106,6 +116,38 @@ export class RosterService {
             })))
         ))
     );
+  }
+
+  private async cacheBootstrap({ match, players, roster }: RosterBootstrap): Promise<void> {
+    // syncOfflineMatches borra el plantel de los partidos que no se usan sin conexión: va antes de guardarlo.
+    await this.cache.syncOfflineMatches([match]);
+    await Promise.all([
+      this.cache.savePersonsByDivisionId(players.map(player => ({ ...player, divisionId: match.divisionId }))),
+      this.cache.saveRoster(match.id, roster),
+    ]);
+  }
+
+  private async readCachedBootstrap(matchId: string): Promise<RosterBootstrap | null> {
+    const match = await this.cache.getMatch(matchId);
+    if (!match) {
+      return null;
+    }
+    const [players, roster] = await Promise.all([
+      this.cache.getPersonsByDivisionId(match.divisionId),
+      this.cache.getRoster(matchId),
+    ]);
+    return { match, players, roster: roster ?? { startingPlayers: [], substitutePlayers: [] } };
+  }
+
+  private toSavedRoster(players: MatchRosterPlayer[]): SavedRoster {
+    return {
+      startingPlayers: players
+        .filter(player => player.role === 'TITULAR')
+        .map(player => this.toRosterEntry(player)),
+      substitutePlayers: players
+        .filter(player => player.role === 'SUPLENTE')
+        .map(player => this.toRosterEntry(player)),
+    };
   }
 
   private toRosterEntry(player: MatchRosterPlayer) {
