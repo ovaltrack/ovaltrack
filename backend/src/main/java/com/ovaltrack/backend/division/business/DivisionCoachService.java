@@ -15,6 +15,7 @@ import com.ovaltrack.backend.division.domain.DivisionCoach;
 import com.ovaltrack.backend.division.domain.dto.DivisionDTOMapper;
 import com.ovaltrack.backend.division.domain.dto.divisioncoachdto.DivisionCoachCreationDTO;
 import com.ovaltrack.backend.division.domain.dto.divisioncoachdto.DivisionCoachResponseDTO;
+import com.ovaltrack.backend.division.domain.dto.DivisionHistoryPersonDTO;
 import com.ovaltrack.backend.division.repository.DivisionCoachRepository;
 import com.ovaltrack.backend.person.business.PersonService;
 import com.ovaltrack.backend.person.domain.Person;
@@ -87,6 +88,17 @@ public class DivisionCoachService {
         }
         return divisionCoachRepository.findDivisionCoachesByDivisionIdAndPersonId(divisionId, personId).stream()
                 .map(DivisionDTOMapper::toResponseDTO).toList();
+    }
+
+    public Collection<DivisionHistoryPersonDTO> findHistoryPeople(UUID divisionId, String search, Authentication authentication) {
+        Division division = divisionService.findDivisionEntityById(divisionId);
+        if (division == null) throw new BusinessException("Division no encontrada");
+        divisionSecurityValidator.validateCanAccessDivision(division, authentication);
+        return divisionCoachRepository.findHistoryPeople(divisionId, normalizeSearch(search));
+    }
+
+    private String normalizeSearch(String search) {
+        return search == null || search.isBlank() ? "" : search.trim();
     }
 
     @Transactional

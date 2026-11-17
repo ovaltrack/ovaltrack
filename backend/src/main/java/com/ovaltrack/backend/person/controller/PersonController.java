@@ -59,8 +59,10 @@ public class PersonController {
             @RequestParam UUID clubId,
             @RequestParam UUID divisionId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(personService.findPaginatedInactivePlayersByClubAndDivision(clubId, divisionId, page, size));
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search) {
+        return ResponseEntity.ok(personService.findPaginatedInactivePlayersByClubAndDivision(
+                clubId, divisionId, page, size, search));
     }
 
     @GetMapping("/division")

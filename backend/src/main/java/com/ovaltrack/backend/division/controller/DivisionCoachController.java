@@ -1,6 +1,7 @@
 package com.ovaltrack.backend.division.controller;
 
 import java.util.UUID;
+import java.util.Collection;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import com.ovaltrack.backend.division.business.DivisionCoachService;
 import com.ovaltrack.backend.division.domain.dto.divisioncoachdto.DivisionCoachCreationDTO;
 import com.ovaltrack.backend.division.domain.dto.divisioncoachdto.DivisionCoachResponseDTO;
+import com.ovaltrack.backend.division.domain.dto.DivisionHistoryPersonDTO;
 import com.ovaltrack.backend.common.dto.response.MessageResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -49,6 +51,14 @@ public class DivisionCoachController {
             @RequestParam UUID divisionId,
             Authentication authentication) {
         return ResponseEntity.ok(divisionCoachService.findActiveDivisionCoachesByDivisionId(divisionId, authentication));
+    }
+
+    @GetMapping("/history/people")
+    @PreAuthorize("hasAnyRole('ADMIN_CLUB', 'COACH_ANALYST', 'ADMIN_OVALTRACK')")
+    public ResponseEntity<Collection<DivisionHistoryPersonDTO>> findHistoryPeople(
+            @RequestParam UUID divisionId, @RequestParam(required = false) String search,
+            Authentication authentication) {
+        return ResponseEntity.ok(divisionCoachService.findHistoryPeople(divisionId, search, authentication));
     }
 
     @Operation(

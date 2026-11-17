@@ -37,7 +37,11 @@ public final class DivisionDTOMapper {
 				player.getJerseyNumber(),
 				player.getPosition(),
 				player.getStartDate(),
-				player.getEndDate());
+				player.getEndDate(),
+				player.getPerson().getFirstName(),
+				player.getPerson().getLastName(),
+				player.getPerson().getContactEmail(),
+				player.getPerson().getContactPhone());
 	}
 
 	public static DivisionCoachResponseDTO toResponseDTO(DivisionCoach coach) {
@@ -48,7 +52,11 @@ public final class DivisionDTOMapper {
 				coach.getPerson().getId(),
 				coach.getDivision().getId(),
 				coach.getStartDate(),
-				coach.getEndDate());
+				coach.getEndDate(),
+				coach.getPerson().getFirstName(),
+				coach.getPerson().getLastName(),
+				coach.getPerson().getContactEmail(),
+				coach.getPerson().getContactPhone());
 	}
 
 }

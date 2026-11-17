@@ -25,6 +25,7 @@ import com.ovaltrack.backend.division.domain.dto.divisionplayerdto.DivisionPlaye
 import com.ovaltrack.backend.division.domain.dto.divisionplayerdto.DivisionPlayerPersonUserResponseDTO;
 import com.ovaltrack.backend.division.domain.dto.divisionplayerdto.DivisionPlayerResponseDTO;
 import com.ovaltrack.backend.division.domain.dto.divisionplayerdto.DivisionPlayerUpdateDTO;
+import com.ovaltrack.backend.division.domain.dto.DivisionHistoryPersonDTO;
 import com.ovaltrack.backend.common.dto.response.MessageResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -57,8 +58,18 @@ public class DivisionPlayerController {
             @RequestParam UUID divisionId,
             Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(divisionPlayerService.findPaginatedActiveDivisionPlayersByDivision(divisionId, page, size, authentication));
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search) {
+        return ResponseEntity.ok(divisionPlayerService.findPaginatedActiveDivisionPlayersByDivision(divisionId, page, size, search, authentication));
+    }
+
+    @GetMapping("/history/people")
+    @PreAuthorize("hasAnyRole('ADMIN_CLUB', 'COACH_ANALYST', 'ADMIN_OVALTRACK')")
+    public ResponseEntity<org.springframework.data.domain.Page<DivisionHistoryPersonDTO>> findHistoryPeople(
+            @RequestParam UUID divisionId, @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size, @RequestParam(required = false) String search,
+            Authentication authentication) {
+        return ResponseEntity.ok(divisionPlayerService.findHistoryPeople(divisionId, page, size, search, authentication));
     }
 
     @Operation(

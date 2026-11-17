@@ -16,6 +16,10 @@ public record DivisionPlayerResponseDTO(
 
         LocalDate startDate,
 
-        LocalDate endDate
+        LocalDate endDate,
+        String firstName,
+        String lastName,
+        String contactEmail,
+        String contactPhone
 ) {
 }

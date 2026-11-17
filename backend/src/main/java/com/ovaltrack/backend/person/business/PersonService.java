@@ -43,6 +43,17 @@ public class PersonService {
         return personRepository.findPaginatedInactivePlayersByClubAndDivision(clubId, divisionId,PageRequest.of(page, size))
                 .map(PersonDTOMapper::toResponseDTO);
     }
+
+    public Page<PersonResponseDTO> findPaginatedInactivePlayersByClubAndDivision(
+            UUID clubId, UUID divisionId, int page, int size, String search) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+        if (search == null || search.isBlank()) {
+            return personRepository.findPaginatedInactivePlayersByClubAndDivision(clubId, divisionId, pageRequest)
+                    .map(PersonDTOMapper::toResponseDTO);
+        }
+        return personRepository.searchPaginatedInactivePlayersByClubAndDivision(
+                clubId, divisionId, search.trim(), pageRequest).map(PersonDTOMapper::toResponseDTO);
+    }
     public Page<PersonResponseDTO> findAllPlayersByDivision(UUID divisionId, int page, int size) {
         return personRepository.findAllPlayersByDivision( divisionId,PageRequest.of(page, size))
                 .map(PersonDTOMapper::toResponseDTO);

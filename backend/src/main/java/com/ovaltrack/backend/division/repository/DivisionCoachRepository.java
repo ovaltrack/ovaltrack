@@ -8,6 +8,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.ovaltrack.backend.division.domain.DivisionCoach;
+import com.ovaltrack.backend.division.domain.dto.DivisionHistoryPersonDTO;
+import org.springframework.data.domain.Sort;
+import java.util.List;
 
 public interface DivisionCoachRepository extends JpaRepository<DivisionCoach, UUID> {
 
@@ -35,5 +38,20 @@ public interface DivisionCoachRepository extends JpaRepository<DivisionCoach, UU
             ORDER BY startDate DESC
             """)
 	Collection<DivisionCoach> findDivisionCoachesByDivisionIdAndPersonId(@Param("divisionId") UUID divisionId, @Param ("personId") UUID personId);
+
+	@Query("""
+	    SELECT new com.ovaltrack.backend.division.domain.dto.DivisionHistoryPersonDTO(
+	      p.id, p.firstName, p.lastName, p.contactEmail,
+	      CASE WHEN SUM(CASE WHEN dc.endDate IS NULL THEN 1 ELSE 0 END) > 0 THEN true ELSE false END,
+	      MIN(dc.startDate), MAX(dc.endDate))
+	    FROM DivisionCoach dc JOIN dc.person p
+	    WHERE dc.division.id = :divisionId
+	      AND (LOWER(CONCAT(p.firstName, ' ', p.lastName)) LIKE LOWER(CONCAT('%', :search, '%'))
+	           OR LOWER(CONCAT(p.lastName, ' ', p.firstName)) LIKE LOWER(CONCAT('%', :search, '%'))
+	           OR LOWER(COALESCE(p.contactEmail, '')) LIKE LOWER(CONCAT('%', :search, '%')))
+	    GROUP BY p.id, p.firstName, p.lastName, p.contactEmail
+	    ORDER BY p.lastName, p.firstName
+	""")
+	List<DivisionHistoryPersonDTO> findHistoryPeople(@Param("divisionId") UUID divisionId, @Param("search") String search);
 
 }
