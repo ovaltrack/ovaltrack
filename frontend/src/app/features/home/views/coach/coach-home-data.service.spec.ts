@@ -7,16 +7,17 @@ import { UserContextService } from '../../../../core/services/user-context.servi
 import { DivisionPlayerService } from '../../../../services/division-player.service';
 import { DivisionStatisticsService } from '../../../division-statistics/services/division-statistics.service';
 import { EventService } from '../../../match/services/event.service';
-import { EventTypeService } from '../../../match/services/event-type.service';
 import { MatchService } from '../../../match/services/match.service';
 import { RosterService } from '../../../match/services/roster.service';
 import { ZoneService } from '../../../match/services/zone.service';
+import { MatchCoverageResponse } from '../../../match/types/event.types';
 import { Match } from '../../../match/types/match.types';
 import { DashboardSnapshotCache } from '../../data/dashboard-snapshot.cache';
 import { OfflineMatchReader } from '../../data/offline-match-reader';
-import { CoachHomeDataService } from './coach-home-data.service';
+import { WidgetState } from '../../types/home.types';
+import { CoachHomeDataService, DebtData, FormData } from './coach-home-data.service';
 
-describe('CoachHomeDataService · eventos del último partido', () => {
+describe('CoachHomeDataService · cobertura del último partido', () => {
   const finished = (id: string, date: string): Match => ({
     id, date, divisionId: 'd1', status: 'finished', currentPeriod: 2, clockElapsedSeconds: 0, clockPaused: true,
     currentPossession: 'NEUTRAL', homeScore: 10, awayScore: 5, finishedAt: `${date}Z`,
@@ -24,7 +25,8 @@ describe('CoachHomeDataService · eventos del último partido', () => {
   });
   const now = new Date(2026, 10, 6, 18, 0);
 
-  let calls: string[];
+  let coverageCalls: string[][];
+  let coverageResult: (ids: readonly string[]) => Observable<MatchCoverageResponse[]>;
   let injector: Injector & { destroy(): void };
   let service: CoachHomeDataService;
   let statisticsCalls: string[];
@@ -32,19 +34,19 @@ describe('CoachHomeDataService · eventos del último partido', () => {
   const cacheWrites: Array<[string, unknown]> = [];
 
   beforeEach(() => {
-    calls = [];
+    coverageCalls = [];
+    coverageResult = ids => of(ids.map(matchId => ({ matchId, totalEvents: 10, withoutPlayer: 2, percent: 80 })));
     statisticsCalls = [];
     cacheWrites.length = 0;
     statisticsResult = of({ matches: [] });
     const eventService = {
-      getByMatchPostMatch: (matchId: string): Observable<unknown[]> => defer(() => { calls.push(matchId); return of([]); })
+      getCoverage: (ids: readonly string[]): Observable<MatchCoverageResponse[]> => defer(() => { coverageCalls.push([...ids]); return coverageResult(ids); })
     };
     injector = Injector.create({
       providers: [
         { provide: MatchService, useValue: {} },
         { provide: RosterService, useValue: {} },
         { provide: EventService, useValue: eventService },
-        { provide: EventTypeService, useValue: { getAll: () => of([]) } },
         { provide: ZoneService, useValue: { list: () => of({ assignments: [] }) } },
         { provide: DivisionPlayerService, useValue: {} },
         { provide: DivisionStatisticsService, useValue: { getDivisionStatistics: (id: string, from: string, to: string) => { statisticsCalls.push(`${id} ${from} ${to}`); return statisticsResult; } } },
@@ -62,18 +64,45 @@ describe('CoachHomeDataService · eventos del último partido', () => {
 
   const matches = [finished('a', '2026-10-30T15:00:00'), finished('b', '2026-11-01T15:00:00')];
 
-  it('Deuda y Forma comparten una sola petición de eventos por partido', () => {
-    service.debt(matches).subscribe();
+  it('Deuda y Forma comparten una sola petición de cobertura con la unión de sus partidos', () => {
+    service.debt(matches, now).subscribe();
     service.form(matches, now).subscribe();
-    expect(calls.filter(id => id === 'b').length).toBe(1);
-    expect(calls.filter(id => id === 'a').length).toBe(1);
+    expect(coverageCalls).toEqual([['a', 'b']]);
   });
 
-  it('después de invalidar vuelve a pedir', () => {
-    service.debt(matches).subscribe();
-    service.invalidateEvents();
-    service.debt(matches).subscribe();
-    expect(calls.filter(id => id === 'b').length).toBe(2);
+  it('después de invalidar vuelve a pedir la cobertura', () => {
+    service.debt(matches, now).subscribe();
+    service.invalidateCoverage();
+    service.debt(matches, now).subscribe();
+    expect(coverageCalls.length).toBe(2);
+  });
+
+  it('el % y las jugadas sin jugador de Deuda salen de la cobertura del último partido', () => {
+    coverageResult = ids => of(ids.map(matchId => ({ matchId, totalEvents: 20, withoutPlayer: matchId === 'b' ? 5 : 1, percent: matchId === 'b' ? 75 : 95 })));
+    const states: WidgetState<DebtData>[] = [];
+    service.debt(matches, now).subscribe(state => states.push(state));
+    const last = states.at(-1);
+    expect(last?.status === 'ready' && last.data).toEqual(jasmine.objectContaining({ matchId: 'b', percent: 75, withoutPlayer: 5, minutesWithoutZone: 80 }));
+  });
+
+  it('el % de cada partido de Forma sale de la cobertura', () => {
+    coverageResult = ids => of(ids.map(matchId => ({ matchId, totalEvents: 20, withoutPlayer: 1, percent: matchId === 'b' ? 75 : 95 })));
+    const states: WidgetState<FormData>[] = [];
+    service.form(matches, now).subscribe(state => states.push(state));
+    const last = states.at(-1);
+    expect(last?.status === 'ready' && last.data.percents).toEqual({ a: 95, b: 75 });
+  });
+
+  it('si la cobertura falla, Forma deja null por partido y Deuda pasa a error', () => {
+    coverageResult = () => defer(() => { throw new Error('boom'); });
+    const forms: WidgetState<FormData>[] = [];
+    const debts: WidgetState<DebtData>[] = [];
+    service.form(matches, now).subscribe(state => forms.push(state));
+    service.invalidateCoverage();
+    service.debt(matches, now).subscribe(state => debts.push(state));
+    const form = forms.at(-1);
+    expect(form?.status === 'ready' && form.data.percents).toEqual({ a: null, b: null });
+    expect(debts.at(-1)?.status).toBe('error');
   });
 
   it('«Qué trabajar» hace una sola llamada de la temporada y guarda su snapshot por división', () => {
@@ -97,7 +126,7 @@ describe('CoachHomeDataService · eventos del último partido', () => {
 
   it('los snapshots de Forma y Deuda son por división, para no mostrar sin red el dato de otra pestaña', () => {
     service.form(matches, now).subscribe();
-    service.debt(matches).subscribe();
+    service.debt(matches, now).subscribe();
     const keys = cacheWrites.map(([widget]) => widget);
     expect(keys).toContain('coach.form.d1');
     expect(keys).toContain('coach.debt.d1');
