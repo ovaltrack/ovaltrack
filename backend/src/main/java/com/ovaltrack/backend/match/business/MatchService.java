@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.ovaltrack.backend.club.business.ClubService;
 import com.ovaltrack.backend.common.config.exceptions.BusinessException;
 import com.ovaltrack.backend.common.config.exceptions.EntityNotFoundException;
+import com.ovaltrack.backend.division.business.DivisionPlayerService;
 import com.ovaltrack.backend.division.business.DivisionService;
 import com.ovaltrack.backend.division.domain.Division;
 import com.ovaltrack.backend.division.domain.DivisionPlayer;
@@ -49,6 +50,7 @@ import com.ovaltrack.backend.match.domain.dto.MatchRosterEntryDTO;
 import com.ovaltrack.backend.match.domain.dto.MatchRosterPlayerDTO;
 import com.ovaltrack.backend.match.domain.dto.MatchUpdateDTO;
 import com.ovaltrack.backend.match.domain.dto.PlayerMatchResponseDTO;
+import com.ovaltrack.backend.match.domain.dto.RosterBootstrapDTO;
 import com.ovaltrack.backend.match.domain.dto.RosterDTO;
 import com.ovaltrack.backend.match.domain.event.MatchPeriodClosedEvent;
 import com.ovaltrack.backend.match.repository.MatchPlayerRepository;
@@ -87,6 +89,7 @@ public class MatchService {
     private final LineupReplayer lineupReplayer;
 
     private final ClubService clubService;
+    private final DivisionPlayerService divisionPlayerService;
 
     @Transactional(readOnly = true)
     public Collection<MatchResponseDTO> findAllMatchesByClubId(UUID clubId) {
@@ -449,6 +452,18 @@ public class MatchService {
     public List<MatchRosterPlayerDTO> getMatchRosterPlayers(UUID matchId, Authentication authentication) {
         validateCanViewMatch(matchId, authentication);
         return getMatchRosterPlayers(matchId);
+    }
+
+    /** Partido, jugadores de su division y plantel guardado en una sola transaccion de lectura. */
+    @Transactional(readOnly = true)
+    public RosterBootstrapDTO getRosterBootstrap(UUID matchId, Authentication authentication) {
+        Match match = requireMatch(matchId);
+        matchSecurityValidator.validateCanManageMatch(match, authentication);
+
+        return new RosterBootstrapDTO(
+                MatchDTOMapper.toResponseDTO(match),
+                divisionPlayerService.findAvailablePlayersByDivisionId(match.getDivision().getId()),
+                getMatchRosterPlayers(matchId));
     }
 
     private void validateCanViewMatch(UUID matchId, Authentication authentication) {

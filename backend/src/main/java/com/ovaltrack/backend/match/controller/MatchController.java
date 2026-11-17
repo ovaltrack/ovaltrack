@@ -23,6 +23,7 @@ import com.ovaltrack.backend.match.domain.MatchStatus;
 import com.ovaltrack.backend.match.domain.dto.MatchCreationDTO;
 import com.ovaltrack.backend.match.domain.dto.MatchResponseDTO;
 import com.ovaltrack.backend.match.domain.dto.MatchUpdateDTO;
+import com.ovaltrack.backend.match.domain.dto.RosterBootstrapDTO;
 import com.ovaltrack.backend.match.domain.dto.RosterDTO;
 import com.ovaltrack.backend.match.domain.dto.MatchRosterDTO;
 import com.ovaltrack.backend.match.domain.dto.MatchRosterPlayerDTO;
@@ -169,6 +170,18 @@ public class MatchController {
     @DeleteMapping("/{matchId}/cancel")
     public ResponseEntity<Object> cancelMatch(@PathVariable UUID matchId) {
         return ResponseEntity.ok(matchService.changeMatchStatus(matchId, MatchStatus.CANCELLED));
+    }
+
+    @Operation(summary = "Get the roster screen bootstrap", description = "Returns the match, the players of its division and the saved roster needed to build the roster in a single request.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Roster bootstrap returned successfully."),
+            @ApiResponse(responseCode = "403", description = "Access denied: insufficient permissions."),
+            @ApiResponse(responseCode = "404", description = "Match not found.")
+    })
+    @GetMapping("/{matchId}/roster-bootstrap")
+    public ResponseEntity<RosterBootstrapDTO> getRosterBootstrap(
+            @PathVariable UUID matchId, Authentication authentication) {
+        return ResponseEntity.ok(matchService.getRosterBootstrap(matchId, authentication));
     }
 
     @PostMapping("/{matchId}/roster")

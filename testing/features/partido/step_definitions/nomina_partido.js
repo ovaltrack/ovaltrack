@@ -56,6 +56,10 @@ When('el administrador del club con email {string} y contraseña {string} intent
   this.response = await saveRoster(this.match.id, { titulares, suplentes: [] }, await loginAsOtherClubAdmin(email, contraseña));
 });
 
+When('el administrador del club con email {string} y contraseña {string} intenta consultar el bootstrap del plantel del partido', async function (email, contraseña) {
+  this.response = await makeHttpRequest('GET', `matches/${this.match.id}/roster-bootstrap`, null, await loginAsOtherClubAdmin(email, contraseña));
+});
+
 // <==================== Consultar la nómina ====================>
 
 Then('la nómina del partido tiene {int} titulares y {int} suplentes', async function (titulares, suplentes) {
@@ -76,4 +80,15 @@ Then('el partido figura en estado {string}', async function (estado) {
   const response = await makeHttpRequest('GET', `matches/${this.match.id}`, null, this.token);
   assert.equal(response.status, 200, response.body?.message);
   assert.equal(response.body.status, estado);
+});
+
+When('consulta el bootstrap del plantel del partido', async function () {
+  this.response = await makeHttpRequest('GET', `matches/${this.match.id}/roster-bootstrap`, null, this.token);
+});
+
+Then('el bootstrap del plantel incluye el partido, los jugadores de la división y {int} titulares en la nómina', function (titulares) {
+  const { match, players, roster } = this.response.body;
+  assert.equal(match.id, this.match.id);
+  assert.ok(players.length >= 15, `La división devolvió ${players.length} jugadores`);
+  assert.equal(roster.filter((p) => p.role === 'TITULAR').length, titulares);
 });
