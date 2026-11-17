@@ -12,6 +12,13 @@
   margin-block: auto;
 }
 
+/* Centro óptico: la tarjeta se ve mejor un poco por encima del centro geométrico */
+@media (min-width: 601px) {
+  .lg-page {
+    padding-bottom: clamp(48px, 14vh, 160px);
+  }
+}
+
 .lg-shell {
   max-width: 880px;
 }
