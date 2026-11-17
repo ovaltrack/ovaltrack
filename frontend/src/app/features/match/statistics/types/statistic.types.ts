@@ -1,5 +1,6 @@
 import { UUID } from '../../types/common.types';
 import { LiveStatView } from '../../types/event-type.types';
+import { Possession } from '../../types/live-capture.types';
 
 /** Respuesta de `GET /statistics/match/{id}`. */
 export interface PeriodStatisticDTO {
@@ -34,6 +35,22 @@ export interface PeriodStatisticDTO {
   ownLineoutsWon: number;
   ownLineoutsLost: number;
   ownPossessionPercentage: number;
+}
+
+/**
+ * Lo mínimo que las calculadoras leen de un evento. Lo cumplen los eventos del backend (`BackendEventResponse`),
+ * los del timeline del post-partido (`MatchTimelineEventResponse`) y los capturados en vivo, así no dependen de ninguno.
+ * `active` solo viene en los primeros: ausente cuenta como activo (el timeline ya trae solo eventos activos).
+ */
+export interface StatisticEvent {
+  id: string;
+  eventTypeId: string;
+  playerId?: string | null;
+  teamPossession: Possession;
+  attributes?: Record<string, unknown> | null;
+  matchTime?: number | null;
+  period?: number | null;
+  active?: boolean;
 }
 
 /**

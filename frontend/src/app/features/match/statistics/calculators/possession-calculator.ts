@@ -1,5 +1,5 @@
 import { LiveCaptureEventType } from '../../types/event-type.types';
-import { BackendEventResponse } from '../../types/event.types';
+import { StatisticEvent } from '../types/statistic.types';
 import { calculatePercentage } from './math-utils';
 
 /**
@@ -7,7 +7,7 @@ import { calculatePercentage } from './math-utils';
  * acredita al equipo que la tenía el tiempo transcurrido desde el evento anterior.
  */
 export function computeOwnPossessionPercentage(
-  events: BackendEventResponse[],
+  events: StatisticEvent[],
   eventTypeMap: Map<string, LiveCaptureEventType>
 ): number {
   const counted = events.filter(e => {

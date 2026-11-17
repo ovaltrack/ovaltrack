@@ -1,5 +1,4 @@
 import { LiveCaptureEventType, TemplateField } from '../../types/event-type.types';
-import { BackendEventResponse } from '../../types/event.types';
 import {
   BooleanFieldStat,
   EventTypeStat,
@@ -8,6 +7,7 @@ import {
   MatchStatistics,
   NumberFieldStat,
   SelectFieldStat,
+  StatisticEvent,
   StatView,
   TeamValue,
 } from '../types/statistic.types';
@@ -38,14 +38,14 @@ export const readNumber = (value: unknown): number | null => {
  * Equipo al que se le acredita un evento. Los tipos que suman usan la misma regla que el marcador
  * persistido por el backend; el resto, el equipo que ejecuta la acción según el `actor` del tipo.
  */
-export function creditedTeam(type: LiveCaptureEventType, event: BackendEventResponse): Team | null {
+export function creditedTeam(type: LiveCaptureEventType, event: StatisticEvent): Team | null {
   return type.isScoring ? scoringTeam(event) : eventTeam(type, event);
 }
 
 /** Acumulador de un campo, armado a partir de su definición en el catálogo. */
 interface FieldAccumulator {
   stat: FieldStat;
-  add(event: BackendEventResponse, team: Team): void;
+  add(event: StatisticEvent, team: Team): void;
   finish(): void;
 }
 
@@ -154,7 +154,7 @@ function typeAccumulator(type: LiveCaptureEventType, view: StatView): TypeAccumu
  * un tipo en el catálogo no requiere tocar este cálculo. Recibe eventos activos ya filtrados por período.
  */
 export function computeMatchStatistics(
-  events: BackendEventResponse[],
+  events: StatisticEvent[],
   eventTypes: LiveCaptureEventType[],
   view: StatView,
 ): MatchStatistics {
