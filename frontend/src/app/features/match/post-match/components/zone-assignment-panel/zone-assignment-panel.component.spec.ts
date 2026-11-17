@@ -3,9 +3,11 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { of } from 'rxjs';
 import { EventTypeService } from '../../../services/event-type.service';
+import { LiveCaptureService } from '../../../services/live-capture.service';
 import { ToastService } from 'src/app/core/services/toast.service';
 import { ZoneAssignmentPanelComponent } from './zone-assignment-panel.component';
 import { MatchZonesStore } from '../../store/match-zones.store';
+import { PostMatchDataStore } from '../../store/post-match-data.store';
 import { MatchTimelineEventResponse } from '../../../types/event.types';
 import { MatchZonesResponse, ZoneAssignmentResponse } from '../../../types/zone.types';
 
@@ -40,7 +42,7 @@ describe('ZoneAssignmentPanelComponent', () => {
 
   /** Carga el store como lo hace la página (tramos + eventos) y renderiza el panel. */
   function render(assignments: ZoneAssignmentResponse[] = [], events: MatchTimelineEventResponse[] = []): void {
-    store.load('match-1').subscribe();
+    store.load('match-1', TestBed.inject(PostMatchDataStore)).subscribe();
     http.expectOne(zonesUrl).flush({ assignments, summary: { cells: [], unzonedEventCount: 0 } });
     http.expectOne(eventsUrl).flush(events);
     fixture.componentRef.setInput('matchId', 'match-1');
@@ -59,6 +61,8 @@ describe('ZoneAssignmentPanelComponent', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: EventTypeService, useValue: { getAll: () => of([]) } },
+        { provide: LiveCaptureService, useValue: { syncPendingEvents: () => of([]) } },
+        PostMatchDataStore,
       ],
     }).compileComponents();
 

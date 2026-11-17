@@ -2,17 +2,13 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, HostListener, inject, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import { catchError, forkJoin, throwError } from 'rxjs';
 import { LayoutService } from 'src/app/core/services/layout.service';
-import { EventService } from '../services/event.service';
-import { EventTypeService } from '../services/event-type.service';
-import { RosterService } from '../services/roster.service';
-import { ZoneService } from '../services/zone.service';
-import { LiveCaptureService } from '../services/live-capture.service';
 import { ToastService } from 'src/app/core/services/toast.service';
 import { HidingFilter, MatchReviewStore } from './store/match-review.store';
 import { MatchTimelineEventResponse } from '../types/event.types';
 import { PENDING_QUERY_PARAM, pendingOnlyFilters, wantsPendingOnly } from './utils/pending-deep-link';
+import { PostMatchDataStore } from './store/post-match-data.store';
 import { PostMatchShellStore } from './store/post-match-shell.store';
 import { RugbyBallLoaderComponent } from '../../../shared/components/rugby-ball-loader/rugby-ball-loader.component';
 import { LoadingGate } from '../../../shared/utils/loading-gate';
@@ -51,13 +47,9 @@ const HIDING_FILTER_LABELS: Record<HidingFilter, string> = {
 export class PostMatchComponent implements OnInit, OnDestroy {
 
   private readonly shell = inject(PostMatchShellStore);
-  private readonly eventService = inject(EventService);
-  private readonly eventTypeService = inject(EventTypeService);
-  private readonly rosterService = inject(RosterService);
-  private readonly liveCaptureService = inject(LiveCaptureService);
+  private readonly data = inject(PostMatchDataStore);
   private readonly toastService = inject(ToastService);
   private readonly layoutService = inject(LayoutService);
-  private readonly zoneService = inject(ZoneService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -173,7 +165,10 @@ export class PostMatchComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.layoutService.setWide(true);
     this.shell.bindLiveScore(this.store.scoreboard, this.store.scoreDelta);
-    this.store.confirmedChange$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.shell.refresh());
+    this.store.confirmedChange$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.shell.refresh();
+      this.data.invalidateAfterEventChange();
+    });
     this.matchId = this.shell.matchId();
     if (this.matchId) {
       this.eventToRestore = this.shell.lastSelectedEventId();
@@ -221,14 +216,14 @@ export class PostMatchComponent implements OnInit, OnDestroy {
    * la zona se sigue viendo (viene en el evento) pero sin el rango del tramo.
    */
   private loadZones(): void {
-    this.zoneService.list(this.matchId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.data.zones().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: ({ assignments }) => this.store.setZoneAssignments(assignments),
       error: () => this.store.setZonesFailed()
     });
   }
 
   loadRoster(): void {
-    this.rosterService.getRosterOrDivisionPlayers(this.matchId).subscribe({
+    this.data.roster().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (players) => {
         this.store.setAvailablePlayers(players.map(player => ({
           id: player.id,
@@ -251,57 +246,54 @@ export class PostMatchComponent implements OnInit, OnDestroy {
     this.store.setInitialScores(match.homeScore ?? 0, match.awayScore ?? 0);
   }
 
+  /** Tipos y eventos en paralelo (la caché del shell ya envió lo capturado en este dispositivo antes de pedir los eventos). */
   loadEventTypesAndEvents(): void {
-    this.eventTypeService.getAll().subscribe({
-      next: (types) => {
-        const dict: { [id: string]: string } = {};
-        types.forEach(type => {
-          dict[type.id] = type.name;
-        });
-        this.eventTypesDiccionario.set(dict);
-        this.store.setEventTypesList(types);
-        this.loadEvents();
-      },
-      error: () => {
-        const msg = 'No se pudieron cargar los tipos de evento.';
-        this.errorMessage.set(msg);
-        this.toastService.error(msg);
-      }
-    });
-  }
-
-  async loadEvents(): Promise<void> {
     this.loading.start();
     this.errorMessage.set('');
 
-    try {
-      await firstValueFrom(this.liveCaptureService.syncPendingEvents(this.matchId));
-    } catch {
-    }
+    let typesFailed = false;
+    const types$ = this.data.eventTypes().pipe(catchError(error => {
+      typesFailed = true;
+      return throwError(() => error);
+    }));
 
-    try {
-      const remoteEvents = await firstValueFrom(this.eventService.getByMatchPostMatch(this.matchId));
-      this.store.setEvents(remoteEvents);
-    } catch (error: any) {
-      if (error?.status === 409 || error?.error?.includes?.('cerrado')) {
-        const msg = typeof error.error === 'string'
-          ? error.error
-          : (error.error?.message || 'El partido aún no se encuentra cerrado.');
-        this.errorMessage.set(msg);
-        this.toastService.warning(msg);
-        return;
-      }
+    forkJoin({ types: types$, events: this.data.events() })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: ({ types, events }) => {
+          const dict: { [id: string]: string } = {};
+          types.forEach(type => {
+            dict[type.id] = type.name;
+          });
+          this.eventTypesDiccionario.set(dict);
+          this.store.setEventTypesList(types);
+          this.store.setEvents(events);
+          void this.revealEvents();
+        },
+        error: (error: { status?: number; error?: string | { message?: string } }) => {
+          this.showLoadError(error, typesFailed);
+          void this.loading.finish();
+        }
+      });
+  }
 
-      const msg = 'No se pudieron cargar los eventos del partido.';
+  private showLoadError(error: { status?: number; error?: string | { message?: string } }, typesFailed: boolean): void {
+    if (typesFailed) {
+      const msg = 'No se pudieron cargar los tipos de evento.';
       this.errorMessage.set(msg);
       this.toastService.error(msg);
-    } finally {
-      if (this.errorMessage()) {
-        await this.loading.finish();
-      } else {
-        await this.revealEvents();
-      }
+      return;
     }
+    const body = error?.error;
+    if (error?.status === 409 || (typeof body === 'string' && body.includes('cerrado'))) {
+      const msg = typeof body === 'string' ? body : (body?.message || 'El partido aún no se encuentra cerrado.');
+      this.errorMessage.set(msg);
+      this.toastService.warning(msg);
+      return;
+    }
+    const msg = 'No se pudieron cargar los eventos del partido.';
+    this.errorMessage.set(msg);
+    this.toastService.error(msg);
   }
 
   /**

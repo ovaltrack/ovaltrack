@@ -1,19 +1,13 @@
 import { Injectable, inject } from '@angular/core';
 import { LiveCaptureEventType } from '../../types/event-type.types';
-import { BackendEventResponse } from '../../types/event.types';
-import { MatchStatistics, PlayerStatistics, StatView } from '../types/statistic.types';
-import { computeMatchStatistics, computePlayerStatistics, RosterPlayerInfo } from '../calculators';
+import { MatchStatistics, PlayerStatistics, StatisticEvent, StatView } from '../types/statistic.types';
+import { computeMatchStatistics, computePlayerStatistics, eventsOfPeriod, RosterPlayerInfo } from '../calculators';
 import { LocalDatabaseService } from '../../../local-database/services/local-database.service';
 
 /** Datos ya cargados en memoria; lo que falte se lee de la caché local. */
 export interface StatisticSource {
-  events?: BackendEventResponse[];
+  events?: StatisticEvent[];
   eventTypes?: LiveCaptureEventType[];
-}
-
-/** Eventos activos del período (los de período null cuentan en ambos). Sin período: partido completo. */
-function eventsOfPeriod(events: BackendEventResponse[], period?: number): BackendEventResponse[] {
-  return events.filter(event => event.active && (period === undefined || event.period === null || event.period === period));
 }
 
 @Injectable({ providedIn: 'root' })
@@ -42,7 +36,7 @@ export class StatisticCalculationService {
   }
 
   computeMatchStatistics(
-    events: BackendEventResponse[],
+    events: StatisticEvent[],
     eventTypes: LiveCaptureEventType[],
     view: StatView,
     period?: number,
@@ -51,7 +45,7 @@ export class StatisticCalculationService {
   }
 
   computePlayerStatistics(
-    events: BackendEventResponse[],
+    events: StatisticEvent[],
     roster: RosterPlayerInfo[],
     eventTypes: LiveCaptureEventType[],
     view: StatView,

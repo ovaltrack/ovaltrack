@@ -234,7 +234,7 @@ export const routes: Routes = [
             },
             {
                 path: 'zones',
-                data: { layout: 'wide', viewTitle: 'Zonas de cancha' },
+                data: { preload: true, layout: 'wide', viewTitle: 'Zonas de cancha' },
                 loadComponent: () => import('./features/match/post-match/components/post-match-zones/post-match-zones.component')
                     .then(m => m.PostMatchZonesComponent),
             },
@@ -242,7 +242,7 @@ export const routes: Routes = [
                 path: 'statistics',
                 loadComponent: () => import('./features/match/post-match/components/post-match-statistics/post-match-statistics.component')
                     .then(m => m.PostMatchStatisticsComponent),
-                data: { layout: 'wide', viewTitle: 'Estadísticas' },
+                data: { preload: true, layout: 'wide', viewTitle: 'Estadísticas' },
             }
         ]
     },

@@ -8,7 +8,9 @@ import { of } from 'rxjs';
 import { PostMatchZonesComponent } from './post-match-zones.component';
 import { EventTypeService } from '../../../services/event-type.service';
 import { MatchZonesStore } from '../../store/match-zones.store';
+import { PostMatchDataStore } from '../../store/post-match-data.store';
 import { PostMatchShellStore } from '../../store/post-match-shell.store';
+import { LiveCaptureService } from '../../../services/live-capture.service';
 import { Match } from '../../../types/match.types';
 import { MatchTimelineEventResponse } from '../../../types/event.types';
 import { ZoneAssignmentResponse } from '../../../types/zone.types';
@@ -67,6 +69,8 @@ describe('PostMatchZonesComponent', () => {
         provideHttpClientTesting(),
         { provide: PostMatchShellStore, useValue: { matchId: signal('match-1'), match: signal(match) } },
         { provide: EventTypeService, useValue: { getAll: () => of([]) } },
+        { provide: LiveCaptureService, useValue: { syncPendingEvents: () => of([]) } },
+        PostMatchDataStore,
       ],
     }).compileComponents();
 

@@ -33,8 +33,7 @@ public class EventTypeService {
 
 	/** Regla de zona de cada tipo de evento que la declara, incluidos los dados de baja (los eventos viejos los siguen usando). */
 	public Map<UUID, ZoneRule> zoneRulesByTypeId() {
-		return eventTypeRepository.findAll().stream()
-				.filter(type -> type.getZoneRule() != null)
+		return eventTypeRepository.findByZoneRuleIsNotNull().stream()
 				.collect(Collectors.toMap(EventType::getId, EventType::getZoneRule));
 	}
 

@@ -1,6 +1,5 @@
 import { LiveCaptureEventType } from '../../types/event-type.types';
-import { BackendEventResponse } from '../../types/event.types';
-import { PlayerStatColumn, PlayerStatistic, PlayerStatistics, StatView } from '../types/statistic.types';
+import { PlayerStatColumn, PlayerStatistic, PlayerStatistics, StatisticEvent, StatView } from '../types/statistic.types';
 import { countsAsScoring } from './event-rules';
 import { creditedTeam, readNumber } from './match-statistics-calculator';
 import { isScoringField, isTypeInView } from './stat-view';
@@ -36,7 +35,7 @@ export function playerStatColumns(eventTypes: LiveCaptureEventType[], view: Stat
  * Recibe eventos activos ya filtrados por período.
  */
 export function computePlayerStatistics(
-  events: BackendEventResponse[],
+  events: StatisticEvent[],
   roster: RosterPlayerInfo[],
   eventTypes: LiveCaptureEventType[],
   view: StatView,
@@ -44,9 +43,9 @@ export function computePlayerStatistics(
   const typeById = new Map(eventTypes.map(type => [type.id, type]));
   const columns = playerStatColumns(eventTypes, view);
 
-  const eventsByPlayerId = new Map<string, BackendEventResponse[]>();
-  const eventsBySlot = new Map<number, BackendEventResponse[]>();
-  const push = <K>(map: Map<K, BackendEventResponse[]>, key: K, event: BackendEventResponse) =>
+  const eventsByPlayerId = new Map<string, StatisticEvent[]>();
+  const eventsBySlot = new Map<number, StatisticEvent[]>();
+  const push = <K>(map: Map<K, StatisticEvent[]>, key: K, event: StatisticEvent) =>
     map.set(key, [...(map.get(key) ?? []), event]);
 
   for (const event of events) {
@@ -61,7 +60,7 @@ export function computePlayerStatistics(
   }
 
   const players: PlayerStatistic[] = roster.map(player => {
-    const playerEvents = new Map<string, BackendEventResponse>();
+    const playerEvents = new Map<string, StatisticEvent>();
     for (const event of eventsByPlayerId.get(player.playerId) ?? []) playerEvents.set(event.id, event);
     for (const event of eventsBySlot.get(player.jerseyNumber) ?? []) playerEvents.set(event.id, event);
 
