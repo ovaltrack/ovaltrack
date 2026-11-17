@@ -12,7 +12,7 @@ import { urgentOf } from '../../domain/club-urgent';
 import { greetingFor, hudDateLabel } from '../../domain/greeting';
 import { parseWallClock } from '../../domain/match-time';
 import { LINEUP_WINDOW_MS, adminRules, resolvePrimaryAction } from '../../domain/primary-action';
-import { BoardModel, PrimaryAction, WidgetState, dataOf } from '../../types/home.types';
+import { BoardModel, PrimaryAction, WidgetState, dataOf, isRefreshing } from '../../types/home.types';
 import { AdminHomeDataService, RosterCounts } from './admin-home-data.service';
 
 const CLOCK_TICK_MS = 1000;
@@ -60,6 +60,10 @@ export class AdminHomeStore {
     const division = this.divisions().find(candidate => candidate.id === match?.divisionId);
     return division ? { ...action, label: `Definir alineación ${division.name}` } : action;
   });
+
+  /** Algún widget muestra un dato viejo mientras llega el real, o los partidos todavía no tienen nada que mostrar. */
+  readonly refreshing = computed(() =>
+    this.matchesState().status === 'loading' || [this.matchesState(), this.statsState()].some(isRefreshing));
 
   /** Una fila por división, en el orden del club (D4); sigue el estado de las estadísticas por división. */
   readonly statusState = computed<WidgetState<DivisionStatusRow[]>>(() => {

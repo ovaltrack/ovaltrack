@@ -1,4 +1,4 @@
-import { DestroyRef, Injectable, WritableSignal, computed, inject, signal } from '@angular/core';
+import { DestroyRef, Injectable, WritableSignal, computed, effect, inject, signal, untracked } from '@angular/core';
 import { Observable, Subject, of, switchMap, tap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { LiveMatchSource } from '../../../../core/navigation/live-match.source';
@@ -15,7 +15,7 @@ import { relativeMatchLabel, parseWallClock } from '../../domain/match-time';
 import { PendingRow, pendingRows } from '../../domain/pending-rows';
 import { UpcomingFixture, upcomingFixtures } from '../../domain/upcoming-fixtures';
 import { coachRules, resolvePrimaryAction } from '../../domain/primary-action';
-import { BoardModel, PrimaryAction, WidgetState } from '../../types/home.types';
+import { BoardModel, PrimaryAction, WidgetState, isRefreshing } from '../../types/home.types';
 import { BoardExtras, CoachHomeDataService, DebtData, EMPTY_BOARD_EXTRAS, FormData } from './coach-home-data.service';
 
 const ACTIVE_DIVISION_WIDGET = 'active-division';
@@ -108,6 +108,11 @@ export class CoachHomeStore {
   /** Mientras no llegan los partidos no hay tablero que mostrar. */
   readonly boardStatus = computed(() => this.divisions().length === 0 ? 'ready' : this.matchesState().status);
 
+  /** Algún widget muestra un dato viejo mientras llega el real, o los partidos todavía no tienen nada que mostrar. */
+  readonly refreshing = computed(() =>
+    this.matchesState().status === 'loading'
+    || [this.matchesState(), this.debtState(), this.jerseyState(), this.formState(), this.focusState()].some(isRefreshing));
+
   /** Pendientes de la división (ver `pendingRows`): lo que el tablero ya pide no se repite acá. */
   readonly pendingState = computed<WidgetState<PendingRow[]>>(() => {
     const jerseys = this.jerseyState();
@@ -144,6 +149,10 @@ export class CoachHomeStore {
   readonly hudLabel = computed(() => `${hudDateLabel(this.now())} · ${this.userContext.currentClub()?.name ?? ''}`);
   readonly hudTitle = computed(() => `${greetingFor(this.now())}, ${this.userContext.userContext()?.firstName ?? ''}`.replace(/,\s*$/, ''));
 
+  /** Identifica las divisiones activas: cambia solo si cambian las divisiones, no cada vez que se reemplaza el contexto. */
+  private readonly divisionKey = computed(() => this.divisions().map(division => division.id).join(','));
+  private loadedKey: string | null = null;
+
   private readonly loadMatches$ = new Subject<void>();
   private readonly derive$ = new Subject<void>();
   private started = false;
@@ -157,6 +166,14 @@ export class CoachHomeStore {
         }))),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe();
+
+    // El contexto puede llegar de Dexie y corregirse después con /api/me: si cambian las divisiones, se recargan los partidos.
+    effect(() => {
+      const key = this.divisionKey();
+      untracked(() => {
+        if (this.started && key !== this.loadedKey) this.reload();
+      });
+    });
 
     this.bind(() => this.data.boardExtras(this.upcoming(), this.captureMatch()), this.extras);
     this.bind(() => this.data.debt(this.divisionMatches()), this.debtState);
@@ -181,7 +198,9 @@ export class CoachHomeStore {
   }
 
   reload(): void {
-    if (this.divisions().length > 0) this.loadMatches$.next();
+    if (this.divisions().length === 0) return;
+    this.loadedKey = this.divisionKey();
+    this.loadMatches$.next();
   }
 
   /** Vuelve a cargar lo que depende de la división activa y del partido que captura este dispositivo. */

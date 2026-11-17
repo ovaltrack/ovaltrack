@@ -12,4 +12,6 @@ export class HomeHudComponent {
   readonly label = input.required<string>();
   readonly title = input.required<string>();
   readonly subtitle = input<string>('');
+  /** Se está trayendo información nueva: se avisa con un chip discreto. */
+  readonly refreshing = input(false);
 }

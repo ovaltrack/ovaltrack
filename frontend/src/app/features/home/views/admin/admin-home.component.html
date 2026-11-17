@@ -1,5 +1,5 @@
 <main class="layout-container page">
-  <app-home-hud [label]="store.hudLabel()" [title]="store.hudTitle()" [subtitle]="store.hudSubtitle()">
+  <app-home-hud [refreshing]="store.refreshing()" [label]="store.hudLabel()" [title]="store.hudTitle()" [subtitle]="store.hudSubtitle()">
     <div hudActions class="hud-actions">
       <a class="btn btn-outline hud-btn" routerLink="/match-selection"><i class="bi bi-plus-lg" aria-hidden="true"></i> Nuevo partido</a>
     </div>

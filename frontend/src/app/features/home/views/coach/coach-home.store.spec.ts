@@ -293,4 +293,62 @@ describe('CoachHomeStore', () => {
     expect(store.board().kind).toBe('team-idle');
     expect(store.primary()).toEqual(jasmine.objectContaining({ kind: 'schedule-match', route: '/match-selection', target: 'board' }));
   });
+
+  describe('refreshing', () => {
+    it('es falso cuando todo está al día', () => {
+      const store = createStore();
+      store.reload();
+      expect(store.refreshing()).toBeFalse();
+    });
+
+    it('es verdadero mientras los partidos cargan sin snapshot', () => {
+      matches = { status: 'loading' };
+      const store = createStore();
+      store.reload();
+      expect(store.refreshing()).toBeTrue();
+    });
+
+    it('es verdadero si algún widget muestra un dato viejo mientras llega el real', () => {
+      focus = { status: 'ready', data: { series: { lineout: [], tackle: [], penalties: [] }, lineoutLast: null }, fetchedAt: 1, stale: true, refreshing: true };
+      const store = createStore();
+      store.reload();
+      expect(store.refreshing()).toBeTrue();
+    });
+
+    it('es falso con un dato viejo que quedó así por un error (stale sin refreshing)', () => {
+      form = { status: 'ready', data: { record: { wins: 0, draws: 0, losses: 0, diff: 0, averageFor: 0, averageAgainst: 0, last: [] }, percents: {} }, fetchedAt: 1, stale: true };
+      const store = createStore();
+      store.reload();
+      expect(store.refreshing()).toBeFalse();
+    });
+  });
+
+  describe('cambio de divisiones al llegar /api/me', () => {
+    let requested: number;
+
+    beforeEach(() => {
+      requested = 0;
+      data.matches = () => {
+        requested++;
+        return of(matches);
+      };
+    });
+
+    it('vuelve a cargar los partidos si cambian las divisiones', async () => {
+      const store = createStore();
+      store.start();
+      expect(requested).toBe(1);
+      divisions.set([division('d1', 'Superior')]);
+      await Promise.resolve();
+      expect(requested).toBe(2);
+    });
+
+    it('no vuelve a cargar si el contexto se reemplaza con las mismas divisiones', async () => {
+      const store = createStore();
+      store.start();
+      divisions.set([division('d1', 'Superior'), division('d2', 'Intermedia')]);
+      await Promise.resolve();
+      expect(requested).toBe(1);
+    });
+  });
 });

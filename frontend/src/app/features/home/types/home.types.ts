@@ -14,6 +14,11 @@ export function dataOf<T>(state: WidgetState<T>): T | null {
   return state.status === 'ready' ? state.data : null;
 }
 
+/** Hay un dato viejo a la vista mientras llega la respuesta real. */
+export function isRefreshing<T>(state: WidgetState<T>): boolean {
+  return state.status === 'ready' && state.refreshing === true;
+}
+
 export type PrimaryActionKind =
   | 'continue-capture'
   | 'go-halftime'

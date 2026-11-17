@@ -5,7 +5,7 @@ import { ConnectivityService } from '../../../../core/services/connectivity.serv
 import { UserContextService } from '../../../../core/services/user-context.service';
 import { greetingFor, hudDateLabel } from '../../domain/greeting';
 import { playerRules, resolvePrimaryAction } from '../../domain/primary-action';
-import { BoardModel, PrimaryAction, WidgetState, dataOf } from '../../types/home.types';
+import { BoardModel, PrimaryAction, WidgetState, dataOf, isRefreshing } from '../../types/home.types';
 import { PlayerSummary } from '../../domain/player-summary';
 import { matchTakeaways } from '../../domain/match-takeaways';
 import { SeasonKpi, seasonKpis } from '../../domain/season-kpis';
@@ -28,6 +28,10 @@ export class PlayerHomeStore {
   readonly seasonState = signal<WidgetState<PlayerSeasonData>>({ status: 'loading' });
 
   readonly summary = computed(() => dataOf(this.summaryState()));
+
+  /** Algún widget muestra un dato viejo mientras llega el real, o el último partido todavía no tiene nada que mostrar. */
+  readonly refreshing = computed(() =>
+    this.summaryState().status === 'loading' || [this.summaryState(), this.seasonState()].some(isRefreshing));
 
   readonly board = computed<BoardModel>(() => {
     const last = this.summary()?.last;

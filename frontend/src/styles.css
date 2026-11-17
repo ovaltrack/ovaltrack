@@ -1111,6 +1111,15 @@ button {
   animation: shimmer 1.4s ease-in-out infinite;
 }
 
+/* En oscuro, surface-alt y surface-hover casi no se distinguen de la superficie: el brillo se arma con el borde fuerte. */
+[data-theme="dark"] .sk {
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--border-strong) 22%, var(--surface)) 25%,
+    color-mix(in srgb, var(--border-strong) 38%, var(--surface)) 50%,
+    color-mix(in srgb, var(--border-strong) 22%, var(--surface)) 75%);
+  background-size: 200% 100%;
+}
+
 @keyframes shimmer {
   0% {
     background-position: 200% 0;
