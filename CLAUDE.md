@@ -67,7 +67,7 @@ Variables en `.env` (ignorado por git): `DB_*`, `OVALTRACK_BOOTSTRAP_ADMIN_EMAIL
 - `/club`, `/division`, `/players`, `/coaches`, `/person`, `/user`
 - `/matches` — `GET /club?clubId`, `GET /division?divisionId`, `GET|PUT /{id}`, `POST`, `PUT /{id}/start`, `/finish`, `/close-first-half`, `/start-second-half`, `DELETE /{id}/cancel`, `GET|PUT /{id}/live-state`, `GET /{id}/live-bootstrap`, `GET|POST /{id}/roster`, `GET /{id}/roster/players`
 - `/opponents`, `/eventType`
-- `/event` — `GET /club|/division|/match`, `GET /match/post-match`, `GET /match/coverage?matchIds=` (% de análisis en lote para el Inicio, máx. 50), `GET|PATCH|DELETE /{id}`, `POST`
+- `/event` — `GET /club|/division|/match`, `GET /match/post-match`, `GET|PATCH|DELETE /{id}`, `POST`
 - `/statistics/match/{matchId}`
 
 **Modelo de eventos**: `Event` (`events`) tiene `clientEventId` (idempotencia offline), `eventType`, `match`, `player` (`Person`), `teamPossession`, `matchTime` (reloj de juego, se pausa), `absoluteMatchTime` (tiempo de video, corre siempre), `realTime`, `period`, `origin` (`live_capture` | `post_capture`), `attributes` (`Map<String,Object>` validado por `EventAttributeValidator` contra `templateEventFields` del `EventType`), `active` (borrado lógico), `synchronizedAt`.
