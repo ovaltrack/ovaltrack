@@ -334,20 +334,26 @@ describe('CoachHomeStore', () => {
       };
     });
 
-    it('vuelve a cargar los partidos si cambian las divisiones', async () => {
+    it('vuelve a cargar los partidos si cambian las divisiones', () => {
       const store = createStore();
       store.start();
       expect(requested).toBe(1);
       divisions.set([division('d1', 'Superior')]);
-      await Promise.resolve();
+      store.reloadIfDivisionsChanged();
       expect(requested).toBe(2);
     });
 
-    it('no vuelve a cargar si el contexto se reemplaza con las mismas divisiones', async () => {
+    it('no recarga antes de arrancar', () => {
+      const store = createStore();
+      store.reloadIfDivisionsChanged();
+      expect(requested).toBe(0);
+    });
+
+    it('no vuelve a cargar si el contexto se reemplaza con las mismas divisiones', () => {
       const store = createStore();
       store.start();
       divisions.set([division('d1', 'Superior'), division('d2', 'Intermedia')]);
-      await Promise.resolve();
+      store.reloadIfDivisionsChanged();
       expect(requested).toBe(1);
     });
   });

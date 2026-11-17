@@ -1,4 +1,4 @@
-import { DestroyRef, Injectable, WritableSignal, computed, effect, inject, signal, untracked } from '@angular/core';
+import { DestroyRef, Injectable, WritableSignal, computed, inject, signal } from '@angular/core';
 import { Observable, Subject, of, switchMap, tap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { LiveMatchSource } from '../../../../core/navigation/live-match.source';
@@ -149,9 +149,8 @@ export class CoachHomeStore {
   readonly hudLabel = computed(() => `${hudDateLabel(this.now())} · ${this.userContext.currentClub()?.name ?? ''}`);
   readonly hudTitle = computed(() => `${greetingFor(this.now())}, ${this.userContext.userContext()?.firstName ?? ''}`.replace(/,\s*$/, ''));
 
-  /** Identifica las divisiones activas: cambia solo si cambian las divisiones, no cada vez que se reemplaza el contexto. */
-  private readonly divisionKey = computed(() => this.divisions().map(division => division.id).join(','));
-  private loadedKey: string | null = null;
+  /** Ids de las divisiones con las que se cargaron los partidos; `null` si todavía no se cargaron. */
+  private loadedDivisionIds: string | null = null;
 
   private readonly loadMatches$ = new Subject<void>();
   private readonly derive$ = new Subject<void>();
@@ -166,14 +165,6 @@ export class CoachHomeStore {
         }))),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe();
-
-    // El contexto puede llegar de Dexie y corregirse después con /api/me: si cambian las divisiones, se recargan los partidos.
-    effect(() => {
-      const key = this.divisionKey();
-      untracked(() => {
-        if (this.started && key !== this.loadedKey) this.reload();
-      });
-    });
 
     this.bind(() => this.data.boardExtras(this.upcoming(), this.captureMatch()), this.extras);
     this.bind(() => this.data.debt(this.divisionMatches()), this.debtState);
@@ -199,8 +190,16 @@ export class CoachHomeStore {
 
   reload(): void {
     if (this.divisions().length === 0) return;
-    this.loadedKey = this.divisionKey();
+    this.loadedDivisionIds = this.divisionIds();
     this.loadMatches$.next();
+  }
+
+  /**
+   * El contexto puede llegar de Dexie y corregirse después con /api/me: si las divisiones cambiaron
+   * desde la última carga se vuelven a pedir los partidos; un contexto con las mismas no recarga nada.
+   */
+  reloadIfDivisionsChanged(): void {
+    if (this.started && this.divisionIds() !== this.loadedDivisionIds) this.reload();
   }
 
   /** Vuelve a cargar lo que depende de la división activa y del partido que captura este dispositivo. */
@@ -219,6 +218,10 @@ export class CoachHomeStore {
   retry(widget: CoachWidget): void {
     if (widget === 'matches') this.reload();
     else this.refreshDerived();
+  }
+
+  private divisionIds(): string {
+    return this.divisions().map(division => division.id).join(',');
   }
 
   private userId(): string | null {
