@@ -10,6 +10,8 @@ import { hasRoleGuard } from './core/guards/has-role.guard';
 import { hasClubGuard } from './core/guards/has-club.guard';
 import { DivisionPlayerListComponent } from './features/division-player/list/division-player-list.component';
 import { OpponentManagerComponent } from './features/match/opponents/opponent-manager.component';
+import { DivisionCoachHistoryComponent } from './features/division-coach/division-coach-history.component';
+import { DivisionPlayerHistoryComponent } from './features/division-player/division-player-history.component';
 
 
 export const routes: Routes = [
@@ -111,6 +113,20 @@ export const routes: Routes = [
         component: DivisionListComponent
     },
     {
+        path: 'divisions/:divisionId/coaches/history/:personId',
+        canActivate: [hasRoleGuard, hasClubGuard],
+        data: { roles: ['ADMIN_OVALTRACK', 'ADMIN_CLUB', 'COACH_ANALYST'] },
+        canMatch: [authGuard],
+        component: DivisionCoachHistoryComponent
+    },
+    {
+        path: 'divisions/:divisionId/coaches/history',
+        canActivate: [hasRoleGuard, hasClubGuard],
+        data: { roles: ['ADMIN_OVALTRACK', 'ADMIN_CLUB', 'COACH_ANALYST'] },
+        canMatch: [authGuard],
+        component: DivisionCoachHistoryComponent
+    },
+    {
         path: 'divisions/:divisionId/coaches',
         canActivate: [hasRoleGuard, hasClubGuard],
         data: {
@@ -131,6 +147,20 @@ export const routes: Routes = [
             import('./features/division-statistics/division-statistics.component').then(
                 m => m.DivisionStatisticsComponent
             )
+    },
+    {
+        path: 'divisions/:divisionId/players/history/:personId',
+        canActivate: [hasRoleGuard, hasClubGuard],
+        data: { roles: ['ADMIN_OVALTRACK', 'ADMIN_CLUB', 'COACH_ANALYST'] },
+        canMatch: [authGuard],
+        component: DivisionPlayerHistoryComponent
+    },
+    {
+        path: 'divisions/:divisionId/players/history',
+        canActivate: [hasRoleGuard, hasClubGuard],
+        data: { roles: ['ADMIN_OVALTRACK', 'ADMIN_CLUB', 'COACH_ANALYST'] },
+        canMatch: [authGuard],
+        component: DivisionPlayerHistoryComponent
     },
     {
         path: 'divisions/:divisionId/players',

@@ -6,6 +6,10 @@ export interface DivisionPlayerResponse {
   position: string;
   startDate: string;
   endDate: string | null;
+  firstName?: string;
+  lastName?: string;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
 }
 
 export interface DivisionPlayerPersonUserResponse {

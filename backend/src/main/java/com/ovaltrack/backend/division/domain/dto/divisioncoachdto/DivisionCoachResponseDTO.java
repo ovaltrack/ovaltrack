@@ -11,7 +11,10 @@ public record DivisionCoachResponseDTO(
         UUID divisionId,
 
         LocalDate startDate,
-        
-        LocalDate endDate
+        LocalDate endDate,
+        String firstName,
+        String lastName,
+        String contactEmail,
+        String contactPhone
 ) {
 }

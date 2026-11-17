@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin, of, switchMap } from 'rxjs';
@@ -26,6 +26,7 @@ export class DivisionCoachListComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly location = inject(Location);
   private readonly divisionService = inject(DivisionService);
   private readonly divisionCoachService = inject(DivisionCoachService);
   private readonly membersService = inject(MembersService);
@@ -52,6 +53,10 @@ export class DivisionCoachListComponent implements OnInit {
       personId: ['', Validators.required]
     });
     this.cargarEntrenadores();
+  }
+
+  volver(): void {
+    this.location.back();
   }
 
   get esCoach(): boolean {
@@ -201,17 +206,7 @@ export class DivisionCoachListComponent implements OnInit {
           coaches: this.divisionCoachService.getByDivisionId(divisionId)
         });
       }),
-      switchMap(({ division, coaches }) => {
-        if (coaches.length === 0) {
-          return of({ division, coaches, persons: [] as PersonResponse[] });
-        }
-
-        return forkJoin(
-          coaches.map(coach => this.personService.getPersonById(coach.personId))
-        ).pipe(
-          switchMap((persons) => of({ division, coaches, persons }))
-        );
-      })
+      switchMap(({ division, coaches }) => of({ division, coaches, persons: [] as PersonResponse[] }))
     ).subscribe({
       next: ({ division, coaches, persons }) => {
         this.division = division;
@@ -249,18 +244,15 @@ export class DivisionCoachListComponent implements OnInit {
   }
 
   getCoachName(coach: DivisionCoachResponse): string {
-    const person = this.persons.find(candidate => candidate.id === coach.personId);
-    return person
-      ? `${person.firstName} ${person.lastName}`.trim()
-      : 'Persona sin nombre disponible';
+    return `${coach.firstName || ''} ${coach.lastName || ''}`.trim() || 'Persona sin nombre disponible';
   }
 
   getCoachEmail(coach: DivisionCoachResponse): string {
-    return this.persons.find(candidate => candidate.id === coach.personId)?.contactEmail || coach.personId;
+    return coach.contactEmail || coach.personId;
   }
 
   getCoachPhone(coach: DivisionCoachResponse): string {
-    return this.persons.find(candidate => candidate.id === coach.personId)?.contactPhone || 'Sin teléfono';
+    return coach.contactPhone || 'Sin teléfono';
   }
 
   formatDate(date: string | null): string {

@@ -19,6 +19,7 @@ import com.ovaltrack.backend.division.domain.dto.divisionplayerdto.DivisionPlaye
 import com.ovaltrack.backend.division.domain.dto.divisionplayerdto.DivisionPlayerPersonUserResponseDTO;
 import com.ovaltrack.backend.division.domain.dto.divisionplayerdto.DivisionPlayerResponseDTO;
 import com.ovaltrack.backend.division.domain.dto.divisionplayerdto.DivisionPlayerUpdateDTO;
+import com.ovaltrack.backend.division.domain.dto.DivisionHistoryPersonDTO;
 import com.ovaltrack.backend.division.repository.DivisionPlayerRepository;
 import com.ovaltrack.backend.match.domain.dto.AvailablePlayerDTO;
 import com.ovaltrack.backend.person.business.PersonService;
@@ -51,6 +52,27 @@ public class DivisionPlayerService {
             divisionSecurityValidator.validateCanAccessDivision(division, authentication);
         }
         return divisionPlayerRepository.findPaginatedActiveDivisionPlayersByDivision(divisionId, PageRequest.of(page, size)).map(DivisionDTOMapper::toResponseDTO);
+    }
+
+    public Page<DivisionPlayerResponseDTO> findPaginatedActiveDivisionPlayersByDivision(
+            UUID divisionId, int page, int size, String search, Authentication authentication) {
+        Division division = divisionService.findDivisionEntityById(divisionId);
+        if (division == null) throw new BusinessException("Division no encontrada");
+        divisionSecurityValidator.validateCanAccessDivision(division, authentication);
+        if (search == null || search.isBlank()) {
+            return divisionPlayerRepository.findPaginatedActiveDivisionPlayersByDivision(
+                    divisionId, PageRequest.of(page, size)).map(DivisionDTOMapper::toResponseDTO);
+        }
+        return divisionPlayerRepository.findPaginatedActiveDivisionPlayersByDivisionAndSearch(
+                divisionId, search.trim(), PageRequest.of(page, size)).map(DivisionDTOMapper::toResponseDTO);
+    }
+
+    public Page<DivisionHistoryPersonDTO> findHistoryPeople(UUID divisionId, int page, int size, String search, Authentication authentication) {
+        Division division = divisionService.findDivisionEntityById(divisionId);
+        if (division == null) throw new BusinessException("Division no encontrada");
+        divisionSecurityValidator.validateCanAccessDivision(division, authentication);
+        return divisionPlayerRepository.findHistoryPeople(divisionId,
+                search == null || search.isBlank() ? "" : search.trim(), PageRequest.of(page, size));
     }
 
     public Collection<DivisionPlayerResponseDTO> findDivisionPlayersByDivisionIdAndPersonId(UUID divisionId, UUID personId) {

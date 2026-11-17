@@ -22,12 +22,15 @@ export class PersonService {
     return this.http.get<PersonResponse>(`${this.apiUrl}/${id}`);
   }
 
-  getPagedInactivePlayersByClubAndDivision(clubId: string, divisionId: string, page: number, size: number): Observable<ResultsPage> {
+  getPagedInactivePlayersByClubAndDivision(
+    clubId: string, divisionId: string, page: number, size: number, search = ''
+  ): Observable<ResultsPage> {
     const params = new HttpParams()
       .set('clubId', clubId)
       .set('divisionId', divisionId)
       .set('page', page - 1)
-      .set('size', size);
+      .set('size', size)
+      .set('search', search);
     return this.http.get<ResultsPage>(`${this.apiUrl}/club`, { params });
   }
   

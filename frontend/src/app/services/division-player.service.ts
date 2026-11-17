@@ -9,6 +9,7 @@ import {
 import { RosterImportRequest, RosterImportResult } from '../features/division-player/import/roster-import.types';
 import { ResultsPage } from '../features/pagination/results-page';
 import { MessageResponse } from '../shared/types/shared-types';
+import { DivisionHistoryPerson } from './division-coach.service';
 
 @Injectable({
   providedIn: 'root'
@@ -36,12 +37,19 @@ export class DivisionPlayerService {
     return this.http.get<DivisionPlayerResponse[]>(`${this.apiUrl}/history`, { params });
   }
 
-  getActiveByDivisionId(divisionId: string, page: number, size: number): Observable<ResultsPage> {
-    const params = new HttpParams()
+  getActiveByDivisionId(divisionId: string, page: number, size: number, search = ''): Observable<ResultsPage> {
+    let params = new HttpParams()
       .set('divisionId', divisionId)
       .set('page', page - 1)
       .set('size', size);
+    if (search.trim()) params = params.set('search', search.trim());
     return this.http.get<ResultsPage>(this.apiUrl, { params });
+  }
+
+  getHistoryPeople(divisionId: string, page: number, size: number, search = ''): Observable<ResultsPage> {
+    let params = new HttpParams().set('divisionId', divisionId).set('page', page - 1).set('size', size);
+    if (search.trim()) params = params.set('search', search.trim());
+    return this.http.get<ResultsPage>(`${this.apiUrl}/history/people`, { params });
   }
 
   getWithPersonAndUserByDivisionId(divisionId: string): Observable<DivisionPlayerPersonUserResponse[]> {
