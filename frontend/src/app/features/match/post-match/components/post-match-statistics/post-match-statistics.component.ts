@@ -1,18 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, Directive, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import { catchError, firstValueFrom, forkJoin, map, of } from 'rxjs';
 import { LayoutService } from 'src/app/core/services/layout.service';
 import { UserContextService } from 'src/app/core/services/user-context.service';
-import { EventTypeService } from '../../../services/event-type.service';
-import { EventService } from '../../../services/event.service';
-import { RosterService } from '../../../services/roster.service';
-import { LiveCaptureService } from '../../../services/live-capture.service';
 import { StatisticCalculationService } from '../../../statistics/services/statistic-calculation.service';
-import { StatisticApiService } from '../../../statistics/services/statistic-api.service';
-import { BackendEventResponse } from '../../../types/event.types';
 import { LiveCaptureEventType } from '../../../types/event-type.types';
-import { AdvancedMatchStatistics, MatchStatistics, PlayerStatistic, PlayerStatistics } from '../../../statistics/types/statistic.types';
+import { MatchRosterPlayer } from '../../../types/roster.types';
+import { AdvancedMatchStatistics, MatchStatistics, PlayerStatistic, PlayerStatistics, StatisticEvent } from '../../../statistics/types/statistic.types';
 import { AdvancedSection, presentAdvancedStatistics } from '../../../statistics/presentation/advanced-presentation';
 import { RosterPlayerInfo } from '../../../statistics/calculators';
 import {
@@ -40,6 +35,7 @@ import {
   StatLine,
 } from '../../../statistics/presentation/stat-presentation';
 import { shortTeamName } from '../../utils/zone-grid';
+import { PostMatchDataStore } from '../../store/post-match-data.store';
 import { PostMatchShellStore } from '../../store/post-match-shell.store';
 import { LoadingGate } from '../../../../../shared/utils/loading-gate';
 import { RugbyBallLoaderComponent } from '../../../../../shared/components/rugby-ball-loader/rugby-ball-loader.component';
@@ -88,12 +84,8 @@ export class PostMatchStatisticsComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly layoutService = inject(LayoutService);
   private readonly shell = inject(PostMatchShellStore);
-  private readonly eventTypeService = inject(EventTypeService);
-  private readonly rosterService = inject(RosterService);
-  private readonly eventService = inject(EventService);
-  private readonly liveCaptureService = inject(LiveCaptureService);
+  private readonly data = inject(PostMatchDataStore);
   private readonly statisticService = inject(StatisticCalculationService);
-  private readonly statisticApi = inject(StatisticApiService);
   private readonly userContext = inject(UserContextService);
 
   readonly matchId = signal<string>('');
@@ -122,12 +114,12 @@ export class PostMatchStatisticsComponent implements OnInit, OnDestroy {
   readonly showAnalysis = computed(() => this.content() !== 'measurements');
   readonly showMeasurements = computed(() => this.content() !== 'analysis');
 
-  private readonly events = signal<BackendEventResponse[]>([]);
+  private readonly events = signal<StatisticEvent[]>([]);
   private readonly eventTypes = signal<LiveCaptureEventType[]>([]);
   private readonly roster = signal<RosterPlayerInfo[]>([]);
   /**
-   * Estadísticas de segundo nivel del backend (posesiones, zona roja, etc.). Se piden una vez al entrar: los eventos
-   * se editan en otra pantalla. `null` si no se pudieron obtener; el resto de la página se muestra igual.
+   * Estadísticas de segundo nivel del backend (posesiones, zona roja, etc.). Vienen de la caché del shell, que las
+   * vuelve a pedir si se editó un evento o un tramo. `null` si no se pudieron obtener; el resto de la página se muestra igual.
    */
   private readonly advanced = signal<AdvancedMatchStatistics | null>(null);
   readonly advancedUnavailable = signal(false);
@@ -302,7 +294,7 @@ export class PostMatchStatisticsComponent implements OnInit, OnDestroy {
       return;
     }
     this.period.useKey(`post-match.${id}.statistics.period`);
-    await this.load(id);
+    await this.load();
   }
 
   ngOnDestroy(): void {
@@ -330,20 +322,31 @@ export class PostMatchStatisticsComponent implements OnInit, OnDestroy {
     this.router.navigate(['/post-match', this.matchId()]);
   }
 
-  private async load(matchId: string): Promise<void> {
+  /**
+   * Todo en paralelo desde la caché del shell (que ya envió lo capturado en este dispositivo antes de pedir los eventos).
+   * Las avanzadas y el plantel no bloquean: si fallan, el resto de la página se muestra igual.
+   */
+  private async load(): Promise<void> {
     this.loading.start();
     this.errorMessage.set('');
 
     try {
-      const [events] = await Promise.all([
-        this.loadEvents(matchId),
-        this.loadEventTypes(),
-      ]);
-      // Después de los eventos: loadEvents primero sincroniza lo capturado en este dispositivo.
-      await this.loadAdvanced(matchId);
+      const { events, types, roster, advanced } = await firstValueFrom(forkJoin({
+        events: this.data.events(),
+        // Solo los tipos activos del catálogo: los eventos de tipos dados de baja no se muestran ni cuentan.
+        types: this.data.eventTypes(),
+        roster: this.data.roster().pipe(map(players => this.toRosterInfo(players)), catchError(() => of<RosterPlayerInfo[]>([]))),
+        advanced: this.data.advanced().pipe(catchError(err => {
+          console.error('Error al cargar las estadísticas avanzadas del partido:', err);
+          return of(null);
+        }))
+      }));
 
+      this.eventTypes.set(types.filter(eventType => eventType.isActive !== false));
       this.events.set(events);
-      this.roster.set(await this.loadRoster(matchId));
+      this.roster.set(roster);
+      this.advanced.set(advanced);
+      this.advancedUnavailable.set(advanced === null);
     } catch (err) {
       console.error('Error al cargar las estadísticas del partido:', err);
       this.errorMessage.set('No se pudieron cargar las estadísticas del partido.');
@@ -353,55 +356,19 @@ export class PostMatchStatisticsComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Eventos del backend, sin pasar por IndexedDB: las estadísticas del post-partido no funcionan sin conexión.
-   * Antes envía lo capturado en este dispositivo, para que el backend tenga el partido completo.
-   */
-  private async loadEvents(matchId: string): Promise<BackendEventResponse[]> {
-    try {
-      await firstValueFrom(this.liveCaptureService.syncPendingEvents(matchId));
-    } catch { /* no bloqueante: se envían en la próxima sincronización */ }
-    return firstValueFrom(this.eventService.getByMatch(matchId));
-  }
-
-  private async loadAdvanced(matchId: string): Promise<void> {
-    try {
-      this.advanced.set(await firstValueFrom(this.statisticApi.getAdvancedStatistics(matchId)));
-      this.advancedUnavailable.set(false);
-    } catch (err) {
-      console.error('Error al cargar las estadísticas avanzadas del partido:', err);
-      this.advanced.set(null);
-      this.advancedUnavailable.set(true);
-    }
-  }
-
-  /**
-   * Usa solo los tipos activos del catálogo: los eventos de tipos dados de baja no se muestran ni
-   * cuentan en las estadísticas del post-partido.
-   */
-  private async loadEventTypes(): Promise<void> {
-    const eventTypes = await firstValueFrom(this.eventTypeService.getAll());
-    this.eventTypes.set(eventTypes.filter(eventType => eventType.isActive !== false));
-  }
-
-  /**
    * Plantel simplificado: jugadores disponibles del partido (incluye a los que no registraron acciones).
    * Si querés titulares/suplentes exactos, extraé `resolveRoster` del resumen de entretiempo a un servicio compartido.
    */
-  private async loadRoster(matchId: string): Promise<RosterPlayerInfo[]> {
-    try {
-      const players = await firstValueFrom(this.rosterService.getRosterOrDivisionPlayers(matchId));
-      return (Array.isArray(players) ? players : [])
-        .filter(p => p.number != null)
-        .map(p => ({
-          playerId: p.id,
-          jerseyNumber: p.number,
-          playerName: p.fullName,
-          position: p.position ?? undefined,
-          isStarter: p.role === 'TITULAR',
-        }));
-    } catch {
-      return [];
-    }
+  private toRosterInfo(players: MatchRosterPlayer[]): RosterPlayerInfo[] {
+    return (Array.isArray(players) ? players : [])
+      .filter(p => p.number != null)
+      .map(p => ({
+        playerId: p.id,
+        jerseyNumber: p.number,
+        playerName: p.fullName,
+        position: p.position ?? undefined,
+        isStarter: p.role === 'TITULAR',
+      }));
   }
 
   barWidth(value: number, other: number): number {
