@@ -1,7 +1,7 @@
 import '@angular/compiler';
 import '../../testing/node-globals';
 import { Injector, signal } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { Observable, from, of } from 'rxjs';
 import { LiveMatchSource } from '../../../../core/navigation/live-match.source';
 import { LiveMatchSummary } from '../../../../core/navigation/navigation.types';
 import { ConnectivityService } from '../../../../core/services/connectivity.service';
@@ -130,7 +130,7 @@ describe('CoachHomeStore', () => {
     const cached = [match({})];
     let debtLoads = 0;
     const store = createStoreWith(
-      () => of<WidgetState<Match[]>>({ status: 'ready', data: cached, fetchedAt: 1, stale: true }, { status: 'ready', data: [...cached], fetchedAt: 2, stale: false }),
+      () => from<WidgetState<Match[]>[]>([{ status: 'ready', data: cached, fetchedAt: 1, stale: true }, { status: 'ready', data: [...cached], fetchedAt: 2, stale: false }]),
       () => { debtLoads++; return of(debt); });
     store.reload();
     expect(store.matchesState()).toEqual({ status: 'ready', data: cached, fetchedAt: 2, stale: false });
@@ -140,7 +140,7 @@ describe('CoachHomeStore', () => {
   it('si la respuesta trae partidos distintos al snapshot, lo derivado se vuelve a pedir', () => {
     let debtLoads = 0;
     const store = createStoreWith(
-      () => of<WidgetState<Match[]>>({ status: 'ready', data: [match({})], fetchedAt: 1, stale: true }, { status: 'ready', data: [match({ id: 'm2' })], fetchedAt: 2, stale: false }),
+      () => from<WidgetState<Match[]>[]>([{ status: 'ready', data: [match({})], fetchedAt: 1, stale: true }, { status: 'ready', data: [match({ id: 'm2' })], fetchedAt: 2, stale: false }]),
       () => { debtLoads++; return of(debt); });
     store.reload();
     expect(debtLoads).toBe(2);
