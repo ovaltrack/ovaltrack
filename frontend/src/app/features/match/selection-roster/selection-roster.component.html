@@ -3,7 +3,11 @@
   <header class="hud">
     <div class="hud-text">
       <p class="label-mono hud-label">Alineación Táctica</p>
-      <h1 class="hud-title">Armar Plantel vs {{ opponentName() }}</h1>
+      @if (isLoading()) {
+        <div class="sk sk-title" aria-hidden="true"></div>
+      } @else {
+        <h1 class="hud-title">Armar Plantel vs {{ opponentName() }}</h1>
+      }
       <p class="hud-subtitle">Asigna los 15 titulares reglamentarios y hasta 8 suplentes para el encuentro</p>
     </div>
 
@@ -18,45 +22,51 @@
   </header>
 
   <!-- 2. Barra de Filtros Segmentados y Contadores de Puesto -->
-  <div class="roster-toolbar">
-    <div class="status-segment">
-      <button
-        type="button"
-        class="status-tab"
-        [class.active]="currentStep() === 'titulares'"
-        (click)="setStep('titulares')">
-        <span>Titulares (15)</span>
-        <span class="status-badge-count" [class.count-complete]="isStartingComplete()">
-          {{ startingAssignedCount() }}/15
-        </span>
-      </button>
-
-      <button
-        type="button"
-        class="status-tab"
-        [class.active]="currentStep() === 'suplentes'"
-        (click)="setStep('suplentes')">
-        <span>Suplentes (hasta 8)</span>
-        <span class="status-badge-count">
-          {{ substituteAssignedCount() }}/8
-        </span>
-      </button>
+  @if (isLoading()) {
+    <div class="roster-toolbar" aria-hidden="true">
+      <div class="sk sk-toolbar"></div>
     </div>
+  } @else if (!loadError()) {
+    <div class="roster-toolbar">
+      <div class="status-segment">
+        <button
+          type="button"
+          class="status-tab"
+          [class.active]="currentStep() === 'titulares'"
+          (click)="setStep('titulares')">
+          <span>Titulares (15)</span>
+          <span class="status-badge-count" [class.count-complete]="isStartingComplete()">
+            {{ startingAssignedCount() }}/15
+          </span>
+        </button>
 
-    <div class="roster-summary-pill">
-      @if (isStartingComplete()) {
-        <span class="status-badge status-active">
-          <span class="dot"></span>
-          Formación titular completa (15/15)
-        </span>
-      } @else {
-        <span class="status-badge status-warning">
-          <span class="dot"></span>
-          Faltan {{ 15 - startingAssignedCount() }} titulares
-        </span>
-      }
+        <button
+          type="button"
+          class="status-tab"
+          [class.active]="currentStep() === 'suplentes'"
+          (click)="setStep('suplentes')">
+          <span>Suplentes (hasta 8)</span>
+          <span class="status-badge-count">
+            {{ substituteAssignedCount() }}/8
+          </span>
+        </button>
+      </div>
+
+      <div class="roster-summary-pill">
+        @if (isStartingComplete()) {
+          <span class="status-badge status-active">
+            <span class="dot"></span>
+            Formación titular completa (15/15)
+          </span>
+        } @else {
+          <span class="status-badge status-warning">
+            <span class="dot"></span>
+            Faltan {{ 15 - startingAssignedCount() }} titulares
+          </span>
+        }
+      </div>
     </div>
-  </div>
+  }
 
   <!-- 3. Contenido Principal / Grid Táctica -->
   @if (isLoading()) {
@@ -64,6 +74,12 @@
       <div class="sk-row"><div class="sk sk-block"></div></div>
       <div class="sk-row"><div class="sk sk-block"></div></div>
       <div class="sk-row"><div class="sk sk-block"></div></div>
+    </div>
+  } @else if (loadError()) {
+    <div class="roster-error" role="alert">
+      <p class="roster-error-title">No se pudo cargar el plantel</p>
+      <p class="roster-error-text">Revisa tu conexión e intenta nuevamente.</p>
+      <button type="button" class="btn btn-outline" (click)="loadAllData(matchId())">Reintentar</button>
     </div>
   } @else {
     <div class="roster-layout">
@@ -96,14 +112,17 @@
                 [class.filled]="slot.player !== null"
                 [class.is-selected]="activeSlotIndex() === i"
                 (click)="selectSlot(i)"
+                (keydown.enter)="onSlotKeydown($event, i)"
+                (keydown.space)="onSlotKeydown($event, i)"
                 role="button"
-                tabindex="0">
+                tabindex="0"
+                [attr.aria-pressed]="activeSlotIndex() === i">
                 
                 <div class="slot-top">
                   <span class="slot-number-editor">
                     <input
                       class="slot-number"
-                      [class.slot-number--duplicate]="isDuplicateSlotNumber(i)"
+                      [class.slot-number--duplicate]="duplicateSlotIndex() === i"
                       type="number"
                       min="1"
                       step="1"
@@ -112,7 +131,7 @@
                       (blur)="finishSlotNumberEdit(i)"
                       (click)="$event.stopPropagation()"
                       [disabled]="isRosterLocked()"
-                      [attr.aria-invalid]="isDuplicateSlotNumber(i)"
+                      [attr.aria-invalid]="duplicateSlotIndex() === i"
                       [attr.aria-label]="'Número del jugador en el puesto ' + slot.number"
                       [placeholder]="slot.number.toString()"
                       title="Editar número del jugador">
@@ -126,7 +145,7 @@
                         </svg>
                       </span>
                     }
-                    @if (isDuplicateSlotNumber(i)) {
+                    @if (duplicateSlotIndex() === i) {
                       <span class="slot-number-error" role="alert">
                         Ese dorsal ya existe
                       </span>
@@ -194,26 +213,26 @@
             </div>
           } @else {
             <div class="players-pool-grid">
-              @for (player of filteredAvailablePlayers(); track player.id) {
+              @for (item of poolItems(); track item.player.id) {
                 <button
                   type="button"
                   class="player-pool-item"
-                  [class.is-assigned]="isPlayerAssigned(player.id)"
-                  (click)="selectAvailablePlayer(player)">
+                  [class.is-assigned]="item.dorsal !== undefined"
+                  (click)="selectAvailablePlayer(item.player)">
                   <div class="player-pool-avatar">
-                    {{ player.fullName.charAt(0).toUpperCase() }}
+                    {{ item.player.fullName.charAt(0).toUpperCase() }}
                   </div>
                   <div class="player-pool-meta">
-                    <span class="player-pool-name">{{ player.fullName }}</span>
+                    <span class="player-pool-name">{{ item.player.fullName }}</span>
                     <span class="player-pool-detail">
-                      @if (isPlayerAssigned(player.id)) {
-                        <span class="assigned-pill">En cancha (#{{ getPlayerDorsal(player.id) }})</span>
+                      @if (item.dorsal !== undefined) {
+                        <span class="assigned-pill">En cancha (#{{ item.dorsal }})</span>
                       } @else {
-                        <span class="position-tag">{{ player.position || 'Jugador' }}</span>
+                        <span class="position-tag">{{ item.player.position || 'Jugador' }}</span>
                       }
                     </span>
                   </div>
-                  @if (!isPlayerAssigned(player.id)) {
+                  @if (item.dorsal === undefined) {
                     <span class="assign-action-indicator">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                         <polyline points="9 18 15 12 9 6"></polyline>
