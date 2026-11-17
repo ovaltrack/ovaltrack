@@ -86,10 +86,30 @@ describe('toWidgetState', () => {
       expect(states[1]).toEqual({ status: 'ready', data: 3, fetchedAt: 50, stale: true });
     });
 
+    it('con snapshot y conexión emite el snapshot como stale y refreshing y luego el dato fresco', () => {
+      const { snapshot } = fakeSnapshot({ data: 5, fetchedAt: 10 });
+      const response = new Subject<number>();
+      const states = collect<number>(response, { snapshot, now: () => 60 });
+      expect(states).toEqual([{ status: 'ready', data: 5, fetchedAt: 10, stale: true, refreshing: true }]);
+      response.next(8);
+      expect(states[1]).toEqual({ status: 'ready', data: 8, fetchedAt: 60, stale: false });
+    });
+
+    it('con snapshot y conexión no emite loading', () => {
+      const { snapshot } = fakeSnapshot({ data: 5, fetchedAt: 10 });
+      expect(collect(of(8), { snapshot }).map(s => s.status)).toEqual(['ready', 'ready']);
+    });
+
+    it('con snapshot y conexión, un dato vacío reemplaza al snapshot', () => {
+      const { snapshot } = fakeSnapshot({ data: 5, fetchedAt: 10 });
+      expect(collect(of(null), { snapshot }).map(s => s.status)).toEqual(['ready', 'empty']);
+    });
+
     it('un error con snapshot cae a la última vista buena', () => {
       const { snapshot } = fakeSnapshot({ data: 9, fetchedAt: 20 });
       const states = collect<number>(throwError(() => new Error('500')), { snapshot });
       expect(states[1]).toEqual({ status: 'ready', data: 9, fetchedAt: 20, stale: true });
+      expect(states[1]).not.toEqual(jasmine.objectContaining({ refreshing: true }));
     });
 
     it('un error sin snapshot sigue siendo error', () => {

@@ -27,14 +27,17 @@ const isNullOrEmptyList = (value: unknown): boolean =>
  * Convierte una carga HTTP en el estado de un widget: emite `loading` enseguida y luego `ready`,
  * `empty` o `error`. El error nunca se propaga, así un widget que falla no tumba al resto.
  * Con `snapshot`, un error o la falta de conexión caen a la última vista buena marcada como `stale`.
+ * Con `snapshot` y conexión, en lugar de `loading` se emite enseguida esa vista buena como `stale` y
+ * `refreshing` (stale-while-revalidate) hasta que llega la respuesta real.
  */
 export function toWidgetState<T>(options: ToWidgetStateOptions<T> = {}): OperatorFunction<T, WidgetState<T>> {
   const { isEmpty = isNullOrEmptyList, errorMessage = WIDGET_ERROR_MESSAGE, now = Date.now, snapshot, offline = false } = options;
   const stale = ({ data, fetchedAt }: Snapshot<T>): WidgetState<T> => ({ status: 'ready', data, fetchedAt, stale: true });
+  const refreshing = (cached: Snapshot<T>): WidgetState<T> => ({ status: 'ready', data: cached.data, fetchedAt: cached.fetchedAt, stale: true, refreshing: true });
 
   return (source: Observable<T>) => defer(() => {
     const cached = snapshot?.read() ?? null;
-    if (offline && cached) return of(stale(cached));
+    if (offline && cached) return of(stale(cached)).pipe(startWith<WidgetState<T>>({ status: 'loading' }));
     return source.pipe(
       map((value): WidgetState<T> => {
         if (isEmpty(value)) return { status: 'empty' };
@@ -42,7 +45,8 @@ export function toWidgetState<T>(options: ToWidgetStateOptions<T> = {}): Operato
         snapshot?.write(value, fetchedAt);
         return { status: 'ready', data: value, fetchedAt, stale: offline };
       }),
-      catchError(() => of<WidgetState<T>>(cached ? stale(cached) : { status: 'error', message: errorMessage }))
+      catchError(() => of<WidgetState<T>>(cached ? stale(cached) : { status: 'error', message: errorMessage })),
+      startWith<WidgetState<T>>(cached ? refreshing(cached) : { status: 'loading' })
     );
-  }).pipe(startWith<WidgetState<T>>({ status: 'loading' }));
+  });
 }
