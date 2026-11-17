@@ -86,6 +86,7 @@ public class EventService {
 				.toList();
 	}
 
+	@org.springframework.transaction.annotation.Transactional(readOnly = true)
 	public Collection<MatchTimelineEventResponseDTO> findPostMatchEvents(UUID matchId, Authentication authentication) {
 		Match match = matchService.findMatchEntityById(matchId);
 		if (match == null) {

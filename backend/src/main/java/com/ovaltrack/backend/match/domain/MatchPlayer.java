@@ -8,7 +8,10 @@ import java.util.UUID;
 @Entity
 @Table(
         name = "matches_players",
-        indexes = {@Index(name = "idx_matches_players_match", columnList = "match_id")},
+        indexes = {
+                @Index(name = "idx_matches_players_match", columnList = "match_id"),
+                @Index(name = "idx_matches_players_division_player", columnList = "division_id")
+        },
         uniqueConstraints = {
                 @UniqueConstraint(name = "uk_match_player_number", columnNames = {"match_id", "number"})
         })

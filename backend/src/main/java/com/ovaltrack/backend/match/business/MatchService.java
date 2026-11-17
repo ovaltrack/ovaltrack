@@ -88,6 +88,7 @@ public class MatchService {
 
     private final ClubService clubService;
 
+    @Transactional(readOnly = true)
     public Collection<MatchResponseDTO> findAllMatchesByClubId(UUID clubId) {
         if (clubService.findClubEntityById(clubId) == null) {
             throw new BusinessException("Club no encontrado");
@@ -95,6 +96,7 @@ public class MatchService {
         return matchRepository.findAllMatchesByClubId(clubId).stream().map(MatchDTOMapper::toResponseDTO).toList();
     }
 
+    @Transactional(readOnly = true)
     public Collection<MatchResponseDTO> findAllMatchesByDivisionId(UUID divisionId) {
         if (divisionService.findDivisionEntityById(divisionId) == null) {
             throw new BusinessException("Division no encontrada");
@@ -431,18 +433,14 @@ public class MatchService {
 
     @Transactional(readOnly = true)
     public RosterDTO getSavedRoster(UUID matchId) {
-        Match match = matchRepository.findById(matchId).orElse(null);
+        List<MatchPlayer> roster = List.copyOf(matchPlayerRepository.findRosterByMatchIds(List.of(matchId)));
 
-        if (match == null || match.getRoster() == null || match.getRoster().isEmpty()) {
-            return new RosterDTO(List.of(), List.of());
-        }
-
-        List<UUID> startingPlayers = match.getRoster().stream()
+        List<UUID> startingPlayers = roster.stream()
                 .filter(mp -> mp.getRole() == MatchPlayerRole.TITULAR)
                 .map(mp -> mp.getDivisionPlayer().getPerson().getId())
                 .toList();
 
-        List<UUID> substitutePlayers = match.getRoster().stream()
+        List<UUID> substitutePlayers = roster.stream()
                 .filter(mp -> mp.getRole() == MatchPlayerRole.SUPLENTE)
                 .map(mp -> mp.getDivisionPlayer().getPerson().getId())
                 .toList();
@@ -457,11 +455,7 @@ public class MatchService {
             throw new EntityNotFoundException("Partido no encontrado");
         }
 
-        if (match.getRoster() == null || match.getRoster().isEmpty()) {
-            return List.of();
-        }
-
-        return match.getRoster().stream()
+        return matchPlayerRepository.findRosterByMatchIds(List.of(matchId)).stream()
                 .map(this::toMatchRosterPlayerDTO)
                 .sorted(Comparator.comparing((MatchRosterPlayerDTO p) -> p.getRole() == MatchPlayerRole.TITULAR ? 0 : 1)
                         .thenComparing(p -> p.getFullName(), String.CASE_INSENSITIVE_ORDER))

@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "divisions")
+@Table(name = "divisions", indexes = {@Index(name = "idx_divisions_club", columnList = "club_id")})
 /* 
 @Table(name = "divisions",
 uniqueConstraints = {
