@@ -112,20 +112,14 @@ public class MatchService {
 
     @Transactional(readOnly = true)
     public MatchResponseDTO getLiveMatchState(UUID matchId) {
-        Match match = findMatchEntityById(matchId);
-        if (match == null) {
-            throw new EntityNotFoundException("Partido no encontrado");
-        }
+        Match match = requireMatch(matchId);
 
         return MatchDTOMapper.toResponseDTO(match);
     }
 
     @Transactional(readOnly = true)
     public LiveMatchBootstrapDTO getLiveMatchBootstrap(UUID matchId) {
-        Match match = findMatchEntityById(matchId);
-        if (match == null) {
-            throw new EntityNotFoundException("Partido no encontrado");
-        }
+        Match match = requireMatch(matchId);
 
         return new LiveMatchBootstrapDTO(
                 MatchDTOMapper.toResponseDTO(match),
@@ -139,10 +133,7 @@ public class MatchService {
 
     @Transactional
     public MatchResponseDTO updateLiveMatchState(UUID matchId, LiveMatchStateDTO request) {
-        Match match = findMatchEntityById(matchId);
-        if (match == null) {
-            throw new EntityNotFoundException("Partido no encontrado");
-        }
+        Match match = requireMatch(matchId);
 
         match.setClockElapsedSeconds(request.clockElapsedSeconds());
         match.setClockPaused(request.clockPaused());
@@ -154,6 +145,11 @@ public class MatchService {
 
     public Match findMatchEntityById(UUID matchId) {
         return matchRepository.findById(matchId).orElse(null);
+    }
+
+    private Match requireMatch(UUID matchId) {
+        return matchRepository.findById(matchId)
+                .orElseThrow(() -> new EntityNotFoundException("Partido no encontrado"));
     }
 
     @Transactional
@@ -192,10 +188,7 @@ public class MatchService {
 
     @Transactional
     public MatchResponseDTO updateMatch(UUID matchId, MatchUpdateDTO request) {
-        Match match = findMatchEntityById(matchId);
-        if (match == null) {
-            throw new EntityNotFoundException("Partido no encontrado");
-        }
+        Match match = requireMatch(matchId);
 
         Opponent opponent = opponentRepository.findById(request.opponentId())
                 .orElseThrow(() -> new EntityNotFoundException("Oponente no encontrado"));
@@ -218,10 +211,7 @@ public class MatchService {
      */
     @Transactional
     public MatchResponseDTO changeMatchStatus(UUID matchId, MatchStatus matchStatus, Instant occurredAt) {
-        Match match = findMatchEntityById(matchId);
-        if (match == null) {
-            throw new EntityNotFoundException("Partido no encontrado");
-        }
+        Match match = requireMatch(matchId);
 
         validateStatusChange(match, matchStatus);
         applyStatusChange(match, matchStatus, resolveTransitionTime(occurredAt));
@@ -462,19 +452,12 @@ public class MatchService {
     }
 
     private void validateCanViewMatch(UUID matchId, Authentication authentication) {
-        Match match = findMatchEntityById(matchId);
-        if (match == null) {
-            throw new EntityNotFoundException("Partido no encontrado");
-        }
-        matchSecurityValidator.validateCanViewMatch(match, authentication);
+        matchSecurityValidator.validateCanViewMatch(requireMatch(matchId), authentication);
     }
 
     @Transactional(readOnly = true)
     public List<MatchRosterPlayerDTO> getMatchRosterPlayers(UUID matchId) {
-        Match match = findMatchEntityById(matchId);
-        if (match == null) {
-            throw new EntityNotFoundException("Partido no encontrado");
-        }
+        Match match = requireMatch(matchId);
 
         return matchPlayerRepository.findRosterByMatchIds(List.of(matchId)).stream()
                 .map(this::toMatchRosterPlayerDTO)
@@ -503,10 +486,7 @@ public class MatchService {
 
     @Transactional
     public MatchResponseDTO closeFirstHalf(UUID matchId, Authentication authentication) {
-        Match match = findMatchEntityById(matchId);
-        if (match == null) {
-            throw new EntityNotFoundException("Partido no encontrado");
-        }
+        Match match = requireMatch(matchId);
 
         matchSecurityValidator.validateCanManageMatch(match, authentication);
 
@@ -520,10 +500,7 @@ public class MatchService {
 
     @Transactional
     public MatchResponseDTO startSecondHalf(UUID matchId, Authentication authentication) {
-        Match match = findMatchEntityById(matchId);
-        if (match == null) {
-            throw new EntityNotFoundException("Partido no encontrado");
-        }
+        Match match = requireMatch(matchId);
 
         matchSecurityValidator.validateCanManageMatch(match, authentication);
 
