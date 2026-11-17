@@ -2,7 +2,7 @@ import { Observable, OperatorFunction, catchError, defer, map, of, startWith } f
 import { WidgetState } from '../types/home.types';
 import { Snapshot } from './dashboard-snapshot.cache';
 
-export const WIDGET_ERROR_MESSAGE = 'No pudimos cargar esto';
+const WIDGET_ERROR_MESSAGE = 'No pudimos cargar esto';
 
 /** Última vista buena de un widget: se lee sin conexión o ante un error, y se escribe con cada respuesta. */
 export interface WidgetSnapshot<T> {

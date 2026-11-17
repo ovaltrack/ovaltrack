@@ -99,11 +99,6 @@ export class UserContextService {
   }
 
   clear(): void {
-    const tokenPayload = this.tokenService.getPayload();
     this.contextSignal.set(null);
-    if (!tokenPayload) {
-      return;
-    }
-
   }
 }
