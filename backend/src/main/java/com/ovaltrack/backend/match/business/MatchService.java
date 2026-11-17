@@ -428,11 +428,6 @@ public class MatchService {
     @Transactional(readOnly = true)
     public RosterDTO getSavedRoster(UUID matchId, Authentication authentication) {
         validateCanViewMatch(matchId, authentication);
-        return getSavedRoster(matchId);
-    }
-
-    @Transactional(readOnly = true)
-    public RosterDTO getSavedRoster(UUID matchId) {
         List<MatchPlayer> roster = List.copyOf(matchPlayerRepository.findRosterByMatchIds(List.of(matchId)));
 
         List<UUID> startingPlayers = roster.stream()
@@ -451,7 +446,7 @@ public class MatchService {
     @Transactional(readOnly = true)
     public List<MatchRosterPlayerDTO> getMatchRosterPlayers(UUID matchId, Authentication authentication) {
         validateCanViewMatch(matchId, authentication);
-        return getMatchRosterPlayers(matchId);
+        return findRosterPlayers(matchId);
     }
 
     /** Partido, jugadores de su division y plantel guardado en una sola transaccion de lectura. */
@@ -463,17 +458,14 @@ public class MatchService {
         return new RosterBootstrapDTO(
                 MatchDTOMapper.toResponseDTO(match),
                 divisionPlayerService.findAvailablePlayersByDivisionId(match.getDivision().getId()),
-                getMatchRosterPlayers(matchId));
+                findRosterPlayers(matchId));
     }
 
     private void validateCanViewMatch(UUID matchId, Authentication authentication) {
         matchSecurityValidator.validateCanViewMatch(requireMatch(matchId), authentication);
     }
 
-    @Transactional(readOnly = true)
-    public List<MatchRosterPlayerDTO> getMatchRosterPlayers(UUID matchId) {
-        Match match = requireMatch(matchId);
-
+    private List<MatchRosterPlayerDTO> findRosterPlayers(UUID matchId) {
         return matchPlayerRepository.findRosterByMatchIds(List.of(matchId)).stream()
                 .map(this::toMatchRosterPlayerDTO)
                 .sorted(Comparator.comparing((MatchRosterPlayerDTO p) -> p.getRole() == MatchPlayerRole.TITULAR ? 0 : 1)
