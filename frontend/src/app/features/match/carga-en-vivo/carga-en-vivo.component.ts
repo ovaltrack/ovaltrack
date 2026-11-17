@@ -68,6 +68,7 @@ interface FollowUpChooser {
     label: string;
     preset?: Record<string, unknown>;
     team?: FollowUpChoice['team'];
+    lockedTeam?: CaptureTeam | null;
   }[];
 }
 
@@ -1183,13 +1184,16 @@ export class CargaEnVivoComponent implements OnInit, OnDestroy {
       return null;
     }
 
-    const resultingPossession = possession === 'KEEP'
-      ? this.currentPossession
-      : possession === 'ACTOR'
-        ? this.capture.team
-        : opposite(this.capture.team);
+    const actor = this.capture.team;
+    const resultingPossession = possession === 'ACTOR'
+      ? actor
+      : possession === 'OTHER'
+        ? opposite(actor)
+        : this.capture.event.actor === 'DEFENDING'
+          ? opposite(actor)
+          : actor;
 
-    return resultingPossession === this.currentPossession ? 'favorable' : 'unfavorable';
+    return resultingPossession === actor ? 'favorable' : 'unfavorable';
   }
 
   sliderValue(field: TemplateField): number {
@@ -1297,7 +1301,7 @@ export class CargaEnVivoComponent implements OnInit, OnDestroy {
     if (followUp) {
       onSuccess = () => this.openCapture(followUp, this.createHistoryId(), possession, team);
     } else if (choices.length > 0) {
-      onSuccess = () => this.openChooser(event, choices, team);
+      onSuccess = () => this.openChooser(event, choices, team, attributes);
     }
 
     this.commitEvent(
@@ -1312,11 +1316,54 @@ export class CargaEnVivoComponent implements OnInit, OnDestroy {
 
   // ───────────────────────── Evento siguiente a elección ─────────────────────────
 
-  private openChooser(event: LiveCaptureEventType, choices: FollowUpChoice[], originTeam: CaptureTeam | null): void {
+  private resolveFollowUpTeam(
+    origin: LiveCaptureEventType,
+    originAttributes: Record<string, unknown> | null,
+    originTeam: CaptureTeam | null,
+    nextType: LiveCaptureEventType,
+    explicitTeam: FollowUpChoice['team'] | undefined,
+  ): CaptureTeam | null {
+    if (originTeam === null) {
+      return null;
+    }
+    if (explicitTeam === 'SAME') {
+      return originTeam;
+    }
+    if (explicitTeam === 'OTHER') {
+      return opposite(originTeam);
+    }
+
+    const rule = possessionRule(origin, originAttributes);
+    const holder: CaptureTeam | null =
+      rule === 'ACTOR'
+        ? originTeam
+        : rule === 'OTHER'
+          ? opposite(originTeam)
+          : origin.actor === 'DEFENDING'
+            ? opposite(originTeam)
+            : origin.actor === 'ATTACKING'
+              ? originTeam
+              : null;
+
+    return holder === null ? null : resolveActor(nextType, holder);
+  }
+
+  private openChooser(
+    event: LiveCaptureEventType,
+    choices: FollowUpChoice[],
+    originTeam: CaptureTeam | null,
+    originAttributes: Record<string, unknown> | null,
+  ): void {
     const resolved = choices.flatMap(choice => {
       const type = this.eventTypes.find(candidate => candidate.code === choice.code);
       return type
-        ? [{ type, label: choice.label ?? type.name, preset: choice.preset, team: choice.team }]
+        ? [{
+          type,
+          label: choice.label ?? type.name,
+          preset: choice.preset,
+          team: choice.team,
+          lockedTeam: this.resolveFollowUpTeam(event, originAttributes, originTeam, type, choice.team),
+        }]
         : [];
     });
 
@@ -1339,11 +1386,9 @@ export class CargaEnVivoComponent implements OnInit, OnDestroy {
     choice: FollowUpChooser['choices'][number],
     originTeam: CaptureTeam | null,
   ): void {
-    const lockedTeam = originTeam === null || choice.team === undefined
-      ? null
-      : choice.team === 'SAME'
-        ? originTeam
-        : opposite(originTeam);
+    const lockedTeam = choice.lockedTeam !== undefined
+      ? choice.lockedTeam
+      : originTeam;
     this.openCapture(
       choice.type,
       this.createHistoryId(),
@@ -1360,9 +1405,6 @@ export class CargaEnVivoComponent implements OnInit, OnDestroy {
   }
 
   closeChooser(): void {
-    if (this.followUpChooser?.mandatory) {
-      return;
-    }
     this.followUpChooser = null;
   }
 
