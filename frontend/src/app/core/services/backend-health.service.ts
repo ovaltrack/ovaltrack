@@ -1,7 +1,7 @@
 import { DestroyRef, Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { catchError, exhaustMap, filter, interval, of } from 'rxjs';
+import { catchError, exhaustMap, filter, of, timer } from 'rxjs';
 import { environment } from '@environments/environment';
 import { ConnectivityService } from './connectivity.service';
 
@@ -9,7 +9,7 @@ import { ConnectivityService } from './connectivity.service';
 export const BACKEND_HEALTH_INTERVAL_MS = 780_000;
 
 /**
- * Consulta periódicamente `GET /actuator/health` (público en SecurityConfig) para mantener activo el
+ * Consulta al arrancar y luego periódicamente `GET /actuator/health` (público en SecurityConfig) para mantener activo el
  * servidor remoto. Sin conexión no hace nada: la petición fallaría igual.
  */
 @Injectable({ providedIn: 'root' })
@@ -19,7 +19,7 @@ export class BackendHealthService {
   private readonly healthUrl = `${environment.apiUrl}/actuator/health`;
 
   constructor() {
-    interval(BACKEND_HEALTH_INTERVAL_MS).pipe(
+    timer(0, BACKEND_HEALTH_INTERVAL_MS).pipe(
       filter(() => this.connectivity.online()),
       exhaustMap(() => this.http.get<{ status: string }>(this.healthUrl).pipe(
         catchError((error: unknown) => {

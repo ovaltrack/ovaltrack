@@ -1,6 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap, catchError, of, from, switchMap } from 'rxjs';
+import { EMPTY, Observable, tap, catchError, of, from, merge, share, switchMap, takeUntil, ignoreElements } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { UserContext, UserRole } from '../../features/auth/types/auth.types';
 import { ClubSummary, Division } from '../../features/division/types/division.types';
@@ -42,6 +42,22 @@ export class UserContextService {
       return of(null);
     }
 
+    const fresh$ = this.revalidate(tokenPayload.userId).pipe(share());
+    return merge(this.hydrateFromCache(tokenPayload.userId).pipe(takeUntil(fresh$)), fresh$);
+  }
+
+  /** Pinta el contexto guardado en Dexie sin esperar a `/api/me`; nunca pisa uno que ya llegó. */
+  private hydrateFromCache(userId: string): Observable<never> {
+    return from(this.cache.getUserContext(userId)).pipe(
+      tap(cached => {
+        if (cached && this.contextSignal() === null) this.contextSignal.set(cached);
+      }),
+      ignoreElements(),
+      catchError(() => EMPTY),
+    );
+  }
+
+  private revalidate(userId: string): Observable<UserContext | null> {
     return this.http.get<UserContext>(`${this.apiUrl}/api/me`).pipe(
       switchMap(ctx => from(this.cache.saveUserContext(ctx)).pipe(
         tap(() => this.contextSignal.set(ctx)),
@@ -55,7 +71,7 @@ export class UserContextService {
           return of(null);
         }
 
-        return from(this.cache.getUserContext(tokenPayload.userId)).pipe(
+        return from(this.cache.getUserContext(userId)).pipe(
           tap(context => this.contextSignal.set(context ?? null)),
           switchMap(context => of(context ?? null)),
         );
@@ -83,11 +99,6 @@ export class UserContextService {
   }
 
   clear(): void {
-    const tokenPayload = this.tokenService.getPayload();
     this.contextSignal.set(null);
-    if (!tokenPayload) {
-      return;
-    }
-
   }
 }

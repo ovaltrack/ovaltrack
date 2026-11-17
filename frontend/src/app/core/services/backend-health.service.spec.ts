@@ -23,9 +23,11 @@ describe('BackendHealthService', () => {
 
   afterEach(() => httpMock.verify());
 
-  it('consulta el health check del backend en cada intervalo', fakeAsync(() => {
+  it('consulta el health check del backend al arrancar y en cada intervalo', fakeAsync(() => {
     TestBed.inject(BackendHealthService);
 
+    tick(0);
+    httpMock.expectOne(req => req.url.endsWith('/actuator/health')).flush({ status: 'UP' });
     tick(BACKEND_HEALTH_INTERVAL_MS);
     httpMock.expectOne(req => req.url.endsWith('/actuator/health')).flush({ status: 'UP' });
     tick(BACKEND_HEALTH_INTERVAL_MS);

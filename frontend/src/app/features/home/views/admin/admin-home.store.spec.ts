@@ -222,4 +222,26 @@ describe('AdminHomeStore', () => {
     expect(store.hudSubtitle()).toBe('Puerto Madryn RC · 2 divisiones');
     expect(store.hudTitle()).toBe('Buenas tardes, Laura');
   });
+
+  describe('refreshing', () => {
+    it('es falso cuando todo está al día', () => {
+      const store = createStore();
+      store.reload();
+      expect(store.refreshing()).toBeFalse();
+    });
+
+    it('es verdadero mientras los partidos cargan sin snapshot', () => {
+      matches = { status: 'loading' };
+      const store = createStore();
+      store.reload();
+      expect(store.refreshing()).toBeTrue();
+    });
+
+    it('es verdadero si un widget muestra un dato viejo mientras llega el real', () => {
+      stats = { status: 'ready', data: [stat('d1', 2)], fetchedAt: 1, stale: true, refreshing: true };
+      const store = createStore();
+      store.reload();
+      expect(store.refreshing()).toBeTrue();
+    });
+  });
 });

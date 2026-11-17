@@ -7,6 +7,11 @@
     }
   </div>
   <div class="hud-actions">
+    <span aria-live="polite">
+      @if (refreshing()) {
+        <span class="hud-refresh"><span class="hud-refresh-spinner" aria-hidden="true"></span>Actualizando…</span>
+      }
+    </span>
     <ng-content select="[hudActions]" />
   </div>
 </header>

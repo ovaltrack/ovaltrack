@@ -190,4 +190,28 @@ describe('PlayerHomeStore', () => {
     expect(store.hudSubtitle()).toBe('M18 · Puerto Madryn RC');
     expect(store.hudLabel()).toBe('Viernes 6 nov · Mi panel');
   });
+
+  describe('refreshing', () => {
+    it('es falso cuando todo está al día', () => {
+      state = { status: 'ready', data: summary, fetchedAt: 1, stale: false };
+      const store = createStore();
+      store.reload();
+      expect(store.refreshing()).toBeFalse();
+    });
+
+    it('es verdadero mientras el último partido carga sin snapshot', () => {
+      state = { status: 'loading' };
+      const store = createStore();
+      store.reload();
+      expect(store.refreshing()).toBeTrue();
+    });
+
+    it('es verdadero si la temporada muestra un dato viejo mientras llega el real', () => {
+      state = { status: 'ready', data: summary, fetchedAt: 1, stale: false };
+      season = { status: 'ready', data: seasonData, fetchedAt: 1, stale: true, refreshing: true };
+      const store = createStore();
+      store.reload();
+      expect(store.refreshing()).toBeTrue();
+    });
+  });
 });

@@ -5,13 +5,18 @@ import { RosterGaps } from '../domain/roster-gaps';
 /** Estado de un widget: cada tarjeta carga, falla y se reintenta sin afectar a las demás. */
 export type WidgetState<T> =
   | { status: 'loading' }
-  | { status: 'ready'; data: T; fetchedAt: number; stale: boolean }
+  | { status: 'ready'; data: T; fetchedAt: number; stale: boolean; /** Hay un dato viejo a la vista y la respuesta real todavía viene en camino. */ refreshing?: boolean }
   | { status: 'empty' }
   | { status: 'error'; message: string };
 
 /** El dato de un widget listo; `null` en cualquier otro estado. */
 export function dataOf<T>(state: WidgetState<T>): T | null {
   return state.status === 'ready' ? state.data : null;
+}
+
+/** Hay un dato viejo a la vista mientras llega la respuesta real. */
+export function isRefreshing(state: WidgetState<unknown>): boolean {
+  return state.status === 'ready' && state.refreshing === true;
 }
 
 export type PrimaryActionKind =

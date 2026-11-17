@@ -44,6 +44,11 @@ export class CoachHomeComponent {
       wasOnline = online;
     });
 
+    effect(() => {
+      this.store.divisions();
+      untracked(() => this.store.reloadIfDivisionsChanged());
+    });
+
     // Cuando este dispositivo empieza o deja de capturar un partido, el tablero cambia de variante.
     effect(() => {
       this.store.captureMatchId();

@@ -15,7 +15,7 @@ import { relativeMatchLabel, parseWallClock } from '../../domain/match-time';
 import { PendingRow, pendingRows } from '../../domain/pending-rows';
 import { UpcomingFixture, upcomingFixtures } from '../../domain/upcoming-fixtures';
 import { coachRules, resolvePrimaryAction } from '../../domain/primary-action';
-import { BoardModel, PrimaryAction, WidgetState } from '../../types/home.types';
+import { BoardModel, PrimaryAction, WidgetState, isRefreshing } from '../../types/home.types';
 import { BoardExtras, CoachHomeDataService, DebtData, EMPTY_BOARD_EXTRAS, FormData } from './coach-home-data.service';
 
 const ACTIVE_DIVISION_WIDGET = 'active-division';
@@ -108,6 +108,11 @@ export class CoachHomeStore {
   /** Mientras no llegan los partidos no hay tablero que mostrar. */
   readonly boardStatus = computed(() => this.divisions().length === 0 ? 'ready' : this.matchesState().status);
 
+  /** Algún widget muestra un dato viejo mientras llega el real, o los partidos todavía no tienen nada que mostrar. */
+  readonly refreshing = computed(() =>
+    this.matchesState().status === 'loading'
+    || [this.matchesState(), this.debtState(), this.jerseyState(), this.formState(), this.focusState()].some(isRefreshing));
+
   /** Pendientes de la división (ver `pendingRows`): lo que el tablero ya pide no se repite acá. */
   readonly pendingState = computed<WidgetState<PendingRow[]>>(() => {
     const jerseys = this.jerseyState();
@@ -143,6 +148,9 @@ export class CoachHomeStore {
 
   readonly hudLabel = computed(() => `${hudDateLabel(this.now())} · ${this.userContext.currentClub()?.name ?? ''}`);
   readonly hudTitle = computed(() => `${greetingFor(this.now())}, ${this.userContext.userContext()?.firstName ?? ''}`.replace(/,\s*$/, ''));
+
+  /** Ids de las divisiones con las que se cargaron los partidos; `null` si todavía no se cargaron. */
+  private loadedDivisionIds: string | null = null;
 
   private readonly loadMatches$ = new Subject<void>();
   private readonly derive$ = new Subject<void>();
@@ -181,7 +189,17 @@ export class CoachHomeStore {
   }
 
   reload(): void {
-    if (this.divisions().length > 0) this.loadMatches$.next();
+    if (this.divisions().length === 0) return;
+    this.loadedDivisionIds = this.divisionIds();
+    this.loadMatches$.next();
+  }
+
+  /**
+   * El contexto puede llegar de Dexie y corregirse después con /api/me: si las divisiones cambiaron
+   * desde la última carga se vuelven a pedir los partidos; un contexto con las mismas no recarga nada.
+   */
+  reloadIfDivisionsChanged(): void {
+    if (this.started && this.divisionIds() !== this.loadedDivisionIds) this.reload();
   }
 
   /** Vuelve a cargar lo que depende de la división activa y del partido que captura este dispositivo. */
@@ -200,6 +218,10 @@ export class CoachHomeStore {
   retry(widget: CoachWidget): void {
     if (widget === 'matches') this.reload();
     else this.refreshDerived();
+  }
+
+  private divisionIds(): string {
+    return this.divisions().map(division => division.id).join(',');
   }
 
   private userId(): string | null {
