@@ -19,10 +19,10 @@ public interface MatchRepository extends JpaRepository<Match, UUID> {
     @Query("SELECT m FROM Match m WHERE m.id = :id")
     java.util.Optional<Match> findByIdForUpdate(@Param("id") UUID id);
 
-    @Query("SELECT m FROM Match m WHERE m.division.club.id = :clubId")
+    @Query("SELECT m FROM Match m JOIN FETCH m.opponent WHERE m.division.club.id = :clubId")
     Collection<Match> findAllMatchesByClubId(@Param("clubId") UUID clubId);
 
-    @Query("SELECT m FROM Match m WHERE m.division.id = :divisionId ORDER BY m.status DESC, m.date")
+    @Query("SELECT m FROM Match m JOIN FETCH m.opponent WHERE m.division.id = :divisionId ORDER BY m.status DESC, m.date")
     Collection<Match> findAllMatchesByDivisionId(@Param("divisionId") UUID divisionId);
 
     @Query("""
@@ -55,6 +55,7 @@ public interface MatchRepository extends JpaRepository<Match, UUID> {
     @Query("""
         SELECT m
         FROM Match m
+        JOIN FETCH m.opponent
         WHERE m.division.id = :divisionId
         AND m.status = MatchStatus.FINISHED
         AND m.date >= :from
