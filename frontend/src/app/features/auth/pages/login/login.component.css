@@ -1,4 +1,24 @@
 /* Login: reutiliza el layout del registro (register-form.css). Solo tokens del design system (Cal y botella y Grafito). */
+/* Login y recupero: la tarjeta va centrada en el alto disponible; si no entra, el margin auto
+   la deja arriba y la página scrollea sin cortarla. */
+.lg-page {
+  display: flex;
+  min-height: calc(100vh - var(--navbar-h));
+  min-height: calc(100dvh - var(--navbar-h));
+}
+
+.lg-page > .rf-shell {
+  width: 100%;
+  margin-block: auto;
+}
+
+/* Centro óptico: la tarjeta se ve mejor un poco por encima del centro geométrico */
+@media (min-width: 601px) {
+  .lg-page {
+    padding-bottom: clamp(48px, 14vh, 160px);
+  }
+}
+
 .lg-shell {
   max-width: 880px;
 }
