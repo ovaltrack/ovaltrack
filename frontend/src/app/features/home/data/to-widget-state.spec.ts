@@ -76,23 +76,8 @@ describe('toWidgetState', () => {
       let requested = false;
       const source = new Subject<number>();
       const states = collect<number>(source.pipe(map(value => { requested = true; return value; })), { snapshot, offline: true });
-      expect(states).toEqual([{ status: 'ready', data: 5, fetchedAt: 10, stale: true }]);
+      expect(states).toEqual([{ status: 'loading' }, { status: 'ready', data: 5, fetchedAt: 10, stale: true }]);
       expect(requested).toBeFalse();
-    });
-
-    it('con conexión muestra el snapshot mientras llega la respuesta, y después la respuesta', () => {
-      const { snapshot } = fakeSnapshot({ data: 5, fetchedAt: 10 });
-      const response = new Subject<number>();
-      const states = collect<number>(response, { snapshot, now: () => 60 });
-      expect(states).toEqual([{ status: 'ready', data: 5, fetchedAt: 10, stale: true }]);
-      response.next(6);
-      expect(states[1]).toEqual({ status: 'ready', data: 6, fetchedAt: 60, stale: false });
-    });
-
-    it('sin snapshot guardado sigue arrancando en loading', () => {
-      const { snapshot } = fakeSnapshot(null);
-      const states = collect<number>(new Subject<number>(), { snapshot });
-      expect(states).toEqual([{ status: 'loading' }]);
     });
 
     it('sin conexión y sin snapshot usa la fuente y marca el dato como stale', () => {

@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { BackendEventCreationRequest, BackendEventUpdateRequest, BackendEventResponse, LocalMatchEvent, MatchCoverage, MatchTimelineEventResponse } from '../types/event.types';
+import { BackendEventCreationRequest, BackendEventUpdateRequest, BackendEventResponse, LocalMatchEvent, MatchTimelineEventResponse } from '../types/event.types';
 
 @Injectable({ providedIn: 'root' })
 export class EventService {
@@ -15,11 +15,6 @@ export class EventService {
 
   getByMatchPostMatch(matchId: string): Observable<MatchTimelineEventResponse[]> {
     return this.http.get<MatchTimelineEventResponse[]>(`${this.apiUrl}/match/post-match?matchId=${matchId}`);
-  }
-
-  /** % de análisis de varios partidos en una sola llamada, sin descargar sus eventos. */
-  getCoverage(matchIds: readonly string[]): Observable<MatchCoverage[]> {
-    return this.http.get<MatchCoverage[]>(`${this.apiUrl}/match/coverage?matchIds=${matchIds.join(',')}`);
   }
 
   create(request: BackendEventCreationRequest): Observable<BackendEventResponse> {

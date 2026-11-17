@@ -42,25 +42,12 @@ export class UserContextService {
       return of(null);
     }
 
-    // Mientras responde /api/me se muestra el último contexto guardado de este usuario, así el Inicio
-    // no espera la red para elegir la vista. Lo que devuelve este método sigue siendo solo la respuesta del servidor.
-    let answered = false;
-    if (this.contextSignal() === null) {
-      this.cache.getUserContext(tokenPayload.userId)
-        .then(cached => {
-          if (!answered && cached && this.contextSignal() === null) this.contextSignal.set(cached);
-        })
-        .catch(() => undefined);
-    }
-
     return this.http.get<UserContext>(`${this.apiUrl}/api/me`).pipe(
-      tap(() => answered = true),
       switchMap(ctx => from(this.cache.saveUserContext(ctx)).pipe(
         tap(() => this.contextSignal.set(ctx)),
         switchMap(() => of(ctx)),
       )),
       catchError(err => {
-        answered = true;
         console.error('Error al cargar el contexto de usuario:', err);
 
         if (err.status === 401 || err.status === 403) {
