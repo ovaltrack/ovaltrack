@@ -59,6 +59,16 @@ export interface LocalMatchEvent extends BackendEventResponse {
   syncErrorMessage?: string | null;
 }
 
+/** Cobertura de análisis de un partido calculada por el backend (`GET /event/match/coverage`) con la regla de `reviewCoverage`. */
+export interface MatchCoverage {
+  matchId: string;
+  totalEvents: number;
+  /** Jugadas propias o neutrales sin jugador asignado. */
+  withoutPlayer: number;
+  /** 0–100, redondeado; un partido sin eventos cuenta como 100. */
+  percent: number;
+}
+
 export interface MatchTimelineEventResponse {
   id: string;
   eventTypeId: string;

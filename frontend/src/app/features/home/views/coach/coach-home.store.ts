@@ -159,7 +159,7 @@ export class CoachHomeStore {
     ).subscribe();
 
     this.bind(() => this.data.boardExtras(this.upcoming(), this.captureMatch()), this.extras);
-    this.bind(() => this.data.debt(this.divisionMatches()), this.debtState);
+    this.bind(() => this.data.debt(this.divisionMatches(), this.now()), this.debtState);
     this.bind(() => {
       const id = this.activeDivisionId();
       return id ? this.data.playersWithoutJersey(id) : of<WidgetState<number>>({ status: 'empty' });
@@ -186,7 +186,7 @@ export class CoachHomeStore {
 
   /** Vuelve a cargar lo que depende de la división activa y del partido que captura este dispositivo. */
   refreshDerived(): void {
-    this.data.invalidateEvents();
+    this.data.invalidateCoverage();
     this.derive$.next();
   }
 
