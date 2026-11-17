@@ -39,7 +39,7 @@ public class MatchSecurityValidator {
             return;
         }
 
-        validateMatchBelongsToUserClub(match, authentication, MANAGE_DENIED_MESSAGE);
+        validateMatchBelongsToUserClub(match, user, MANAGE_DENIED_MESSAGE);
 
         if (user.getRole() == UserRole.ADMIN_CLUB) {
             return;
@@ -66,11 +66,11 @@ public class MatchSecurityValidator {
             return;
         }
 
-        validateMatchBelongsToUserClub(match, authentication, VIEW_DENIED_MESSAGE);
+        validateMatchBelongsToUserClub(match, user, VIEW_DENIED_MESSAGE);
     }
 
-    private void validateMatchBelongsToUserClub(Match match, Authentication authentication, String deniedMessage) {
-        Club userClub = clubService.findClubEntityForAuthenticatedUser(authentication);
+    private void validateMatchBelongsToUserClub(Match match, User user, String deniedMessage) {
+        Club userClub = clubService.findClubEntityForUser(user);
         if (match.getDivision() == null || match.getDivision().getClub() == null) {
             throw new AccessDeniedException(deniedMessage);
         }

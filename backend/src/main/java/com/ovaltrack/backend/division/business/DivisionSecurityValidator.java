@@ -34,7 +34,7 @@ public class DivisionSecurityValidator {
             throw new AccessDeniedException("Acceso denegado: solo el administrador del club puede crear divisiones");
         }
 
-        Club userClub = clubService.findClubEntityForAuthenticatedUser(authentication);
+        Club userClub = clubService.findClubEntityForUser(user);
         if (userClub == null || (targetClubId != null && !userClub.getId().equals(targetClubId))) {
             throw new AccessDeniedException("Acceso denegado: no puede crear divisiones en otro club");
         }
@@ -50,7 +50,7 @@ public class DivisionSecurityValidator {
             throw new AccessDeniedException("Acceso denegado: rol no autorizado");
         }
 
-        Club userClub = clubService.findClubEntityForAuthenticatedUser(authentication);
+        Club userClub = clubService.findClubEntityForUser(user);
         if (userClub == null || (clubId != null && !userClub.getId().equals(clubId))) {
             throw new AccessDeniedException("Acceso denegado: no pertenece al club solicitado");
         }
@@ -70,7 +70,7 @@ public class DivisionSecurityValidator {
             throw new AccessDeniedException("Acceso denegado: rol no autorizado");
         }
 
-        Club userClub = clubService.findClubEntityForAuthenticatedUser(authentication);
+        Club userClub = clubService.findClubEntityForUser(user);
         if (userClub == null || division.getClub() == null || !userClub.getId().equals(division.getClub().getId())) {
             throw new AccessDeniedException("Acceso denegado: la división no pertenece a su club");
         }
@@ -98,7 +98,7 @@ public class DivisionSecurityValidator {
                     "Acceso denegado: solo el administrador de club puede modificar o eliminar divisiones");
         }
 
-        Club userClub = clubService.findClubEntityForAuthenticatedUser(authentication);
+        Club userClub = clubService.findClubEntityForUser(user);
         if (userClub == null || division.getClub() == null || !userClub.getId().equals(division.getClub().getId())) {
             throw new AccessDeniedException("Acceso denegado: la división no pertenece a su club");
         }
@@ -115,7 +115,7 @@ public class DivisionSecurityValidator {
         }
 
         if (user.getRole() == UserRole.ADMIN_CLUB) {
-            Club userClub = clubService.findClubEntityForAuthenticatedUser(authentication);
+            Club userClub = clubService.findClubEntityForUser(user);
             if (userClub == null || division.getClub() == null
                     || !userClub.getId().equals(division.getClub().getId())) {
                 throw new AccessDeniedException("Acceso denegado: la división no pertenece a su club");
@@ -124,7 +124,7 @@ public class DivisionSecurityValidator {
         }
 
         if (user.getRole() == UserRole.COACH_ANALYST) {
-            Club userClub = clubService.findClubEntityForAuthenticatedUser(authentication);
+            Club userClub = clubService.findClubEntityForUser(user);
             if (userClub == null || division.getClub() == null
                     || !userClub.getId().equals(division.getClub().getId())) {
                 throw new AccessDeniedException("Acceso denegado: la división no pertenece a su club");
@@ -156,7 +156,7 @@ public class DivisionSecurityValidator {
                     "Acceso denegado: solo el administrador del club puede gestionar entrenadores de división");
         }
 
-        Club userClub = clubService.findClubEntityForAuthenticatedUser(authentication);
+        Club userClub = clubService.findClubEntityForUser(user);
         if (userClub == null || division.getClub() == null || !userClub.getId().equals(division.getClub().getId())) {
             throw new AccessDeniedException("Acceso denegado: la división no pertenece a su club");
         }
