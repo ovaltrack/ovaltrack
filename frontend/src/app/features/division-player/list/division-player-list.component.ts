@@ -1,8 +1,10 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { forkJoin, of, switchMap } from 'rxjs';
+import { forkJoin, of, switchMap, Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { DestroyRef } from '@angular/core';
 import { DivisionPlayerService } from 'src/app/services/division-player.service';
 import { DivisionService } from 'src/app/services/division.service';
 import { PersonService } from 'src/app/services/person.service';
@@ -29,8 +31,14 @@ export class DivisionPlayerListComponent implements OnInit {
   private readonly divisionPlayerService = inject(DivisionPlayerService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly location = inject(Location);
   private readonly toastService = inject(ToastService);
   private readonly userContext = inject(UserContextService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly searchChanges = new Subject<string>();
+  private readonly availablePlayersSearchChanges = new Subject<string>();
+  searchText = '';
+  availablePlayersSearchText = '';
 
   /** La importación por planilla es solo para el administrador del club y el coach de la división (el backend lo valida). */
   readonly canImportRoster = computed(() => {
@@ -58,7 +66,26 @@ export class DivisionPlayerListComponent implements OnInit {
 
 
   ngOnInit(): void {
+    this.searchChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => this.cargarJugadoresActivos(1));
+    this.availablePlayersSearchChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => this.cargarJugadoresDisponibles(1));
     this.cargarJugadoresActivos();
+  }
+
+  buscarJugadores(value: string): void {
+    this.searchText = value;
+    this.searchChanges.next(value);
+  }
+
+  limpiarBusqueda(): void {
+    this.buscarJugadores('');
   }
 
   mostrarJugadoresInactivos(): void {
@@ -82,7 +109,9 @@ export class DivisionPlayerListComponent implements OnInit {
     }
 
     this.currentPage = page;
-    this.personService.getPagedInactivePlayersByClubAndDivision(this.division.clubId, this.division.id, page, 10).subscribe({
+    this.personService.getPagedInactivePlayersByClubAndDivision(
+      this.division.clubId, this.division.id, page, 10, this.availablePlayersSearchText
+    ).subscribe({
       next: (response: ResultsPage) => {
         this.resultsPage = response;
         this.mostrarFormularioAsociacion = true;
@@ -92,6 +121,19 @@ export class DivisionPlayerListComponent implements OnInit {
         this.toastService.show('error', 'No se pudieron obtener las personas del club.', 'Error');
       }
     });
+  }
+
+  buscarJugadoresDisponibles(value: string): void {
+    this.availablePlayersSearchText = value;
+    this.availablePlayersSearchChanges.next(value);
+  }
+
+  limpiarBusquedaJugadoresDisponibles(): void {
+    this.buscarJugadoresDisponibles('');
+  }
+
+  volver(): void {
+    this.location.back();
   }
 
   onPageChangeRequested(page: number): void {
@@ -164,21 +206,15 @@ export class DivisionPlayerListComponent implements OnInit {
 
         return forkJoin({
           division: this.divisionService.getDivisionById(divisionId),
-          activePlayersPage: this.divisionPlayerService.getActiveByDivisionId(divisionId, page, 10)
+          activePlayersPage: this.divisionPlayerService.getActiveByDivisionId(divisionId, page, 10, this.searchText)
         });
       }),
-      switchMap(({ division, activePlayersPage }) => {
-        const activePlayers = activePlayersPage.content as DivisionPlayerResponse[];
-        if (activePlayers.length === 0) {
-          return of({ division, activePlayersPage, activePlayers, activePersons: [] as PersonResponse[] });
-        }
-
-        return forkJoin(
-          activePlayers.map(player => this.personService.getPersonById(player.personId))
-        ).pipe(
-          switchMap((activePersons) => of({ division, activePlayersPage, activePlayers, activePersons }))
-        );
-      })
+      switchMap(({ division, activePlayersPage }) => of({
+        division,
+        activePlayersPage,
+        activePlayers: activePlayersPage.content as DivisionPlayerResponse[],
+        activePersons: [] as PersonResponse[]
+      }))
     ).subscribe({
       next: ({ division, activePlayersPage, activePlayers, activePersons }) => {
         this.division = division;

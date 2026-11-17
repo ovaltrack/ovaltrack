@@ -8,7 +8,8 @@
     </div>
 
     <div class="hud-actions">
-      <a routerLink="/divisions" class="btn btn-outline">← Volver a divisiones</a>
+      <button type="button" class="btn btn-outline" (click)="volver()">← Volver</button>
+      <a [routerLink]="['/divisions', division?.id, 'coaches', 'history']" class="btn btn-outline">Historial</a>
       <button type="button" class="btn btn-invite" *ngIf="!esCoach" (click)="mostrarAsociacion()" [disabled]="cargandoMiembros">
         {{ mostrarFormulario ? 'Ocultar registro' : '+ Asociar entrenador' }}
       </button>
@@ -67,14 +68,14 @@
     <div class="division-card" *ngFor="let coach of coaches">
       <div class="division-main">
         <div class="division-badge-icon" aria-hidden="true">
-          <span>{{ getCoachName(coach).charAt(0).toUpperCase() }}</span>
+          <span>{{ (coach.firstName || 'P').charAt(0).toUpperCase() }}</span>
         </div>
         <div class="division-info">
-          <div class="division-name">{{ getCoachName(coach) }}</div>
+          <div class="division-name">{{ coach.firstName }} {{ coach.lastName }}</div>
           <div class="division-meta">
-            <span class="meta-gender">{{ getCoachEmail(coach) }}</span>
+            <span class="meta-gender">{{ coach.contactEmail || 'Sin email' }}</span>
             <span class="meta-dot">•</span>
-            <span class="meta-gender">{{ getCoachPhone(coach) }}</span>
+            <span class="meta-gender">{{ coach.contactPhone || 'Sin teléfono' }}</span>
           </div>
           <div class="division-meta">
             <span class="meta-gender">Desde {{ formatDate(coach.startDate) }}</span>
@@ -85,12 +86,6 @@
       </div>
 
       <div class="division-status-zone">
-        <button
-          type="button"
-          class="btn btn-outline"
-          (click)="mostrarHistorial(coach)">
-          Historial
-        </button>
         <button
           *ngIf="!esCoach && !coach.endDate"
           type="button"

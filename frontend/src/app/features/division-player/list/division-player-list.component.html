@@ -12,6 +12,7 @@
       <a routerLink="/members" [queryParams]="{ tab: 'jugadores' }" class="btn btn-outline">
         <i class="bi bi-envelope"></i> Invitaciones
       </a>
+      <a [routerLink]="['/divisions', division?.id, 'players', 'history']" class="btn btn-outline">Historial</a>
 
       <!-- Botón secundario: Asociar jugadores existentes del club -->
       <button
@@ -35,16 +36,16 @@
       }
 
       <!-- Enlace / Botón auxiliar de navegación -->
-      <a routerLink="/divisions" class="btn btn-outline">
+      <button type="button" class="btn btn-outline" (click)="volver()">
         <i class="bi bi-arrow-left"></i> Volver
-      </a>
+      </button>
     </div>
   </header>
 
   <!-- Section: Available Club Players to Register (Visible when toggled ON) -->
   <section
     class="table-card"
-    *ngIf="mostrarFormularioAsociacion && resultsPage.content.length > 0"
+    *ngIf="mostrarFormularioAsociacion"
   >
     <div
       class="card-header"
@@ -54,9 +55,39 @@
         <p class="brand-text club">Jugadores del club disponibles</p>
         <h2 class="card-title">Seleccionar e ingresar posición</h2>
       </div>
+      <div class="d-flex gap-2">
+        <label class="visually-hidden" for="available-player-search">Buscar jugador disponible</label>
+        <input
+          id="available-player-search"
+          class="form-control"
+          type="search"
+          [value]="availablePlayersSearchText"
+          (input)="buscarJugadoresDisponibles($any($event.target).value)"
+          placeholder="Buscar por nombre o email"
+        />
+        <button
+          type="button"
+          class="btn btn-outline"
+          *ngIf="availablePlayersSearchText"
+          (click)="limpiarBusquedaJugadoresDisponibles()">
+          Limpiar
+        </button>
+      </div>
     </div>
 
-    <div class="table-responsive">
+    <div class="empty-state" *ngIf="!resultsPage.content || resultsPage.content.length === 0">
+      <h2>
+        {{ availablePlayersSearchText
+          ? 'Sin resultados para «' + availablePlayersSearchText + '»'
+          : 'No hay jugadores del club disponibles' }}
+      </h2>
+      <p>
+        No hay jugadores del club disponibles para asociar a esta división.
+        Los jugadores activos en esta división no aparecen en esta lista.
+      </p>
+    </div>
+
+    <div class="table-responsive" *ngIf="resultsPage.content && resultsPage.content.length > 0">
       <table class="data-table">
         <thead>
           <tr>
@@ -124,6 +155,17 @@
 
   <!-- Main Content Card (Active Players List) -->
   <section class="table-card" data-tour="squad" aria-live="polite">
+    <div class="card-header">
+      <label for="division-player-search">Buscar jugador</label>
+      <div class="d-flex gap-2">
+        <input id="division-player-search" class="form-control" type="search"
+          [value]="searchText" (input)="buscarJugadores($any($event.target).value)"
+          placeholder="Nombre, apellido, email o camiseta" />
+        <button type="button" class="btn btn-outline" *ngIf="searchText" (click)="limpiarBusqueda()">
+          Limpiar
+        </button>
+      </div>
+    </div>
     <!-- Header inside card displaying total count -->
     <div class="card-header" *ngIf="activePlayers.length > 0">
       <p class="brand-text club">Plantel de división</p>
@@ -136,7 +178,7 @@
 
     <!-- Empty State -->
     <div class="empty-state" *ngIf="activePlayers.length === 0">
-      <h2>No hay jugadores asociados</h2>
+      <h2>{{ searchText ? 'Sin resultados para «' + searchText + '»' : 'No hay jugadores asociados' }}</h2>
       <p>Esta división todavía no tiene jugadores registrados.</p>
     </div>
 
@@ -164,12 +206,12 @@
             <!-- Player Identity -->
             <td>
               <div class="player-name">
-                {{ activePersons[index].firstName || "Persona" }}
-                {{ activePersons[index].lastName || "sin nombre" }}
+                {{ player.firstName || "Persona" }}
+                {{ player.lastName || "sin nombre" }}
               </div>
               <div class="brand-text club">
                 {{
-                  activePersons[index].contactEmail || "Sin email registrado"
+                  player.contactEmail || "Sin email registrado"
                 }}
               </div>
             </td>
@@ -196,17 +238,10 @@
                 <a
                   class="btn btn-secondary"
                   [routerLink]="['/players', player.personId, 'statistics']"
-                  [attr.aria-label]="'Estadísticas de ' + (activePersons[index].firstName || 'la persona') + ' ' + (activePersons[index].lastName || '')"
+                  [attr.aria-label]="'Estadísticas de ' + (player.firstName || 'la persona') + ' ' + (player.lastName || '')"
                 >
                   Estadísticas
                 </a>
-                <button
-                  type="button"
-                  class="btn btn-secondary"
-                  (click)="mostrarAsociaciones(player)"
-                >
-                  Historial
-                </button>
                 <button
                   *ngIf="!player.endDate"
                   type="button"

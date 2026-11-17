@@ -8,6 +8,16 @@ import {
 } from '../features/division-coach/types/division-coach.types';
 import { MessageResponse } from '../shared/types/shared-types';
 
+export interface DivisionHistoryPerson {
+  personId: string;
+  firstName: string;
+  lastName: string;
+  contactEmail: string | null;
+  active: boolean;
+  firstStartDate: string;
+  lastEndDate: string | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -32,6 +42,12 @@ export class DivisionCoachService {
       }
     });
     return this.http.get<DivisionCoachResponse[]>(`${this.apiUrl}/history`, { params });
+  }
+
+  getHistoryPeople(divisionId: string, search = ''): Observable<DivisionHistoryPerson[]> {
+    let params = new HttpParams().set('divisionId', divisionId);
+    if (search.trim()) params = params.set('search', search.trim());
+    return this.http.get<DivisionHistoryPerson[]>(`${this.apiUrl}/history/people`, { params });
   }
 
   create(request: DivisionCoachCreationRequest): Observable<DivisionCoachResponse> {
