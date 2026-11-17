@@ -4,7 +4,8 @@ import { routes } from './app.routes';
 import { SelectivePreloadingStrategy } from './core/routing/selective-preloading.strategy';
 import { provideServiceWorker } from '@angular/service-worker';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { jwtInterceptor } from './core/interceptor/jwt.interceptor'; 
+import { jwtInterceptor } from './core/interceptor/jwt.interceptor';
+import { slowBackendInterceptor } from './core/interceptor/slow-backend.interceptor';
 import { initializeLocalDatabases } from './features/local-database/local-databases';
 import { DexieLiveMatchSource, LiveMatchSource } from './core/navigation/live-match.source';
 import { LocalSyncStatusSource, SyncStatusSource } from './core/navigation/sync-status.source';
@@ -25,7 +26,7 @@ export const appConfig: ApplicationConfig = {
       useFactory: () => () => initializeLocalDatabases(),
       multi: true,
     },
-    provideHttpClient(withInterceptors([jwtInterceptor])),
+    provideHttpClient(withInterceptors([jwtInterceptor, slowBackendInterceptor])),
     { provide: LiveMatchSource, useClass: DexieLiveMatchSource },
     { provide: SyncStatusSource, useClass: LocalSyncStatusSource },
     // En la raíz porque el Inicio es lazy: al cerrar sesión o ante un 401 se borran los snapshots de todos los usuarios.
