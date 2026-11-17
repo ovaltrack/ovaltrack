@@ -6,14 +6,11 @@ import { DivisionCoachService } from '../../../../services/division-coach.servic
 import { DivisionPlayerService } from '../../../../services/division-player.service';
 import { Division } from '../../../division/types/division.types';
 import { EventService } from '../../../match/services/event.service';
-import { EventTypeService } from '../../../match/services/event-type.service';
 import { MatchService } from '../../../match/services/match.service';
 import { RosterService } from '../../../match/services/roster.service';
 import { Match } from '../../../match/types/match.types';
-import { loadActiveTypeIds } from '../../data/active-type-ids';
 import { DashboardSnapshotCache } from '../../data/dashboard-snapshot.cache';
 import { ToWidgetStateOptions, toWidgetState } from '../../data/to-widget-state';
-import { analysisCoverage } from '../../domain/analysis-coverage';
 import { DivisionStat } from '../../domain/division-status';
 import { lastFinishedOf, upcomingMatches } from '../../domain/division-match-state';
 import { WidgetState } from '../../types/home.types';
@@ -28,7 +25,6 @@ export class AdminHomeDataService {
   private readonly matchService = inject(MatchService);
   private readonly rosterService = inject(RosterService);
   private readonly eventService = inject(EventService);
-  private readonly eventTypeService = inject(EventTypeService);
   private readonly coachService = inject(DivisionCoachService);
   private readonly playerService = inject(DivisionPlayerService);
   private readonly cache = inject(DashboardSnapshotCache);
@@ -51,13 +47,13 @@ export class AdminHomeDataService {
   }
 
   divisionStats(divisions: readonly Division[], matches: readonly Match[], now: Date): Observable<WidgetState<DivisionStat[]>> {
-    const activeTypeIds$ = loadActiveTypeIds(this.eventTypeService).pipe(shareReplay({ bufferSize: 1, refCount: false }));
+    const coverage$ = this.lastFinishedCoverage(divisions, matches);
     const loads = divisions.map(division => forkJoin({
       staff: this.coachService.getByDivisionId(division.id).pipe(
         map(coaches => coaches.filter(coach => !coach.endDate).length), catchError(() => of(null))),
       players: this.playerService.getActiveByDivisionId(division.id, 1, 1).pipe(
         map(page => page.totalElements), catchError(() => of(null))),
-      analysisPercent: this.lastFinishedAnalysis(division.id, matches, activeTypeIds$),
+      analysisPercent: this.analysisPercentOf(division.id, matches, coverage$),
       roster: this.nextRoster(division.id, matches, now)
     }).pipe(map(values => ({ divisionId: division.id, ...values }))));
     return (loads.length > 0 ? forkJoin(loads) : of([] as DivisionStat[])).pipe(toWidgetState<DivisionStat[]>(this.options('divisions')));
@@ -73,13 +69,21 @@ export class AdminHomeDataService {
     );
   }
 
-  private lastFinishedAnalysis(divisionId: string, matches: readonly Match[], activeTypeIds$: Observable<ReadonlySet<string> | null>): Observable<number | null> {
+  /** Una sola petición de cobertura con el último partido finalizado de cada división; `null` si falla. */
+  private lastFinishedCoverage(divisions: readonly Division[], matches: readonly Match[]): Observable<Map<string, number> | null> {
+    const ids = divisions.flatMap(division => lastFinishedOf(matches.filter(match => match.divisionId === division.id))?.id ?? []);
+    if (ids.length === 0) return of(new Map<string, number>());
+    return this.eventService.getCoverage(ids).pipe(
+      map(list => new Map(list.map(coverage => [coverage.matchId, coverage.percent] as const))),
+      catchError(() => of(null)),
+      shareReplay({ bufferSize: 1, refCount: false })
+    );
+  }
+
+  private analysisPercentOf(divisionId: string, matches: readonly Match[], coverage$: Observable<Map<string, number> | null>): Observable<number | null> {
     const last = lastFinishedOf(matches.filter(match => match.divisionId === divisionId));
     if (!last) return of(null);
-    return forkJoin({ events: this.eventService.getByMatchPostMatch(last.id), activeTypeIds: activeTypeIds$ }).pipe(
-      map(({ events, activeTypeIds }) => analysisCoverage(events, activeTypeIds).percent),
-      catchError(() => of(null))
-    );
+    return coverage$.pipe(map(percents => percents?.get(last.id) ?? null));
   }
 
   private options<T>(widget: string, extra: Partial<ToWidgetStateOptions<T>> = {}): ToWidgetStateOptions<T> {

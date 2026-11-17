@@ -77,3 +77,11 @@ export interface MatchTimelineEventResponse {
   /** Zona de la cancha derivada del período asignado; null/ausente = sin zona. */
   zone?: { row: number; col: number } | null;
 }
+
+/** Cobertura de análisis de un partido finalizado (`GET /event/coverage`); `percent` 100 si no tiene eventos. */
+export interface MatchCoverageResponse {
+  matchId: string;
+  totalEvents: number;
+  withoutPlayer: number;
+  percent: number;
+}

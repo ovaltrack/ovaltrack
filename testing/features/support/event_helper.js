@@ -40,3 +40,7 @@ export async function getPostMatchEvents(matchId, token) {
   assert.equal(response.status, 200, `No se pudo consultar la línea de eventos: ${response.body?.message}`);
   return response.body;
 }
+
+export function getCoverage(matchIds, token) {
+  return makeHttpRequest('GET', `event/coverage?matchIds=${matchIds.join(',')}`, null, token);
+}

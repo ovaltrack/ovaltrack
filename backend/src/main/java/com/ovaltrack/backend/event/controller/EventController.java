@@ -1,5 +1,6 @@
 package com.ovaltrack.backend.event.controller;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,7 @@ import com.ovaltrack.backend.event.business.EventService;
 import com.ovaltrack.backend.event.domain.dto.event.EventCreationDTO;
 import com.ovaltrack.backend.event.domain.dto.event.EventResponseDTO;
 import com.ovaltrack.backend.event.domain.dto.event.EventUpdateDTO;
+import com.ovaltrack.backend.event.domain.dto.event.MatchCoverageDTO;
 import com.ovaltrack.backend.common.dto.response.MessageResponse;
 import com.ovaltrack.backend.zone.business.PostMatchZoneEnricher;
 
@@ -80,6 +82,20 @@ public class EventController {
     public ResponseEntity<Object> findPostMatchEvents(@RequestParam UUID matchId, Authentication authentication) {
         return ResponseEntity
                 .ok(postMatchZoneEnricher.enrich(matchId, eventService.findPostMatchEvents(matchId, authentication)));
+    }
+
+    @Operation(summary = "Analysis coverage of finished matches", description = "Returns, for each finished match, how many active events it has and how many have no player assigned (opponent events do not count as pending); percent is the share already assigned (100 when there are no events). Only active event types count. Matches that are not FINISHED are omitted from the result. Accepts between 1 and 20 match ids.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Coverage returned for the finished matches."),
+            @ApiResponse(responseCode = "400", description = "No match ids, more than 20 ids, or malformed ids."),
+            @ApiResponse(responseCode = "403", description = "Forbidden: user cannot manage one of the matches."),
+            @ApiResponse(responseCode = "404", description = "One of the matches does not exist.")
+    })
+    @GetMapping("/coverage")
+    @PreAuthorize("hasAnyRole('ADMIN_OVALTRACK', 'ADMIN_CLUB', 'COACH_ANALYST')")
+    public ResponseEntity<List<MatchCoverageDTO>> findCoverage(@RequestParam List<UUID> matchIds,
+            Authentication authentication) {
+        return ResponseEntity.ok(eventService.findCoverage(matchIds, authentication));
     }
 
     @Operation(summary = "Find an event", description = "Returns the event identified by the eventId path parameter.")

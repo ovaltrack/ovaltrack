@@ -5,7 +5,10 @@ import java.util.Collection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -20,6 +23,7 @@ import com.ovaltrack.backend.person.domain.Person;
 import com.ovaltrack.backend.club.business.ClubService;
 import com.ovaltrack.backend.division.business.DivisionService;
 import com.ovaltrack.backend.common.config.exceptions.BusinessException;
+import com.ovaltrack.backend.common.config.exceptions.EntityNotFoundException;
 import com.ovaltrack.backend.event.domain.Event;
 import com.ovaltrack.backend.event.domain.EventPossession;
 import com.ovaltrack.backend.event.domain.EventType;
@@ -27,6 +31,8 @@ import com.ovaltrack.backend.event.domain.dto.EventDTOMapper;
 import com.ovaltrack.backend.event.domain.dto.event.EventCreationDTO;
 import com.ovaltrack.backend.event.domain.dto.event.EventResponseDTO;
 import com.ovaltrack.backend.event.domain.dto.event.EventUpdateDTO;
+import com.ovaltrack.backend.event.domain.dto.event.EventCoverageCount;
+import com.ovaltrack.backend.event.domain.dto.event.MatchCoverageDTO;
 import com.ovaltrack.backend.event.domain.dto.event.MatchTimelineEventResponseDTO;
 import com.ovaltrack.backend.event.repository.EventRepository;
 import com.ovaltrack.backend.match.repository.MatchPlayerRepository;
@@ -44,6 +50,7 @@ public class EventService {
 
 	public static final int MAX_FIRST_HALF_MATCH_SECONDS = 2400; // 40 min reglamentarios
 	public static final int MAX_SECOND_HALF_MATCH_SECONDS = 4800; // 80 min reglamentarios (40 + 40)
+	public static final int MAX_COVERAGE_MATCHES = 20;
 
 	private final EventRepository eventRepository;
 	private final EventTypeService eventTypeService;
@@ -99,6 +106,56 @@ public class EventService {
 		return eventRepository.findPostMatchEventsByMatchId(matchId).stream()
 				.map(EventDTOMapper::toTimelineResponseDTO)
 				.toList();
+	}
+
+	/**
+	 * Cobertura de análisis de los partidos finalizados indicados, en una sola consulta agregada.
+	 * Valida el acceso a cada partido; los que no están finalizados se omiten del resultado.
+	 */
+	@org.springframework.transaction.annotation.Transactional(readOnly = true)
+	public List<MatchCoverageDTO> findCoverage(Collection<UUID> matchIds, Authentication authentication) {
+		List<UUID> ids = requireValidCoverageIds(matchIds);
+		Map<UUID, Match> matchesById = matchRepository.findAllById(ids).stream()
+				.collect(Collectors.toMap(Match::getId, Function.identity()));
+		List<UUID> finishedIds = ids.stream()
+				.map(id -> findAuthorizedMatch(matchesById, id, authentication))
+				.filter(match -> match.getStatus() == MatchStatus.FINISHED)
+				.map(Match::getId)
+				.toList();
+		if (finishedIds.isEmpty()) {
+			return List.of();
+		}
+		Map<UUID, EventCoverageCount> countsByMatch = eventRepository.countCoverageByMatchIds(finishedIds).stream()
+				.collect(Collectors.toMap(EventCoverageCount::matchId, Function.identity()));
+		return finishedIds.stream()
+				.map(id -> toCoverage(id, countsByMatch.get(id)))
+				.toList();
+	}
+
+	private List<UUID> requireValidCoverageIds(Collection<UUID> matchIds) {
+		List<UUID> ids = matchIds == null ? List.of() : matchIds.stream().distinct().toList();
+		if (ids.isEmpty()) {
+			throw new IllegalArgumentException("Se requiere al menos un partido");
+		}
+		if (ids.size() > MAX_COVERAGE_MATCHES) {
+			throw new IllegalArgumentException("No se pueden consultar más de " + MAX_COVERAGE_MATCHES + " partidos a la vez");
+		}
+		return ids;
+	}
+
+	private Match findAuthorizedMatch(Map<UUID, Match> matchesById, UUID matchId, Authentication authentication) {
+		Match match = matchesById.get(matchId);
+		if (match == null) {
+			throw new EntityNotFoundException("Partido no encontrado");
+		}
+		matchSecurityValidator.validateCanManageMatch(match, authentication);
+		return match;
+	}
+
+	private MatchCoverageDTO toCoverage(UUID matchId, EventCoverageCount count) {
+		return count == null
+				? MatchCoverageDTO.empty(matchId)
+				: MatchCoverageDTO.of(matchId, count.totalEvents(), count.withoutPlayer());
 	}
 
 	public EventResponseDTO findEventById(UUID eventId) {
