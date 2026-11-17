@@ -622,6 +622,103 @@ class EventServiceTest {
         verify(matchRepository).save(match);
     }
 
+    @Test
+    @DisplayName("saveEvent: Una jugada que no puntúa no recalcula el tanteador")
+    void saveEvent_shouldNotRecalculateScore_whenEventDoesNotScore() {
+        UUID matchId = UUID.randomUUID();
+        UUID tackleTypeId = UUID.randomUUID();
+
+        EventType tackleType = new EventType();
+        tackleType.setId(tackleTypeId);
+        tackleType.setIsScoring(false);
+
+        Match match = new Match();
+        match.setId(matchId);
+        match.setStatus(MatchStatus.IN_PROGRESS);
+
+        when(eventTypeService.findEventTypeEntityById(tackleTypeId)).thenReturn(tackleType);
+        when(matchService.findMatchEntityById(matchId)).thenReturn(match);
+        when(eventRepository.save(any(Event.class))).thenAnswer(i -> i.getArgument(0));
+
+        EventCreationDTO request = new EventCreationDTO(
+                tackleTypeId, matchId, null, null, EventPossession.OWN,
+                100, 100, null, 1, "APP", null, null
+        );
+
+        eventService.saveEvent(request);
+
+        verify(eventRepository, never()).findEventsByMatchId(matchId);
+        verify(matchRepository, never()).save(match);
+    }
+
+    @Test
+    @DisplayName("deleteEvent: Borrar una jugada que no puntúa no recalcula el tanteador")
+    void deleteEvent_shouldNotRecalculateScore_whenEventDoesNotScore() {
+        UUID eventId = UUID.randomUUID();
+
+        EventType tackleType = new EventType();
+        tackleType.setIsScoring(false);
+
+        Match match = new Match();
+        match.setId(UUID.randomUUID());
+
+        Event tackle = new Event();
+        tackle.setId(eventId);
+        tackle.setMatch(match);
+        tackle.setEventType(tackleType);
+        tackle.setActive(true);
+
+        when(eventRepository.findById(eventId)).thenReturn(java.util.Optional.of(tackle));
+        when(eventRepository.save(any(Event.class))).thenAnswer(i -> i.getArgument(0));
+
+        eventService.deleteEvent(eventId);
+
+        assertFalse(tackle.getActive());
+        verify(eventRepository, never()).findEventsByMatchId(match.getId());
+        verify(matchRepository, never()).save(match);
+    }
+
+    @Test
+    @DisplayName("updateEvent: Cambiar un Try por una jugada que no puntúa recalcula el tanteador")
+    void updateEvent_shouldRecalculateScore_whenEventStopsScoring() {
+        UUID eventId = UUID.randomUUID();
+        UUID tackleTypeId = UUID.randomUUID();
+
+        EventType tryType = new EventType();
+        tryType.setIsScoring(true);
+        tryType.setPoints(5);
+
+        EventType tackleType = new EventType();
+        tackleType.setId(tackleTypeId);
+        tackleType.setIsScoring(false);
+
+        Match match = new Match();
+        match.setId(UUID.randomUUID());
+        match.setHomeScore(5);
+
+        Event event = new Event();
+        event.setId(eventId);
+        event.setMatch(match);
+        event.setEventType(tryType);
+        event.setTeamPossession(EventPossession.OWN);
+        event.setPeriod(1);
+        event.setMatchTime(500);
+
+        when(eventRepository.findActiveEventById(eventId)).thenReturn(event);
+        when(eventTypeService.findEventTypeEntityById(tackleTypeId)).thenReturn(tackleType);
+        when(eventRepository.save(any(Event.class))).thenAnswer(i -> i.getArgument(0));
+        when(eventRepository.findEventsByMatchId(match.getId())).thenReturn(List.of(event));
+
+        EventUpdateDTO request = new EventUpdateDTO(
+                tackleTypeId, null, null, null, null, null, null, null, null, null
+        );
+
+        eventService.updateEvent(eventId, request);
+
+        assertEquals(0, match.getHomeScore());
+        verify(matchRepository).save(match);
+    }
+
     private EventType createSampleTypeWithFields() {
         TemplateField penaltyTypeField = new TemplateField(
                 "penaltyType", "Causa del penal", "select", "live", false,
