@@ -1,5 +1,5 @@
 import { shortTeamName } from '../../match/post-match/utils/zone-grid';
-import { PlayerMatchStatistic } from '../../player-statistics/types/player-statistics.types';
+import { PlayerMatchDTO, PlayerMatchStatistic } from '../../player-statistics/types/player-statistics.types';
 import { toResult, valueByCode } from '../../player-statistics/utils/player-statistics.utils';
 import { playedAt } from './division-match-state';
 import { dayLabel, parseWallClock } from './match-time';
@@ -33,20 +33,18 @@ const provisionalZero = (value: number, analysisPercent: number): number | null 
 
 const count = (stat: PlayerMatchStatistic, code: string) => valueByCode(stat.stat, stat.columns, code).count;
 
-const playedTime = (entry: PlayerMatchStatistic): number => playedAt(entry.match)?.getTime() ?? 0;
+const playedTime = (match: PlayerMatchDTO): number => playedAt(match)?.getTime() ?? 0;
 
-/** Del más reciente al más viejo según cuándo se jugó (`finishedAt`, o la fecha si falta); el orden del servicio es por fecha programada. */
-export function newestFirst(statistics: readonly PlayerMatchStatistic[]): PlayerMatchStatistic[] {
-  return [...statistics].sort((a, b) => playedTime(b) - playedTime(a));
+/** El partido que se jugó más tarde (`finishedAt`, o la fecha si falta); el orden del servicio es por fecha programada. `null` sin partidos. */
+export function latestMatchOf(matches: readonly PlayerMatchDTO[]): PlayerMatchDTO | null {
+  return [...matches].sort((a, b) => playedTime(b) - playedTime(a))[0] ?? null;
 }
 
 /**
- * Resumen del jugador a partir de sus partidos, en cualquier orden. El último es el que se jugó más tarde
- * (un terminado con fecha futura cuenta como jugado). `analysisPercent` es el de ese partido. `null` si todavía no jugó ninguno.
+ * Resumen del jugador a partir de las estadísticas de su último partido (ver `latestMatchOf`; un terminado con fecha futura
+ * cuenta como jugado). `analysisPercent` es el de ese partido. `null` si todavía no jugó ninguno.
  */
-export function buildPlayerSummary(unordered: readonly PlayerMatchStatistic[], analysisPercent: number): PlayerSummary | null {
-  const statistics = newestFirst(unordered);
-  const latest = statistics[0];
+export function buildPlayerSummary(latest: PlayerMatchStatistic | null, analysisPercent: number): PlayerSummary | null {
   if (!latest) return null;
 
   const { match } = latest;
