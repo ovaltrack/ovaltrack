@@ -34,13 +34,13 @@ class EventTypeServiceZoneRuleTest {
     }
 
     @Test
-    @DisplayName("Indexa por id solo los tipos que declaran regla, incluidos los dados de baja")
+    @DisplayName("Indexa por id los tipos que declaran regla (los filtra la consulta), incluidos los dados de baja")
     void shouldIndexOnlyTypesWithRuleIncludingInactiveOnes() {
         ZoneRule activeRule = new ZoneRule(List.of(6), null, "zone");
         ZoneRule inactiveRule = new ZoneRule(List.of(2, 3, 4, 5), null, null);
         EventType withRule = type(activeRule, true);
         EventType inactive = type(inactiveRule, false);
-        when(eventTypeRepository.findAll()).thenReturn(List.of(withRule, inactive, type(null, true)));
+        when(eventTypeRepository.findByZoneRuleIsNotNull()).thenReturn(List.of(withRule, inactive));
 
         Map<UUID, ZoneRule> rules = eventTypeService.zoneRulesByTypeId();
 
