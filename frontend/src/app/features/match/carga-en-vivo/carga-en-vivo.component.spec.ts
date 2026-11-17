@@ -297,6 +297,19 @@ describe('CargaEnVivoComponent', () => {
     expect(component.capture?.canChooseTeam).toBe(true);
   });
 
+  it('should allow closing a mandatory neutral follow-up chooser', () => {
+    component.followUpChooser = {
+      title: 'Penal / Infracción',
+      originTeam: 'OPPONENT',
+      mandatory: true,
+      choices: [],
+    };
+
+    component.closeChooser();
+
+    expect(component.followUpChooser).toBe(null);
+  });
+
   it('should skip preset steps and resolve the follow-up team with the updated possession', () => {
     const touch = eventType({
       id: 'touch', name: 'Patada a touch', code: 'KICK_TO_TOUCH', isScoring: false, points: 0,
@@ -316,6 +329,76 @@ describe('CargaEnVivoComponent', () => {
     expect(component.capture?.steps.map(step => step.kind)).toEqual(['field']);
     expect(component.capture?.values).toEqual({ kind: 'penalty_touch' });
     expect(component.capture?.team).toBe('OPPONENT');
+  });
+
+  it('should keep the infractor-favored team on a follow-up without an explicit team', () => {
+    const touch = eventType({
+      id: 'touch', name: 'Patada a touch', code: 'KICK_TO_TOUCH', isScoring: false, points: 0,
+      templateEventFields: [{
+        key: 'kind', label: 'Tipo', type: 'select', phase: 'live', required: true,
+        options: [{ value: 'penalty_touch', label: 'Sale directo', possession: 'KEEP' }],
+      }],
+    });
+
+    component.followUpChooser = {
+      title: 'Penal / Infracción',
+      originTeam: 'OPPONENT',
+      mandatory: true,
+      choices: [{ type: touch, label: touch.name, preset: { kind: 'penalty_touch' } }],
+    };
+    component.pickFollowUp({ type: touch, label: touch.name, preset: { kind: 'penalty_touch' } });
+
+    expect(component.capture?.team).toBe('OPPONENT');
+  });
+
+  it('should classify line-out colors against the selected team instead of the global possession', () => {
+    const lineout = eventType({
+      id: 'lineout', name: 'Line-out', code: 'LINEOUT', isScoring: false, points: 0,
+      requiresPlayer: false, actor: 'ATTACKING',
+    });
+
+    component.eventTypes = [lineout];
+    component.currentPossession = 'OWN';
+    (component as any).openCapture(lineout, 'lineout-event', 'OWN', 'OPPONENT');
+
+    expect(component.optionPossessionEffect('KEEP')).toBe('favorable');
+    expect(component.optionPossessionEffect('OTHER')).toBe('unfavorable');
+  });
+
+  it('should assign a direct touch to the team benefited by a penalty against the rival', () => {
+    const penalty = eventType({
+      id: 'penalty', name: 'Penal / Infracción', code: 'PENALTY_CONCEDED',
+      requiresPlayer: false, actor: 'CHOOSE', possessionAfter: 'OTHER',
+    });
+    const touch = eventType({
+      id: 'touch', name: 'Patada a touch', code: 'KICK_TO_TOUCH',
+      requiresPlayer: false, actor: 'ATTACKING', possessionAfter: 'KEEP',
+    });
+    const lineout = eventType({
+      id: 'lineout', name: 'Line-out', code: 'LINEOUT',
+      requiresPlayer: false, actor: 'ATTACKING', possessionAfter: 'KEEP',
+    });
+    component.eventTypes = [penalty, touch, lineout];
+
+    (component as any).openChooser(
+      penalty,
+      [{ code: 'KICK_TO_TOUCH' }],
+      'OPPONENT',
+      null,
+    );
+
+    expect(component.followUpChooser?.choices[0].lockedTeam).toBe('OWN');
+
+    (component as any).launchFollowUp(component.followUpChooser!.choices[0], 'OPPONENT');
+    expect(component.capture?.team).toBe('OWN');
+
+    (component as any).openChooser(
+      touch,
+      [{ code: 'LINEOUT', team: 'SAME' }],
+      'OWN',
+      { kind: 'penalty_touch' },
+    );
+    expect(component.followUpChooser?.choices[0].lockedTeam).toBe('OWN');
   });
 
   it('should revert score without changing possession when deleting an older event', () => {
