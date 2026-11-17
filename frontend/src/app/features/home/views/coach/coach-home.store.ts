@@ -6,6 +6,7 @@ import { ConnectivityService } from '../../../../core/services/connectivity.serv
 import { UserContextService } from '../../../../core/services/user-context.service';
 import { Match } from '../../../match/types/match.types';
 import { shortTeamName } from '../../../match/post-match/utils/zone-grid';
+import { ContentKey } from '../../data/content-key';
 import { DashboardSnapshotCache } from '../../data/dashboard-snapshot.cache';
 import { buildCoachBoard } from '../../domain/coach-board';
 import { FocusInput } from '../../domain/focus-rows';
@@ -146,6 +147,8 @@ export class CoachHomeStore {
 
   private readonly loadMatches$ = new Subject<void>();
   private readonly derive$ = new Subject<void>();
+  /** Partidos con los que se cargó lo derivado: si la respuesta trae lo mismo que el snapshot, no se vuelve a pedir. */
+  private readonly derivedFor = new ContentKey();
   private started = false;
 
   constructor() {
@@ -153,7 +156,7 @@ export class CoachHomeStore {
       switchMap(() => this.data.matches(this.divisions()).pipe(
         tap(state => {
           this.matchesState.set(state);
-          if (state.status !== 'loading') this.refreshDerived();
+          if (state.status !== 'loading' && this.derivedFor.changed(state)) this.refreshDerived();
         }))),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe();

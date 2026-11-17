@@ -36,11 +36,13 @@ describe('CoachHomeStore', () => {
   /** `Injector.create` devuelve un injector de entorno; `destroy()` corre los `onDestroy` (corta relojes y suscripciones). */
   let injector: Injector & { destroy(): void };
 
+  let matchesLoad: () => Observable<WidgetState<Match[]>>;
+  let debtLoad: () => Observable<WidgetState<DebtData>>;
   const data = {
-    matches: (): Observable<WidgetState<Match[]>> => of(matches),
+    matches: (): Observable<WidgetState<Match[]>> => matchesLoad(),
     boardExtras: () => of(extras),
     invalidateCoverage: () => undefined,
-    debt: () => of(debt),
+    debt: () => debtLoad(),
     playersWithoutJersey: () => of(jerseys),
     form: () => of(form),
     focus: () => of(focus)
@@ -68,7 +70,16 @@ describe('CoachHomeStore', () => {
     return store;
   }
 
+  /** Store con cargas propias de partidos y de Deuda, para contar cuántas veces se piden. */
+  function createStoreWith(loadMatches: typeof matchesLoad, loadDebt: typeof debtLoad): CoachHomeStore {
+    matchesLoad = loadMatches;
+    debtLoad = loadDebt;
+    return createStore();
+  }
+
   beforeEach(() => {
+    matchesLoad = () => of(matches);
+    debtLoad = () => of(debt);
     matches = { status: 'ready', data: [], fetchedAt: 1, stale: false };
     debt = { status: 'empty' };
     jerseys = { status: 'ready', data: 0, fetchedAt: 1, stale: false };
@@ -113,6 +124,26 @@ describe('CoachHomeStore', () => {
     focus = { status: 'ready', data: { series: { lineout: [], tackle: [], penalties: [] }, lineoutLast: null }, fetchedAt: 2, stale: false };
     store.retry('focus');
     expect(store.focusState().status).toBe('ready');
+  });
+
+  it('si la respuesta trae los mismos partidos que el snapshot, lo derivado se pide una sola vez', () => {
+    const cached = [match({})];
+    let debtLoads = 0;
+    const store = createStoreWith(
+      () => of<WidgetState<Match[]>>({ status: 'ready', data: cached, fetchedAt: 1, stale: true }, { status: 'ready', data: [...cached], fetchedAt: 2, stale: false }),
+      () => { debtLoads++; return of(debt); });
+    store.reload();
+    expect(store.matchesState()).toEqual({ status: 'ready', data: cached, fetchedAt: 2, stale: false });
+    expect(debtLoads).toBe(1);
+  });
+
+  it('si la respuesta trae partidos distintos al snapshot, lo derivado se vuelve a pedir', () => {
+    let debtLoads = 0;
+    const store = createStoreWith(
+      () => of<WidgetState<Match[]>>({ status: 'ready', data: [match({})], fetchedAt: 1, stale: true }, { status: 'ready', data: [match({ id: 'm2' })], fetchedAt: 2, stale: false }),
+      () => { debtLoads++; return of(debt); });
+    store.reload();
+    expect(debtLoads).toBe(2);
   });
 
   it('sin conexión «Qué trabajar» muestra la última vista guardada con su sello', () => {
