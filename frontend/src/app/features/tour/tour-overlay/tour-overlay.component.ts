@@ -8,6 +8,8 @@ import { TourService } from '../services/tour.service';
 import { AnchorRect, BubblePosition, ResolvedTourStep } from '../types/tour.types';
 import { computeBubblePosition } from '../utils/tour-position';
 import { waitForAnchor } from '../utils/wait-for-anchor';
+import { ThemeService } from '../../../core/services/theme.service';
+import { ScreenshotSources, themedScreenshot } from '../../../shared/utils/screenshot';
 
 /** Debajo de este ancho el globo pasa a ser una hoja fija abajo. */
 const SHEET_QUERY = '(max-width: 640px)';
@@ -27,6 +29,7 @@ export class TourOverlayComponent {
   private readonly tour = inject(TourService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly zone = inject(NgZone);
+  private readonly theme = inject(ThemeService).theme;
 
   readonly step = this.tour.currentStep;
   readonly progress = this.tour.progress;
@@ -82,6 +85,11 @@ export class TourOverlayComponent {
   }
 
   /** La captura de una vista previa cambia el alto del globo al cargar: se vuelve a centrar. */
+  /** Vista previa en el tema activo. */
+  shot(base: string): ScreenshotSources {
+    return themedScreenshot(base, this.theme());
+  }
+
   onShotLoad(): void {
     this.scheduleReposition();
   }

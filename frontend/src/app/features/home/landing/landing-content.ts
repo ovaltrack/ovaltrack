@@ -22,8 +22,10 @@ export interface LandingScreen {
   readonly id: string;
   /** Etiqueta corta de la pestaña del carrusel. */
   readonly tab: string;
-  /** Ruta base de la captura: existe en `-800.webp` y `-1600.webp`. */
+  /** Ruta base de la captura: existe en claro y oscuro, en `-<tema>-800.webp` y `-<tema>-1600.webp`. */
   readonly image: string;
+  /** Cara del cubo arriba o abajo del anillo; sin valor, la pantalla gira en el anillo horizontal. */
+  readonly face?: 'top' | 'bottom';
   readonly alt: string;
   readonly title: string;
   readonly description: string;
@@ -112,7 +114,10 @@ export const LANDING_AUDIENCES: readonly LandingAudience[] = [
   }
 ];
 
-/** Capturas reales de la app (datos de staging), en el orden del ciclo del partido. */
+/**
+ * Capturas reales de la app (datos de staging), en el orden del ciclo del partido. Las cuatro primeras giran
+ * en el anillo del cubo; estadísticas queda arriba y la evolución de la división abajo.
+ */
 export const LANDING_SCREENS: readonly LandingScreen[] = [
   {
     id: 'coach-home',
@@ -154,6 +159,7 @@ export const LANDING_SCREENS: readonly LandingScreen[] = [
     id: 'statistics',
     tab: 'Estadísticas',
     image: 'assets/landing/statistics',
+    face: 'top',
     alt: 'Pantalla de estadísticas post-partido de OvalTrack: marcador, porcentaje de posesión y comparación de tries, conversiones y penales entre ambos equipos',
     title: 'Estadísticas listas cuando termina el partido',
     description: 'Los eventos capturados se convierten en métricas comparadas entre tu equipo y el rival, por tiempo y por jugador.',
@@ -163,6 +169,7 @@ export const LANDING_SCREENS: readonly LandingScreen[] = [
     id: 'division-dashboard',
     tab: 'Evolución',
     image: 'assets/landing/division-dashboard',
+    face: 'bottom',
     alt: 'Dashboard de partidos de una división en OvalTrack: resumen de resultados, promedios y gráficos de puntos y tries partido a partido',
     title: 'La evolución de la división, partido a partido',
     description: 'Elegí un rango de fechas y las métricas que te importan para ver cómo viene el equipo a lo largo de la temporada.',

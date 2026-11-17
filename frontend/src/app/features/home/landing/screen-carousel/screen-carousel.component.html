@@ -1,10 +1,25 @@
 <div class="carousel" aria-roledescription="carrusel" aria-label="Pantallas de OvalTrack">
   <div class="stage">
+    <!-- Girar hacia arriba: siempre ocupa su lugar para que el cubo no salte al aparecer o desaparecer -->
+    <div class="vturn">
+      <button
+        type="button"
+        class="vturn-btn"
+        [class.vturn-btn--hidden]="!upTurn()"
+        [attr.aria-label]="upTurn() ? 'Girar hacia arriba: ' + upTurn()!.tab : null"
+        [attr.aria-hidden]="upTurn() ? null : 'true'"
+        [attr.tabindex]="upTurn() ? null : -1"
+        (click)="up()"
+      >
+        <i class="bi bi-chevron-up" aria-hidden="true"></i>{{ upTurn()?.tab }}
+      </button>
+    </div>
+
     <div
       #scene
       class="scene"
       tabindex="0"
-      aria-label="Pantallas: arrastrá o usá las flechas del teclado para girar el cubo"
+      aria-label="Pantallas: arrastrá o usá las flechas del teclado (también arriba y abajo) para girar el cubo"
       [class.scene--dragging]="dragging()"
       (keydown)="onKeydown($event)"
       (pointerdown)="onPointerDown($event)"
@@ -12,7 +27,7 @@
       (pointerup)="onPointerUp($event)"
       (pointercancel)="onPointerUp($event)"
     >
-      <div class="cube" [style.transform]="cubeTransform()">
+      <div #cube class="cube" [style.--half-h]="halfHeight() + 'px'" [style.transform]="cubeTransform()">
         @for (screen of screens(); track screen.id; let i = $index) {
           <article
             class="face"
@@ -29,8 +44,8 @@
               <span class="face-badge">{{ screen.tab }}</span>
               <img
                 class="face-image"
-                [src]="screen.image + '-800.webp'"
-                [attr.srcset]="screen.image + '-800.webp 800w, ' + screen.image + '-1600.webp 1600w'"
+                [src]="images()[i].src"
+                [attr.srcset]="images()[i].srcset"
                 sizes="(max-width: 768px) 92vw, 720px"
                 width="1600"
                 height="1000"
@@ -64,6 +79,20 @@
     <button type="button" class="arrow arrow--next" aria-label="Pantalla siguiente" (click)="next()">
       <i class="bi bi-chevron-right" aria-hidden="true"></i>
     </button>
+
+    <div class="vturn">
+      <button
+        type="button"
+        class="vturn-btn"
+        [class.vturn-btn--hidden]="!downTurn()"
+        [attr.aria-label]="downTurn() ? 'Girar hacia abajo: ' + downTurn()!.tab : null"
+        [attr.aria-hidden]="downTurn() ? null : 'true'"
+        [attr.tabindex]="downTurn() ? null : -1"
+        (click)="down()"
+      >
+        <i class="bi bi-chevron-down" aria-hidden="true"></i>{{ downTurn()?.tab }}
+      </button>
+    </div>
   </div>
 
   <div class="dots">

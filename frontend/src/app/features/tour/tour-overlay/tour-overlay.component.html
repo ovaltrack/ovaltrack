@@ -50,8 +50,8 @@
           <!-- Vista previa: al club le faltan los datos de esta pantalla, así que Ovi muestra cómo se ve -->
           <img
             class="tour-shot"
-            [src]="image.src + '-800.webp'"
-            [attr.srcset]="image.src + '-800.webp 800w, ' + image.src + '-1600.webp 1600w'"
+            [src]="shot(image.src).src"
+            [attr.srcset]="shot(image.src).srcset"
             sizes="(max-width: 640px) 100vw, 480px"
             [alt]="image.alt"
             width="800"

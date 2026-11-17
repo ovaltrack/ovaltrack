@@ -18,7 +18,7 @@ export interface TourContext {
 /** Ruta real de un paso; `null` si al club le faltan los datos para mostrarla y el paso se saltea. */
 export type TourRoute = (context: TourContext) => string | null;
 
-/** Captura de una pantalla (las de la landing): ruta base sin el sufijo de tamaño `-800.webp` / `-1600.webp`. */
+/** Captura de una pantalla (las de la landing): ruta base sin el sufijo de tema y tamaño (`-light-800.webp`, `-dark-1600.webp`…). */
 export interface TourImage {
   readonly src: string;
   readonly alt: string;

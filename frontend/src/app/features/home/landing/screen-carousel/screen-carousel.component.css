@@ -18,13 +18,15 @@
   --half: calc(var(--face-w) / 2);
   --turn-duration: 0.75s;
   --turn-easing: cubic-bezier(0.45, 0.05, 0.25, 1);
+  /* Respiro sobre el cubo para su sombra (las flechas laterales se centran desde acá) */
+  --scene-top: 16px;
 }
 
 /* ---------- Escena y cubo ---------- */
 .scene {
   perspective: 2400px;
   perspective-origin: 50% 45%;
-  padding-block: 24px 32px;
+  padding-block: var(--scene-top) 24px;
   /* El scroll vertical sigue siendo del navegador; el arrastre horizontal gira el cubo */
   touch-action: pan-y;
   user-select: none;
@@ -49,6 +51,8 @@
   margin-inline: auto;
   transform-style: preserve-3d;
   transition: transform var(--turn-duration) var(--turn-easing);
+  /* Eje del giro vertical: a media altura detrás de la cara de frente (--half-h lo mide el componente) */
+  --pivot: calc(var(--half) - var(--half-h, 0px));
 }
 
 /* ---------- Caras ---------- */
@@ -172,7 +176,7 @@
 .arrow {
   position: absolute;
   /* A media altura de la captura (16:10) de la cara de frente */
-  top: calc(24px + 14px + var(--face-w) * 0.3125);
+  top: calc(var(--hit) + var(--scene-top) + 14px + var(--face-w) * 0.3125);
   transform: translateY(-50%);
   z-index: 2;
   display: inline-flex;
@@ -208,6 +212,47 @@
 .dot:focus-visible {
   outline: 2px solid var(--grass-deep);
   outline-offset: 2px;
+}
+
+/* ---------- Girar arriba / abajo ---------- */
+.vturn {
+  display: flex;
+  justify-content: center;
+}
+
+.vturn-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--hit);
+  padding: 0 18px 0 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--btn-outline-border);
+  background: var(--btn-outline-bg);
+  color: var(--btn-outline-fg);
+  box-shadow: var(--shadow-button);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.vturn-btn:hover {
+  transform: scale(1.04);
+}
+
+.vturn-btn:focus-visible {
+  outline: 2px solid var(--grass-deep);
+  outline-offset: 2px;
+}
+
+.vturn-btn i {
+  font-size: 15px;
+}
+
+/* Sin destino: invisible pero guarda el lugar */
+.vturn-btn--hidden {
+  visibility: hidden;
 }
 
 /* ---------- Puntos ---------- */
@@ -251,6 +296,7 @@
   .cube,
   .face-shade,
   .arrow,
+  .vturn-btn,
   .dot-mark {
     transition: none;
   }
