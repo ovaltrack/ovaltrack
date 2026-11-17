@@ -2,12 +2,10 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { catchError, forkJoin, of } from 'rxjs';
-import { MatchService } from '../services/match.service';
 import { RosterService } from '../services/roster.service';
 import { ToastService } from 'src/app/core/services/toast.service';
 import { Match } from '../types/match.types';
-import { AvailablePlayer, MatchRosterPlayer, RosterPayload, RosterSlot, RosterStep, SavedRoster } from '../types/roster.types';
+import { AvailablePlayer, RosterEntry, RosterPayload, RosterSlot, RosterStep, SavedRoster } from '../types/roster.types';
 import { createInitialStartingSlots, createInitialSubstituteSlots } from '../data/match.constants';
 
 @Component({
@@ -20,7 +18,6 @@ import { createInitialStartingSlots, createInitialSubstituteSlots } from '../dat
 export class SelectionRosterComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly matchService = inject(MatchService);
   private readonly rosterService = inject(RosterService);
   private readonly toastService = inject(ToastService);
 
@@ -106,23 +103,11 @@ export class SelectionRosterComponent implements OnInit {
   loadAllData(matchId: string): void {
     this.isLoading.set(true);
 
-    forkJoin({
-      match: this.matchService.getMatchById(matchId),
-      players: this.rosterService.getAvailablePlayers(matchId),
-      savedRoster: this.rosterService.getSavedRoster(matchId),
-      rosterPlayers: this.rosterService.getMatchRosterPlayers(matchId).pipe(catchError(() => of([])))
-    }).subscribe({
-      next: ({ match, players, savedRoster, rosterPlayers }) => {
+    this.rosterService.getRosterBootstrap(matchId).subscribe({
+      next: ({ match, players, roster }) => {
         this.match.set(match);
-        this.availablePlayers.set(players || []);
-
-        if (savedRoster) {
-          this.applySavedRoster(savedRoster, players || [], rosterPlayers);
-        } else {
-          // Pre-seleccionar primera casilla titular
-          this.autoSelectFirstEmptySlot('titulares', this.startingSlots());
-        }
-
+        this.availablePlayers.set(players);
+        this.applySavedRoster(roster, players);
         this.isLoading.set(false);
       },
       error: (err) => {
@@ -133,41 +118,12 @@ export class SelectionRosterComponent implements OnInit {
     });
   }
 
-  private applySavedRoster(
-    savedRoster: SavedRoster,
-    players: AvailablePlayer[],
-    rosterPlayers: MatchRosterPlayer[],
-  ): void {
+  private applySavedRoster(savedRoster: SavedRoster, players: AvailablePlayer[]): void {
     const starting = createInitialStartingSlots();
     const subs = createInitialSubstituteSlots();
 
-    savedRoster.startingPlayers.forEach((entry, index) => {
-      if (starting[index]) {
-        const found = players.find(p => p.id === entry.playerId);
-        if (found) {
-          const saved = rosterPlayers.find(player => player.id === entry.playerId);
-          const target = saved?.slotOrder != null ? starting[saved.slotOrder] : undefined;
-          if (target) {
-            target.player = found;
-            target.matchNumber = entry.number;
-          }
-        }
-      }
-    });
-
-    savedRoster.substitutePlayers.forEach((entry, index) => {
-      if (subs[index]) {
-        const found = players.find(p => p.id === entry.playerId);
-        if (found) {
-          const saved = rosterPlayers.find(player => player.id === entry.playerId);
-          const target = saved?.slotOrder != null ? subs[saved.slotOrder] : undefined;
-          if (target) {
-            target.player = found;
-            target.matchNumber = entry.number;
-          }
-        }
-      }
-    });
+    this.fillSlots(starting, savedRoster.startingPlayers, players);
+    this.fillSlots(subs, savedRoster.substitutePlayers, players);
 
     this.startingSlots.set(starting);
     this.substituteSlots.set(subs);
@@ -184,6 +140,17 @@ export class SelectionRosterComponent implements OnInit {
         this.activeSlotIndex.set(firstEmptySub);
       }
     }
+  }
+
+  private fillSlots(slots: RosterSlot[], entries: RosterEntry[], players: AvailablePlayer[]): void {
+    entries.forEach(entry => {
+      const player = players.find(p => p.id === entry.playerId);
+      const target = entry.slotOrder != null ? slots[entry.slotOrder] : undefined;
+      if (player && target) {
+        target.player = player;
+        target.matchNumber = entry.number;
+      }
+    });
   }
 
   setStep(step: RosterStep): void {
