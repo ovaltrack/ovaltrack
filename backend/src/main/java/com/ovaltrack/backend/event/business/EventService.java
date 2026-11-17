@@ -29,6 +29,7 @@ import com.ovaltrack.backend.event.domain.dto.event.EventResponseDTO;
 import com.ovaltrack.backend.event.domain.dto.event.EventUpdateDTO;
 import com.ovaltrack.backend.event.domain.dto.event.MatchTimelineEventResponseDTO;
 import com.ovaltrack.backend.event.repository.EventRepository;
+import com.ovaltrack.backend.match.repository.MatchPlayerRepository;
 import com.ovaltrack.backend.match.repository.MatchRepository;
 import com.ovaltrack.backend.zone.business.EventZoneRuleValidator;
 import com.ovaltrack.backend.zone.business.TramoTrimmer;
@@ -51,6 +52,7 @@ public class EventService {
 	private final MatchService matchService;
 	private final PersonService personService;
 	private final MatchRepository matchRepository;
+	private final MatchPlayerRepository matchPlayerRepository;
 	private final MatchSecurityValidator matchSecurityValidator;
 	private final SubstitutionDependencyChecker substitutionDependencyChecker;
 	private final ZoneAssignmentRepository zoneAssignmentRepository;
@@ -154,7 +156,9 @@ public class EventService {
 			savedEvent.setPlayer(null);
 			matchService.recalculateLineup(match);
 		}
-		recalculateMatchScore(match);
+		if (scores(result)) {
+			recalculateMatchScore(match);
+		}
 		tramoTrimmer.trimAt(savedEvent);
 		return EventDTOMapper.toResponseDTO(savedEvent);
 	}
@@ -196,9 +200,7 @@ public class EventService {
 			throw new BusinessException("No se puede asignar un evento a un jugador que no existe");
 		}
 
-		boolean playerInRoster = match.getRoster().stream()
-				.anyMatch(matchPlayer -> matchPlayer.getDivisionPlayer().getPerson().getId().equals(playerId));
-		if (!playerInRoster) {
+		if (!matchPlayerRepository.existsInRoster(match.getId(), playerId)) {
 			throw new BusinessException(
 					"No se puede asignar un evento a un jugador que no pertenece al plantel del partido");
 		}
@@ -234,7 +236,9 @@ public class EventService {
 			result.setPlayer(null);
 			matchService.recalculateLineup(result.getMatch());
 		}
-		recalculateMatchScore(result.getMatch());
+		if (scores(result)) {
+			recalculateMatchScore(result.getMatch());
+		}
 		return EventDTOMapper.toResponseDTO(savedEvent);
 	}
 
@@ -251,6 +255,7 @@ public class EventService {
 			matchSecurityValidator.validateCanManageMatch(event.getMatch(), authentication);
 		}
 		boolean wasOwnSubstitution = isOwnSubstitution(event.getEventType(), event.getTeamPossession());
+		boolean scoredBefore = scores(event);
 		EventType requestedType = eventRequest.eventTypeId() == null
 				? event.getEventType()
 				: eventTypeService.findEventTypeEntityById(eventRequest.eventTypeId());
@@ -290,7 +295,9 @@ public class EventService {
 			event.setPlayer(null);
 			matchService.recalculateLineup(event.getMatch());
 		}
-		recalculateMatchScore(event.getMatch());
+		if (scoredBefore || scores(event)) {
+			recalculateMatchScore(event.getMatch());
+		}
 		if (changesZone(eventRequest)) {
 			tramoTrimmer.trimAt(savedEvent);
 		}
@@ -417,6 +424,14 @@ public class EventService {
 	@Transactional
 	public EventResponseDTO updateEvent(UUID eventId, EventUpdateDTO eventRequest) {
 		return updateEvent(eventId, eventRequest, null);
+	}
+
+	/**
+	 * El marcador solo cambia con jugadas que puntúan: recalcularlo relee todos los eventos del partido, así que se
+	 * evita cuando el evento no puntúa (en una edición, ni antes ni después del cambio).
+	 */
+	private boolean scores(Event event) {
+		return EventRules.countsAsScoring(event.getEventType(), event.getAttributes());
 	}
 
 	private void recalculateMatchScore(Match match) {
