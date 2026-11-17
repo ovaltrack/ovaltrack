@@ -6,18 +6,19 @@ import { filter, map, startWith } from 'rxjs';
 import { UserContextService } from 'src/app/core/services/user-context.service';
 import { PostMatchHeaderComponent } from './components/post-match-header/post-match-header.component';
 import { RugbyBallLoaderComponent } from '../../../shared/components/rugby-ball-loader/rugby-ball-loader.component';
+import { PostMatchDataStore } from './store/post-match-data.store';
 import { PostMatchShellStore } from './store/post-match-shell.store';
 
 /**
  * Contenedor de las vistas de análisis post-partido (Eventos, Zonas y Estadísticas):
- * carga el partido una sola vez, pinta el encabezado común y muestra la vista hija cuando está listo.
+ * carga el partido una sola vez (y los datos que comparten las vistas, ver PostMatchDataStore), pinta el encabezado común y muestra la vista hija cuando está listo.
  * Las vistas con `data.lockViewport` (Eventos) ocupan exactamente el alto de la ventana.
  */
 @Component({
   selector: 'app-post-match-shell',
   standalone: true,
   imports: [RouterOutlet, PostMatchHeaderComponent, RugbyBallLoaderComponent],
-  providers: [PostMatchShellStore],
+  providers: [PostMatchShellStore, PostMatchDataStore],
   templateUrl: './post-match-shell.component.html',
   styleUrl: './post-match-shell.component.css'
 })
@@ -27,6 +28,7 @@ export class PostMatchShellComponent {
   private readonly userContext = inject(UserContextService);
   private readonly documentTitle = inject(Title);
   readonly store = inject(PostMatchShellStore);
+  private readonly dataStore = inject(PostMatchDataStore);
 
   readonly ownClubName = computed(() => this.userContext.currentClub()?.name || 'Mi Club');
 
@@ -56,7 +58,10 @@ export class PostMatchShellComponent {
     this.route.paramMap.pipe(
       map(params => params.get('id') ?? ''),
       takeUntilDestroyed()
-    ).subscribe(id => this.store.load(id));
+    ).subscribe(id => {
+      this.store.load(id);
+      this.dataStore.load(id);
+    });
   }
 
   goBack(): void {

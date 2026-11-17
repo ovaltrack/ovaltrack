@@ -1,8 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, catchError, finalize, forkJoin, map, of, switchMap, tap } from 'rxjs';
-import { EventService } from '../../services/event.service';
-import { EventTypeService } from '../../services/event-type.service';
 import { ZoneService } from '../../services/zone.service';
+import { PostMatchDataStore } from './post-match-data.store';
 import { MatchTimelineEventResponse } from '../../types/event.types';
 import { ZONE_MOTION_MS } from '../utils/zone-motion';
 import { ScoringTypesById, ZoneRulesByType, isFixedZone } from '../utils/zone-rule';
@@ -17,8 +16,8 @@ import { ZoneAssignmentResponse, ZoneAssignmentRequest, ZoneCellRef, ZonePeriod 
 @Injectable({ providedIn: 'root' })
 export class MatchZonesStore {
   private readonly zoneService = inject(ZoneService);
-  private readonly eventService = inject(EventService);
-  private readonly eventTypeService = inject(EventTypeService);
+  /** Datos del partido que provee el shell (el store es global y no puede inyectarlo): se recibe en `load`. */
+  private data!: PostMatchDataStore;
 
   readonly assignments = signal<ZoneAssignmentResponse[]>([]);
   private readonly rawEvents = signal<MatchTimelineEventResponse[]>([]);
@@ -58,12 +57,13 @@ export class MatchZonesStore {
   /** Cortes por try (y tanteos que reinician el juego): el tramo que los contiene termina en su minuto. */
   readonly cuts = computed<TramoCutMark[]>(() => tramoCuts(this.events(), this.zoneRules(), this.scoringTypes(), 'ALL'));
 
-  load(matchId: string): Observable<void> {
+  load(matchId: string, data: PostMatchDataStore): Observable<void> {
+    this.data = data;
     this.isLoading.set(true);
     return forkJoin({
-      zones: this.zoneService.list(matchId),
-      events: this.eventService.getByMatchPostMatch(matchId),
-      types: this.eventTypeService.getAll()
+      zones: data.zones(),
+      events: data.events(),
+      types: data.eventTypes()
     }).pipe(
       tap(({ zones, events, types }) => {
         this.assignments.set(zones.assignments);
@@ -114,11 +114,14 @@ export class MatchZonesStore {
   private runAndReload(matchId: string, write$: Observable<unknown>): Observable<void> {
     this.isSaving.set(true);
     return write$.pipe(
-      switchMap(() => forkJoin({
-        zones: this.zoneService.list(matchId),
-        // Si solo falla la recarga de eventos, el cambio ya se guardó: se conservan los que había.
-        events: this.eventService.getByMatchPostMatch(matchId).pipe(catchError(() => of(this.rawEvents())))
-      })),
+      switchMap(() => {
+        this.data.invalidateAfterZoneChange();
+        return forkJoin({
+          zones: this.data.zones(),
+          // Si solo falla la recarga de eventos, el cambio ya se guardó: se conservan los que había.
+          events: this.data.events().pipe(catchError(() => of(this.rawEvents())))
+        });
+      }),
       tap(({ zones, events }) => {
         this.assignments.set(zones.assignments);
         this.rawEvents.set(events);

@@ -7,6 +7,7 @@ import { UserContextService } from 'src/app/core/services/user-context.service';
 import { ZoneAssignmentResponse, ZoneCellRef, ZoneCellSummary } from '../../../types/zone.types';
 import { IN_GOAL_COLUMNS, isInGoalColumn } from '../../utils/zone-grid';
 import { MatchZonesStore } from '../../store/match-zones.store';
+import { PostMatchDataStore } from '../../store/post-match-data.store';
 import { PostMatchShellStore } from '../../store/post-match-shell.store';
 import { watchCompactLayout } from '../../utils/zone-compact';
 import { segmentAt, zonePoints } from '../../utils/zone-track-layout';
@@ -54,6 +55,7 @@ export class PostMatchZonesComponent implements OnInit, OnDestroy {
   private readonly shell = inject(PostMatchShellStore);
   private readonly userContext = inject(UserContextService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly data = inject(PostMatchDataStore);
   readonly zonesStore = inject(MatchZonesStore);
 
   private readonly panel = viewChild(ZoneAssignmentPanelComponent);
@@ -397,7 +399,7 @@ export class PostMatchZonesComponent implements OnInit, OnDestroy {
     this.loading.start();
     this.errorMessage.set('');
 
-    this.zonesStore.load(matchId)
+    this.zonesStore.load(matchId, this.data)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
