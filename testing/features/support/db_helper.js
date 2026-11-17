@@ -176,3 +176,8 @@ export async function createSentInvitationForPerson(personId, { rawToken = rando
     [personId, sha256(rawToken), expiresInHours],
   );
 }
+
+/** Activa o desactiva un tipo del catálogo de eventos por nombre (no hay endpoint para hacerlo). */
+export async function setEventTypeActive(name, active) {
+  await query('UPDATE event_types SET is_active = $2 WHERE name = $1', [name, active]);
+}
