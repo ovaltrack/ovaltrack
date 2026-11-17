@@ -727,7 +727,8 @@ VALUES
             "possession": "OTHER",
             "followUps": [
               {
-                "code": "LINEOUT"
+                "code": "LINEOUT",
+                "team": "OTHER"
               }
             ]
           },
@@ -776,7 +777,8 @@ VALUES
             "possession": "KEEP",
             "followUps":[
               {
-                "code": "LINEOUT"
+                "code": "LINEOUT",
+                "team": "SAME"
               }
             ]
           },
