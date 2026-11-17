@@ -1,15 +1,16 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, map, of, switchMap } from 'rxjs';
+import { Observable, map, of, switchMap } from 'rxjs';
 import { ConnectivityService } from '../../../../core/services/connectivity.service';
 import { UserContextService } from '../../../../core/services/user-context.service';
 import { PlayerStatsApiService } from '../../../player-statistics/services/player-stats-api.service';
 import { MetricComparison, PlayerMatchSummary, PlayerMetrics } from '../../../player-statistics/types/player-stats-api.types';
+import { PlayerMatchDTO } from '../../../player-statistics/types/player-statistics.types';
 import { PlayerStatisticsService } from '../../../player-statistics/services/player-statistics.service';
 import { DashboardSnapshotCache } from '../../data/dashboard-snapshot.cache';
 import { toWidgetState } from '../../data/to-widget-state';
 import { activeTypeIdsOf } from '../../../match/post-match/utils/review-coverage';
 import { analysisCoverage } from '../../domain/analysis-coverage';
-import { PlayerSummary, buildPlayerSummary, newestFirst } from '../../domain/player-summary';
+import { PlayerSummary, buildPlayerSummary, latestMatchOf } from '../../domain/player-summary';
 import { WidgetState } from '../../types/home.types';
 
 /** Temporada del jugador según el backend: totales, un resumen por partido y su comparación con el plantel. */
@@ -32,17 +33,10 @@ export class PlayerHomeDataService {
   /** Último partido y temporada del jugador; vacío si todavía no jugó ninguno. */
   summary(): Observable<WidgetState<PlayerSummary>> {
     const userId = this.userContext.userContext()?.userId;
-    return this.statistics.loadAllMatchStatistics().pipe(
-      switchMap(unordered => {
-        const stats = newestFirst(unordered);
-        const latest = stats[0];
-        if (!latest) return of(buildPlayerSummary(stats, 100));
-        // El % de análisis es del partido completo (no solo de las jugadas del jugador).
-        return this.statistics.loadMatchSource(latest.match.matchId).pipe(
-          map(source => analysisCoverage(source.events, activeTypeIdsOf(source.eventTypes)).percent),
-          catchError(() => of(100)),
-          map(percent => buildPlayerSummary(stats, percent))
-        );
+    return this.statistics.getMyMatches().pipe(
+      switchMap(matches => {
+        const latest = latestMatchOf(matches);
+        return latest ? this.latestSummary(latest) : of(null);
       }),
       toWidgetState<PlayerSummary | null>({
         offline: !this.connectivity.online(),
@@ -54,6 +48,17 @@ export class PlayerHomeDataService {
           : undefined
       })
     ) as Observable<WidgetState<PlayerSummary>>;
+  }
+
+  /** Un solo `loadMatchSource` del último partido: de ahí salen la estadística del jugador y el % de análisis del partido completo. */
+  private latestSummary(latest: PlayerMatchDTO): Observable<PlayerSummary | null> {
+    return this.statistics.loadMatchSource(latest.matchId).pipe(
+      map(source => {
+        const statistic = this.statistics.computeMatchStatistic(latest, source);
+        if (!statistic) throw new Error('El usuario autenticado no tiene una persona asociada');
+        return buildPlayerSummary(statistic, analysisCoverage(source.events, activeTypeIdsOf(source.eventTypes)).percent);
+      })
+    );
   }
 
   /** Temporada del año en curso (`GET /statistics/player/{personId}`); vacía si no jugó partidos o no hay persona asociada. */
