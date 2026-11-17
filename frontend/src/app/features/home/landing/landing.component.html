@@ -48,8 +48,8 @@
     <div class="hero-shots" aria-hidden="true">
       <img
         class="shot shot-back"
-        src="assets/landing/statistics-800.webp"
-        srcset="assets/landing/statistics-800.webp 800w, assets/landing/statistics-1600.webp 1600w"
+        [src]="heroBack().src"
+        [attr.srcset]="heroBack().srcset"
         sizes="(max-width: 991px) 80vw, 560px"
         width="1600"
         height="1000"
@@ -58,8 +58,8 @@
       />
       <img
         class="shot shot-front"
-        src="assets/landing/live-capture-800.webp"
-        srcset="assets/landing/live-capture-800.webp 800w, assets/landing/live-capture-1600.webp 1600w"
+        [src]="heroFront().src"
+        [attr.srcset]="heroFront().srcset"
         sizes="(max-width: 991px) 80vw, 560px"
         width="1600"
         height="1000"
