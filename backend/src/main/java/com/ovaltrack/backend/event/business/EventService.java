@@ -29,6 +29,7 @@ import com.ovaltrack.backend.event.domain.dto.event.EventResponseDTO;
 import com.ovaltrack.backend.event.domain.dto.event.EventUpdateDTO;
 import com.ovaltrack.backend.event.domain.dto.event.MatchTimelineEventResponseDTO;
 import com.ovaltrack.backend.event.repository.EventRepository;
+import com.ovaltrack.backend.match.repository.MatchPlayerRepository;
 import com.ovaltrack.backend.match.repository.MatchRepository;
 import com.ovaltrack.backend.zone.business.EventZoneRuleValidator;
 import com.ovaltrack.backend.zone.business.TramoTrimmer;
@@ -51,6 +52,7 @@ public class EventService {
 	private final MatchService matchService;
 	private final PersonService personService;
 	private final MatchRepository matchRepository;
+	private final MatchPlayerRepository matchPlayerRepository;
 	private final MatchSecurityValidator matchSecurityValidator;
 	private final SubstitutionDependencyChecker substitutionDependencyChecker;
 	private final ZoneAssignmentRepository zoneAssignmentRepository;
@@ -196,9 +198,7 @@ public class EventService {
 			throw new BusinessException("No se puede asignar un evento a un jugador que no existe");
 		}
 
-		boolean playerInRoster = match.getRoster().stream()
-				.anyMatch(matchPlayer -> matchPlayer.getDivisionPlayer().getPerson().getId().equals(playerId));
-		if (!playerInRoster) {
+		if (!matchPlayerRepository.existsInRoster(match.getId(), playerId)) {
 			throw new BusinessException(
 					"No se puede asignar un evento a un jugador que no pertenece al plantel del partido");
 		}

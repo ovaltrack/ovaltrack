@@ -34,4 +34,12 @@ public interface MatchPlayerRepository extends JpaRepository<MatchPlayer, UUID> 
             """)
     Collection<MatchPlayer> findRosterByMatchIds(@Param("matchIds") Collection<UUID> matchIds);
 
+    /** Si la persona está en la nómina del partido (titular o suplente), en una sola consulta. */
+    @Query("""
+                SELECT CASE WHEN COUNT(mp) > 0 THEN true ELSE false END FROM MatchPlayer mp
+                WHERE mp.match.id = :matchId
+                AND mp.divisionPlayer.person.id = :personId
+            """)
+    boolean existsInRoster(@Param("matchId") UUID matchId, @Param("personId") UUID personId);
+
 }

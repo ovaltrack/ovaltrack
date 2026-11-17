@@ -34,6 +34,7 @@ import com.ovaltrack.backend.match.business.MatchSecurityValidator;
 import com.ovaltrack.backend.match.business.MatchService;
 import com.ovaltrack.backend.match.domain.Match;
 import com.ovaltrack.backend.match.domain.MatchStatus;
+import com.ovaltrack.backend.match.repository.MatchPlayerRepository;
 import com.ovaltrack.backend.match.repository.MatchRepository;
 import com.ovaltrack.backend.zone.business.EventZoneRuleValidator;
 import com.ovaltrack.backend.zone.business.TramoTrimmer;
@@ -62,6 +63,9 @@ class EventServiceTest {
 
     @Mock
     private MatchRepository matchRepository;
+
+    @Mock
+    private MatchPlayerRepository matchPlayerRepository;
 
     @Mock
     private MatchSecurityValidator matchSecurityValidator;
@@ -507,13 +511,6 @@ class EventServiceTest {
         person.setFirstName("Agustin");
         person.setLastName("Creevy");
 
-        com.ovaltrack.backend.division.domain.DivisionPlayer divPlayer = new com.ovaltrack.backend.division.domain.DivisionPlayer();
-        divPlayer.setPerson(person);
-
-        com.ovaltrack.backend.match.domain.MatchPlayer matchPlayer = new com.ovaltrack.backend.match.domain.MatchPlayer();
-        matchPlayer.setDivisionPlayer(divPlayer);
-        match.setRoster(List.of(matchPlayer));
-
         com.ovaltrack.backend.event.domain.TemplateField requiredField = new com.ovaltrack.backend.event.domain.TemplateField(
                 "passType", "Tipo de pase", "select", "live", true, null, null, null, null, null, null, null
         );
@@ -531,6 +528,7 @@ class EventServiceTest {
 
         when(eventRepository.findActiveEventById(eventId)).thenReturn(existingEvent);
         when(personService.findPersonEntityById(playerId)).thenReturn(person);
+        when(matchPlayerRepository.existsInRoster(matchId, playerId)).thenReturn(true);
         when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         EventUpdateDTO updateDTO = new EventUpdateDTO(
@@ -541,6 +539,38 @@ class EventServiceTest {
         assertNotNull(res);
         assertEquals(playerId, res.playerId());
         assertEquals(person, existingEvent.getPlayer());
+    }
+
+    @Test
+    @DisplayName("saveEvent: Rechaza un jugador que no está en la nómina del partido")
+    void saveEvent_shouldRejectPlayerOutsideRoster() {
+        UUID matchId = UUID.randomUUID();
+        UUID eventTypeId = UUID.randomUUID();
+        UUID playerId = UUID.randomUUID();
+
+        EventType tackleType = new EventType();
+        tackleType.setId(eventTypeId);
+
+        Match match = new Match();
+        match.setId(matchId);
+        match.setStatus(MatchStatus.IN_PROGRESS);
+
+        Person person = new Person();
+        person.setId(playerId);
+
+        when(eventTypeService.findEventTypeEntityById(eventTypeId)).thenReturn(tackleType);
+        when(matchService.findMatchEntityById(matchId)).thenReturn(match);
+        when(personService.findPersonEntityById(playerId)).thenReturn(person);
+        when(matchPlayerRepository.existsInRoster(matchId, playerId)).thenReturn(false);
+
+        EventCreationDTO request = new EventCreationDTO(
+                eventTypeId, matchId, null, playerId, EventPossession.OWN,
+                100, 100, null, 1, "APP", null, null
+        );
+
+        BusinessException error = assertThrows(BusinessException.class, () -> eventService.saveEvent(request));
+        assertEquals("No se puede asignar un evento a un jugador que no pertenece al plantel del partido", error.getMessage());
+        verify(eventRepository, never()).save(any(Event.class));
     }
 
     @Test
