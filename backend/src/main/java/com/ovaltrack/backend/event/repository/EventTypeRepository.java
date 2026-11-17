@@ -13,4 +13,7 @@ public interface EventTypeRepository extends JpaRepository<EventType, UUID> {
 	Collection<EventType> findByIsActiveTrueOrderByNameAscIdAsc();
 
 	java.util.Optional<EventType> findByIdAndIsActiveTrue(UUID id);
+
+	/** Solo los tipos que declaran regla de zona (activos o dados de baja), sin leer el catálogo completo. */
+	Collection<EventType> findByZoneRuleIsNotNull();
 }
