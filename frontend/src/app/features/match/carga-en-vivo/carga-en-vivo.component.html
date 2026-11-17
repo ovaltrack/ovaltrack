@@ -218,8 +218,24 @@
     <div class="capture-backdrop">
         <div class="capture" role="dialog" aria-modal="true"
             [attr.aria-label]="chooser.title">
-            <header class="capture__header">
+            <header class="capture__header capture__header--neutral">
                 <h2 class="capture__title">{{ chooser.title }}</h2>
+                <div class="live-capture__clock">
+                    <span class="live-capture__clock-time">{{ gameClock }}</span>
+                    <button
+                        type="button"
+                        class="icon-btn"
+                        (click)="toggleClock()"
+                        [attr.aria-label]="pausaLabel"
+                        [attr.aria-pressed]="clockPaused"
+                        [disabled]="!isStarted || isHalftime">
+                        <i [class]="pausaIcon" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <button type="button" class="capture__icon-btn"
+                    aria-label="Cancelar evento" (click)="closeChooser()">
+                    <i class="ti ti-x" aria-hidden="true"></i>
+                </button>
             </header>
             <div class="capture__body">
                 <div class="capture__choices">
