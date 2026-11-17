@@ -1,12 +1,14 @@
 package com.ovaltrack.backend.event.repository;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.ovaltrack.backend.event.domain.Event;
+import com.ovaltrack.backend.event.domain.EventPossession;
 
 public interface EventRepository extends JpaRepository<Event, UUID> {
 
@@ -25,6 +27,23 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
 
     @Query("SELECT e FROM Event e JOIN FETCH e.eventType LEFT JOIN FETCH e.player WHERE e.active = true AND e.match.id = :matchId ORDER BY e.period, e.matchTime, e.realTime")
     Collection<Event> findPostMatchEventsByMatchId(@Param("matchId") UUID matchId);
+
+    /**
+     * Cobertura de análisis por partido sin traer los eventos: jugadas activas de tipos activos y cuántas no tienen
+     * jugador (las del rival nunca llevan jugador del plantel, así que no cuentan como pendientes).
+     * Los partidos sin jugadas no aparecen en el resultado.
+     */
+    @Query("""
+            SELECT e.match.id AS matchId,
+                   COUNT(e) AS totalEvents,
+                   SUM(CASE WHEN e.player IS NULL AND (e.teamPossession IS NULL OR e.teamPossession <> :opponent)
+                            THEN 1 ELSE 0 END) AS withoutPlayer
+            FROM Event e
+            WHERE e.active = true AND e.eventType.isActive = true AND e.match.id IN :matchIds
+            GROUP BY e.match.id
+            """)
+    List<MatchCoverageCount> countCoverageByMatchIds(@Param("matchIds") Collection<UUID> matchIds,
+            @Param("opponent") EventPossession opponent);
 
     @Query("SELECT e FROM Event e WHERE e.active = true AND e.id = :eventId AND e.match.id = :matchId")
     Event findEventByIdAndMatchId(@Param("eventId") UUID eventId, @Param("matchId") UUID matchId);

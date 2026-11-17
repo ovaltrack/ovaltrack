@@ -24,9 +24,10 @@ const isNullOrEmptyList = (value: unknown): boolean =>
   value == null || (Array.isArray(value) && value.length === 0);
 
 /**
- * Convierte una carga HTTP en el estado de un widget: emite `loading` enseguida y luego `ready`,
+ * Convierte una carga HTTP en el estado de un widget: emite enseguida un estado inicial y luego `ready`,
  * `empty` o `error`. El error nunca se propaga, así un widget que falla no tumba al resto.
- * Con `snapshot`, un error o la falta de conexión caen a la última vista buena marcada como `stale`.
+ * Con `snapshot`, el estado inicial es la última vista buena marcada como `stale` (se ve mientras llega la
+ * respuesta, que la reemplaza); sin snapshot es `loading`. Un error o la falta de conexión también caen al snapshot.
  */
 export function toWidgetState<T>(options: ToWidgetStateOptions<T> = {}): OperatorFunction<T, WidgetState<T>> {
   const { isEmpty = isNullOrEmptyList, errorMessage = WIDGET_ERROR_MESSAGE, now = Date.now, snapshot, offline = false } = options;
@@ -42,7 +43,8 @@ export function toWidgetState<T>(options: ToWidgetStateOptions<T> = {}): Operato
         snapshot?.write(value, fetchedAt);
         return { status: 'ready', data: value, fetchedAt, stale: offline };
       }),
-      catchError(() => of<WidgetState<T>>(cached ? stale(cached) : { status: 'error', message: errorMessage }))
+      catchError(() => of<WidgetState<T>>(cached ? stale(cached) : { status: 'error', message: errorMessage })),
+      startWith<WidgetState<T>>(cached ? stale(cached) : { status: 'loading' })
     );
-  }).pipe(startWith<WidgetState<T>>({ status: 'loading' }));
+  });
 }

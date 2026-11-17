@@ -30,6 +30,11 @@ export function registerEvent(token, event) {
   return makeHttpRequest('POST', 'event', { origin: 'live-capture', ...event }, token);
 }
 
+/** % de análisis de varios partidos en una sola consulta (lo usa el Inicio). */
+export function getMatchCoverage(matchIds, token) {
+  return makeHttpRequest('GET', `event/match/coverage?matchIds=${matchIds.join(',')}`, null, token);
+}
+
 export function getPostMatchTimeline(matchId, token) {
   return makeHttpRequest('GET', `event/match/post-match?matchId=${matchId}`, null, token);
 }

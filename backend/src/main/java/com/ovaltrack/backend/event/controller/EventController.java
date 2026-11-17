@@ -1,5 +1,6 @@
 package com.ovaltrack.backend.event.controller;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -16,10 +17,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import com.ovaltrack.backend.event.business.EventCoverageService;
 import com.ovaltrack.backend.event.business.EventService;
 import com.ovaltrack.backend.event.domain.dto.event.EventCreationDTO;
 import com.ovaltrack.backend.event.domain.dto.event.EventResponseDTO;
 import com.ovaltrack.backend.event.domain.dto.event.EventUpdateDTO;
+import com.ovaltrack.backend.event.domain.dto.event.MatchCoverageDTO;
 import com.ovaltrack.backend.common.dto.response.MessageResponse;
 import com.ovaltrack.backend.zone.business.PostMatchZoneEnricher;
 
@@ -37,6 +40,7 @@ import lombok.RequiredArgsConstructor;
 public class EventController {
 
     private final EventService eventService;
+    private final EventCoverageService eventCoverageService;
     private final PostMatchZoneEnricher postMatchZoneEnricher;
 
     @Operation(summary = "List events for a club", description = "Returns all events associated with the club identified by the clubId query parameter.")
@@ -80,6 +84,18 @@ public class EventController {
     public ResponseEntity<Object> findPostMatchEvents(@RequestParam UUID matchId, Authentication authentication) {
         return ResponseEntity
                 .ok(postMatchZoneEnricher.enrich(matchId, eventService.findPostMatchEvents(matchId, authentication)));
+    }
+
+    @Operation(summary = "Analysis coverage for several matches", description = "Returns, for each requested match, its active events of active types and how many of them still have no player assigned (opponent events excluded). Each match is checked with the same access rules as the post-match review.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Coverage returned, one entry per requested match in the same order."),
+            @ApiResponse(responseCode = "403", description = "Forbidden: user cannot manage one of the matches."),
+            @ApiResponse(responseCode = "409", description = "A match does not exist or too many matches were requested.")
+    })
+    @GetMapping("/match/coverage")
+    @PreAuthorize("hasAnyRole('ADMIN_OVALTRACK', 'ADMIN_CLUB', 'COACH_ANALYST')")
+    public ResponseEntity<List<MatchCoverageDTO>> findMatchCoverage(@RequestParam List<UUID> matchIds, Authentication authentication) {
+        return ResponseEntity.ok(eventCoverageService.coverage(matchIds, authentication));
     }
 
     @Operation(summary = "Find an event", description = "Returns the event identified by the eventId path parameter.")

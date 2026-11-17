@@ -4,6 +4,7 @@ import { Observable, Subject, switchMap, tap } from 'rxjs';
 import { ConnectivityService } from '../../../../core/services/connectivity.service';
 import { UserContextService } from '../../../../core/services/user-context.service';
 import { Match } from '../../../match/types/match.types';
+import { ContentKey } from '../../data/content-key';
 import { clubKpis, ClubKpi } from '../../domain/club-kpis';
 import { DivisionStat, DivisionStatusRow, divisionStatusRows } from '../../domain/division-status';
 import { buildAdminBoard } from '../../domain/admin-board';
@@ -86,6 +87,8 @@ export class AdminHomeStore {
 
   private readonly loadMatches$ = new Subject<void>();
   private readonly derive$ = new Subject<void>();
+  /** Partidos con los que se cargó lo derivado: si la respuesta trae lo mismo que el snapshot, no se vuelve a pedir. */
+  private readonly derivedFor = new ContentKey();
   private started = false;
 
   constructor() {
@@ -93,7 +96,7 @@ export class AdminHomeStore {
       switchMap(() => this.data.matches(this.club()?.id ?? '').pipe(
         tap(state => {
           this.matchesState.set(state);
-          if (state.status !== 'loading') this.derive$.next();
+          if (state.status !== 'loading' && this.derivedFor.changed(state)) this.derive$.next();
         }))),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe();
